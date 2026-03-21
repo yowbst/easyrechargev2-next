@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen } from "lucide-react";
 import { BlogCard } from "@/components/BlogCard";
+import { MiniQuoteCard } from "@/components/MiniQuoteCard";
 import { cmsBgImage } from "@/lib/directusAssets";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -46,6 +47,16 @@ export function BlogListing({
   lang,
 }: BlogListingProps) {
   const hasImage = !!heroImage;
+
+  // Spotlight effect
+  const heroRef = useRef<HTMLElement>(null);
+  const [spotlight, setSpotlight] = useState<{ x: number; y: number } | null>(null);
+  const handleHeroMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    const rect = heroRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setSpotlight({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, []);
+  const handleHeroMouseLeave = useCallback(() => setSpotlight(null), []);
 
   // Separate guide posts from other posts
   const guidePosts = useMemo(
@@ -102,10 +113,24 @@ export function BlogListing({
     <div>
       {/* Hero Section */}
       <section
+        ref={heroRef}
         className="relative py-16 md:py-28 overflow-hidden"
         style={hasImage ? { backgroundImage: `url(${cmsBgImage(heroImage!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        onMouseMove={hasImage ? handleHeroMouseMove : undefined}
+        onMouseLeave={hasImage ? handleHeroMouseLeave : undefined}
       >
-        {hasImage && <div className="absolute inset-0 bg-slate-900/75" />}
+        {/* Spotlight overlay — dark base with a lighter circle following the cursor */}
+        {hasImage && (
+          <div
+            className="absolute inset-0 transition-none"
+            aria-hidden="true"
+            style={{
+              background: spotlight
+                ? `radial-gradient(circle 280px at ${spotlight.x}px ${spotlight.y}px, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.78) 100%)`
+                : "rgba(15,23,42,0.75)",
+            }}
+          />
+        )}
         {!hasImage && <div className="absolute inset-0 bg-muted/50" />}
 
         <div className="relative container mx-auto px-4">
@@ -166,7 +191,7 @@ export function BlogListing({
 
           {/* Posts by Tag */}
           <div className="container mx-auto px-4 pb-16">
-            {allTags.map((tag) => {
+            {allTags.map((tag, tagIndex) => {
               const tagPosts = postsByTag.get(tag.id) || [];
               if (tagPosts.length === 0) return null;
 
@@ -174,21 +199,31 @@ export function BlogListing({
                 <div key={tag.id} id={`tag-section-${tag.id}`} className="mb-16 last:mb-0 scroll-mt-24">
                   <h3 className="text-2xl font-heading font-bold mb-6">{tag.name}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tagPosts.map((post) => (
-                      <BlogCard
-                        key={post.id}
-                        id={post.id}
-                        title={post.title}
-                        category={post.category}
-                        categorySlug={post.categorySlug}
-                        slug={post.slug}
-                        readingTime={post.readingTime}
-                        image={post.image}
-                        excerpt={post.excerpt}
-                        date={post.date}
-                        dictionary={dictionary}
-                        pageRegistry={pageRegistry}
-                      />
+                    {tagPosts.map((post, postIndex) => (
+                      <React.Fragment key={post.id}>
+                        {/* Insert MiniQuoteCard at position 3 in the first tag section */}
+                        {tagIndex === 0 && postIndex === 3 && (
+                          <MiniQuoteCard
+                            pageId="blog"
+                            dictionary={dictionary}
+                            pageRegistry={pageRegistry}
+                            lang={lang}
+                          />
+                        )}
+                        <BlogCard
+                          id={post.id}
+                          title={post.title}
+                          category={post.category}
+                          categorySlug={post.categorySlug}
+                          slug={post.slug}
+                          readingTime={post.readingTime}
+                          image={post.image}
+                          excerpt={post.excerpt}
+                          date={post.date}
+                          dictionary={dictionary}
+                          pageRegistry={pageRegistry}
+                        />
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
