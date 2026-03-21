@@ -181,19 +181,25 @@ export default async function SlugPage({ params }: SlugPageProps) {
       fetchVehicles(locale),
     ]);
     const brandsSegment = getRouteSlug(lang, "brands");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const heroBlock = page?.blocks?.find((b: any) => b?.collection === "block_hero")?.item;
+    const heroTranslation = heroBlock?.translations?.[0];
 
     return (
       <div>
-        {/* Vehicle count */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <h1 className="text-3xl md:text-4xl font-heading font-bold mb-3">
-              {t(dictionary, "pages.vehicles.vehiclesGrid.results.count_other", { count: vehicles.length })}
+        {/* Hero */}
+        <section className="py-16 md:py-24 bg-muted/30">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
+              {heroTranslation?.headline || t(dictionary, "pages.vehicles.blocks.hero.title")}
             </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {t(dictionary, "pages.vehicles.vehiclesGrid.results.count_other", { count: vehicles.length })}
+            </p>
           </div>
         </section>
 
-        {/* Brands grid */}
+        {/* Brands navigation */}
         <VehicleBrandsListView
           brands={brands}
           lang={lang}
@@ -201,6 +207,50 @@ export default async function SlugPage({ params }: SlugPageProps) {
           brandsSegment={brandsSegment}
           dictionary={dictionary}
         />
+
+        {/* Vehicle grid */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {vehicles.map((vehicle: any) => {
+                const name = `${vehicle.brand?.name || ""} ${vehicle.model || vehicle.name || ""}`.trim();
+                const thumbnail = vehicle.thumbnail ? `${DIRECTUS_URL}/assets/${vehicle.thumbnail}` : null;
+                const range = vehicle.range?.value ? `${vehicle.range.value} ${vehicle.range.unit || "km"}` : null;
+                const battery = vehicle.battery?.value ? `${vehicle.battery.value} ${vehicle.battery.unit || "kWh"}` : null;
+
+                return (
+                  <a
+                    key={vehicle.id}
+                    href={`/${lang}/${slug}/${vehicle.slug}`}
+                    className="border rounded-xl overflow-hidden hover:border-primary/50 transition-colors group"
+                  >
+                    {thumbnail && (
+                      <div className="relative aspect-[16/10] bg-muted">
+                        <img
+                          src={thumbnail}
+                          alt={name}
+                          loading="lazy"
+                          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                    )}
+                    <div className="p-4">
+                      {vehicle.brand?.name && (
+                        <p className="text-xs text-primary font-medium mb-1">{vehicle.brand.name}</p>
+                      )}
+                      <h3 className="font-semibold mb-2">{name}</h3>
+                      <div className="flex gap-3 text-xs text-muted-foreground">
+                        {range && <span>{range}</span>}
+                        {battery && <span>{battery}</span>}
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </section>
       </div>
     );
   }

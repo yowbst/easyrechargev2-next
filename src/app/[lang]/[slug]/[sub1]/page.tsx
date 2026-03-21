@@ -158,5 +158,12 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     );
   }
 
+  // Blog category listing: /{lang}/{blogSlug}/{categorySlug}
+  if (route.type === "blog-listing") {
+    // Redirect to the main blog page — category filtering handled there
+    const { redirect } = await import("next/navigation");
+    redirect(`/${lang}/${slug}`);
+  }
+
   notFound();
 }
