@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchPage, fetchPageRegistry, fetchLayout } from "@/lib/directus-queries";
+import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands } from "@/lib/directus-queries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -16,6 +16,11 @@ import { wrapInGraph, buildBreadcrumbList } from "@/lib/seo/jsonLd";
 import { extractPageDictionary, extractLayoutDictionary, t } from "@/lib/i18n/dictionaries";
 import { QuoteForm } from "@/components/quote/QuoteForm";
 import { ContactForm } from "@/components/ContactForm";
+import { BlogListing } from "@/components/BlogListing";
+import { VehicleBrandsListView } from "@/lib/vehicles/shared";
+import { DIRECTUS_URL } from "@/lib/directus";
+import { getDateLocale, getRouteSlug } from "@/lib/i18n/config";
+import { resolveRouteLinks } from "@/lib/pageConfig";
 
 interface SlugPageProps {
   params: Promise<{ lang: string; slug: string }>;
@@ -98,6 +103,8 @@ export default async function SlugPage({ params }: SlugPageProps) {
   const pageDict = extractPageDictionary(entry.id, page, locale);
   const dictionary = { ...layoutDict, ...pageDict };
 
+  const registry = await fetchPageRegistry();
+
   // Interactive pages: render dedicated form components
   if (INTERACTIVE_PAGES.has(entry.id)) {
     if (entry.id === "quote") {
@@ -106,6 +113,96 @@ export default async function SlugPage({ params }: SlugPageProps) {
     if (entry.id === "contact") {
       return <ContactForm lang={lang} dictionary={dictionary} />;
     }
+  }
+
+  // Blog listing page
+  if (entry.id === "blog") {
+    const blogPosts = await fetchBlogPosts(locale);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const heroBlock = page?.blocks?.find((b: any) => b?.collection === "block_hero")?.item;
+    const heroTranslation = heroBlock?.translations?.[0];
+
+    const parseReadingTime = (v: unknown): number => {
+      if (!v) return 5;
+      if (typeof v === "number") return v;
+      const match = String(v).match(/^(\d+):(\d+):(\d+)$/);
+      if (match) return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+      return parseInt(String(v), 10) || 5;
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedPosts = blogPosts.map((post: any) => {
+      const pt = post.translations?.[0];
+      const ct = post.category?.translations?.[0];
+      const tags = (post.tags || [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((tj: any) => {
+          const tag = tj?.blog_tags_id;
+          const tt = tag?.translations?.[0];
+          if (!tag) return null;
+          return { id: tag.tag_id || tag.id, name: tt?.name || tag.tag_id || "", slug: tt?.slug || "" };
+        })
+        .filter(Boolean);
+      const dateValue = post.date_published || post.date_created;
+      return {
+        id: String(post.id),
+        title: pt?.title || "",
+        excerpt: pt?.excerpt || "",
+        slug: pt?.slug || post.slug || String(post.id),
+        readingTime: parseReadingTime(post.reading_time),
+        image: post.image ? `${DIRECTUS_URL}/assets/${post.image}` : "/og-default.webp",
+        date: dateValue ? new Date(dateValue).toLocaleDateString(getDateLocale(lang), { day: "numeric", month: "short", year: "numeric" }) : "",
+        category: ct?.name || "Guide",
+        categorySlug: ct?.slug || "guide",
+        categoryId: post.category?.category_id || post.category?.key || post.category?.id || "",
+        tags,
+      };
+    });
+
+    return (
+      <BlogListing
+        posts={transformedPosts}
+        heroTitle={heroTranslation?.headline || t(dictionary, "pages.blog.blocks.hero.headline")}
+        heroSubtitle={heroTranslation?.subheadline || t(dictionary, "pages.blog.blocks.hero.subheadline")}
+        heroImage={heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined}
+        guideSectionTitle={t(dictionary, "pages.blog.rechargingGuide.headline")}
+        guideSectionSubtitle={t(dictionary, "pages.blog.rechargingGuide.subheadline", { count: transformedPosts.length })}
+        dictionary={dictionary}
+        pageRegistry={registry}
+        lang={lang}
+      />
+    );
+  }
+
+  // Vehicles listing page
+  if (entry.id === "vehicles") {
+    const [brands, vehicles] = await Promise.all([
+      fetchVehicleBrands(locale),
+      fetchVehicles(locale),
+    ]);
+    const brandsSegment = getRouteSlug(lang, "brands");
+
+    return (
+      <div>
+        {/* Vehicle count */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h1 className="text-3xl md:text-4xl font-heading font-bold mb-3">
+              {t(dictionary, "pages.vehicles.vehiclesGrid.results.count_other", { count: vehicles.length })}
+            </h1>
+          </div>
+        </section>
+
+        {/* Brands grid */}
+        <VehicleBrandsListView
+          brands={brands}
+          lang={lang}
+          vehiclesSegment={slug}
+          brandsSegment={brandsSegment}
+          dictionary={dictionary}
+        />
+      </div>
+    );
   }
 
   const translation = page?.translations?.[0];
@@ -161,7 +258,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
                 {section.content && (
                   <div
                     className="text-muted-foreground leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: section.content }}
+                    dangerouslySetInnerHTML={{ __html: resolveRouteLinks(section.content, lang, registry) }}
                   />
                 )}
               </section>
@@ -169,7 +266,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
           ) : body ? (
             <div
               className="prose-headings:font-heading prose-headings:tracking-tight prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-a:text-primary prose-a:font-medium hover:prose-a:underline prose-strong:text-foreground"
-              dangerouslySetInnerHTML={{ __html: body }}
+              dangerouslySetInnerHTML={{ __html: resolveRouteLinks(body, lang, registry) }}
             />
           ) : (
             <p className="text-muted-foreground">

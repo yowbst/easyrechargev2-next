@@ -320,6 +320,7 @@ export default async function Home({ params }: HomeProps) {
         subtitle={getQuoteTranslation?.subheadline || t(dictionary, "pages.home.blocks.get-quote.subtitle")}
         ctaLabel={ctaLabel}
         ctaHref={ctaHref}
+        image={getQuoteBlock?.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined}
       />
     </>
   );
