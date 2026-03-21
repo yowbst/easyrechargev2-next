@@ -21,6 +21,7 @@ import {
   buildFAQPage,
 } from "@/lib/seo/jsonLd";
 import { DIRECTUS_URL } from "@/lib/directus";
+import { resolveRouteId } from "@/lib/pageConfig";
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -281,12 +282,27 @@ export default async function Home({ params }: HomeProps) {
         />
       )}
 
-      {faqItems.length > 0 && (
-        <FAQ
-          title={t(dictionary, "pages.home.blocks.faq.title")}
-          items={faqItems}
-        />
-      )}
+      {faqItems.length > 0 && (() => {
+        const faqBlockData = findBlock(blocks, "block_faq");
+        const faqTranslation = faqBlockData?.translations?.[0];
+        const faqCta = faqTranslation?.ctas?.[0];
+        const faqCtaHref = faqCta?.page_route_id
+          ? resolveRouteId(faqCta.page_route_id, lang, pageRegistry) || `/${lang}`
+          : undefined;
+        return (
+          <FAQ
+            title={faqTranslation?.headline || t(dictionary, "pages.home.blocks.faq.title")}
+            subtitle={faqTranslation?.subheadline || undefined}
+            items={faqItems}
+            image={faqBlockData?.image ? `${DIRECTUS_URL}/assets/${faqBlockData.image}` : undefined}
+            ctaLabel={faqCta?.label}
+            ctaHref={faqCtaHref}
+            ctaVariant={faqCta?.variant}
+            lang={lang}
+            pageRegistry={pageRegistry}
+          />
+        );
+      })()}
 
       {testimonialItems.length > 0 && (
         <Testimonials
