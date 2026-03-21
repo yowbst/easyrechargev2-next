@@ -113,14 +113,24 @@ export default async function Home({ params }: HomeProps) {
     quote_request_duration: slas?.quote_request_duration?.value ?? 3,
   });
   const heroImage = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
-  const heroChecks = heroBlock?.content?.checks
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      heroBlock.content.checks.map((_: any, i: number) =>
-        t(dictionary, `pages.home.blocks.hero.checks.${i}`),
-      ).filter((c: string) => !c.startsWith("["))
+  // Hero checks: array of strings from block translation content
+  const heroChecksConfig = heroBlock?.content?.checks
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? heroBlock.content.checks.map((_: any, i: number) => String(i))
     : undefined;
+  const heroChecksMap: Record<string, string> = {};
+  if (heroBlock?.content?.checks) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    heroBlock.content.checks.forEach((_: any, i: number) => {
+      const val = t(dictionary, `pages.home.blocks.hero.checks.${i}`);
+      if (!val.startsWith("[")) heroChecksMap[String(i)] = val;
+    });
+  }
+  const heroRatingTemplate = t(dictionary, "pages.home.blocks.hero.rating");
   const heroRating = stats.installations && trustpilot.score
-    ? `${stats.installations}+ installations · ${trustpilot.score}/5 Trustpilot`
+    ? heroRatingTemplate.startsWith("[")
+      ? `${stats.installations}+ installations · ${trustpilot.score}/5 Trustpilot`
+      : heroRatingTemplate.replace("{installations}", String(stats.installations)).replace("{score}", String(trustpilot.score))
     : undefined;
 
   // Features and ProcessSteps use tPrefix + dictionary internally — no pre-resolution needed
@@ -232,7 +242,8 @@ export default async function Home({ params }: HomeProps) {
       <Hero
         title={heroTitle}
         subtitle={heroSubtitle}
-        checks={heroChecks}
+        checksConfig={heroChecksConfig}
+        checks={heroChecksMap}
         rating={heroRating}
         image={heroImage}
         pageId="home"
