@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
+import { useCallback } from "react";
+import { cmsBgImage } from "@/lib/directusAssets";
+import { BlogCard } from "@/components/BlogCard";
+import { t } from "@/lib/i18n/dictionaries";
+import type { PageRegistryEntry } from "@/lib/directus-queries";
 
 interface PostData {
   id: string;
@@ -25,10 +27,10 @@ interface GuideCarouselProps {
   subtitle?: string;
   ctaLabel?: string;
   ctaHref: string;
-  posts: PostData[];
-  lang: string;
-  blogSlug: string;
-  readingTimeLabel?: string;
+  posts: PostData[] | undefined;
+  image?: string;
+  dictionary: Record<string, string>;
+  pageRegistry: PageRegistryEntry[];
 }
 
 export function GuideCarousel({
@@ -37,105 +39,157 @@ export function GuideCarousel({
   ctaLabel,
   ctaHref,
   posts,
-  lang,
-  blogSlug,
-  readingTimeLabel,
+  image,
+  dictionary,
+  pageRegistry,
 }: GuideCarouselProps) {
+  const hasImage = !!image;
+
   const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    loop: false,
+    skipSnaps: false,
     dragFree: true,
-    containScroll: "trimSnaps",
   });
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
-  if (!posts.length) return null;
+  const transformedPosts = posts || [];
+  const resolvedTitle = title || t(dictionary, "pages.home.blocks.postgroup.title");
+  const resolvedSubtitle = subtitle || t(dictionary, "pages.home.blocks.postgroup.subtitle");
+  const resolvedCtaLabel = ctaLabel || t(dictionary, "pages.home.blocks.postgroup.cta.label");
 
-  return (
-    <section className="py-16 bg-muted/30">
-      <div className="container mx-auto px-4">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            {title && (
-              <h2 className="font-heading text-3xl font-bold mb-2">
-                {title}
-              </h2>
-            )}
-            {subtitle && (
-              <p className="text-muted-foreground">{subtitle}</p>
+  const carouselContent = (
+    <div className="relative">
+      {!posts ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : transformedPosts.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          {t(dictionary, "common.noArticles")}
+        </div>
+      ) : (
+        <>
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex gap-6">
+              {transformedPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_80%] md:flex-[0_0_45%] lg:flex-[0_0_30%]"
+                >
+                  <BlogCard
+                    id={post.id}
+                    title={post.title}
+                    category={post.category}
+                    categorySlug={post.categorySlug}
+                    slug={post.slug}
+                    readingTime={post.readingTime}
+                    image={post.image}
+                    excerpt={post.excerpt}
+                    tag={post.tag}
+                    showCategory={false}
+                    variant={hasImage ? "dark" : "default"}
+                    dictionary={dictionary}
+                    pageRegistry={pageRegistry}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-center mt-8">
+            <Button
+              variant={hasImage ? "ghost" : "outline"}
+              size="icon"
+              onClick={scrollPrev}
+              aria-label="Previous"
+              className={hasImage ? "text-white border border-white/20 hover:bg-white/10" : ""}
+              data-testid="button-carousel-prev"
+            >
+              <ArrowRight className="h-4 w-4 rotate-180" />
+            </Button>
+            <Button
+              variant={hasImage ? "ghost" : "outline"}
+              size="icon"
+              onClick={scrollNext}
+              aria-label="Next"
+              className={hasImage ? "text-white border border-white/20 hover:bg-white/10" : ""}
+              data-testid="button-carousel-next"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  if (hasImage) {
+    return (
+      <section
+        className="relative py-24 overflow-hidden border-y"
+        style={{ backgroundImage: `url(${cmsBgImage(image!)})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        data-testid="section-guide-carousel"
+      >
+        <div className="absolute inset-0 bg-slate-900/70" />
+
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4" data-testid="heading-guide-title">
+              {resolvedTitle}
+            </h2>
+            {resolvedSubtitle && !resolvedSubtitle.startsWith("[") && (
+              <p className="text-lg text-white/75 max-w-3xl mx-auto" data-testid="text-guide-subtitle">
+                {resolvedSubtitle}
+              </p>
             )}
           </div>
-          {ctaLabel && (
-            <Link href={ctaHref}>
-              <Button variant="outline" className="hidden md:flex gap-2">
-                {ctaLabel}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+
+          {carouselContent}
+
+          <div className="flex justify-center mt-12">
+            <Link
+              href={ctaHref}
+              className="inline-flex items-center justify-center gap-2 min-w-[240px] rounded-lg border border-border bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-4 text-sm font-medium"
+              data-testid="button-view-all-guides"
+            >
+              {resolvedCtaLabel}
+              <ArrowRight className="h-4 w-4" />
             </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-y py-24" data-testid="section-guide-carousel">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4" data-testid="heading-guide-title">
+            {resolvedTitle}
+          </h2>
+          {resolvedSubtitle && !resolvedSubtitle.startsWith("[") && (
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-6" data-testid="text-guide-subtitle">
+              {resolvedSubtitle}
+            </p>
           )}
         </div>
 
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-6">
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                className="flex-[0_0_85%] min-w-0 md:flex-[0_0_45%] lg:flex-[0_0_30%]"
-              >
-                <Link
-                  href={`/${lang}/${blogSlug}/${post.categorySlug}/${post.slug}`}
-                >
-                  <Card className="overflow-hidden h-full hover:border-primary/50 transition-colors">
-                    <div className="relative aspect-[16/10]">
-                      <Image
-                        src={post.image}
-                        alt={post.title}
-                        fill
-                        sizes="(max-width: 768px) 85vw, (max-width: 1024px) 45vw, 30vw"
-                        className="object-cover"
-                      />
-                      {post.tag && (
-                        <span className="absolute top-3 left-3 bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-medium">
-                          {post.tag}
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{post.category}</span>
-                        <span>·</span>
-                        <span>
-                          {readingTimeLabel
-                            ? readingTimeLabel.replace("{count}", String(post.readingTime))
-                            : `${post.readingTime} min`}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold line-clamp-2">
-                        {post.title}
-                      </h3>
-                      {post.excerpt && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {post.excerpt}
-                        </p>
-                      )}
-                    </div>
-                  </Card>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
+        {carouselContent}
 
-        {ctaLabel && (
-          <div className="mt-6 md:hidden text-center">
-            <Link href={ctaHref}>
-              <Button variant="outline" className="gap-2">
-                {ctaLabel}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        )}
+        <div className="flex justify-center mt-12">
+          <Link
+            href={ctaHref}
+            className="inline-flex items-center justify-center gap-2 min-w-[240px] rounded-lg border border-border bg-background hover:bg-muted h-9 px-4 text-sm font-medium"
+            data-testid="button-view-all-guides"
+          >
+            {resolvedCtaLabel}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </section>
   );

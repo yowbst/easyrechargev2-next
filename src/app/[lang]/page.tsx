@@ -120,37 +120,7 @@ export default async function Home({ params }: HomeProps) {
     ? `${stats.installations}+ installations · ${trustpilot.score}/5 Trustpilot`
     : undefined;
 
-  // Features
-  const defaultFeatures = [
-    { id: "certifiedInstallers", icon: "Shield" },
-    { id: "transparentPrices", icon: "DollarSign" },
-    { id: "expertAdvice", icon: "Users" },
-    { id: "nationalCoverage", icon: "MapPin" },
-    { id: "fastInstallation", icon: "Clock" },
-    { id: "qualityGuarantee", icon: "Award" },
-  ];
-  const featureItems = defaultFeatures.map((f) => ({
-    ...f,
-    title: t(dictionary, `pages.home.features.items.${f.id}.title`),
-    description: t(dictionary, `pages.home.features.items.${f.id}.description`),
-  })).filter((f) => !f.title.startsWith("["));
-
-  // Process steps
-  const defaultSteps = [
-    { id: "request", icon: "FileText", number: 1 },
-    { id: "contact", icon: "Phone", number: 2 },
-    { id: "decision", icon: "CheckCircle", number: 3 },
-    { id: "installation", icon: "Wrench", number: 4 },
-  ];
-  const processSteps = defaultSteps.map((s) => ({
-    ...s,
-    title: t(dictionary, `pages.home.process.steps.${s.id}.title`),
-    description: t(dictionary, `pages.home.process.steps.${s.id}.description`, {
-      first_contact: slas?.first_contact?.value ?? 48,
-      quote_delivery_timeline: slas?.quote_delivery_timeline?.value ?? "3-5",
-      quote_request_duration: slas?.quote_request_duration?.value ?? 3,
-    }),
-  })).filter((s) => !s.title.startsWith("["));
+  // Features and ProcessSteps use tPrefix + dictionary internally — no pre-resolution needed
 
   // FAQ items
   const faqItems = faqBlock?.faq_items
@@ -167,27 +137,24 @@ export default async function Home({ params }: HomeProps) {
     })
     .filter(Boolean) as Array<{ id: string; question: string; answer: string }> || [];
 
-  // Testimonials
+  // Testimonials — build config from block settings, text resolved by component via dictionary
   const testimonialsBlock = findBlock(blocks, "block_testimonials");
-  const testimonialsTranslation = testimonialsBlock?.translations?.[0];
   const testimonialsConfig = testimonialsBlock?.config || {};
-  const defaultTestimonialIds = ["item1", "item2", "item3", "item4", "item5"];
   const testimonialRatings = testimonialsConfig?.testimonialsSection?.ratings || {};
-  const testimonialItems = defaultTestimonialIds
-    .map((id) => {
+  // Build itemsConfig: use ratings keys from CMS config, or fall back to defaults
+  const testimonialItemIds = Object.keys(testimonialRatings).length > 0
+    ? Object.keys(testimonialRatings)
+    : ["item1", "item2", "item3", "item4", "item5", "item6", "item7", "item8"];
+  const testimonialItems = testimonialItemIds
+    .filter((id) => {
+      // Only include items that have translations in the dictionary
       const name = t(dictionary, `pages.home.blocks.testimonials.items.${id}.name`);
-      const text = t(dictionary, `pages.home.blocks.testimonials.items.${id}.text`);
-      if (name.startsWith("[") || text.startsWith("[")) return null;
-      return {
-        id,
-        name,
-        text,
-        status: t(dictionary, `pages.home.blocks.testimonials.items.${id}.status`),
-        location: t(dictionary, `pages.home.blocks.testimonials.items.${id}.location`),
-        rating: typeof testimonialRatings[id] === "number" ? testimonialRatings[id] : 5,
-      };
+      return !name.startsWith("[");
     })
-    .filter(Boolean) as Array<{ id: string; name: string; text: string; status?: string; location?: string; rating: number }>;
+    .map((id) => ({
+      id,
+      rating: typeof testimonialRatings[id] === "number" ? testimonialRatings[id] : 5,
+    }));
 
   // Guide carousel (blog posts from postgroup block)
   const postGroupBlock = findBlock(blocks, "block_postgroup");
@@ -267,31 +234,38 @@ export default async function Home({ params }: HomeProps) {
         image={heroImage}
       />
 
-      {featureItems.length > 0 && (
-        <Features
-          title={t(dictionary, "pages.home.features.title")}
-          subtitle={t(dictionary, "pages.home.features.subtitle")}
-          items={featureItems}
-        />
-      )}
+      <Features
+        title={t(dictionary, "pages.home.features.title")}
+        subtitle={t(dictionary, "pages.home.features.subtitle")}
+        tPrefix="pages.home"
+        image={findBlock(blocks, "block_features")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_features").image}` : undefined}
+        dictionary={dictionary}
+      />
 
-      {processSteps.length > 0 && (
-        <ProcessSteps
-          title={t(dictionary, "pages.home.process.title")}
-          subtitle={t(dictionary, "pages.home.process.subtitle")}
-          steps={processSteps}
-        />
-      )}
+      <ProcessSteps
+        title={t(dictionary, "pages.home.process.title")}
+        subtitle={t(dictionary, "pages.home.process.subtitle")}
+        tPrefix="pages.home"
+        image={findBlock(blocks, "block_process")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_process").image}` : undefined}
+        tOptions={{
+          first_contact: slas?.first_contact?.value ?? 48,
+          quote_delivery_timeline: slas?.quote_delivery_timeline?.value ?? "3-5",
+          quote_request_duration: slas?.quote_request_duration?.value ?? 3,
+        }}
+        dictionary={dictionary}
+      />
 
       <SwissMap
         title={t(dictionary, "pages.home.location.title")}
         subtitle={t(dictionary, "pages.home.location.subtitle")}
         activeCantons={page?.config?.location?.activeCantons || ["GE", "VD", "FR", "VS"]}
-        stats={[
-          { id: "cantonsCovered", icon: "Pin", value: stats.cantons ?? 4, label: t(dictionary, "pages.home.location.stats.cantonsCovered") },
-          { id: "certifiedInstallers", icon: "CheckCircle", value: stats.partners ?? 1, label: t(dictionary, "pages.home.location.stats.certifiedInstallers") },
-          { id: "installationsDone", icon: "Zap", value: stats.installations ?? 550, label: t(dictionary, "pages.home.location.stats.installationsDone") },
+        statsConfig={[
+          { id: "cantonsCovered", icon: "Pin", value: stats.cantons ?? 4 },
+          { id: "certifiedInstallers", icon: "CheckCircle", value: stats.partners ?? 1 },
+          { id: "installationsDone", icon: "Zap", value: stats.installations ?? 550 },
         ]}
+        tPrefix="pages.home"
+        dictionary={dictionary}
       />
 
       {guideCarouselPosts.length > 0 && (
@@ -301,9 +275,9 @@ export default async function Home({ params }: HomeProps) {
           ctaLabel={postGroupTranslation?.ctas?.[0]?.label || t(dictionary, "pages.home.blocks.postgroup.cta.label")}
           ctaHref={`/${lang}/${blogSlug}`}
           posts={guideCarouselPosts}
-          lang={lang}
-          blogSlug={blogSlug}
-          readingTimeLabel={t(dictionary, "shared.blogCard.readingTime.label_one")}
+          image={findBlock(blocks, "block_postgroup")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_postgroup").image}` : undefined}
+          dictionary={dictionary}
+          pageRegistry={pageRegistry}
         />
       )}
 
@@ -318,7 +292,10 @@ export default async function Home({ params }: HomeProps) {
         <Testimonials
           headline={t(dictionary, "pages.home.blocks.testimonials.title")}
           subheadline={t(dictionary, "pages.home.blocks.testimonials.subtitle")}
-          items={testimonialItems}
+          itemsConfig={testimonialItems.map((ti) => ({ id: ti.id, rating: ti.rating }))}
+          pageId="home"
+          image={findBlock(blocks, "block_testimonials")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_testimonials").image}` : undefined}
+          dictionary={dictionary}
         />
       )}
 

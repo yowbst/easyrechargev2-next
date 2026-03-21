@@ -1,46 +1,80 @@
 import { Card } from "@/components/ui/card";
-import { LucideCmsIcon } from "./LucideCmsIcon";
+import * as LucideIcons from "lucide-react";
+import { cmsBgImage } from "@/lib/directusAssets";
+import { t } from "@/lib/i18n/dictionaries";
 
-interface FeatureItem {
+interface FeatureItemConfig {
   id: string;
   icon: string;
-  title: string;
-  description: string;
 }
 
 interface FeaturesProps {
   title?: string;
   subtitle?: string;
-  items: FeatureItem[];
+  itemsConfig?: FeatureItemConfig[];
+  tPrefix: string;
+  image?: string;
+  dictionary: Record<string, string>;
 }
 
-export function Features({ title, subtitle, items }: FeaturesProps) {
-  if (!items.length) return null;
+function getIconComponent(iconName?: string) {
+  if (!iconName) return LucideIcons.Info;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const IconComponent = (LucideIcons as any)[iconName];
+  return IconComponent || LucideIcons.Info;
+}
+
+export function Features({ title, subtitle, itemsConfig = [], tPrefix, image, dictionary }: FeaturesProps) {
+  const hasImage = !!image;
+
+  const defaultItemsConfig: FeatureItemConfig[] = [
+    { id: "certifiedInstallers", icon: "Shield" },
+    { id: "transparentPrices", icon: "DollarSign" },
+    { id: "expertAdvice", icon: "Users" },
+    { id: "nationalCoverage", icon: "MapPin" },
+    { id: "fastInstallation", icon: "Clock" },
+    { id: "qualityGuarantee", icon: "Award" },
+  ];
+
+  const displayItems = itemsConfig.length > 0 ? itemsConfig : defaultItemsConfig;
 
   return (
-    <section className="py-16 bg-muted/30">
-      <div className="container mx-auto px-4">
-        {title && (
-          <h2 className="font-heading text-3xl font-bold text-center mb-3">
+    <section
+      className="relative py-24 overflow-hidden"
+      style={hasImage ? { backgroundImage: `url(${cmsBgImage(image!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+    >
+      {hasImage && <div className="absolute inset-0 bg-slate-900/70" />}
+
+      <div className="relative z-10 container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className={`text-3xl md:text-4xl font-heading font-bold mb-4 ${hasImage ? "text-white" : ""}`}>
             {title}
           </h2>
-        )}
-        {subtitle && (
-          <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+          <p className={`text-lg max-w-3xl mx-auto ${hasImage ? "text-white/75" : "text-muted-foreground"}`}>
             {subtitle}
           </p>
-        )}
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((item) => (
-            <Card key={item.id} className="p-6 space-y-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <LucideCmsIcon name={item.icon} className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="font-semibold">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">{item.description}</p>
-            </Card>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {displayItems.map((item) => {
+            const IconComponent = getIconComponent(item.icon);
+            const itemTitle = t(dictionary, `${tPrefix}.features.items.${item.id}.title`);
+            const itemDescription = t(dictionary, `${tPrefix}.features.items.${item.id}.description`);
+
+            return (
+              <Card
+                key={item.id}
+                className={`p-6 hover-elevate transition-all duration-300 ${hasImage ? "bg-white/10 backdrop-blur-md border-white/15" : ""}`}
+                data-testid={`card-feature-${item.id}`}
+              >
+                <div className="mb-4">
+                  <IconComponent className={`h-12 w-12 ${hasImage ? "text-white" : "text-primary"}`} />
+                </div>
+                <h3 className={`text-xl font-heading font-semibold mb-2 ${hasImage ? "text-white" : ""}`}>{itemTitle}</h3>
+                <p className={hasImage ? "text-white/70" : "text-muted-foreground"}>{itemDescription}</p>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </section>

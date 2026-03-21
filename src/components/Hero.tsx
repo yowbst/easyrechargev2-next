@@ -1,69 +1,115 @@
-import Image from "next/image";
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import * as LucideIcons from "lucide-react";
+import { useEffect } from "react";
+import { cmsImage } from "@/lib/directusAssets";
 
 interface HeroProps {
-  title: string;
+  title?: string;
   subtitle?: string;
-  checks?: string[];
+  checksConfig?: string[];
+  checks?: Record<string, string>;
   rating?: string;
-  image?: string;
   children?: React.ReactNode;
+  pageId?: string;
+  image?: string;
 }
 
 export function Hero({
   title,
   subtitle,
-  checks,
+  checksConfig = [],
+  checks = {},
   rating,
-  image,
   children,
+  pageId,
+  image,
 }: HeroProps) {
+  const resolvedImage = image || "/og-default.webp";
+
+  // Build responsive srcset for CMS images
+  const optimised = cmsImage(resolvedImage, [640, 1024, 1920], { quality: 80 });
+  const heroSrc = optimised.src;
+  const heroSrcSet = optimised.srcSet;
+  const heroSizes = optimised.sizes;
+
+  // Inject <link rel="preload"> for LCP hero image
+  useEffect(() => {
+    const existing = document.querySelector(`link[rel="preload"][href="${heroSrc}"]`);
+    if (existing) return;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = heroSrc;
+    if (heroSrcSet) link.setAttribute("imagesrcset", heroSrcSet);
+    if (heroSizes) link.setAttribute("imagesizes", heroSizes);
+    link.fetchPriority = "high";
+    document.head.appendChild(link);
+    return () => { link.remove(); };
+  }, [heroSrc, heroSrcSet, heroSizes]);
+
   return (
-    <section className="relative bg-gradient-to-b from-primary/5 to-background overflow-hidden">
-      <div className="container mx-auto px-4 py-16 md:py-24">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+    // IMPORTANT: overflow-visible so autocomplete dropdown isn't clipped
+    <section className="relative overflow-visible min-h-[950px] md:min-h-[1000px]">
+      {/* Background Image with Overlay - Fixed Height */}
+      <div className="absolute inset-0 h-[950px] md:h-[1000px] z-0">
+        <img
+          src={heroSrc}
+          srcSet={heroSrcSet}
+          sizes={heroSizes}
+          alt="EV Charging"
+          fetchPriority="high"
+          decoding="sync"
+          width={1920}
+          height={1000}
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-slate-900/40" />
+      </div>
+
+      {/* Content */}
+      <div className="container relative z-10 mx-auto px-4 w-full pt-32 pb-16 md:pt-40 md:pb-20">
+        <div className="max-w-3xl">
+          {/* Trust Badge */}
+          {!!rating && (
+            <Badge className="mb-6 bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30">
+              <LucideIcons.Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+              <span>{rating}</span>
+            </Badge>
+          )}
+
+          {!!title && (
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white mb-6 leading-tight">
               {title}
             </h1>
-            {subtitle && (
-              <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-                {subtitle}
-              </p>
-            )}
-
-            {checks && checks.length > 0 && (
-              <ul className="flex flex-col gap-2">
-                {checks.map((check, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm">
-                    <span className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs">
-                      ✓
-                    </span>
-                    {check}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {rating && (
-              <p className="text-sm text-muted-foreground">{rating}</p>
-            )}
-
-            {/* Interactive island (e.g. MiniQuoteForm) */}
-            {children}
-          </div>
-
-          {image && (
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
-              <Image
-                src={image}
-                alt=""
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
-                priority
-              />
-            </div>
           )}
+
+          {!!subtitle && (
+            <p className="text-lg text-white/90 mb-8 leading-relaxed max-w-2xl">
+              {subtitle}
+            </p>
+          )}
+
+          {/* Quick Quote Form (MiniQuoteForm or other child) */}
+          {children && <div className="mb-6">{children}</div>}
+
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap gap-6 text-sm text-white/80">
+            {(checksConfig.length > 0
+              ? checksConfig
+              : ["freeQuote", "certifiedPartners", "swissPlatform"]
+            ).map((checkId) => (
+              <div
+                key={checkId}
+                className="flex items-center gap-2"
+                data-testid={`check-${checkId}`}
+              >
+                <span className="text-green-400">✓</span>
+                <span>{checks[checkId] || `[hero.checks.${checkId}]`}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
