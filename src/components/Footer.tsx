@@ -68,6 +68,14 @@ export function Footer({
   const aboutHeading = t(dictionary, "layout.footer.columns.about.heading");
   const stepsHeading = t(dictionary, "layout.footer.columns.steps.heading");
 
+  // SLA values from global_config for step interpolation
+  const gc = layoutData?.global_config || {};
+  const slasVars = {
+    first_contact: gc?.slas?.first_contact?.value ?? 48,
+    quote_delivery_timeline: gc?.slas?.quote_delivery_timeline?.value ?? "3-5",
+    quote_request_duration: gc?.slas?.quote_request_duration?.value ?? 3,
+  };
+
   const subline = t(dictionary, "layout.footer.subline", {
     year: new Date().getFullYear(),
     address: footerConfig?.subline?.address ?? "",
@@ -189,14 +197,20 @@ export function Footer({
               const label = t(
                 dictionary,
                 `layout.footer.columns.steps.rows.${row.id}`,
+                slasVars as Record<string, string | number>,
               );
               if (!label || label.startsWith("[")) return null;
 
+              const stepIcon = row.icon_lucide;
               return (
                 <li key={row.id} className="flex items-start gap-2">
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs">
-                    {row.icon_lucide ?? row.id}
-                  </span>
+                  {stepIcon ? (
+                    <LucideCmsIcon name={stepIcon} className="h-5 w-5 shrink-0 mt-0.5 text-primary" />
+                  ) : (
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs shrink-0">
+                      {row.id}
+                    </span>
+                  )}
                   <span>{label}</span>
                 </li>
               );
