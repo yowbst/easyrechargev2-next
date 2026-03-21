@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat, Open_Sans, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { CookieBanner } from "@/components/CookieBanner";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -38,7 +39,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-          <Providers>{children}</Providers>
+          <Providers>
+            {children}
+            <CookieBanner />
+          </Providers>
         </body>
     </html>
   );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchPage, fetchLayout } from "@/lib/directus-queries";
-import { extractPageDictionary } from "@/lib/i18n/dictionaries";
+import { fetchPage, fetchLayout, fetchPageRegistry } from "@/lib/directus-queries";
+import { extractPageDictionary, t } from "@/lib/i18n/dictionaries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -21,9 +21,22 @@ import {
   buildFAQPage,
 } from "@/lib/seo/jsonLd";
 import { DIRECTUS_URL } from "@/lib/directus";
+import { Hero } from "@/components/Hero";
+import { Features } from "@/components/Features";
+import { ProcessSteps } from "@/components/ProcessSteps";
+import { FAQ } from "@/components/FAQ";
+import { GetQuote } from "@/components/GetQuote";
 
 interface HomeProps {
   params: Promise<{ lang: string }>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRecord = Record<string, any>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function findBlock(blocks: any[], collection: string) {
+  return blocks?.find((b: AnyRecord) => b?.collection === collection)?.item;
 }
 
 export async function generateMetadata({ params }: HomeProps): Promise<Metadata> {
@@ -38,11 +51,7 @@ export async function generateMetadata({ params }: HomeProps): Promise<Metadata>
 
   const SITE_URL = getSiteUrl();
   const otherLang = lang === "de" ? "fr" : "de";
-  const heroBlock = page?.blocks?.find(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (b: any) => b?.collection === "block_hero",
-  );
-  const heroImage = heroBlock?.item?.image;
+  const heroBlock = findBlock(page?.blocks || [], "block_hero");
 
   return buildMetadata({
     title: normalizeTitle(
@@ -53,7 +62,7 @@ export async function generateMetadata({ params }: HomeProps): Promise<Metadata>
         "Trouvez rapidement un installateur certifié pour votre borne de recharge électrique en Suisse.",
     ),
     canonical: `${SITE_URL}/${lang}`,
-    ogImage: resolveOgImage(resolved, undefined, heroImage),
+    ogImage: resolveOgImage(resolved, undefined, heroBlock?.image),
     ogType: "website",
     lang,
     alternates: buildAlternates({
@@ -68,72 +77,113 @@ export default async function Home({ params }: HomeProps) {
   if (!isValidLang(lang)) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [page, layoutData] = await Promise.all([
+  const [page, layoutData, pageRegistry] = await Promise.all([
     fetchPage("home", locale),
     fetchLayout(locale),
+    fetchPageRegistry(),
   ]);
 
-  const dictionary = page
-    ? extractPageDictionary("home", page, locale)
-    : {};
-
-  // Extract blocks for rendering
+  const dictionary = page ? extractPageDictionary("home", page, locale) : {};
   const blocks = page?.blocks || [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const findBlock = (collection: string) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    blocks.find((b: any) => b?.collection === collection)?.item;
 
-  const heroBlock = findBlock("block_hero");
-  const faqBlock = findBlock("block_faq");
+  const heroBlock = findBlock(blocks, "block_hero");
+  const faqBlock = findBlock(blocks, "block_faq");
+  const getQuoteBlock = findBlock(blocks, "block_getquote");
+
+  // Global config
+  const gc = layoutData?.global_config || {};
+  const stats = gc?.stats || {};
+  const trustpilot = gc?.trustpilot || {};
+  const slas = gc?.slas || {};
+
+  // Hero data
+  const heroTranslation = heroBlock?.translations?.[0];
+  const heroTitle = heroTranslation?.headline || t(dictionary, "pages.home.blocks.hero.title");
+  const heroSubtitle = heroTranslation?.subheadline || t(dictionary, "pages.home.blocks.hero.subtitle", {
+    quote_request_duration: slas?.quote_request_duration?.value ?? 3,
+  });
+  const heroImage = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
+  const heroChecks = heroBlock?.content?.checks
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      heroBlock.content.checks.map((_: any, i: number) =>
+        t(dictionary, `pages.home.blocks.hero.checks.${i}`),
+      ).filter((c: string) => !c.startsWith("["))
+    : undefined;
+  const heroRating = stats.installations && trustpilot.score
+    ? `${stats.installations}+ installations · ${trustpilot.score}/5 Trustpilot`
+    : undefined;
+
+  // Features
+  const defaultFeatures = [
+    { id: "certifiedInstallers", icon: "Shield" },
+    { id: "transparentPrices", icon: "DollarSign" },
+    { id: "expertAdvice", icon: "Users" },
+    { id: "nationalCoverage", icon: "MapPin" },
+    { id: "fastInstallation", icon: "Clock" },
+    { id: "qualityGuarantee", icon: "Award" },
+  ];
+  const featureItems = defaultFeatures.map((f) => ({
+    ...f,
+    title: t(dictionary, `pages.home.features.items.${f.id}.title`),
+    description: t(dictionary, `pages.home.features.items.${f.id}.description`),
+  })).filter((f) => !f.title.startsWith("["));
+
+  // Process steps
+  const defaultSteps = [
+    { id: "request", icon: "FileText", number: 1 },
+    { id: "contact", icon: "Phone", number: 2 },
+    { id: "decision", icon: "CheckCircle", number: 3 },
+    { id: "installation", icon: "Wrench", number: 4 },
+  ];
+  const processSteps = defaultSteps.map((s) => ({
+    ...s,
+    title: t(dictionary, `pages.home.process.steps.${s.id}.title`),
+    description: t(dictionary, `pages.home.process.steps.${s.id}.description`, {
+      first_contact: slas?.first_contact?.value ?? 48,
+      quote_delivery_timeline: slas?.quote_delivery_timeline?.value ?? "3-5",
+      quote_request_duration: slas?.quote_request_duration?.value ?? 3,
+    }),
+  })).filter((s) => !s.title.startsWith("["));
+
+  // FAQ items
+  const faqItems = faqBlock?.faq_items
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ?.map((junction: any) => {
+      const item = junction?.faq_items_id;
+      if (!item?.translations) return null;
+      const trans =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        item.translations.find((tr: any) => tr.languages_code === locale) ||
+        item.translations[0];
+      if (!trans?.question || !trans?.answer) return null;
+      return { id: String(item.id), question: trans.question, answer: trans.answer };
+    })
+    .filter(Boolean) as Array<{ id: string; question: string; answer: string }> || [];
+
+  // GetQuote CTA
+  const getQuoteTranslation = getQuoteBlock?.translations?.[0];
+  const quoteEntry = pageRegistry.find((p) => p.id === "quote");
+  const quoteSlug = quoteEntry?.slugs[lang];
+  const ctaHref = quoteSlug ? `/${lang}/${quoteSlug}` : `/${lang}`;
+  const ctaLabel = getQuoteTranslation?.ctas?.[0]?.label ||
+    t(dictionary, "pages.home.blocks.get-quote.cta.label") ||
+    (lang === "de" ? "Offerte anfragen" : "Demander un devis");
 
   // JSON-LD
   const SITE_URL = getSiteUrl();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const schemas: Record<string, unknown>[] = [
+  const schemas: AnyRecord[] = [
     buildOrganization({ logoUrl: `${SITE_URL}/og-default.webp` }),
     buildWebSite(),
     buildBreadcrumbList([
       { name: lang === "de" ? "Startseite" : "Accueil", url: `${SITE_URL}/${lang}` },
     ]),
   ];
-
-  // FAQ JSON-LD
-  if (faqBlock?.faq_items?.length) {
-    const faqItems = faqBlock.faq_items
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((junction: any) => {
-        const item = junction?.faq_items_id;
-        if (!item?.translations) return null;
-        const trans =
-          item.translations.find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (tr: any) => tr.languages_code === locale,
-          ) || item.translations[0];
-        if (!trans?.question || !trans?.answer) return null;
-        return {
-          question: trans.question,
-          answer: trans.answer.replace(/<[^>]+>/g, ""),
-        };
-      })
-      .filter(Boolean) as Array<{ question: string; answer: string }>;
-    if (faqItems.length) schemas.push(buildFAQPage(faqItems));
+  if (faqItems.length) {
+    schemas.push(
+      buildFAQPage(faqItems.map((f) => ({ question: f.question, answer: f.answer.replace(/<[^>]+>/g, "") }))),
+    );
   }
-
   const jsonLd = wrapInGraph(...schemas);
-
-  // Hero translation
-  const heroTranslation = heroBlock?.translations?.[0];
-  const heroTitle = heroTranslation?.headline || dictionary["pages.home.blocks.hero.title"] || "";
-  const heroSubtitle = heroTranslation?.subheadline || dictionary["pages.home.blocks.hero.subtitle"] || "";
-  const heroImage = heroBlock?.image
-    ? `${DIRECTUS_URL}/assets/${heroBlock.image}`
-    : undefined;
-
-  // Global config
-  const gc = layoutData?.global_config || {};
-  const stats = gc?.stats || {};
-  const trustpilot = gc?.trustpilot || {};
 
   return (
     <>
@@ -142,66 +192,43 @@ export default async function Home({ params }: HomeProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-primary/5 to-background py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              {heroTitle}
-            </h1>
-            {heroSubtitle && (
-              <p className="text-lg md:text-xl text-muted-foreground">
-                {heroSubtitle}
-              </p>
-            )}
-            {stats.installations && trustpilot.score && (
-              <p className="text-sm text-muted-foreground">
-                {stats.installations}+ installations · {trustpilot.score}/5 Trustpilot
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      <Hero
+        title={heroTitle}
+        subtitle={heroSubtitle}
+        checks={heroChecks}
+        rating={heroRating}
+        image={heroImage}
+      />
 
-      {/* FAQ Section */}
-      {faqBlock?.faq_items?.length > 0 && (
-        <section className="py-16 bg-muted/30">
-          <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="font-heading text-3xl font-bold text-center mb-8">
-              {dictionary["pages.home.blocks.faq.title"] || "FAQ"}
-            </h2>
-            <div className="space-y-4">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {faqBlock.faq_items.map((junction: any) => {
-                const item = junction?.faq_items_id;
-                if (!item?.translations) return null;
-                const trans =
-                  item.translations.find(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (tr: any) => tr.languages_code === locale,
-                  ) || item.translations[0];
-                if (!trans?.question) return null;
-                return (
-                  <details
-                    key={item.id}
-                    className="border rounded-lg p-4 bg-background"
-                  >
-                    <summary className="font-medium cursor-pointer">
-                      {trans.question}
-                    </summary>
-                    {trans.answer && (
-                      <div
-                        className="mt-3 text-muted-foreground prose prose-sm dark:prose-invert"
-                        dangerouslySetInnerHTML={{ __html: trans.answer }}
-                      />
-                    )}
-                  </details>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+      {featureItems.length > 0 && (
+        <Features
+          title={t(dictionary, "pages.home.features.title")}
+          subtitle={t(dictionary, "pages.home.features.subtitle")}
+          items={featureItems}
+        />
       )}
+
+      {processSteps.length > 0 && (
+        <ProcessSteps
+          title={t(dictionary, "pages.home.process.title")}
+          subtitle={t(dictionary, "pages.home.process.subtitle")}
+          steps={processSteps}
+        />
+      )}
+
+      {faqItems.length > 0 && (
+        <FAQ
+          title={t(dictionary, "pages.home.blocks.faq.title")}
+          items={faqItems}
+        />
+      )}
+
+      <GetQuote
+        title={getQuoteTranslation?.headline || t(dictionary, "pages.home.blocks.get-quote.title")}
+        subtitle={getQuoteTranslation?.subheadline || t(dictionary, "pages.home.blocks.get-quote.subtitle")}
+        ctaLabel={ctaLabel}
+        ctaHref={ctaHref}
+      />
     </>
   );
 }
