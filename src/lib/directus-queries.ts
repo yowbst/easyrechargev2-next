@@ -123,6 +123,10 @@ const PAGE_FIELDS = [
   "blocks.item:block_postgroup.posts.blog_posts_id.category.translations.*",
   "blocks.item:block_postgroup.posts.blog_posts_id.tags.blog_tags_id.*",
   "blocks.item:block_postgroup.posts.blog_posts_id.tags.blog_tags_id.translations.*",
+  "blocks.item:block_features.*",
+  "blocks.item:block_features.translations.*",
+  "blocks.item:block_process.*",
+  "blocks.item:block_process.translations.*",
 ];
 
 export async function fetchPage(
@@ -141,6 +145,8 @@ export async function fetchPage(
     "[blocks][item:block_postgroup][posts][blog_posts_id][translations][_filter][languages_code][_eq]": locale,
     "[blocks][item:block_postgroup][posts][blog_posts_id][category][translations][_filter][languages_code][_eq]": locale,
     "[blocks][item:block_postgroup][posts][blog_posts_id][tags][blog_tags_id][translations][_filter][languages_code][_eq]": locale,
+    "[blocks][item:block_features][translations][_filter][languages_code][_eq]": locale,
+    "[blocks][item:block_process][translations][_filter][languages_code][_eq]": locale,
   };
 
   const path = buildItemsQuery({
