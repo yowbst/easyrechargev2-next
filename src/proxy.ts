@@ -36,7 +36,7 @@ const AD_CLICK_PARAMS: Record<
   rdt_cid: { cookie: "_rdt_cid", maxAgeDays: 90 },
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ── Skip static files and API routes ──────────────────────────────
