@@ -46,10 +46,10 @@ export function Footer({
   const logoWhiteId = layoutData?.logo_white;
   const logoSrc = logoColorId
     ? `${DIRECTUS_URL}/assets/${logoColorId}`
-    : "/og-default.webp";
+    : null;
   const logoDarkSrc = logoWhiteId
     ? `${DIRECTUS_URL}/assets/${logoWhiteId}`
-    : logoSrc;
+    : null;
 
   const socials = footerConfig?.socials || [];
   const stepRows = footerConfig?.columns?.rows || [];
@@ -113,22 +113,30 @@ export function Footer({
   const columns: Record<string, React.ReactNode> = {
     brand: (
       <div key="brand">
-        <Image
-          src={logoSrc}
-          alt="easyRecharge"
-          width={160}
-          height={40}
-          className="h-10 mb-3 dark:hidden"
-          style={{ width: "auto", height: "2.5rem" }}
-        />
-        <Image
-          src={logoDarkSrc}
-          alt="easyRecharge"
-          width={160}
-          height={40}
-          className="h-10 mb-3 hidden dark:block"
-          style={{ width: "auto", height: "2.5rem" }}
-        />
+        {logoSrc ? (
+          <>
+            <Image
+              src={logoSrc}
+              alt="easyRecharge"
+              width={160}
+              height={40}
+              className="h-10 mb-3 dark:hidden"
+              style={{ width: "auto", height: "2.5rem" }}
+            />
+            <Image
+              src={logoDarkSrc || logoSrc}
+              alt="easyRecharge"
+              width={160}
+              height={40}
+              className="h-10 mb-3 hidden dark:block"
+              style={{ width: "auto", height: "2.5rem" }}
+            />
+          </>
+        ) : (
+          <span className="font-heading text-xl font-bold text-primary block mb-3">
+            easyRecharge
+          </span>
+        )}
         {brandTagline && !brandTagline.startsWith("[") && (
           <p className="text-sm text-muted-foreground mb-4">{brandTagline}</p>
         )}

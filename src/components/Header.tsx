@@ -50,10 +50,10 @@ export function Header({
   const logoWhiteId = layoutData?.logo_white;
   const logoSrc = logoColorId
     ? `${DIRECTUS_URL}/assets/${logoColorId}`
-    : "/og-default.webp";
+    : null;
   const logoDarkSrc = logoWhiteId
     ? `${DIRECTUS_URL}/assets/${logoWhiteId}`
-    : logoSrc;
+    : null;
 
   // Build nav links
   const navLinks = headerNavItems
@@ -106,25 +106,33 @@ export function Header({
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href={`/${lang}`} title="easyRecharge">
-          <Image
-            src={logoSrc}
-            alt="easyRecharge"
-            width={160}
-            height={40}
-            className="h-10 dark:hidden"
-            style={{ width: "auto", height: "2.5rem" }}
-            priority
-          />
-          <Image
-            src={logoDarkSrc}
-            alt="easyRecharge"
-            width={160}
-            height={40}
-            className="h-10 hidden dark:block"
-            style={{ width: "auto", height: "2.5rem" }}
-            priority
-          />
+        <Link href={`/${lang}`} title="easyRecharge" className="flex items-center">
+          {logoSrc ? (
+            <>
+              <Image
+                src={logoSrc}
+                alt="easyRecharge"
+                width={160}
+                height={40}
+                className="h-10 dark:hidden"
+                style={{ width: "auto", height: "2.5rem" }}
+                priority
+              />
+              <Image
+                src={logoDarkSrc || logoSrc}
+                alt="easyRecharge"
+                width={160}
+                height={40}
+                className="h-10 hidden dark:block"
+                style={{ width: "auto", height: "2.5rem" }}
+                priority
+              />
+            </>
+          ) : (
+            <span className="font-heading text-xl font-bold text-primary">
+              easyRecharge
+            </span>
+          )}
         </Link>
 
         {/* Desktop Navigation */}
