@@ -10,6 +10,12 @@ import { t } from "@/lib/i18n/dictionaries";
 import { Mail, Send, Loader2, User, Users, Building2, Phone as PhoneIcon } from "lucide-react";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
 import { cmsBgImage } from "@/lib/directusAssets";
+import { useFormTelemetry } from "@/hooks/use-form-telemetry";
+import { getAttributionCompact } from "@/lib/attribution";
+import { usePostHog } from "posthog-js/react";
+import { PlaceAutocomplete } from "@/components/quote/PlaceAutocomplete";
+import { getCantonCode } from "@shared/swiss-cantons";
+import { APIProvider } from "@vis.gl/react-google-maps";
 import type { CountryCode } from "libphonenumber-js";
 
 interface ContactFormProps {
@@ -23,10 +29,14 @@ const P = "pages.contact";
 export function ContactForm({ lang, dictionary, heroImage }: ContactFormProps) {
   const hasHeroImage = !!heroImage;
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
+  const ph = usePostHog();
+  const telemetry = useFormTelemetry({ formType: "contact", locale: lang });
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [addressMode, setAddressMode] = useState<"google" | "manual">(googleMapsApiKey ? "google" : "manual");
 
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: "", phone: "", phoneCountry: "CH",
@@ -35,8 +45,23 @@ export function ContactForm({ lang, dictionary, heroImage }: ContactFormProps) {
   });
 
   const handleChange = (field: string, value: string) => {
+    telemetry.trackChange(field, value);
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
+  };
+
+  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    if (!place.address_components) return;
+    let streetNb = "", streetName = "", postal = "", locality = "", canton = "", country = "";
+    for (const c of place.address_components) {
+      if (c.types.includes("street_number")) streetNb = c.long_name;
+      if (c.types.includes("route")) streetName = c.long_name;
+      if (c.types.includes("postal_code")) postal = c.long_name;
+      if (c.types.includes("locality")) locality = c.long_name;
+      if (c.types.includes("administrative_area_level_1")) canton = getCantonCode(c.long_name) || c.short_name;
+      if (c.types.includes("country")) country = c.short_name;
+    }
+    setFormData((prev) => ({ ...prev, streetName, streetNb, postalCode: postal, locality, canton, country }));
   };
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
@@ -52,15 +77,39 @@ export function ContactForm({ lang, dictionary, heroImage }: ContactFormProps) {
     setError(null);
 
     try {
+      const attribution = getAttributionCompact();
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, attribution }),
       });
       const result = await res.json();
       if (res.ok && result.success) {
+        telemetry.trackSubmit(true);
+        ph?.capture("contact_form_submitted", { locale: lang, subject: formData.subject });
+        ph?.identify(formData.email, { first_name: formData.firstName, last_name: formData.lastName, locale: lang });
+
+        // Post to form-submissions (non-blocking)
+        fetch("/api/form-submissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionToken: telemetry.sessionToken,
+            formType: "contact",
+            locationPath: window.location.pathname,
+            locationRoute: "contact",
+            locale: lang,
+            userAgent: navigator.userAgent,
+            user: { email: formData.email, firstName: formData.firstName, lastName: formData.lastName, phone: formData.phone },
+            data: formData,
+            status: "success",
+          }),
+        }).catch(() => {});
+
         setSubmitted(true);
       } else {
+        telemetry.trackSubmit(false, { error: result.message });
+        ph?.capture("contact_form_error", { error_message: result.message });
         setError(d(`${P}.toasts.error.description`));
       }
     } catch {
@@ -86,6 +135,7 @@ export function ContactForm({ lang, dictionary, heroImage }: ContactFormProps) {
   const isPhoneValid = !formData.phone || validatePhone(formData.phone, formData.phoneCountry as CountryCode);
 
   return (
+    <APIProvider apiKey={googleMapsApiKey} libraries={["places"]}>
     <div>
       {/* Hero Section */}
       <section
@@ -151,17 +201,41 @@ export function ContactForm({ lang, dictionary, heroImage }: ContactFormProps) {
             <Input id="company" value={formData.company} onChange={(e) => handleChange("company", e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="streetName">{d(`${P}.form.address`)}</Label>
-              <Input id="streetName" value={formData.streetName} onChange={(e) => handleChange("streetName", e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="streetNb">N°</Label>
-              <Input id="streetNb" value={formData.streetNb} onChange={(e) => handleChange("streetNb", e.target.value)} />
-            </div>
+          <div className="space-y-2">
+            <Label>{d(`${P}.form.address`)}</Label>
+            {addressMode === "google" && googleMapsApiKey ? (
+              <>
+                <PlaceAutocomplete
+                  value={formData.streetName ? `${formData.streetName} ${formData.streetNb}, ${formData.postalCode} ${formData.locality}`.trim() : ""}
+                  onChange={(v) => handleChange("address", v)}
+                  onPlaceSelect={handlePlaceSelect}
+                  placeholder={d(`${P}.form.address`)}
+                />
+                <button type="button" onClick={() => setAddressMode("manual")} className="text-xs text-muted-foreground hover:text-foreground underline">
+                  {d(`${P}.form.addressManual`) || "Saisie manuelle"}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input className="col-span-2" placeholder={d(`${P}.form.address`)} value={formData.streetName} onChange={(e) => handleChange("streetName", e.target.value)} />
+                  <Input placeholder="N°" value={formData.streetNb} onChange={(e) => handleChange("streetNb", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input placeholder={d(`${P}.form.postalCode`)} value={formData.postalCode} onChange={(e) => handleChange("postalCode", e.target.value)} />
+                  <Input className="col-span-2" placeholder={d(`${P}.form.locality`)} value={formData.locality} onChange={(e) => handleChange("locality", e.target.value)} />
+                </div>
+                {googleMapsApiKey && (
+                  <button type="button" onClick={() => setAddressMode("google")} className="text-xs text-muted-foreground hover:text-foreground underline">
+                    {d(`${P}.form.addressGoogle`) || "Recherche automatique"}
+                  </button>
+                )}
+              </>
+            )}
           </div>
-          <div className="grid grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-3 gap-4" style={{ display: "none" }}>
+            {/* Hidden — kept for backward compat with existing form data shape */}
             <div className="space-y-2">
               <Label htmlFor="postalCode">{d(`${P}.form.postalCode`)}</Label>
               <Input id="postalCode" value={formData.postalCode} onChange={(e) => handleChange("postalCode", e.target.value)} />
@@ -195,5 +269,6 @@ export function ContactForm({ lang, dictionary, heroImage }: ContactFormProps) {
       </Card>
       </div>
     </div>
+    </APIProvider>
   );
 }

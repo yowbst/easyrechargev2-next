@@ -13,6 +13,9 @@ import { IconButtonGroup, type IconButtonOption } from "./IconButtonGroup";
 import { SliderWithCheckbox } from "./SliderWithCheckbox";
 import { PlaceAutocomplete } from "./PlaceAutocomplete";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
+import { useFormTelemetry } from "@/hooks/use-form-telemetry";
+import { getAttributionCompact } from "@/lib/attribution";
+import { usePostHog } from "posthog-js/react";
 import { getCantonCode } from "@shared/swiss-cantons";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { t } from "@/lib/i18n/dictionaries";
@@ -124,9 +127,25 @@ function optionIcon(value: string) {
 
 export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const ph = usePostHog();
+  const telemetry = useFormTelemetry({ formType: "quote", locale: lang });
+  const [step, setStep] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const s = parseInt(new URLSearchParams(window.location.search).get("step") ?? "0", 10);
+    return isNaN(s) || s < 0 || s > 6 ? 0 : s;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+
+  // Sync step with URL for browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const s = parseInt(new URLSearchParams(window.location.search).get("step") ?? "0", 10);
+      setStep(isNaN(s) || s < 0 || s > 6 ? 0 : s);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   /** Resolve a key from the flattened page dictionary. */
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
@@ -201,24 +220,73 @@ export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
   const isStep6Valid = form.acceptTerms;
   const canProceed = [false, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid, isStep5Valid, isStep6Valid][step];
 
-  const goToStep = (n: number) => { setStep(n); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const stepNames = ["welcome", "housing", "parking", "charger", "vehicle", "contact", "finalize"] as const;
+  const goToStep = (n: number) => {
+    if (n > step) {
+      ph?.capture("quote_step_completed", { step, step_name: stepNames[step] });
+    }
+    setStep(n);
+    const url = new URL(window.location.href);
+    url.searchParams.set("step", String(n));
+    window.history.pushState({}, "", url.toString());
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleSubmit = async () => {
     if (!form.acceptTerms) return;
     setIsSubmitting(true);
     setSubmitError(false);
     try {
-      const res = await fetch("/api/quote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const attribution = getAttributionCompact();
+      const phIds = {
+        phDistinctId: ph?.get_distinct_id?.() ?? null,
+        phSessionId: ph?.get_session_id?.() ?? null,
+      };
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, attribution, posthog: phIds }),
+      });
       const result = await res.json();
       if (res.ok && result.success) {
+        telemetry.trackSubmit(true, { submissionId: result.submissionId });
+        ph?.capture("quote_form_submitted", { locale: lang });
+        ph?.identify(form.email, { first_name: form.firstName, last_name: form.lastName, locale: lang });
+
+        // Post to form-submissions for session tracking (non-blocking)
+        fetch("/api/form-submissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionToken: telemetry.sessionToken,
+            formType: "quote",
+            locationPath: window.location.pathname,
+            locationParams: window.location.search.slice(1) || null,
+            locationRoute: "quote",
+            locale: lang,
+            userAgent: navigator.userAgent,
+            user: { email: form.email, firstName: form.firstName, lastName: form.lastName, phone: form.phone },
+            data: form,
+            status: "success",
+            posthog: phIds,
+          }),
+        }).catch(() => {});
+
         const confirmSegment = d("pages.quote.steps.finalize.fields.confirmation_segment");
         const seg = confirmSegment.startsWith("[") ? "confirmation" : confirmSegment;
         router.push(quoteSlug ? `/${lang}/${quoteSlug}/${seg}` : `/${lang}`);
       } else {
+        telemetry.trackSubmit(false, { error: result.message });
+        ph?.capture("quote_form_error", { error_message: result.message });
         setSubmitError(true);
       }
-    } catch { setSubmitError(true); }
-    finally { setIsSubmitting(false); }
+    } catch (err) {
+      telemetry.trackSubmit(false, { error: String(err) });
+      ph?.capture("quote_form_error", { error_message: String(err) });
+      setSubmitError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Welcome step

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
+import { NavLink } from "./NavLink";
 import { DIRECTUS_URL } from "@/lib/directus";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -141,13 +142,14 @@ export function Header({
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((item) => (
-            <Link
+            <NavLink
               key={item.id}
               href={item.href}
-              className="text-sm font-medium transition-colors hover:text-primary text-foreground"
+              className="text-sm font-medium transition-colors hover:text-primary"
+              activeClassName="text-primary"
             >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
 
