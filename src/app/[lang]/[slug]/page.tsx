@@ -21,6 +21,19 @@ interface SlugPageProps {
   params: Promise<{ lang: string; slug: string }>;
 }
 
+export async function generateStaticParams() {
+  const registry = await fetchPageRegistry();
+  const params: { lang: string; slug: string }[] = [];
+  for (const entry of registry) {
+    for (const [lang, slug] of Object.entries(entry.slugs)) {
+      if (slug) params.push({ lang, slug });
+    }
+  }
+  return params;
+}
+
+export const dynamicParams = true;
+
 /** Find the page registry entry matching this slug for the given language. */
 async function resolvePageEntry(slug: string, lang: string) {
   const registry = await fetchPageRegistry();

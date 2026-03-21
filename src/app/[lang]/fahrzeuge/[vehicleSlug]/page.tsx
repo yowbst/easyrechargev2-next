@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchVehicle } from "@/lib/directus-queries";
+import { fetchVehicle, fetchVehicles } from "@/lib/directus-queries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { VehicleDetailView } from "@/lib/vehicles/shared";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -12,6 +12,17 @@ import {
   getSiteUrl,
 } from "@/lib/seo/resolver";
 import { wrapInGraph, buildVehicleProduct } from "@/lib/seo/jsonLd";
+
+export async function generateStaticParams() {
+  const vehicles = await fetchVehicles("de-DE");
+  return vehicles
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((v: any) => v.slug)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((v: any) => ({ lang: "de", vehicleSlug: v.slug }));
+}
+
+export const dynamicParams = true;
 
 interface Props {
   params: Promise<{ lang: string; vehicleSlug: string }>;

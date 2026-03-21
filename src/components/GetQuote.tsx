@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface GetQuoteProps {
@@ -37,7 +36,7 @@ export function GetQuote({
         >
           {title}
         </h2>
-        {subtitle && (
+        {subtitle && !subtitle.startsWith("[") && (
           <p
             className={cn(
               "text-lg",
@@ -50,11 +49,10 @@ export function GetQuote({
         <Link
           href={ctaHref}
           className={cn(
-            buttonVariants({
-              variant: isPrimary ? "secondary" : "default",
-              size: "lg",
-            }),
-            "px-8",
+            "inline-flex items-center justify-center rounded-lg px-8 h-9 text-sm font-medium transition-colors",
+            isPrimary
+              ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              : "bg-primary text-primary-foreground hover:bg-primary/80",
           )}
         >
           {ctaLabel}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { fetchBlogPost, fetchPageRegistry } from "@/lib/directus-queries";
+import { fetchBlogPost, fetchBlogPosts, fetchPageRegistry } from "@/lib/directus-queries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { DIRECTUS_URL } from "@/lib/directus";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -20,6 +20,39 @@ import {
 } from "@/lib/seo/resolver";
 import { fetchPage } from "@/lib/directus-queries";
 import { wrapInGraph, buildBlogPosting, buildBreadcrumbList } from "@/lib/seo/jsonLd";
+
+const LANG_MAP: Record<string, "fr" | "de"> = { "fr-FR": "fr", "de-DE": "de" };
+
+export async function generateStaticParams() {
+  const registry = await fetchPageRegistry();
+  const blogPage = registry.find((p) => p.id === "blog");
+
+  const params: { lang: string; blogSlug: string; categorySlug: string; postSlug: string }[] = [];
+
+  for (const locale of ["fr-FR", "de-DE"] as const) {
+    const lang = LANG_MAP[locale];
+    const blogSlug = blogPage?.slugs[lang] || "blog";
+    const posts = await fetchBlogPosts(locale);
+
+    for (const post of posts) {
+      const pt = post.translations?.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (t: any) => t.languages_code === locale,
+      );
+      const ct = post.category?.translations?.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (t: any) => t.languages_code === locale,
+      );
+      if (pt?.slug && ct?.slug) {
+        params.push({ lang, blogSlug, categorySlug: ct.slug, postSlug: pt.slug });
+      }
+    }
+  }
+
+  return params;
+}
+
+export const dynamicParams = true;
 
 interface BlogPostPageProps {
   params: Promise<{
