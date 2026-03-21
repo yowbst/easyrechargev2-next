@@ -111,7 +111,10 @@ export default async function SlugPage({ params }: SlugPageProps) {
       return <QuoteForm lang={lang} dictionary={dictionary} quoteSlug={slug} />;
     }
     if (entry.id === "contact") {
-      return <ContactForm lang={lang} dictionary={dictionary} />;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const contactHeroBlock = page?.blocks?.find((b: any) => b?.collection === "block_hero")?.item;
+      const contactHeroImage = contactHeroBlock?.image ? `${DIRECTUS_URL}/assets/${contactHeroBlock.image}` : undefined;
+      return <ContactForm lang={lang} dictionary={dictionary} heroImage={contactHeroImage} />;
     }
   }
 

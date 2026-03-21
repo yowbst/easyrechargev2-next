@@ -7,16 +7,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { t } from "@/lib/i18n/dictionaries";
-import { Mail, Send, Loader2, User, Users, Building2 } from "lucide-react";
+import { Mail, Send, Loader2, User, Users, Building2, Phone as PhoneIcon } from "lucide-react";
+import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
+import { cmsBgImage } from "@/lib/directusAssets";
+import type { CountryCode } from "libphonenumber-js";
 
 interface ContactFormProps {
   lang: string;
   dictionary: Record<string, string>;
+  heroImage?: string;
 }
 
 const P = "pages.contact";
 
-export function ContactForm({ lang, dictionary }: ContactFormProps) {
+export function ContactForm({ lang, dictionary, heroImage }: ContactFormProps) {
+  const hasHeroImage = !!heroImage;
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,12 +80,31 @@ export function ContactForm({ lang, dictionary }: ContactFormProps) {
     );
   }
 
+  const countryFlag = (code: string) =>
+    Array.from(code.toUpperCase()).map((c) => String.fromCodePoint(0x1f1e6 - 65 + c.charCodeAt(0))).join("");
+
+  const isPhoneValid = !formData.phone || validatePhone(formData.phone, formData.phoneCountry as CountryCode);
+
   return (
-    <div className="container mx-auto px-4 py-12 max-w-2xl">
-      <div className="text-center space-y-3 mb-10">
-        <h1 className="font-heading text-3xl md:text-4xl font-bold">{d(`${P}.hero.title`)}</h1>
-        <p className="text-muted-foreground text-lg">{d(`${P}.hero.subtitle`)}</p>
-      </div>
+    <div>
+      {/* Hero Section */}
+      <section
+        className="relative py-16 md:py-24 overflow-hidden"
+        style={hasHeroImage ? { backgroundImage: `url(${cmsBgImage(heroImage!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+      >
+        {hasHeroImage && <div className="absolute inset-0 bg-slate-900/75" />}
+        {!hasHeroImage && <div className="absolute inset-0 bg-muted/50" />}
+        <div className="relative container mx-auto px-4 text-center">
+          <h1 className={`font-heading text-3xl md:text-4xl font-bold mb-3 ${hasHeroImage ? "text-white" : ""}`}>
+            {d(`${P}.hero.title`)}
+          </h1>
+          <p className={`text-lg max-w-2xl mx-auto ${hasHeroImage ? "text-white/85" : "text-muted-foreground"}`}>
+            {d(`${P}.hero.subtitle`)}
+          </p>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-12 max-w-2xl -mt-8 relative z-10">
 
       <Card className="p-6 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -101,8 +125,24 @@ export function ContactForm({ lang, dictionary }: ContactFormProps) {
               <Input id="email" type="email" value={formData.email} onChange={(e) => handleChange("email", e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">{d(`${P}.form.phone`)}</Label>
-              <Input id="phone" type="tel" value={formData.phone} onChange={(e) => handleChange("phone", e.target.value)} />
+              <Label htmlFor="phone"><PhoneIcon className="inline h-3.5 w-3.5 mr-1" />{d(`${P}.form.phone`)}</Label>
+              <div className="flex gap-2">
+                <select
+                  value={formData.phoneCountry}
+                  onChange={(e) => handleChange("phoneCountry", e.target.value)}
+                  className="h-8 rounded-lg border border-border bg-background px-2 text-sm"
+                >
+                  {SUPPORTED_COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {countryFlag(c.code)} {c.dialCode}
+                    </option>
+                  ))}
+                </select>
+                <Input id="phone" type="tel" value={formData.phone} onChange={(e) => handleChange("phone", e.target.value)} className="flex-1" />
+              </div>
+              {formData.phone && !isPhoneValid && (
+                <p className="text-xs text-destructive">{d(`${P}.form.phone`)}: invalid</p>
+              )}
             </div>
           </div>
 
@@ -153,6 +193,7 @@ export function ContactForm({ lang, dictionary }: ContactFormProps) {
           </Button>
         </form>
       </Card>
+      </div>
     </div>
   );
 }

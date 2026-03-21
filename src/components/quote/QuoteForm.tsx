@@ -63,6 +63,7 @@ interface FormData {
   locality: string;
   canton: string;
   country: string;
+  approval: string;
   comment: string;
   acceptTerms: boolean;
 }
@@ -164,7 +165,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
     firstName: "", lastName: "", email: "", phone: "", phoneCountry: "CH",
     addressMode: "google", address: "", streetName: "", streetNb: "",
     postalCode: "", locality: "", canton: "", country: "CH",
-    comment: "", acceptTerms: false,
+    approval: "", comment: "", acceptTerms: false,
   });
 
   const set = (field: keyof FormData, value: string | number | boolean | "na" | null) =>
@@ -271,6 +272,13 @@ export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
                 <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("housing", "electricalBoardType")}</Label>
                 <IconButtonGroup options={opts("housing", "electricalBoardType", ["old", "recent", "na"])} value={form.electricalBoardType} onChange={(v) => set("electricalBoardType", v)} />
               </RevealField>
+              <RevealField visible={
+                (form.housingStatus === "co-owner" && ["apartment", "house"].includes(form.housingType)) ||
+                (form.housingStatus === "tenant" && form.housingType === "apartment")
+              }>
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("housing", "neighborhoodEquipment")}</Label>
+                <IconButtonGroup options={opts("housing", "neighborhoodEquipment", ["exists", "in-progress", "none"])} value={form.neighborhoodEquipment} onChange={(v) => set("neighborhoodEquipment", v)} />
+              </RevealField>
             </div>
           )}
 
@@ -306,6 +314,13 @@ export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
                 <IconButtonGroup options={opts("charger", "parkingSpotCount", ["1", "2", "3plus"])} value={form.parkingSpotCount} onChange={(v) => set("parkingSpotCount", v)} />
               </div>
               <RevealField visible={!!form.parkingSpotCount}>
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("charger", "ecpStatus")}</Label>
+                <IconButtonGroup options={opts("charger", "ecpStatus", ["get-advice"])} value={form.ecpStatus} onChange={(v) => set("ecpStatus", v)} />
+                {ft("charger", "ecpStatus") && (
+                  <p className="text-xs text-muted-foreground mt-2">{d(`${STEP_PREFIX}.charger.fields.ecpStatus.note`)}</p>
+                )}
+              </RevealField>
+              <RevealField visible={!!form.ecpStatus}>
                 <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("charger", "ecpProvided")}</Label>
                 <IconButtonGroup options={opts("charger", "ecpProvided", ["include", "exclude"])} value={form.ecpProvided} onChange={(v) => set("ecpProvided", v)} />
               </RevealField>
@@ -411,6 +426,19 @@ export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
                 <CheckCircle className="h-5 w-5 text-primary" />
                 {d(`${STEP_PREFIX}.finalize.title`)}
               </h2>
+              {/* Approval field — shown for tenants and co-owners */}
+              {(form.housingStatus === "tenant" || form.housingStatus === "co-owner") && (
+                <div>
+                  <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
+                    {d(`${STEP_PREFIX}.finalize.fields.approval.${form.housingStatus === "tenant" ? "tenant" : "co-owner"}.label`)}
+                  </Label>
+                  <IconButtonGroup
+                    options={opts("finalize", `approval.${form.housingStatus === "tenant" ? "tenant" : "co-owner"}`, ["yes", "in-progress", "no"])}
+                    value={form.approval}
+                    onChange={(v) => set("approval", v)}
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>{d(`${STEP_PREFIX}.finalize.fields.comment.label`)}</Label>
                 <Textarea rows={4} value={form.comment} onChange={(e) => set("comment", e.target.value)} placeholder={d(`${STEP_PREFIX}.finalize.fields.comment.placeholder`)} />
