@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { resolveSub1Route } from "@/lib/route-resolver";
-import { fetchVehicle, fetchVehicleBrands, fetchVehicles } from "@/lib/directus-queries";
+import { fetchVehicle, fetchVehicleBrands, fetchVehicles, fetchLayout, fetchPage } from "@/lib/directus-queries";
+import { extractLayoutDictionary, extractPageDictionary, t } from "@/lib/i18n/dictionaries";
 import { VehicleDetailView, VehicleBrandsListView } from "@/lib/vehicles/shared";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -61,7 +62,7 @@ export async function generateMetadata({ params }: Sub1PageProps): Promise<Metad
 
   if (route.type === "quote-success") {
     return {
-      title: lang === "de" ? "Bestätigung | easyRecharge" : "Confirmation | easyRecharge",
+      title: "easyRecharge",  // noindex page — no SEO title needed
       robots: { index: false, follow: false },
     };
   }
@@ -79,9 +80,23 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
   const locale = slugToDirectusLocale(lang);
   const brandsSegment = getRouteSlug(lang, "brands");
 
-  // Vehicle detail: /{lang}/{vehiclesSlug}/{vehicleSlug}
+  // Build merged dictionary: layout shared + vehicles page content
+  const buildDictionary = async () => {
+    const [layoutData, vehiclesPage] = await Promise.all([
+      fetchLayout(locale),
+      fetchPage("vehicles", locale),
+    ]);
+    const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
+    const pageDict = vehiclesPage ? extractPageDictionary("vehicles", vehiclesPage, locale) : {};
+    return { ...layoutDict, ...pageDict };
+  };
+
+  // Vehicle detail
   if (route.type === "vehicle-detail") {
-    const vehicle = await fetchVehicle(route.slug, locale);
+    const [vehicle, dictionary] = await Promise.all([
+      fetchVehicle(route.slug, locale),
+      buildDictionary(),
+    ]);
     if (!vehicle) notFound();
 
     const brandName = vehicle.brand?.name || "";
@@ -91,9 +106,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
     const jsonLd = wrapInGraph(
       buildVehicleProduct({
-        name: vehicleName,
-        brand: brandName,
-        description: vehicleName,
+        name: vehicleName, brand: brandName, description: vehicleName,
         imageUrl: imageUrl || `${SITE_URL}/og-default.webp`,
         url: `${SITE_URL}/${lang}/${slug}/${sub1}`,
       }),
@@ -101,52 +114,44 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
     return (
       <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <VehicleDetailView
-          vehicle={vehicle}
-          lang={lang}
-          vehiclesSegment={slug}
-          brandsSegment={brandsSegment}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <VehicleDetailView vehicle={vehicle} lang={lang} vehiclesSegment={slug} brandsSegment={brandsSegment} dictionary={dictionary} />
       </>
     );
   }
 
-  // Vehicle brands listing: /{lang}/{vehiclesSlug}/{brandsSegment}
+  // Vehicle brands listing
   if (route.type === "vehicle-brands") {
-    const brands = await fetchVehicleBrands(locale);
+    const [brands, dictionary] = await Promise.all([
+      fetchVehicleBrands(locale),
+      buildDictionary(),
+    ]);
     return (
-      <VehicleBrandsListView
-        brands={brands}
-        lang={lang}
-        vehiclesSegment={slug}
-        brandsSegment={brandsSegment}
-      />
+      <VehicleBrandsListView brands={brands} lang={lang} vehiclesSegment={slug} brandsSegment={brandsSegment} dictionary={dictionary} />
     );
   }
 
-  // Quote success: /{lang}/{quoteSlug}/confirmation
+  // Quote success
   if (route.type === "quote-success") {
+    const quotePage = await fetchPage("quote-success", locale);
+    const dictionary = quotePage ? extractPageDictionary("quote-success", quotePage, locale) : {};
+    const d = (key: string) => t(dictionary, key);
+
     return (
       <div className="flex-1 flex items-center justify-center py-24">
         <div className="text-center space-y-6 max-w-lg px-4">
           <CheckCircle className="h-16 w-16 text-primary mx-auto" />
           <h1 className="font-heading text-3xl font-bold">
-            {lang === "de" ? "Vielen Dank für Ihre Anfrage!" : "Merci pour votre demande !"}
+            {d("pages.quote-success.blocks.hero.title")}
           </h1>
           <p className="text-muted-foreground text-lg">
-            {lang === "de"
-              ? "Ihre Offerteanfrage wurde erfolgreich registriert. Ein zertifizierter Installateur wird sich in Kürze bei Ihnen melden."
-              : "Votre demande de devis a bien été enregistrée. Un installateur certifié vous contactera dans les plus brefs délais."}
+            {d("pages.quote-success.blocks.hero.subtitle")}
           </p>
           <Link
             href={`/${lang}`}
             className="inline-flex items-center justify-center rounded-lg px-8 h-9 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/80"
           >
-            {lang === "de" ? "Zurück zur Startseite" : "Retour à l'accueil"}
+            {d("pages.quote-success.blocks.hero.cta.label")}
           </Link>
         </div>
       </div>

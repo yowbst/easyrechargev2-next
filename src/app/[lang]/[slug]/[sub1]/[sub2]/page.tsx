@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
+import { isValidLang, slugToDirectusLocale, getDateLocale } from "@/lib/i18n/config";
 import { getRouteSlug } from "@/lib/i18n/config";
+import { extractLayoutDictionary, extractPageDictionary, t } from "@/lib/i18n/dictionaries";
 import { resolveSub2Route } from "@/lib/route-resolver";
 import {
   fetchBlogPost,
   fetchBlogPosts,
   fetchVehicles,
   fetchPageRegistry,
+  fetchLayout,
+  fetchPage,
 } from "@/lib/directus-queries";
 import { VehicleBrandView } from "@/lib/vehicles/shared";
 import { DIRECTUS_URL } from "@/lib/directus";
@@ -26,7 +29,6 @@ import {
   getSiteUrl,
   decodeHtmlEntities,
 } from "@/lib/seo/resolver";
-import { fetchPage } from "@/lib/directus-queries";
 import {
   wrapInGraph,
   buildBlogPosting,
@@ -148,8 +150,13 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
 
   // Blog post
   if (route.type === "blog-post") {
-    const post = await fetchBlogPost(route.postSlug, locale);
+    const [post, layoutData] = await Promise.all([
+      fetchBlogPost(route.postSlug, locale),
+      fetchLayout(locale),
+    ]);
     if (!post) notFound();
+    const dictionary = layoutData ? extractLayoutDictionary(layoutData) : {};
+    const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
 
     const pt = post.translations?.[0];
     const ct = post.category?.translations?.[0];
@@ -187,10 +194,10 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
         dateModified: post.date_updated,
         categoryName,
         url: `${SITE_URL}${currentPath}`,
-        langCode: lang === "de" ? "de-CH" : "fr-CH",
+        langCode: getDateLocale(lang),
       }),
       buildBreadcrumbList([
-        { name: lang === "de" ? "Startseite" : "Accueil", url: `${SITE_URL}/${lang}` },
+        { name: d("common.home", { defaultValue: "Home" }), url: `${SITE_URL}/${lang}` },
         { name: "Blog", url: `${SITE_URL}/${lang}/${slug}` },
         { name: categoryName, url: `${SITE_URL}/${lang}/${slug}/${sub1}` },
         { name: articleTitle, url: `${SITE_URL}${currentPath}` },
@@ -208,7 +215,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
             href={`/${lang}/${slug}`}
             className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
           >
-            ← {lang === "de" ? "Zurück zum Blog" : "Retour au blog"}
+            ← {d("pages.vehicles.vehiclesGrid.pagination.previous")}
           </Link>
 
           <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
@@ -216,12 +223,12 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
               {categoryName}
             </span>
             {readingTime && (
-              <span>{readingTime} min {lang === "de" ? "Lesezeit" : "de lecture"}</span>
+              <span>{d("shared.blogCard.readingTime.label_one", { count: readingTime })}</span>
             )}
             {post.date_created && (
               <time dateTime={post.date_created}>
                 {new Date(post.date_created).toLocaleDateString(
-                  lang === "de" ? "de-CH" : "fr-CH",
+                  getDateLocale(lang),
                 )}
               </time>
             )}
@@ -268,8 +275,15 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
 
   // Vehicle brand detail: /{lang}/{vehiclesSlug}/{brandsSegment}/{brandSlug}
   if (route.type === "vehicle-brand-detail") {
-    const vehicles = await fetchVehicles(locale);
+    const [vehicles, layoutData, vehiclesPage] = await Promise.all([
+      fetchVehicles(locale),
+      fetchLayout(locale),
+      fetchPage("vehicles", locale),
+    ]);
     const brandsSegment = getRouteSlug(lang, "brands");
+    const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
+    const pageDict = vehiclesPage ? extractPageDictionary("vehicles", vehiclesPage, locale) : {};
+    const vehicleDictionary = { ...layoutDict, ...pageDict };
 
     return (
       <VehicleBrandView
@@ -278,6 +292,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
         lang={lang}
         vehiclesSegment={slug}
         brandsSegment={brandsSegment}
+        dictionary={vehicleDictionary}
       />
     );
   }

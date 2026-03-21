@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat, Open_Sans, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
-import { CookieBanner } from "@/components/CookieBanner";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -41,7 +40,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
           <Providers>
             {children}
-            <CookieBanner />
           </Providers>
         </body>
     </html>

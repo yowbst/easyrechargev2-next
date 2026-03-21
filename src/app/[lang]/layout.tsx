@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { CookieBanner } from "@/components/CookieBanner";
 import { fetchLayout, fetchPageRegistry } from "@/lib/directus-queries";
 import { extractLayoutDictionary } from "@/lib/i18n/dictionaries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
@@ -42,6 +43,12 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
         layoutData={layoutData || {}}
         dictionary={dictionary}
         pageRegistry={pageRegistry}
+      />
+      <CookieBanner
+        title={dictionary["shared.cookie_banner.title"]}
+        description={dictionary["shared.cookie_banner.description"]}
+        acceptLabel={dictionary["shared.cookie_banner.accept"]}
+        rejectLabel={dictionary["shared.cookie_banner.reject"]}
       />
     </>
   );

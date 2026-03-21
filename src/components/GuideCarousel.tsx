@@ -28,6 +28,7 @@ interface GuideCarouselProps {
   posts: PostData[];
   lang: string;
   blogSlug: string;
+  readingTimeLabel?: string;
 }
 
 export function GuideCarousel({
@@ -38,6 +39,7 @@ export function GuideCarousel({
   posts,
   lang,
   blogSlug,
+  readingTimeLabel,
 }: GuideCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     dragFree: true,
@@ -102,8 +104,9 @@ export function GuideCarousel({
                         <span>{post.category}</span>
                         <span>·</span>
                         <span>
-                          {post.readingTime} min{" "}
-                          {lang === "de" ? "Lesezeit" : "de lecture"}
+                          {readingTimeLabel
+                            ? readingTimeLabel.replace("{count}", String(post.readingTime))
+                            : `${post.readingTime} min`}
                         </span>
                       </div>
                       <h3 className="font-semibold line-clamp-2">

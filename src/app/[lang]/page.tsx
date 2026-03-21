@@ -234,8 +234,7 @@ export default async function Home({ params }: HomeProps) {
   const quoteSlug = quoteEntry?.slugs[lang];
   const ctaHref = quoteSlug ? `/${lang}/${quoteSlug}` : `/${lang}`;
   const ctaLabel = getQuoteTranslation?.ctas?.[0]?.label ||
-    t(dictionary, "pages.home.blocks.get-quote.cta.label") ||
-    (lang === "de" ? "Offerte anfragen" : "Demander un devis");
+    t(dictionary, "pages.home.blocks.get-quote.cta.label");
 
   // JSON-LD
   const SITE_URL = getSiteUrl();
@@ -243,7 +242,7 @@ export default async function Home({ params }: HomeProps) {
     buildOrganization({ logoUrl: `${SITE_URL}/og-default.webp` }),
     buildWebSite(),
     buildBreadcrumbList([
-      { name: lang === "de" ? "Startseite" : "Accueil", url: `${SITE_URL}/${lang}` },
+      { name: t(dictionary, "common.home"), url: `${SITE_URL}/${lang}` },
     ]),
   ];
   if (faqItems.length) {
@@ -299,11 +298,12 @@ export default async function Home({ params }: HomeProps) {
         <GuideCarousel
           title={postGroupTranslation?.headline || t(dictionary, "pages.home.blocks.postgroup.title")}
           subtitle={postGroupTranslation?.subheadline || t(dictionary, "pages.home.blocks.postgroup.subtitle")}
-          ctaLabel={postGroupTranslation?.ctas?.[0]?.label || (lang === "de" ? "Alle Artikel" : "Tous les articles")}
+          ctaLabel={postGroupTranslation?.ctas?.[0]?.label || t(dictionary, "pages.home.blocks.postgroup.cta.label")}
           ctaHref={`/${lang}/${blogSlug}`}
           posts={guideCarouselPosts}
           lang={lang}
           blogSlug={blogSlug}
+          readingTimeLabel={t(dictionary, "shared.blogCard.readingTime.label_one")}
         />
       )}
 

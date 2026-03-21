@@ -15,31 +15,11 @@ import { PlaceAutocomplete } from "./PlaceAutocomplete";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
 import { getCantonCode } from "@shared/swiss-cantons";
 import { APIProvider } from "@vis.gl/react-google-maps";
+import { t } from "@/lib/i18n/dictionaries";
 import {
-  ChevronRight,
-  ChevronLeft,
-  Home,
-  Building2,
-  Warehouse,
-  Car,
-  Sun,
-  BatteryCharging,
-  Zap,
-  HelpCircle,
-  Key,
-  Package,
-  Clock,
-  User,
-  Users,
-  MapPin,
-  Plug,
-  Cable,
-  Mail,
-  Phone as PhoneIcon,
-  Gauge,
-  CheckCircle,
-  Loader2,
-  Navigation,
+  ChevronRight, ChevronLeft, Home, Building2, Warehouse, Car, Sun,
+  BatteryCharging, Zap, HelpCircle, Key, Package, Clock, User, Users,
+  MapPin, Plug, Cable, Mail, Phone as PhoneIcon, Gauge, CheckCircle, Loader2, Navigation,
 } from "lucide-react";
 import type { CountryCode } from "libphonenumber-js";
 
@@ -95,10 +75,10 @@ function RevealField({ visible, children }: { visible: boolean; children: React.
   useEffect(() => {
     if (visible && !hasBeenVisible.current) {
       hasBeenVisible.current = true;
-      const t = setTimeout(() => {
+      const timer = setTimeout(() => {
         ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }, 150);
-      return () => clearTimeout(t);
+      return () => clearTimeout(timer);
     }
     if (!visible) hasBeenVisible.current = false;
   }, [visible]);
@@ -117,54 +97,74 @@ function RevealField({ visible, children }: { visible: boolean; children: React.
   );
 }
 
+// ── Shorthand helpers ────────────────────────────────────
+
+const STEP_PREFIX = "pages.quote.steps";
+const ICON_MAP: Record<string, typeof Home> = {
+  owner: Key, "co-owner": Users, tenant: User,
+  house: Home, apartment: Building2, other: Warehouse,
+  exists: Sun, "in-progress": Sun, none: HelpCircle,
+  yes: BatteryCharging, no: HelpCircle, unknown: HelpCircle,
+  old: Zap, recent: Zap, na: HelpCircle,
+  "garage-adjacent": Home, "garage-standalone": Warehouse,
+  "exterior-adjacent": MapPin, "exterior-standalone": MapPin,
+  "covered-adjacent": Home, "covered-standalone": Warehouse,
+  underground: Building2,
+  "1": Plug, "2": Plug, "3plus": Plug,
+  "get-advice": HelpCircle,
+  include: Package, exclude: Zap,
+  asap: Clock, "2-3mo": Clock, "3-6mo": Clock, "6+mo": Clock,
+  own: Car, ordered: Package, "want-to-order": Navigation,
+};
+
+function optionIcon(value: string) {
+  return ICON_MAP[value] || HelpCircle;
+}
+
 export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
   const router = useRouter();
-  const l = lang as "fr" | "de";
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
 
-  const tq = (key: string) => {
-    const v = dictionary[`pages.quote.${key}`];
-    return v && !v.startsWith("[") ? v : undefined;
+  /** Resolve a key from the flattened page dictionary. */
+  const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
+
+  /** Step field label */
+  const fl = (stepId: string, field: string) => d(`${STEP_PREFIX}.${stepId}.fields.${field}.label`);
+
+  /** Step field option */
+  const fo = (stepId: string, field: string, option: string) =>
+    d(`${STEP_PREFIX}.${stepId}.fields.${field}.options.${option}`);
+
+  /** Step field tooltip */
+  const ft = (stepId: string, field: string) => {
+    const v = d(`${STEP_PREFIX}.${stepId}.fields.${field}.tooltip`);
+    return v.startsWith("[") ? undefined : v;
   };
 
+  /** Step field checkbox / na label */
+  const fc = (stepId: string, field: string) => {
+    const v = d(`${STEP_PREFIX}.${stepId}.fields.${field}.checkboxLabel`);
+    return v.startsWith("[") ? d(`${STEP_PREFIX}.${stepId}.fields.${field}.na`) : v;
+  };
+
+  /** Build IconButtonOption[] from a set of option keys */
+  const opts = (stepId: string, field: string, keys: string[]): IconButtonOption[] =>
+    keys.map((k) => ({ value: k, label: fo(stepId, field, k), icon: optionIcon(k) }));
+
   const [form, setForm] = useState<FormData>({
-    housingStatus: "",
-    housingType: "",
-    solarEquipment: "",
-    homeBattery: "",
-    neighborhoodEquipment: "",
-    electricalBoardType: "",
-    parkingSpotLocation: "",
-    electricalLineDistance: null,
-    electricalLineHoleCount: null,
-    parkingSpotCount: "",
-    ecpStatus: "get-advice",
-    ecpBrand: "",
-    ecpModel: "",
-    ecpProvided: "",
-    deadline: "",
-    vehicleStatus: "",
-    vehicleBrand: "",
-    vehicleModel: "",
-    vehicleTripDistance: null,
-    vehicleChargingHours: null,
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    phoneCountry: "CH",
-    addressMode: "google",
-    address: "",
-    streetName: "",
-    streetNb: "",
-    postalCode: "",
-    locality: "",
-    canton: "",
-    country: "CH",
-    comment: "",
-    acceptTerms: false,
+    housingStatus: "", housingType: "", solarEquipment: "", homeBattery: "",
+    neighborhoodEquipment: "", electricalBoardType: "",
+    parkingSpotLocation: "", electricalLineDistance: null, electricalLineHoleCount: null,
+    parkingSpotCount: "", ecpStatus: "get-advice", ecpBrand: "", ecpModel: "",
+    ecpProvided: "", deadline: "",
+    vehicleStatus: "", vehicleBrand: "", vehicleModel: "",
+    vehicleTripDistance: null, vehicleChargingHours: null,
+    firstName: "", lastName: "", email: "", phone: "", phoneCountry: "CH",
+    addressMode: "google", address: "", streetName: "", streetNb: "",
+    postalCode: "", locality: "", canton: "", country: "CH",
+    comment: "", acceptTerms: false,
   });
 
   const set = (field: keyof FormData, value: string | number | boolean | "na" | null) =>
@@ -180,9 +180,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
       if (c.types.includes("route")) streetName = c.long_name;
       if (c.types.includes("postal_code")) postal = c.long_name;
       if (c.types.includes("locality")) locality = c.long_name;
-      if (c.types.includes("administrative_area_level_1")) {
-        canton = getCantonCode(c.long_name) || c.short_name;
-      }
+      if (c.types.includes("administrative_area_level_1")) canton = getCantonCode(c.long_name) || c.short_name;
       if (c.types.includes("country")) country = c.short_name;
     }
     setForm((prev) => ({ ...prev, streetName, streetNb, postalCode: postal, locality, canton, country }));
@@ -194,64 +192,46 @@ export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
   // Validation
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const isPhoneValid = form.phone ? validatePhone(form.phone, form.phoneCountry as CountryCode) : false;
-
   const isStep1Valid = form.housingType && form.solarEquipment && form.electricalBoardType;
   const isStep2Valid = form.parkingSpotLocation && form.electricalLineDistance !== null && form.electricalLineHoleCount !== null;
   const isStep3Valid = form.parkingSpotCount && form.ecpProvided && form.deadline;
   const isStep4Valid = form.vehicleStatus && form.vehicleTripDistance !== null && form.vehicleChargingHours !== null;
-  const isStep5Valid =
-    form.firstName.trim() && form.lastName.trim() && isEmailValid && isPhoneValid &&
-    form.postalCode && form.locality;
+  const isStep5Valid = form.firstName.trim() && form.lastName.trim() && isEmailValid && isPhoneValid && form.postalCode && form.locality;
   const isStep6Valid = form.acceptTerms;
-
   const canProceed = [false, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid, isStep5Valid, isStep6Valid][step];
 
-  const goToStep = (nextStep: number) => {
-    setStep(nextStep);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const goToStep = (n: number) => { setStep(n); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   const handleSubmit = async () => {
     if (!form.acceptTerms) return;
     setIsSubmitting(true);
     setSubmitError(false);
-
     try {
-      const res = await fetch("/api/quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch("/api/quote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
       const result = await res.json();
       if (res.ok && result.success) {
-        const confirmSegment = l === "de" ? "bestaetigung" : "confirmation";
-        const successPath = quoteSlug
-          ? `/${lang}/${quoteSlug}/${confirmSegment}`
-          : `/${lang}`;
-        router.push(successPath);
+        const confirmSegment = d("pages.quote.steps.finalize.fields.confirmation_segment");
+        const seg = confirmSegment.startsWith("[") ? "confirmation" : confirmSegment;
+        router.push(quoteSlug ? `/${lang}/${quoteSlug}/${seg}` : `/${lang}`);
       } else {
         setSubmitError(true);
       }
-    } catch {
-      setSubmitError(true);
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch { setSubmitError(true); }
+    finally { setIsSubmitting(false); }
   };
 
-  const title = tq("blocks.hero.title") || (l === "de" ? "Offerteanfrage" : "Demande de devis");
-  const subtitle = tq("blocks.hero.subtitle") || (l === "de"
-    ? "Erhalten Sie in wenigen Minuten ein Angebot für Ihre Ladestation."
-    : "Recevez en quelques minutes un devis pour votre borne de recharge.");
-
-  // Welcome step (step 0)
+  // Welcome step
   if (step === 0) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-2xl text-center space-y-8">
-        <h1 className="font-heading text-4xl md:text-5xl font-bold">{title}</h1>
-        <p className="text-lg text-muted-foreground max-w-lg mx-auto">{subtitle}</p>
+        <h1 className="font-heading text-4xl md:text-5xl font-bold">
+          {d("pages.quote.welcome.title")}
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-lg mx-auto">
+          {d("pages.quote.welcome.subtitle")}
+        </p>
         <Button onClick={() => goToStep(1)} size="lg" className="px-8">
-          {l === "de" ? "Jetzt starten" : "Commencer"}
+          {d("pages.quote.welcome.cta")}
           <ChevronRight className="h-4 w-4 ml-2" />
         </Button>
       </div>
@@ -261,420 +241,205 @@ export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
   return (
     <APIProvider apiKey={googleMapsApiKey} libraries={["places"]}>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <ProgressBar
-          currentStep={step}
-          totalSteps={6}
-          onStepClick={(s) => s < step && goToStep(s)}
-          className="mb-8"
-        />
+        <ProgressBar currentStep={step} totalSteps={6} onStepClick={(s) => s < step && goToStep(s)} className="mb-8" />
 
         <Card className="p-6 md:p-8">
-          {/* Step 1: Housing */}
+          {/* ── Step 1: Housing ── */}
           {step === 1 && (
             <div className="space-y-6">
               <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
                 <Home className="h-5 w-5 text-primary" />
-                {l === "de" ? "Ihr Zuhause" : "Votre logement"}
+                {d(`${STEP_PREFIX}.housing.title`)}
               </h2>
-
               <div>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Ihr Status" : "Votre statut"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "owner", label: l === "de" ? "Eigentümer" : "Propriétaire", icon: Key },
-                    { value: "co-owner", label: l === "de" ? "Miteigentümer" : "Copropriétaire", icon: Users },
-                    { value: "tenant", label: l === "de" ? "Mieter" : "Locataire", icon: User },
-                  ]}
-                  value={form.housingStatus}
-                  onChange={(v) => set("housingStatus", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("housing", "housingStatus")}</Label>
+                <IconButtonGroup options={opts("housing", "housingStatus", ["owner", "co-owner", "tenant"])} value={form.housingStatus} onChange={(v) => set("housingStatus", v)} />
               </div>
-
               <RevealField visible={!!form.housingStatus}>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Gebäudetyp" : "Type de logement"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "house", label: l === "de" ? "Haus" : "Maison", icon: Home },
-                    { value: "apartment", label: l === "de" ? "Wohnung" : "Appartement", icon: Building2 },
-                    { value: "other", label: l === "de" ? "Andere" : "Autre", icon: Warehouse },
-                  ]}
-                  value={form.housingType}
-                  onChange={(v) => set("housingType", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("housing", "housingType")}</Label>
+                <IconButtonGroup options={opts("housing", "housingType", ["house", "apartment", "other"])} value={form.housingType} onChange={(v) => set("housingType", v)} />
               </RevealField>
-
               <RevealField visible={!!form.housingType}>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Solaranlage" : "Panneaux solaires"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "yes", label: l === "de" ? "Ja" : "Oui", icon: Sun },
-                    { value: "no", label: l === "de" ? "Nein" : "Non", icon: HelpCircle },
-                    { value: "unknown", label: l === "de" ? "Weiss nicht" : "Je ne sais pas", icon: HelpCircle },
-                  ]}
-                  value={form.solarEquipment}
-                  onChange={(v) => set("solarEquipment", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("housing", "solarEquipment")}</Label>
+                <IconButtonGroup options={opts("housing", "solarEquipment", ["exists", "in-progress", "none"])} value={form.solarEquipment} onChange={(v) => set("solarEquipment", v)} />
               </RevealField>
-
-              <RevealField visible={form.solarEquipment === "yes"}>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Hausbatterie" : "Batterie domestique"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "yes", label: l === "de" ? "Ja" : "Oui", icon: BatteryCharging },
-                    { value: "no", label: l === "de" ? "Nein" : "Non", icon: HelpCircle },
-                    { value: "unknown", label: l === "de" ? "Weiss nicht" : "Je ne sais pas", icon: HelpCircle },
-                  ]}
-                  value={form.homeBattery}
-                  onChange={(v) => set("homeBattery", v)}
-                />
+              <RevealField visible={form.solarEquipment === "exists" || form.solarEquipment === "in-progress"}>
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("housing", "homeBattery")}</Label>
+                <IconButtonGroup options={opts("housing", "homeBattery", ["exists", "in-progress", "none"])} value={form.homeBattery} onChange={(v) => set("homeBattery", v)} />
               </RevealField>
-
               <RevealField visible={!!form.solarEquipment}>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Elektrische Anlage" : "Tableau électrique"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "easy", label: l === "de" ? "Einfach" : "Facile", icon: Zap },
-                    { value: "medium", label: l === "de" ? "Mittel" : "Moyen", icon: Zap },
-                    { value: "difficult", label: l === "de" ? "Schwierig" : "Difficile", icon: Zap },
-                    { value: "unknown", label: l === "de" ? "Weiss nicht" : "Je ne sais pas", icon: HelpCircle },
-                  ]}
-                  value={form.electricalBoardType}
-                  onChange={(v) => set("electricalBoardType", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("housing", "electricalBoardType")}</Label>
+                <IconButtonGroup options={opts("housing", "electricalBoardType", ["old", "recent", "na"])} value={form.electricalBoardType} onChange={(v) => set("electricalBoardType", v)} />
               </RevealField>
             </div>
           )}
 
-          {/* Step 2: Parking */}
+          {/* ── Step 2: Parking ── */}
           {step === 2 && (
             <div className="space-y-6">
               <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
                 <Car className="h-5 w-5 text-primary" />
-                {l === "de" ? "Ihr Parkplatz" : "Votre place de parc"}
+                {d(`${STEP_PREFIX}.parking.title`)}
               </h2>
-
               <div>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Standort" : "Emplacement"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "garage-adjacent", label: l === "de" ? "Garage (anliegend)" : "Garage (attenant)", icon: Home },
-                    { value: "garage-standalone", label: l === "de" ? "Garage (freistehend)" : "Garage (séparé)", icon: Warehouse },
-                    { value: "exterior-adjacent", label: l === "de" ? "Draussen (anliegend)" : "Extérieur (attenant)", icon: MapPin },
-                    { value: "exterior-standalone", label: l === "de" ? "Draussen (freistehend)" : "Extérieur (séparé)", icon: MapPin },
-                    { value: "covered-adjacent", label: l === "de" ? "Carport (anliegend)" : "Couvert (attenant)", icon: Home },
-                    { value: "underground", label: l === "de" ? "Tiefgarage" : "Souterrain", icon: Building2 },
-                  ]}
-                  value={form.parkingSpotLocation}
-                  onChange={(v) => set("parkingSpotLocation", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("parking", "parkingSpotLocation")}</Label>
+                <IconButtonGroup options={opts("parking", "parkingSpotLocation", ["garage-adjacent", "garage-standalone", "exterior-adjacent", "exterior-standalone", "covered-adjacent", "underground"])} value={form.parkingSpotLocation} onChange={(v) => set("parkingSpotLocation", v)} />
               </div>
-
               <RevealField visible={!!form.parkingSpotLocation}>
-                <SliderWithCheckbox
-                  value={form.electricalLineDistance}
-                  onChange={(v) => set("electricalLineDistance", v)}
-                  min={5}
-                  max={50}
-                  step={5}
-                  label={l === "de" ? "Entfernung zum Zähler" : "Distance au compteur"}
-                  unit="m"
-                  checkboxLabel={l === "de" ? "Weiss ich nicht" : "Je ne sais pas"}
-                  icon={Cable}
-                />
+                <SliderWithCheckbox value={form.electricalLineDistance} onChange={(v) => set("electricalLineDistance", v)} min={5} max={50} step={5} label={fl("parking", "electricalLineDistance")} unit={d(`${STEP_PREFIX}.parking.fields.electricalLineDistance.unit`)} checkboxLabel={fc("parking", "electricalLineDistance")} icon={Cable} />
               </RevealField>
-
               <RevealField visible={form.electricalLineDistance !== null}>
-                <SliderWithCheckbox
-                  value={form.electricalLineHoleCount}
-                  onChange={(v) => set("electricalLineHoleCount", v)}
-                  min={0}
-                  max={5}
-                  label={l === "de" ? "Wanddurchbrüche" : "Passages de murs"}
-                  checkboxLabel={l === "de" ? "Weiss ich nicht" : "Je ne sais pas"}
-                  icon={Plug}
-                />
+                <SliderWithCheckbox value={form.electricalLineHoleCount} onChange={(v) => set("electricalLineHoleCount", v)} min={0} max={5} label={fl("parking", "electricalLineHoleCount")} unit={d(`${STEP_PREFIX}.parking.fields.electricalLineHoleCount.unit`)} checkboxLabel={fc("parking", "electricalLineHoleCount")} icon={Plug} />
               </RevealField>
             </div>
           )}
 
-          {/* Step 3: Charger */}
+          {/* ── Step 3: Charger ── */}
           {step === 3 && (
             <div className="space-y-6">
               <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
                 <Zap className="h-5 w-5 text-primary" />
-                {l === "de" ? "Ihre Ladestation" : "Votre borne de recharge"}
+                {d(`${STEP_PREFIX}.charger.title`)}
               </h2>
-
               <div>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Anzahl Ladepunkte" : "Nombre de points de charge"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "1", label: "1", icon: Plug },
-                    { value: "2", label: "2", icon: Plug },
-                    { value: "3+", label: "3+", icon: Plug },
-                  ]}
-                  value={form.parkingSpotCount}
-                  onChange={(v) => set("parkingSpotCount", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("charger", "parkingSpotCount")}</Label>
+                <IconButtonGroup options={opts("charger", "parkingSpotCount", ["1", "2", "3plus"])} value={form.parkingSpotCount} onChange={(v) => set("parkingSpotCount", v)} />
               </div>
-
               <RevealField visible={!!form.parkingSpotCount}>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Borne im Angebot?" : "Borne incluse dans l'offre ?"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "include", label: l === "de" ? "Ja, einschliessen" : "Oui, inclure", icon: Package },
-                    { value: "exclude", label: l === "de" ? "Nein, nur Installation" : "Non, installation seule", icon: Zap },
-                  ]}
-                  value={form.ecpProvided}
-                  onChange={(v) => set("ecpProvided", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("charger", "ecpProvided")}</Label>
+                <IconButtonGroup options={opts("charger", "ecpProvided", ["include", "exclude"])} value={form.ecpProvided} onChange={(v) => set("ecpProvided", v)} />
               </RevealField>
-
               <RevealField visible={!!form.ecpProvided}>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Gewünschter Zeitraum" : "Délai souhaité"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "asap", label: l === "de" ? "ASAP" : "Dès que possible", icon: Clock },
-                    { value: "1-2mo", label: "1-2 mois", icon: Clock },
-                    { value: "3-6mo", label: "3-6 mois", icon: Clock },
-                    { value: "6+mo", label: "6+ mois", icon: Clock },
-                  ]}
-                  value={form.deadline}
-                  onChange={(v) => set("deadline", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("charger", "deadline")}</Label>
+                <IconButtonGroup options={opts("charger", "deadline", ["asap", "2-3mo", "3-6mo", "6+mo"])} value={form.deadline} onChange={(v) => set("deadline", v)} />
               </RevealField>
             </div>
           )}
 
-          {/* Step 4: Vehicle */}
+          {/* ── Step 4: Vehicle ── */}
           {step === 4 && (
             <div className="space-y-6">
               <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
                 <Car className="h-5 w-5 text-primary" />
-                {l === "de" ? "Ihr Elektrofahrzeug" : "Votre véhicule électrique"}
+                {d(`${STEP_PREFIX}.vehicle.title`)}
               </h2>
-
               <div>
-                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">
-                  {l === "de" ? "Status" : "Statut"}
-                </Label>
-                <IconButtonGroup
-                  options={[
-                    { value: "own", label: l === "de" ? "Besitze eines" : "J'en possède un", icon: Car },
-                    { value: "ordered", label: l === "de" ? "Bestellt" : "Commandé", icon: Package },
-                    { value: "want-to-order", label: l === "de" ? "Möchte bestellen" : "Je souhaite commander", icon: Navigation },
-                    { value: "unknown", label: l === "de" ? "Weiss nicht" : "Je ne sais pas", icon: HelpCircle },
-                  ]}
-                  value={form.vehicleStatus}
-                  onChange={(v) => set("vehicleStatus", v)}
-                />
+                <Label className="mb-2 block text-xs uppercase tracking-wide text-muted-foreground">{fl("vehicle", "vehicleStatus")}</Label>
+                <IconButtonGroup options={opts("vehicle", "vehicleStatus", ["own", "ordered", "want-to-order", "unknown"])} value={form.vehicleStatus} onChange={(v) => set("vehicleStatus", v)} />
               </div>
-
               <RevealField visible={form.vehicleStatus === "own" || form.vehicleStatus === "ordered"}>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>{l === "de" ? "Marke" : "Marque"}</Label>
+                    <Label>{fl("vehicle", "vehicleBrand")}</Label>
                     <Input value={form.vehicleBrand} onChange={(e) => set("vehicleBrand", e.target.value)} placeholder="Tesla, BMW, ..." />
                   </div>
                   <div className="space-y-2">
-                    <Label>{l === "de" ? "Modell" : "Modèle"}</Label>
+                    <Label>{fl("vehicle", "vehicleBrand")}</Label>
                     <Input value={form.vehicleModel} onChange={(e) => set("vehicleModel", e.target.value)} placeholder="Model 3, iX3, ..." />
                   </div>
                 </div>
               </RevealField>
-
               <RevealField visible={!!form.vehicleStatus}>
-                <SliderWithCheckbox
-                  value={form.vehicleTripDistance}
-                  onChange={(v) => set("vehicleTripDistance", v)}
-                  min={5}
-                  max={180}
-                  step={5}
-                  label={l === "de" ? "Tägliche Strecke" : "Distance quotidienne"}
-                  unit=" km"
-                  checkboxLabel={l === "de" ? "Weiss ich nicht" : "Je ne sais pas"}
-                  icon={Gauge}
-                />
+                <SliderWithCheckbox value={form.vehicleTripDistance} onChange={(v) => set("vehicleTripDistance", v)} min={5} max={180} step={5} label={fl("vehicle", "vehicleTripDistance")} unit={d(`${STEP_PREFIX}.vehicle.fields.vehicleTripDistance.unit`)} checkboxLabel={fc("vehicle", "vehicleTripDistance")} icon={Gauge} />
               </RevealField>
-
               <RevealField visible={form.vehicleTripDistance !== null}>
-                <SliderWithCheckbox
-                  value={form.vehicleChargingHours}
-                  onChange={(v) => set("vehicleChargingHours", v)}
-                  min={5}
-                  max={10}
-                  label={l === "de" ? "Ladezeit (Stunden zu Hause)" : "Heures de charge à domicile"}
-                  unit="h"
-                  checkboxLabel={l === "de" ? "Weiss ich nicht" : "Je ne sais pas"}
-                  icon={Clock}
-                />
+                <SliderWithCheckbox value={form.vehicleChargingHours} onChange={(v) => set("vehicleChargingHours", v)} min={5} max={10} label={fl("vehicle", "vehicleChargingHours")} unit={d(`${STEP_PREFIX}.vehicle.fields.vehicleChargingHours.unit`)} checkboxLabel={fc("vehicle", "vehicleChargingHours")} icon={Clock} />
               </RevealField>
             </div>
           )}
 
-          {/* Step 5: Contact details */}
+          {/* ── Step 5: Contact ── */}
           {step === 5 && (
             <div className="space-y-6">
               <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" />
-                {l === "de" ? "Ihre Kontaktdaten" : "Vos coordonnées"}
+                {d(`${STEP_PREFIX}.contact.title`)}
               </h2>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label><User className="inline h-3.5 w-3.5 mr-1" />{l === "de" ? "Vorname" : "Prénom"} *</Label>
+                  <Label><User className="inline h-3.5 w-3.5 mr-1" />{fl("contact", "firstName")} *</Label>
                   <Input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label><Users className="inline h-3.5 w-3.5 mr-1" />{l === "de" ? "Nachname" : "Nom"} *</Label>
+                  <Label><Users className="inline h-3.5 w-3.5 mr-1" />{fl("contact", "lastName")} *</Label>
                   <Input value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
                 </div>
               </div>
-
               <div className="space-y-2">
-                <Label><Mail className="inline h-3.5 w-3.5 mr-1" />Email *</Label>
+                <Label><Mail className="inline h-3.5 w-3.5 mr-1" />{fl("contact", "email")} *</Label>
                 <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+                {form.email && !isEmailValid && <p className="text-xs text-destructive">{d(`${STEP_PREFIX}.contact.fields.email.error`)}</p>}
               </div>
-
               <div className="space-y-2">
-                <Label><PhoneIcon className="inline h-3.5 w-3.5 mr-1" />{l === "de" ? "Telefon" : "Téléphone"} *</Label>
+                <Label><PhoneIcon className="inline h-3.5 w-3.5 mr-1" />{fl("contact", "phone")} *</Label>
                 <div className="flex gap-2">
-                  <select
-                    value={form.phoneCountry}
-                    onChange={(e) => set("phoneCountry", e.target.value)}
-                    className="h-8 rounded-lg border border-border bg-background px-2 text-sm"
-                  >
-                    {SUPPORTED_COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {countryFlag(c.code)} {c.dialCode}
-                      </option>
-                    ))}
+                  <select value={form.phoneCountry} onChange={(e) => set("phoneCountry", e.target.value)} className="h-8 rounded-lg border border-border bg-background px-2 text-sm">
+                    {SUPPORTED_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{countryFlag(c.code)} {c.dialCode}</option>)}
                   </select>
-                  <Input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => set("phone", e.target.value)}
-                    className="flex-1"
-                  />
+                  <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} className="flex-1" />
                 </div>
-                {form.phone && !isPhoneValid && (
-                  <p className="text-xs text-destructive">{l === "de" ? "Ungültige Telefonnummer" : "Numéro de téléphone invalide"}</p>
-                )}
+                {form.phone && !isPhoneValid && <p className="text-xs text-destructive">{d(`${STEP_PREFIX}.contact.fields.phone.error`)}</p>}
               </div>
-
               <div className="space-y-2">
-                <Label><MapPin className="inline h-3.5 w-3.5 mr-1" />{l === "de" ? "Adresse" : "Adresse"} *</Label>
+                <Label><MapPin className="inline h-3.5 w-3.5 mr-1" />{fl("contact", "address")} *</Label>
                 {form.addressMode === "google" && googleMapsApiKey ? (
                   <>
-                    <PlaceAutocomplete
-                      value={form.address}
-                      onChange={(v) => set("address", v)}
-                      onPlaceSelect={handlePlaceSelect}
-                      placeholder={l === "de" ? "Strasse, PLZ Ort" : "Rue, NPA Localité"}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => set("addressMode", "manual")}
-                      className="text-xs text-muted-foreground hover:text-foreground underline"
-                    >
-                      {l === "de" ? "Adresse manuell eingeben" : "Saisir l'adresse manuellement"}
-                    </button>
+                    <PlaceAutocomplete value={form.address} onChange={(v) => set("address", v)} onPlaceSelect={handlePlaceSelect} placeholder={d(`${STEP_PREFIX}.contact.fields.address.placeholder`)} />
+                    <button type="button" onClick={() => set("addressMode", "manual")} className="text-xs text-muted-foreground hover:text-foreground underline">{d(`${STEP_PREFIX}.contact.fields.address.toggleManual`)}</button>
                   </>
                 ) : (
                   <>
                     <div className="grid grid-cols-3 gap-2">
-                      <Input className="col-span-2" placeholder={l === "de" ? "Strasse" : "Rue"} value={form.streetName} onChange={(e) => set("streetName", e.target.value)} />
-                      <Input placeholder="N°" value={form.streetNb} onChange={(e) => set("streetNb", e.target.value)} />
+                      <Input className="col-span-2" placeholder={d(`${STEP_PREFIX}.contact.fields.address.subfields.streetName`)} value={form.streetName} onChange={(e) => set("streetName", e.target.value)} />
+                      <Input placeholder={d(`${STEP_PREFIX}.contact.fields.address.subfields.streetNb`)} value={form.streetNb} onChange={(e) => set("streetNb", e.target.value)} />
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <Input placeholder={l === "de" ? "PLZ" : "NPA"} value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} />
-                      <Input className="col-span-2" placeholder={l === "de" ? "Ort" : "Localité"} value={form.locality} onChange={(e) => set("locality", e.target.value)} />
+                      <Input placeholder={d(`${STEP_PREFIX}.contact.fields.address.subfields.postalCode`)} value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} />
+                      <Input className="col-span-2" placeholder={d(`${STEP_PREFIX}.contact.fields.address.subfields.locality`)} value={form.locality} onChange={(e) => set("locality", e.target.value)} />
                     </div>
-                    {googleMapsApiKey && (
-                      <button
-                        type="button"
-                        onClick={() => set("addressMode", "google")}
-                        className="text-xs text-muted-foreground hover:text-foreground underline"
-                      >
-                        {l === "de" ? "Google-Suche verwenden" : "Utiliser la recherche Google"}
-                      </button>
-                    )}
+                    {googleMapsApiKey && <button type="button" onClick={() => set("addressMode", "google")} className="text-xs text-muted-foreground hover:text-foreground underline">{d(`${STEP_PREFIX}.contact.fields.address.toggleGoogle`)}</button>}
                   </>
                 )}
               </div>
             </div>
           )}
 
-          {/* Step 6: Confirmation */}
+          {/* ── Step 6: Finalize ── */}
           {step === 6 && (
             <div className="space-y-6">
               <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-primary" />
-                {l === "de" ? "Bestätigung" : "Confirmation"}
+                {d(`${STEP_PREFIX}.finalize.title`)}
               </h2>
-
               <div className="space-y-2">
-                <Label>{l === "de" ? "Kommentar (optional)" : "Commentaire (optionnel)"}</Label>
-                <Textarea rows={4} value={form.comment} onChange={(e) => set("comment", e.target.value)} />
+                <Label>{d(`${STEP_PREFIX}.finalize.fields.comment.label`)}</Label>
+                <Textarea rows={4} value={form.comment} onChange={(e) => set("comment", e.target.value)} placeholder={d(`${STEP_PREFIX}.finalize.fields.comment.placeholder`)} />
               </div>
-
               <div className="flex items-start gap-3">
-                <Checkbox
-                  id="terms"
-                  checked={form.acceptTerms}
-                  onCheckedChange={(v) => set("acceptTerms", v === true)}
-                />
-                <Label htmlFor="terms" className="text-sm leading-relaxed">
-                  {l === "de"
-                    ? "Ich akzeptiere die allgemeinen Geschäftsbedingungen und die Datenschutzrichtlinie."
-                    : "J'accepte les conditions générales et la politique de confidentialité."}
-                </Label>
+                <Checkbox id="terms" checked={form.acceptTerms} onCheckedChange={(v) => set("acceptTerms", v === true)} />
+                <Label htmlFor="terms" className="text-sm leading-relaxed">{d(`${STEP_PREFIX}.finalize.fields.acceptTerms.label`)}</Label>
               </div>
-
-              {submitError && (
-                <p className="text-sm text-destructive">
-                  {l === "de" ? "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut." : "Une erreur est survenue. Veuillez réessayer."}
-                </p>
-              )}
+              {submitError && <p className="text-sm text-destructive">{d("pages.quote.error", { defaultValue: "[pages.quote.error]" })}</p>}
             </div>
           )}
 
-          {/* Navigation */}
+          {/* ── Navigation ── */}
           <div className="flex justify-between mt-8 pt-6 border-t">
             <Button variant="outline" onClick={() => goToStep(step - 1)}>
               <ChevronLeft className="h-4 w-4 mr-1" />
-              {l === "de" ? "Zurück" : "Retour"}
+              {d("pages.quote.navigation.back")}
             </Button>
-
             {step < 6 ? (
               <Button onClick={() => goToStep(step + 1)} disabled={!canProceed}>
-                {l === "de" ? "Weiter" : "Suivant"}
+                {d("pages.quote.navigation.next")}
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
               <Button onClick={handleSubmit} disabled={!isStep6Valid || isSubmitting}>
                 {isSubmitting ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />{l === "de" ? "Senden..." : "Envoi..."}</>
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />{d("pages.quote.navigation.next")}</>
                 ) : (
-                  <><CheckCircle className="h-4 w-4 mr-2" />{l === "de" ? "Offerte anfragen" : "Envoyer ma demande"}</>
+                  <><CheckCircle className="h-4 w-4 mr-2" />{d(`${STEP_PREFIX}.finalize.submit`)}</>
                 )}
               </Button>
             )}

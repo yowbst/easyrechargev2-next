@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchPage, fetchPageRegistry } from "@/lib/directus-queries";
+import { fetchPage, fetchPageRegistry, fetchLayout } from "@/lib/directus-queries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -13,7 +13,7 @@ import {
   getSiteUrl,
 } from "@/lib/seo/resolver";
 import { wrapInGraph, buildBreadcrumbList } from "@/lib/seo/jsonLd";
-import { extractPageDictionary } from "@/lib/i18n/dictionaries";
+import { extractPageDictionary, extractLayoutDictionary, t } from "@/lib/i18n/dictionaries";
 import { QuoteForm } from "@/components/quote/QuoteForm";
 import { ContactForm } from "@/components/ContactForm";
 
@@ -88,13 +88,18 @@ export default async function SlugPage({ params }: SlugPageProps) {
   if (!entry) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const page = await fetchPage(entry.id, locale);
+  const [page, layoutData] = await Promise.all([
+    fetchPage(entry.id, locale),
+    fetchLayout(locale),
+  ]);
   if (!page) notFound();
+
+  const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
+  const pageDict = extractPageDictionary(entry.id, page, locale);
+  const dictionary = { ...layoutDict, ...pageDict };
 
   // Interactive pages: render dedicated form components
   if (INTERACTIVE_PAGES.has(entry.id)) {
-    const dictionary = extractPageDictionary(entry.id, page, locale);
-
     if (entry.id === "quote") {
       return <QuoteForm lang={lang} dictionary={dictionary} quoteSlug={slug} />;
     }
@@ -114,7 +119,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
   const breadcrumbJsonLd = wrapInGraph(
     buildBreadcrumbList([
       {
-        name: lang === "de" ? "Startseite" : "Accueil",
+        name: t(dictionary, "common.home"),
         url: `${SITE_URL}/${lang}`,
       },
       { name: title, url: `${SITE_URL}/${lang}/${slug}` },
@@ -138,7 +143,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
 
         {content?.lastUpdated && (
           <p className="text-sm text-muted-foreground mb-8">
-            {lang === "de" ? "Letzte Aktualisierung: " : "Dernière mise à jour: "}
+            {t(dictionary, "common.lastUpdated")}{" "}
             {content.lastUpdated}
           </p>
         )}
@@ -168,7 +173,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
             />
           ) : (
             <p className="text-muted-foreground">
-              {lang === "de" ? "Kein Inhalt verfügbar." : "Aucun contenu disponible."}
+              {t(dictionary, "common.noContent")}
             </p>
           )}
         </div>

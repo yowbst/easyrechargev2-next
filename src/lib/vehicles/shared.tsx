@@ -1,9 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { DIRECTUS_URL } from "@/lib/directus";
+import { t } from "@/lib/i18n/dictionaries";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
+
+interface VehicleViewProps {
+  vehicle: AnyRecord;
+  lang: string;
+  vehiclesSegment: string;
+  brandsSegment: string;
+  dictionary: Record<string, string>;
+}
 
 /** Render a vehicle detail page. */
 export function VehicleDetailView({
@@ -11,12 +20,10 @@ export function VehicleDetailView({
   lang,
   vehiclesSegment,
   brandsSegment,
-}: {
-  vehicle: AnyRecord;
-  lang: string;
-  vehiclesSegment: string;
-  brandsSegment: string;
-}) {
+  dictionary,
+}: VehicleViewProps) {
+  const d = (key: string) => t(dictionary, key);
+
   const brandName = vehicle.brand?.name || "";
   const modelName = vehicle.model || vehicle.name || "";
   const vehicleName = `${brandName} ${modelName}`.trim();
@@ -40,18 +47,13 @@ export function VehicleDetailView({
         href={`/${lang}/${vehiclesSegment}`}
         className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
       >
-        ← {lang === "de" ? "Zurück" : "Retour"}
+        ← {d("pages.vehicles.vehiclesGrid.pagination.previous")}
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         {thumbnail && (
           <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-muted">
-            <Image
-              src={thumbnail}
-              alt={vehicleName}
-              fill
-              className="object-contain"
-            />
+            <Image src={thumbnail} alt={vehicleName} fill className="object-contain" />
           </div>
         )}
         <div>
@@ -70,25 +72,19 @@ export function VehicleDetailView({
           <dl className="grid grid-cols-2 gap-4 text-sm">
             {battery && (
               <>
-                <dt className="text-muted-foreground">
-                  {lang === "de" ? "Batterie" : "Batterie"}
-                </dt>
+                <dt className="text-muted-foreground">{d("shared.vehiclesFilters.general.battery.label")}</dt>
                 <dd className="font-medium">{battery}</dd>
               </>
             )}
             {range && (
               <>
-                <dt className="text-muted-foreground">
-                  {lang === "de" ? "Reichweite" : "Autonomie"}
-                </dt>
+                <dt className="text-muted-foreground">{d("shared.vehiclesFilters.general.range.label")}</dt>
                 <dd className="font-medium">{range}</dd>
               </>
             )}
             {efficiency && (
               <>
-                <dt className="text-muted-foreground">
-                  {lang === "de" ? "Effizienz" : "Efficacité"}
-                </dt>
+                <dt className="text-muted-foreground">{d("shared.vehiclesFilters.general.efficiency.label")}</dt>
                 <dd className="font-medium">{efficiency}</dd>
               </>
             )}
@@ -99,22 +95,28 @@ export function VehicleDetailView({
   );
 }
 
+interface BrandsListProps {
+  brands: AnyRecord[];
+  lang: string;
+  vehiclesSegment: string;
+  brandsSegment: string;
+  dictionary: Record<string, string>;
+}
+
 /** Render a vehicle brands listing page. */
 export function VehicleBrandsListView({
   brands,
   lang,
   vehiclesSegment,
   brandsSegment,
-}: {
-  brands: AnyRecord[];
-  lang: string;
-  vehiclesSegment: string;
-  brandsSegment: string;
-}) {
+  dictionary,
+}: BrandsListProps) {
+  const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
+
   return (
     <div className="container mx-auto px-4 py-12">
       <h1 className="text-3xl md:text-4xl font-heading font-bold mb-8">
-        {lang === "de" ? "Fahrzeugmarken" : "Marques de véhicules"}
+        {d("pages.vehicles.brandsFilters.badges.all", { count: brands.length })}
       </h1>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {brands.map((brand) => (
@@ -140,6 +142,15 @@ export function VehicleBrandsListView({
   );
 }
 
+interface BrandViewProps {
+  brandSlug: string;
+  vehicles: AnyRecord[];
+  lang: string;
+  vehiclesSegment: string;
+  brandsSegment: string;
+  dictionary: Record<string, string>;
+}
+
 /** Render a single brand's vehicles page. */
 export function VehicleBrandView({
   brandSlug,
@@ -147,22 +158,14 @@ export function VehicleBrandView({
   lang,
   vehiclesSegment,
   brandsSegment,
-}: {
-  brandSlug: string;
-  vehicles: AnyRecord[];
-  lang: string;
-  vehiclesSegment: string;
-  brandsSegment: string;
-}) {
-  const brandVehicles = vehicles.filter(
-    (v) => v.brand?.slug === brandSlug,
-  );
+  dictionary,
+}: BrandViewProps) {
+  const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
+
+  const brandVehicles = vehicles.filter((v) => v.brand?.slug === brandSlug);
   const brandName =
     brandVehicles[0]?.brand?.name ||
-    brandSlug
-      .split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
+    brandSlug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -170,22 +173,19 @@ export function VehicleBrandView({
         href={`/${lang}/${vehiclesSegment}/${brandsSegment}`}
         className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
       >
-        ← {lang === "de" ? "Alle Marken" : "Toutes les marques"}
+        ← {d("pages.vehicles.vehiclesGrid.pagination.previous")}
       </Link>
 
       <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2">
         {brandName}
       </h1>
       <p className="text-muted-foreground mb-8">
-        {brandVehicles.length}{" "}
-        {lang === "de" ? "Elektrofahrzeuge" : "véhicules électriques"}
+        {d("pages.vehicles.vehiclesGrid.results.count_other", { count: brandVehicles.length })}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {brandVehicles.map((vehicle) => {
-          const thumbnail = vehicle.thumbnail
-            ? `${DIRECTUS_URL}/assets/${vehicle.thumbnail}`
-            : null;
+          const thumbnail = vehicle.thumbnail ? `${DIRECTUS_URL}/assets/${vehicle.thumbnail}` : null;
           const name = `${vehicle.brand?.name || ""} ${vehicle.model || vehicle.name || ""}`.trim();
 
           return (
@@ -196,12 +196,7 @@ export function VehicleBrandView({
             >
               {thumbnail && (
                 <div className="relative aspect-[16/10] bg-muted">
-                  <Image
-                    src={thumbnail}
-                    alt={name}
-                    fill
-                    className="object-contain p-4"
-                  />
+                  <Image src={thumbnail} alt={name} fill className="object-contain p-4" />
                 </div>
               )}
               <div className="p-4">
