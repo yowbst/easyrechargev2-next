@@ -30,6 +30,7 @@ import { GetQuote } from "@/components/GetQuote";
 import { Testimonials } from "@/components/Testimonials";
 import { GuideCarousel } from "@/components/GuideCarousel";
 import { SwissMap } from "@/components/SwissMap";
+import { MiniQuoteForm } from "@/components/MiniQuoteForm";
 
 export function generateStaticParams() {
   return [{ lang: "fr" }, { lang: "de" }];
@@ -95,6 +96,7 @@ export default async function Home({ params }: HomeProps) {
   const blocks = page?.blocks || [];
 
   const heroBlock = findBlock(blocks, "block_hero");
+  const miniQuoteBlock = findBlock(blocks, "block_miniquote");
   const faqBlock = findBlock(blocks, "block_faq");
   const getQuoteBlock = findBlock(blocks, "block_getquote");
 
@@ -233,7 +235,16 @@ export default async function Home({ params }: HomeProps) {
         checks={heroChecks}
         rating={heroRating}
         image={heroImage}
-      />
+        pageId="home"
+      >
+        <MiniQuoteForm
+          miniQuoteContent={miniQuoteBlock ? { config: miniQuoteBlock.config } : undefined}
+          pageId="home"
+          dictionary={dictionary}
+          pageRegistry={pageRegistry}
+          lang={lang}
+        />
+      </Hero>
 
       <Features
         title={t(dictionary, "pages.home.features.title")}
