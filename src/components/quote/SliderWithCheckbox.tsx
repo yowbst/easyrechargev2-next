@@ -57,8 +57,12 @@ export function SliderWithCheckbox({
       <div className="rounded-lg border border-border/60 bg-muted/40 overflow-hidden">
         <div className={`px-4 pt-4 pb-4 ${isNA ? "opacity-40 pointer-events-none" : ""}`}>
           <Slider
-            value={[numericValue]}
-            onValueChange={([newValue]) => !isNA && onChange(newValue)}
+            value={numericValue}
+            onValueChange={(val) => {
+              if (isNA) return;
+              const v = Array.isArray(val) ? val[0] : val;
+              onChange(v);
+            }}
             min={min}
             max={max}
             step={step}

@@ -46,6 +46,7 @@ import type { CountryCode } from "libphonenumber-js";
 interface QuoteFormProps {
   lang: string;
   dictionary: Record<string, string>;
+  quoteSlug?: string;
 }
 
 interface FormData {
@@ -116,7 +117,7 @@ function RevealField({ visible, children }: { visible: boolean; children: React.
   );
 }
 
-export function QuoteForm({ lang, dictionary }: QuoteFormProps) {
+export function QuoteForm({ lang, dictionary, quoteSlug }: QuoteFormProps) {
   const router = useRouter();
   const l = lang as "fr" | "de";
   const [step, setStep] = useState(0);
@@ -223,9 +224,11 @@ export function QuoteForm({ lang, dictionary }: QuoteFormProps) {
       });
       const result = await res.json();
       if (res.ok && result.success) {
-        router.push(
-          l === "de" ? `/${lang}/offertenanfrage/bestaetigung` : `/${lang}/demande-devis/confirmation`,
-        );
+        const confirmSegment = l === "de" ? "bestaetigung" : "confirmation";
+        const successPath = quoteSlug
+          ? `/${lang}/${quoteSlug}/${confirmSegment}`
+          : `/${lang}`;
+        router.push(successPath);
       } else {
         setSubmitError(true);
       }

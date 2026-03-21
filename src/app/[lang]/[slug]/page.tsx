@@ -96,7 +96,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
     const dictionary = extractPageDictionary(entry.id, page, locale);
 
     if (entry.id === "quote") {
-      return <QuoteForm lang={lang} dictionary={dictionary} />;
+      return <QuoteForm lang={lang} dictionary={dictionary} quoteSlug={slug} />;
     }
     if (entry.id === "contact") {
       return <ContactForm lang={lang} dictionary={dictionary} />;
