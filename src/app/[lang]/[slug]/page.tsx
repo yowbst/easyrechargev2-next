@@ -13,6 +13,9 @@ import {
   getSiteUrl,
 } from "@/lib/seo/resolver";
 import { wrapInGraph, buildBreadcrumbList } from "@/lib/seo/jsonLd";
+import { extractPageDictionary } from "@/lib/i18n/dictionaries";
+import { QuoteForm } from "@/components/quote/QuoteForm";
+import { ContactForm } from "@/components/ContactForm";
 
 interface SlugPageProps {
   params: Promise<{ lang: string; slug: string }>;
@@ -61,6 +64,9 @@ export async function generateMetadata({
   });
 }
 
+/** Route IDs that render interactive forms instead of content pages. */
+const INTERACTIVE_PAGES = new Set(["quote", "contact"]);
+
 export default async function SlugPage({ params }: SlugPageProps) {
   const { lang, slug } = await params;
   if (!isValidLang(lang)) notFound();
@@ -71,6 +77,18 @@ export default async function SlugPage({ params }: SlugPageProps) {
   const locale = slugToDirectusLocale(lang);
   const page = await fetchPage(entry.id, locale);
   if (!page) notFound();
+
+  // Interactive pages: render dedicated form components
+  if (INTERACTIVE_PAGES.has(entry.id)) {
+    const dictionary = extractPageDictionary(entry.id, page, locale);
+
+    if (entry.id === "quote") {
+      return <QuoteForm lang={lang} dictionary={dictionary} />;
+    }
+    if (entry.id === "contact") {
+      return <ContactForm lang={lang} dictionary={dictionary} />;
+    }
+  }
 
   const translation = page?.translations?.[0];
   const content = translation?.content;
