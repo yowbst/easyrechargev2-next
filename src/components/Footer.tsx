@@ -118,14 +118,16 @@ export function Footer({
           alt="easyRecharge"
           width={160}
           height={40}
-          className="h-10 w-auto mb-3 dark:hidden"
+          className="h-10 mb-3 dark:hidden"
+          style={{ width: "auto", height: "2.5rem" }}
         />
         <Image
           src={logoDarkSrc}
           alt="easyRecharge"
           width={160}
           height={40}
-          className="h-10 w-auto mb-3 hidden dark:block"
+          className="h-10 mb-3 hidden dark:block"
+          style={{ width: "auto", height: "2.5rem" }}
         />
         {brandTagline && !brandTagline.startsWith("[") && (
           <p className="text-sm text-muted-foreground mb-4">{brandTagline}</p>

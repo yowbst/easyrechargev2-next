@@ -53,7 +53,7 @@ export function VehicleDetailView({
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         {thumbnail && (
           <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-muted">
-            <Image src={thumbnail} alt={vehicleName} fill className="object-contain" />
+            <Image src={thumbnail} alt={vehicleName} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-contain" />
           </div>
         )}
         <div>
@@ -196,7 +196,7 @@ export function VehicleBrandView({
             >
               {thumbnail && (
                 <div className="relative aspect-[16/10] bg-muted">
-                  <Image src={thumbnail} alt={name} fill className="object-contain p-4" />
+                  <Image src={thumbnail} alt={name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain p-4" />
                 </div>
               )}
               <div className="p-4">

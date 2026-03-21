@@ -91,6 +91,7 @@ export function GuideCarousel({
                         src={post.image}
                         alt={post.title}
                         fill
+                        sizes="(max-width: 768px) 85vw, (max-width: 1024px) 45vw, 30vw"
                         className="object-cover"
                       />
                       {post.tag && (

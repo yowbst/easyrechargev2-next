@@ -112,7 +112,8 @@ export function Header({
             alt="easyRecharge"
             width={160}
             height={40}
-            className="h-10 w-auto dark:hidden"
+            className="h-10 dark:hidden"
+            style={{ width: "auto", height: "2.5rem" }}
             priority
           />
           <Image
@@ -120,7 +121,8 @@ export function Header({
             alt="easyRecharge"
             width={160}
             height={40}
-            className="h-10 w-auto hidden dark:block"
+            className="h-10 hidden dark:block"
+            style={{ width: "auto", height: "2.5rem" }}
             priority
           />
         </Link>

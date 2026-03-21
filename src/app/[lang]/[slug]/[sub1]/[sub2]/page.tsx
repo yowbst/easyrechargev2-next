@@ -244,7 +244,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
 
           {articleImage && (
             <div className="relative w-full aspect-[16/9] mb-10 rounded-xl overflow-hidden">
-              <Image src={articleImage} alt={articleTitle} fill className="object-cover" priority />
+              <Image src={articleImage} alt={articleTitle} fill sizes="(max-width: 896px) 100vw, 896px" className="object-cover" priority />
             </div>
           )}
 
