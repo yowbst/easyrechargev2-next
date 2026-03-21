@@ -1,9 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { buttonVariants } from "@/components/ui/button";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
-import { cn } from "@/lib/utils";
 import { MobileMenu } from "./MobileMenu";
 import { DIRECTUS_URL } from "@/lib/directus";
 import { t } from "@/lib/i18n/dictionaries";
@@ -29,6 +27,9 @@ function resolveNavHref(
 
   const page = typeof item.page === "string" ? null : item.page;
   if (!page?.route_id) return null;
+
+  // Home page → language root
+  if (page.route_id === "home") return `/${lang}`;
 
   const entry = pageRegistry.find((p) => p.id === page.route_id);
   const slug = entry?.slugs[lang];
@@ -63,9 +64,11 @@ export function Header({
     .map((item: any) => {
       const href = resolveNavHref(item, lang, pageRegistry);
       if (!href) return null;
+      const navCount = headerConfig?.nav_counts?.[item.key];
       const label = t(
         dictionary,
         `layout.nav.header.${item.key}`,
+        navCount != null ? { count: navCount } : undefined,
       );
       return {
         id: item.id || item.key,
@@ -161,20 +164,14 @@ export function Header({
                 href={ctaLink.href}
                 target={ctaLink.openInNewTab ? "_blank" : "_self"}
                 rel={ctaLink.openInNewTab ? "noopener noreferrer" : undefined}
-                className={cn(
-                  buttonVariants(),
-                  "hidden md:inline-flex w-44",
-                )}
+                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/80 h-8 px-2.5 text-sm font-medium transition-colors"
               >
                 {ctaLink.label}
               </a>
             ) : (
               <Link
                 href={ctaLink.href}
-                className={cn(
-                  buttonVariants(),
-                  "hidden md:inline-flex w-44",
-                )}
+                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/80 h-8 px-2.5 text-sm font-medium transition-colors"
               >
                 {ctaLink.label}
               </Link>

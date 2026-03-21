@@ -89,11 +89,13 @@ export async function fetchLayout(locale: string = DIRECTUS_DEFAULT_LOCALE) {
     sort: ["id"],
   });
 
-  const result = await directusFetch<{ data: AnyRecord[] }>(path, {
+  const result = await directusFetch<{ data: AnyRecord | AnyRecord[] }>(path, {
     next: { revalidate: 60, tags: ["layout"] },
   });
 
-  return result?.data?.[0] ?? null;
+  // site_settings is a singleton — Directus returns { data: {...} } not { data: [{...}] }
+  const raw = result?.data;
+  return (Array.isArray(raw) ? raw[0] : raw) ?? null;
 }
 
 // ─── Pages ───────────────────────────────────────────────

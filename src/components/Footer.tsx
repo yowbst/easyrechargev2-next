@@ -24,6 +24,7 @@ function resolveNavHref(
   if (item.type === "external") return item.url;
   const page = typeof item.page === "string" ? null : item.page;
   if (!page?.route_id) return null;
+  if (page.route_id === "home") return `/${lang}`;
   const entry = pageRegistry.find((p) => p.id === page.route_id);
   const slug = entry?.slugs[lang];
   if (slug) return `/${lang}/${slug}`;
