@@ -9,13 +9,30 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CmsData = Record<string, any>;
 
-/** Simple {var} interpolation for translation strings. */
+/**
+ * Simple {var} interpolation with i18next-style pluralization.
+ *
+ * When `vars` contains a `count` key the function resolves plural forms:
+ *   key_one   → count === 1
+ *   key_other → everything else
+ * If no plural variant is found it falls back to the base key.
+ */
 export function t(
   dictionary: Record<string, string>,
   key: string,
   vars?: Record<string, string | number>,
 ): string {
-  let value = dictionary[key] ?? key;
+  let resolved: string | undefined;
+
+  if (vars && "count" in vars) {
+    const count = Number(vars.count);
+    const suffix = count === 1 ? "_one" : "_other";
+    resolved = dictionary[`${key}${suffix}`] ?? dictionary[key];
+  } else {
+    resolved = dictionary[key];
+  }
+
+  let value = resolved ?? key;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
       value = value.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
@@ -204,26 +221,40 @@ export function extractPageDictionary(
       f === "id" || f === "languages_code" || f.endsWith("_id");
 
     const prefix = `pages.${routeId}.blocks.${blockKey}`;
+    // Also register under the unmapped raw key so both work
+    const aliasPrefix = blockKey !== rawKey ? `pages.${routeId}.blocks.${rawKey}` : null;
+
+    /** Set a translation key under both the canonical prefix and alias. */
+    const set = (suffix: string, val: string) => {
+      translations[`${prefix}.${suffix}`] = val;
+      if (aliasPrefix) translations[`${aliasPrefix}.${suffix}`] = val;
+    };
 
     if (bt.content && typeof bt.content === "object") {
-      Object.assign(translations, flattenTranslations(bt.content, prefix));
+      const flat = flattenTranslations(bt.content, prefix);
+      Object.assign(translations, flat);
+      if (aliasPrefix) {
+        for (const [k, v] of Object.entries(flat)) {
+          translations[k.replace(prefix, aliasPrefix)] = v;
+        }
+      }
     }
 
     if (bt.headline) {
-      translations[`${prefix}.title`] = bt.headline;
-      translations[`${prefix}.headline`] = bt.headline;
+      set("title", bt.headline);
+      set("headline", bt.headline);
     }
     if (bt.subheadline) {
-      translations[`${prefix}.subtitle`] = bt.subheadline;
-      translations[`${prefix}.subheadline`] = bt.subheadline;
+      set("subtitle", bt.subheadline);
+      set("subheadline", bt.subheadline);
     }
 
     if (Array.isArray(bt.ctas) && bt.ctas.length > 0) {
       bt.ctas.forEach((cta: CmsData, idx: number) => {
         if (!cta) return;
         if (cta.label) {
-          if (idx === 0) translations[`${prefix}.cta.label`] = cta.label;
-          translations[`${prefix}.cta.${idx}.label`] = cta.label;
+          if (idx === 0) set("cta.label", cta.label);
+          set(`cta.${idx}.label`, cta.label);
         }
       });
     }
@@ -235,14 +266,17 @@ export function extractPageDictionary(
       if (value === null || value === undefined) continue;
 
       if (typeof value === "string") {
-        translations[`${prefix}.${field}`] = value;
+        set(field, value);
       } else if (typeof value === "number" || typeof value === "boolean") {
-        translations[`${prefix}.${field}`] = String(value);
+        set(field, String(value));
       } else if (typeof value === "object" && !Array.isArray(value)) {
-        Object.assign(
-          translations,
-          flattenTranslations(value, `${prefix}.${field}`),
-        );
+        const flat = flattenTranslations(value, `${prefix}.${field}`);
+        Object.assign(translations, flat);
+        if (aliasPrefix) {
+          for (const [k, v] of Object.entries(flat)) {
+            translations[k.replace(prefix, aliasPrefix)] = v;
+          }
+        }
       }
     }
   }

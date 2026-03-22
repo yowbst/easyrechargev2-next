@@ -19,6 +19,7 @@ interface MiniQuoteFormProps {
   dictionary: Record<string, string>;
   pageRegistry: PageRegistryEntry[];
   lang: string;
+  tOptions?: Record<string, string | number>;
 }
 
 export function MiniQuoteForm({
@@ -28,6 +29,7 @@ export function MiniQuoteForm({
   dictionary,
   pageRegistry,
   lang,
+  tOptions,
 }: MiniQuoteFormProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -59,7 +61,9 @@ export function MiniQuoteForm({
     return <IconComponent className="h-5 w-5 text-white" />;
   };
 
-  const subtitle = t(dictionary, `${bp}.subtitle`);
+  const subtitleKey = `${bp}.subtitle`;
+  const subtitleRaw = t(dictionary, subtitleKey, tOptions);
+  const subtitle = (subtitleRaw && subtitleRaw !== subtitleKey && !subtitleRaw.startsWith("[")) ? subtitleRaw : "";
   const getHousingTypeLabel = (type: string) =>
     t(dictionary, `${bp}.form.fields.housingStatus.options.${type}`);
   const locationPlaceholder = t(dictionary, `${bp}.form.fields.location.placeholder`);
@@ -115,7 +119,7 @@ export function MiniQuoteForm({
       className={`bg-white/10 backdrop-blur-md border border-white/25 rounded-2xl p-6 flex flex-col space-y-4 shadow-lg ${className}`}
       data-testid="mini-quote-form"
     >
-      {subtitle && !subtitle.startsWith("[") && (
+      {subtitle && (
         <p className="text-sm text-white/80 leading-snug">{subtitle}</p>
       )}
 

@@ -110,7 +110,7 @@ export function Header({
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href={`/${lang}`} title="easyRecharge" className="flex items-center">
+        <Link href={`/${lang}`} title="easyRecharge" className="flex items-center" data-testid="link-home">
           {logoSrc ? (
             <>
               <Image
@@ -121,6 +121,7 @@ export function Header({
                 className="h-10 dark:hidden"
                 style={{ width: "auto", height: "2.5rem" }}
                 priority
+                data-testid="img-logo"
               />
               <Image
                 src={logoDarkSrc || logoSrc}
@@ -145,6 +146,8 @@ export function Header({
             <NavLink
               key={item.id}
               href={item.href}
+              title={item.label}
+              data-testid={`link-nav-${item.id}`}
               className="text-sm font-medium transition-colors hover:text-primary"
               activeClassName="text-primary"
             >
@@ -164,16 +167,20 @@ export function Header({
             (ctaLink.external ? (
               <a
                 href={ctaLink.href}
+                title={ctaLink.label}
                 target={ctaLink.openInNewTab ? "_blank" : "_self"}
                 rel={ctaLink.openInNewTab ? "noopener noreferrer" : undefined}
-                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/80 h-8 px-2.5 text-sm font-medium transition-colors"
+                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground [a]:hover:bg-primary/80 h-8 px-2.5 text-sm font-medium transition-all"
+                data-testid="button-header-quote"
               >
                 {ctaLink.label}
               </a>
             ) : (
               <Link
                 href={ctaLink.href}
-                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/80 h-8 px-2.5 text-sm font-medium transition-colors"
+                title={ctaLink.label}
+                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground [a]:hover:bg-primary/80 h-8 px-2.5 text-sm font-medium transition-all"
+                data-testid="button-header-quote"
               >
                 {ctaLink.label}
               </Link>

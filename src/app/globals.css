@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -178,6 +179,12 @@
   --destructive-border: hsl(0 80% 59%);
   --sidebar-primary-border: hsl(142 71% 54%);
   --sidebar-accent-border: hsl(220 16% 31%);
+}
+
+/* ─── Focused layout: hides site header/footer for immersive pages (e.g. quote form) ─── */
+body:has([data-hide-layout]) > header,
+body:has([data-hide-layout]) > footer {
+  display: none !important;
 }
 
 /* ─── Base layer ─── */

@@ -13,17 +13,16 @@ interface IconButtonGroupProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  disabledValues?: string[];
 }
 
-export function IconButtonGroup({ options, value, onChange, className = "" }: IconButtonGroupProps) {
+export function IconButtonGroup({ options, value, onChange, className = "", disabledValues = [] }: IconButtonGroupProps) {
   return (
-    <div
-      className={`grid gap-3 ${className}`}
-      style={{ gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, 1fr)` }}
-    >
+    <div className={`grid gap-3 ${className}`} style={{ gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, 1fr)` }}>
       {options.map((option) => {
         const Icon = option.icon;
         const isSelected = value === option.value;
+        const isDisabled = disabledValues.includes(option.value);
 
         return (
           <button
@@ -33,8 +32,11 @@ export function IconButtonGroup({ options, value, onChange, className = "" }: Ic
               isSelected
                 ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/30"
                 : "border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 text-foreground"
-            }`}
-            onClick={() => onChange(option.value)}
+            } ${isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
+            onClick={() => !isDisabled && onChange(option.value)}
+            disabled={isDisabled}
+            aria-disabled={isDisabled}
+            data-testid={`icon-button-${option.value}`}
           >
             <Icon className="h-5 w-5 text-primary" />
             <span className="font-medium text-sm text-center leading-tight">{option.label}</span>

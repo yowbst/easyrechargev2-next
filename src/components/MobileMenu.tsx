@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,10 @@ interface MobileMenuProps {
 
 export function MobileMenu({ navLinks, ctaLink }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (path: string) =>
+    pathname === path || pathname.startsWith(path + "/");
 
   return (
     <>
@@ -32,6 +37,7 @@ export function MobileMenu({ navLinks, ctaLink }: MobileMenuProps) {
         className="md:hidden"
         onClick={() => setOpen(!open)}
         aria-label={open ? "Close menu" : "Open menu"}
+        data-testid="button-mobile-menu"
       >
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
@@ -43,8 +49,12 @@ export function MobileMenu({ navLinks, ctaLink }: MobileMenuProps) {
               <Link
                 key={item.id}
                 href={item.href}
+                title={item.label}
+                data-testid={`link-mobile-${item.id}`}
                 onClick={() => setOpen(false)}
-                className="text-sm font-medium text-foreground"
+                className={`text-sm font-medium ${
+                  isActive(item.href) ? "text-primary" : "text-foreground"
+                }`}
               >
                 {item.label}
               </Link>
@@ -54,18 +64,22 @@ export function MobileMenu({ navLinks, ctaLink }: MobileMenuProps) {
               (ctaLink.external ? (
                 <a
                   href={ctaLink.href}
+                  title={ctaLink.label}
                   target={ctaLink.openInNewTab ? "_blank" : "_self"}
                   rel={ctaLink.openInNewTab ? "noopener noreferrer" : undefined}
                   onClick={() => setOpen(false)}
                   className={cn(buttonVariants(), "w-full")}
+                  data-testid="button-mobile-quote"
                 >
                   {ctaLink.label}
                 </a>
               ) : (
                 <Link
                   href={ctaLink.href}
+                  title={ctaLink.label}
                   onClick={() => setOpen(false)}
                   className={cn(buttonVariants(), "w-full")}
+                  data-testid="button-mobile-quote"
                 >
                   {ctaLink.label}
                 </Link>

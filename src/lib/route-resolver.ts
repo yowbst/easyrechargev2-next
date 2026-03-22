@@ -15,6 +15,7 @@ export type RouteType =
   | { type: "vehicle-detail"; slug: string; vehiclesEntry: PageRegistryEntry }
   | { type: "vehicle-brands"; vehiclesEntry: PageRegistryEntry }
   | { type: "vehicle-brand-detail"; brandSlug: string; vehiclesEntry: PageRegistryEntry }
+  | { type: "vehicle-model-detail"; brandSlug: string; vehicleSlug: string; vehiclesEntry: PageRegistryEntry }
   | { type: "blog-post"; blogSlug: string; categorySlug: string; postSlug: string; blogEntry: PageRegistryEntry }
   | { type: "quote-success"; quoteEntry: PageRegistryEntry }
   | null;
@@ -99,9 +100,15 @@ export async function resolveSub2Route(
 
   if (!entry) return null;
 
-  // Vehicle brand detail: /{lang}/{vehiclesSlug}/{brandsSegment}/{brandSlug}
+  // Vehicles: /{lang}/{vehiclesSlug}/{sub1}/{sub2}
   if (entry.id === "vehicles") {
-    return { type: "vehicle-brand-detail", brandSlug: sub2, vehiclesEntry: entry };
+    const brandsSegment = getRouteSlug(lang, "brands");
+    // Brand detail: /{vehiclesSlug}/{brandsSegment}/{brandSlug}
+    if (sub1 === brandsSegment) {
+      return { type: "vehicle-brand-detail", brandSlug: sub2, vehiclesEntry: entry };
+    }
+    // Vehicle model detail: /{vehiclesSlug}/{brandSlug}/{modelSlug}
+    return { type: "vehicle-model-detail", brandSlug: sub1, vehicleSlug: sub2, vehiclesEntry: entry };
   }
 
   // Blog post: /{lang}/{blogSlug}/{categorySlug}/{postSlug}

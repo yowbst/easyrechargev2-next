@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useCallback } from "react";
+import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen } from "lucide-react";
+import { BookOpen, List, ChevronDown, ChevronUp } from "lucide-react";
 import { BlogCard } from "@/components/BlogCard";
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
+import { GetQuote } from "@/components/GetQuote";
 import { cmsBgImage } from "@/lib/directusAssets";
+import { useVisibleTagSections } from "@/hooks/useVisibleTagSections";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
@@ -23,6 +25,11 @@ interface TransformedPost {
   tags: Array<{ id: string; name: string; slug: string }>;
 }
 
+interface GetQuoteBlockData {
+  variant?: string;
+  image?: string;
+}
+
 interface BlogListingProps {
   posts: TransformedPost[];
   heroTitle: string;
@@ -30,6 +37,7 @@ interface BlogListingProps {
   heroImage?: string;
   guideSectionTitle?: string;
   guideSectionSubtitle?: string;
+  getQuoteBlock?: GetQuoteBlockData;
   dictionary: Record<string, string>;
   pageRegistry: PageRegistryEntry[];
   lang: string;
@@ -42,11 +50,13 @@ export function BlogListing({
   heroImage,
   guideSectionTitle,
   guideSectionSubtitle,
+  getQuoteBlock,
   dictionary,
   pageRegistry,
   lang,
 }: BlogListingProps) {
   const hasImage = !!heroImage;
+  const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
 
   // Spotlight effect
   const heroRef = useRef<HTMLElement>(null);
@@ -98,6 +108,9 @@ export function BlogListing({
     return grouped;
   }, [guidePosts, allTags]);
 
+  // Track which tag sections are visible on screen
+  const { hiddenTags, registerSection } = useVisibleTagSections(allTags);
+
   // Categories for filtering (non-guide articles)
   const categories = useMemo(
     () => Array.from(new Set(otherPosts.map((post) => post.category))),
@@ -105,9 +118,48 @@ export function BlogListing({
   );
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isSommaireStuck, setIsSommaireStuck] = useState(false);
+  const [isMobileTagsExpanded, setIsMobileTagsExpanded] = useState(false);
+  const sommaireRef = useRef<HTMLDivElement>(null);
+
   const filteredPosts = selectedCategory
     ? otherPosts.filter((post) => post.category === selectedCategory)
     : otherPosts;
+
+  // Smooth scroll to tag section
+  const scrollToSection = (tagId: string) => {
+    const element = document.getElementById(`tag-section-${tagId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  // Detect when sommaire is stuck
+  useEffect(() => {
+    const sommaire = sommaireRef.current;
+    if (!sommaire) return;
+
+    const handleScroll = () => {
+      const rect = sommaire.getBoundingClientRect();
+      setIsSommaireStuck(rect.top <= 65);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hiddenTags.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // GetQuote block
+  const getQuoteVariant = (() => {
+    const variant = getQuoteBlock?.variant;
+    if (variant === "grey") return "muted" as const;
+    if (variant === "green") return "primary" as const;
+    return "muted" as const;
+  })();
+
+  const quotePage = pageRegistry.find((p) => p.id === "quote");
+  const quoteHref = quotePage ? `/${lang}/${quotePage.slugs[lang]}` : `/${lang}`;
 
   return (
     <div>
@@ -119,7 +171,6 @@ export function BlogListing({
         onMouseMove={hasImage ? handleHeroMouseMove : undefined}
         onMouseLeave={hasImage ? handleHeroMouseLeave : undefined}
       >
-        {/* Spotlight overlay — dark base with a lighter circle following the cursor */}
         {hasImage && (
           <div
             className="absolute inset-0 transition-none"
@@ -131,7 +182,7 @@ export function BlogListing({
             }}
           />
         )}
-        {!hasImage && <div className="absolute inset-0 bg-muted/50" />}
+        {!hasImage && <div className="absolute inset-0 bg-muted/50" aria-hidden="true" />}
 
         <div className="relative container mx-auto px-4">
           <h1
@@ -149,134 +200,249 @@ export function BlogListing({
         </div>
       </section>
 
-      {/* Guide de la recharge Section */}
+      {/* Guide de la recharge - Highlighted Section with Sticky TOC */}
       {guidePosts.length > 0 && (
-        <section id="guide-section" className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-y">
+        <section
+          id="guide-section"
+          className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-y"
+        >
+          {/* Section Header */}
           <div className="py-12 pb-6">
             <div className="container mx-auto px-4">
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
                   <BookOpen className="h-8 w-8 text-primary" />
                 </div>
-                <h2 className="text-4xl font-heading font-bold mb-3" data-testid="heading-guide-section">
-                  {guideSectionTitle || t(dictionary, "pages.blog.rechargingGuide.headline")}
+                <h2
+                  className="text-4xl font-heading font-bold mb-3"
+                  data-testid="heading-guide-section"
+                >
+                  {guideSectionTitle || d("pages.blog.rechargingGuide.headline")}
                 </h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="text-guide-section-subheadline">
-                  {guideSectionSubtitle || t(dictionary, "pages.blog.rechargingGuide.subheadline", { count: guidePosts.length })}
-                </p>
+                {guideSectionSubtitle && !guideSectionSubtitle.startsWith("[") && (
+                  <p
+                    className="text-lg text-muted-foreground max-w-2xl mx-auto"
+                    data-testid="text-guide-section-subheadline"
+                  >
+                    {guideSectionSubtitle}
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Tag Navigation */}
-          {allTags.length > 0 && (
-            <div className="container mx-auto px-4 py-3">
-              <div className="flex items-center gap-2 flex-wrap justify-center">
-                {allTags.map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    variant="secondary"
-                    className="cursor-pointer hover:bg-primary/10 transition-colors"
-                    onClick={() => {
-                      const el = document.getElementById(`tag-section-${tag.id}`);
-                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }}
+          {/* Sticky Table of Contents */}
+          {hiddenTags.length > 0 && (
+            <div
+              ref={sommaireRef}
+              className={`sticky top-16 z-40 transition-colors duration-200 ${
+                isSommaireStuck
+                  ? "bg-background border-b shadow-sm"
+                  : ""
+              }`}
+            >
+              <div className="container mx-auto px-4 py-3">
+                {/* Desktop: horizontal scrollable list */}
+                <nav
+                  className="hidden md:flex items-center gap-3 min-w-0 overflow-x-auto"
+                  data-testid="nav-table-of-contents"
+                >
+                  <List className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-medium text-muted-foreground flex-shrink-0">
+                    {d("pages.blog.rechargingGuide.tags.label", { count: allTags.length })}
+                  </span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {hiddenTags.map((tag) => (
+                      <Badge
+                        key={tag.id}
+                        variant="outline"
+                        className="cursor-pointer hover-elevate flex-shrink-0"
+                        onClick={() => scrollToSection(tag.id)}
+                        data-testid={`link-tag-${tag.slug}`}
+                      >
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </nav>
+
+                {/* Mobile: collapsible list */}
+                <div className="md:hidden">
+                  <button
+                    onClick={() => setIsMobileTagsExpanded(!isMobileTagsExpanded)}
+                    className="flex items-center justify-between w-full"
+                    data-testid="button-toggle-mobile-tags"
                   >
-                    {tag.name} ({tag.count})
-                  </Badge>
-                ))}
+                    <div className="flex items-center gap-2">
+                      <List className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">
+                        {d("pages.blog.rechargingGuide.tags.label", { count: allTags.length })}
+                      </span>
+                    </div>
+                    {isMobileTagsExpanded ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  {isMobileTagsExpanded && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {hiddenTags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant="outline"
+                          className="cursor-pointer hover-elevate"
+                          onClick={() => {
+                            scrollToSection(tag.id);
+                            setIsMobileTagsExpanded(false);
+                          }}
+                          data-testid={`link-tag-mobile-${tag.slug}`}
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Posts by Tag */}
-          <div className="container mx-auto px-4 pb-16">
-            {allTags.map((tag, tagIndex) => {
-              const tagPosts = postsByTag.get(tag.id) || [];
-              if (tagPosts.length === 0) return null;
+          {/* Tag-based Article Sections */}
+          {allTags.map((tag, tagIndex) => {
+            const postsForTag = postsByTag.get(tag.id) || [];
+            if (postsForTag.length === 0) return null;
 
-              return (
-                <div key={tag.id} id={`tag-section-${tag.id}`} className="mb-16 last:mb-0 scroll-mt-24">
-                  <h3 className="text-2xl font-heading font-bold mb-6">{tag.name}</h3>
+            const isEven = tagIndex % 2 === 0;
+
+            return (
+              <div
+                key={tag.id}
+                id={`tag-section-${tag.id}`}
+                ref={(el) => registerSection(tag.id, el)}
+                className={`py-10 scroll-mt-24 ${isEven ? "" : "bg-background/50"}`}
+              >
+                <div className="container mx-auto px-4">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Badge variant="default" className="text-sm px-3 py-1">
+                      {tag.name}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {d("pages.blog.rechargingGuide.articles.label", { count: postsForTag.length })}
+                    </span>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tagPosts.map((post, postIndex) => (
-                      <React.Fragment key={post.id}>
-                        {/* Insert MiniQuoteCard at position 3 in the first tag section */}
-                        {tagIndex === 0 && postIndex === 3 && (
+                    {postsForTag.flatMap((post, index) => {
+                      // Insert MiniQuoteCard at position 3 in the first tag section
+                      if (tagIndex === 0 && index === 2) {
+                        return [
                           <MiniQuoteCard
+                            key="mini-quote-card"
                             pageId="blog"
                             dictionary={dictionary}
                             pageRegistry={pageRegistry}
                             lang={lang}
-                          />
-                        )}
+                          />,
+                          <BlogCard
+                            key={post.id}
+                            {...post}
+                            dictionary={dictionary}
+                            pageRegistry={pageRegistry}
+                          />,
+                        ];
+                      }
+                      return [
                         <BlogCard
-                          id={post.id}
-                          title={post.title}
-                          category={post.category}
-                          categorySlug={post.categorySlug}
-                          slug={post.slug}
-                          readingTime={post.readingTime}
-                          image={post.image}
-                          excerpt={post.excerpt}
-                          date={post.date}
+                          key={post.id}
+                          {...post}
                           dictionary={dictionary}
                           pageRegistry={pageRegistry}
-                        />
-                      </React.Fragment>
-                    ))}
+                        />,
+                      ];
+                    })}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+
+          {/* Fallback: Show guide posts grid if no tags */}
+          {allTags.length === 0 && (
+            <div className="py-8">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {guidePosts.flatMap((post, index) => {
+                    if (index === 2) {
+                      return [
+                        <MiniQuoteCard
+                          key="mini-quote-card"
+                          pageId="blog"
+                          dictionary={dictionary}
+                          pageRegistry={pageRegistry}
+                          lang={lang}
+                        />,
+                        <BlogCard
+                          key={post.id}
+                          {...post}
+                          dictionary={dictionary}
+                          pageRegistry={pageRegistry}
+                        />,
+                      ];
+                    }
+                    return [
+                      <BlogCard
+                        key={post.id}
+                        {...post}
+                        dictionary={dictionary}
+                        pageRegistry={pageRegistry}
+                      />,
+                    ];
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
-      {/* Other Articles */}
+      {/* Other Articles Section */}
       {otherPosts.length > 0 && (
-        <section className="py-16">
+        <section className="py-12">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-heading font-bold mb-6" data-testid="heading-other-articles">
-              {t(dictionary, "pages.blog.otherArticles.headline")}
-            </h2>
-
-            {/* Category filter */}
-            {categories.length > 1 && (
-              <div className="flex items-center gap-2 flex-wrap mb-8">
+            <div className="mb-8">
+              <h2
+                className="text-3xl font-heading font-bold mb-6"
+                data-testid="heading-articles-section"
+              >
+                {d("pages.blog.restOfBlog.headline")}
+              </h2>
+              <div className="flex flex-wrap gap-2">
                 <Badge
-                  variant={selectedCategory === null ? "default" : "secondary"}
+                  variant={selectedCategory === null ? "default" : "outline"}
                   className="cursor-pointer"
                   onClick={() => setSelectedCategory(null)}
+                  data-testid="badge-category-all"
                 >
-                  {t(dictionary, "pages.blog.otherArticles.filterAll")}
+                  {d("pages.blog.restOfBlog.tags.all")}
                 </Badge>
-                {categories.map((cat) => (
+                {categories.map((category) => (
                   <Badge
-                    key={cat}
-                    variant={selectedCategory === cat ? "default" : "secondary"}
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "outline"}
                     className="cursor-pointer"
-                    onClick={() => setSelectedCategory(cat)}
+                    onClick={() => setSelectedCategory(category)}
+                    data-testid={`badge-category-${category}`}
                   >
-                    {cat}
+                    {category}
                   </Badge>
                 ))}
               </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredPosts.map((post) => (
                 <BlogCard
                   key={post.id}
-                  id={post.id}
-                  title={post.title}
-                  category={post.category}
-                  categorySlug={post.categorySlug}
-                  slug={post.slug}
-                  readingTime={post.readingTime}
-                  image={post.image}
-                  excerpt={post.excerpt}
-                  date={post.date}
+                  {...post}
                   dictionary={dictionary}
                   pageRegistry={pageRegistry}
                 />
@@ -285,6 +451,17 @@ export function BlogListing({
           </div>
         </section>
       )}
+
+      {/* GetQuote CTA */}
+      <GetQuote
+        variant={getQuoteVariant}
+        title={d("pages.blog.blocks.getquote.headline")}
+        subtitle={d("pages.blog.blocks.getquote.subheadline")}
+        ctaLabel={d("pages.blog.blocks.getquote.cta.label")}
+        ctaHref={quoteHref}
+        note={d("pages.blog.blocks.getquote.note")}
+        image={getQuoteBlock?.image}
+      />
     </div>
   );
 }

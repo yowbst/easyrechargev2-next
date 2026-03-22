@@ -101,6 +101,7 @@ export function Footer({
           {external ? (
             <a
               href={href}
+              title={label}
               target={item.open_in_new_tab ? "_blank" : "_self"}
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground"
@@ -110,6 +111,7 @@ export function Footer({
           ) : (
             <Link
               href={href}
+              title={label}
               className="text-muted-foreground hover:text-foreground"
             >
               {label}
@@ -159,6 +161,7 @@ export function Footer({
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
               aria-label={social.id}
+              title={social.id}
             >
               <LucideCmsIcon name={social.icon_lucide} className="h-5 w-5" />
             </a>

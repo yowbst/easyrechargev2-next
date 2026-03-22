@@ -106,24 +106,48 @@ export default async function Home({ params }: HomeProps) {
   const trustpilot = gc?.trustpilot || {};
   const slas = gc?.slas || {};
 
+  // Pre-interpolate global config SLA values into dictionary strings
+  const slaEntries: [string, string][] = [
+    ["quote_request_duration", String(slas?.quote_request_duration?.value ?? 3)],
+    ["first_contact", String(slas?.first_contact?.value ?? 48)],
+    ["quote_delivery_timeline", String(slas?.quote_delivery_timeline?.value ?? "3-5")],
+  ];
+  for (const key of Object.keys(dictionary)) {
+    for (const [varName, varVal] of slaEntries) {
+      if (dictionary[key].includes(`{${varName}}`)) {
+        dictionary[key] = dictionary[key].replace(new RegExp(`\\{${varName}\\}`, "g"), varVal);
+      }
+    }
+  }
+
   // Hero data
   const heroTranslation = heroBlock?.translations?.[0];
   const heroTitle = heroTranslation?.headline || t(dictionary, "pages.home.blocks.hero.title");
-  const heroSubtitle = heroTranslation?.subheadline || t(dictionary, "pages.home.blocks.hero.subtitle", {
+  const slaVars = {
     quote_request_duration: slas?.quote_request_duration?.value ?? 3,
-  });
+    first_contact: slas?.first_contact?.value ?? 48,
+    quote_delivery_timeline: slas?.quote_delivery_timeline?.value ?? "3-5",
+  };
+  const heroSubtitleRaw = heroTranslation?.subheadline || t(dictionary, "pages.home.blocks.hero.subtitle");
+  const heroSubtitle = Object.entries(slaVars).reduce(
+    (str, [k, v]) => str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)),
+    heroSubtitleRaw,
+  );
   const heroImage = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
-  // Hero checks: array of strings from block translation content
-  const heroChecksConfig = heroBlock?.content?.checks
+  // Hero checks: read from block translation content (not block root content)
+  const heroTranslationChecks = heroTranslation?.content?.checks;
+  const heroChecksConfig = heroTranslationChecks
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ? heroBlock.content.checks.map((_: any, i: number) => String(i))
+    ? heroTranslationChecks.map((_: any, i: number) => String(i))
     : undefined;
   const heroChecksMap: Record<string, string> = {};
-  if (heroBlock?.content?.checks) {
+  if (heroTranslationChecks) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    heroBlock.content.checks.forEach((_: any, i: number) => {
+    heroTranslationChecks.forEach((_: any, i: number) => {
       const val = t(dictionary, `pages.home.blocks.hero.checks.${i}`);
-      if (!val.startsWith("[")) heroChecksMap[String(i)] = val;
+      if (val !== `pages.home.blocks.hero.checks.${i}` && !val.startsWith("[")) {
+        heroChecksMap[String(i)] = val;
+      }
     });
   }
   const heroRatingTemplate = t(dictionary, "pages.home.blocks.hero.rating");
@@ -209,12 +233,9 @@ export default async function Home({ params }: HomeProps) {
   }>;
 
   // GetQuote CTA
-  const getQuoteTranslation = getQuoteBlock?.translations?.[0];
   const quoteEntry = pageRegistry.find((p) => p.id === "quote");
   const quoteSlug = quoteEntry?.slugs[lang];
   const ctaHref = quoteSlug ? `/${lang}/${quoteSlug}` : `/${lang}`;
-  const ctaLabel = getQuoteTranslation?.ctas?.[0]?.label ||
-    t(dictionary, "pages.home.blocks.get-quote.cta.label");
 
   // JSON-LD
   const SITE_URL = getSiteUrl();
@@ -239,109 +260,127 @@ export default async function Home({ params }: HomeProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <Hero
-        title={heroTitle}
-        subtitle={heroSubtitle}
-        checksConfig={heroChecksConfig}
-        checks={heroChecksMap}
-        rating={heroRating}
-        image={heroImage}
-        pageId="home"
-      >
-        <MiniQuoteForm
-          miniQuoteContent={miniQuoteBlock ? { config: miniQuoteBlock.config } : undefined}
+      <section id="hero">
+        <Hero
+          title={heroTitle}
+          subtitle={heroSubtitle}
+          checksConfig={heroChecksConfig}
+          checks={heroChecksMap}
+          rating={heroRating}
+          image={heroImage}
           pageId="home"
-          dictionary={dictionary}
-          pageRegistry={pageRegistry}
-          lang={lang}
-        />
-      </Hero>
-
-      <Features
-        title={t(dictionary, "pages.home.features.title")}
-        subtitle={t(dictionary, "pages.home.features.subtitle")}
-        tPrefix="pages.home"
-        image={findBlock(blocks, "block_features")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_features").image}` : undefined}
-        dictionary={dictionary}
-      />
-
-      <ProcessSteps
-        title={t(dictionary, "pages.home.process.title")}
-        subtitle={t(dictionary, "pages.home.process.subtitle")}
-        tPrefix="pages.home"
-        image={findBlock(blocks, "block_process")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_process").image}` : undefined}
-        tOptions={{
-          first_contact: slas?.first_contact?.value ?? 48,
-          quote_delivery_timeline: slas?.quote_delivery_timeline?.value ?? "3-5",
-          quote_request_duration: slas?.quote_request_duration?.value ?? 3,
-        }}
-        dictionary={dictionary}
-      />
-
-      <SwissMap
-        title={t(dictionary, "pages.home.location.title")}
-        subtitle={t(dictionary, "pages.home.location.subtitle")}
-        activeCantons={page?.config?.location?.activeCantons || ["GE", "VD", "FR", "VS"]}
-        statsConfig={[
-          { id: "cantonsCovered", icon: "Pin", value: stats.cantons ?? 4 },
-          { id: "certifiedInstallers", icon: "CheckCircle", value: stats.partners ?? 1 },
-          { id: "installationsDone", icon: "Zap", value: stats.installations ?? 550 },
-        ]}
-        tPrefix="pages.home"
-        dictionary={dictionary}
-      />
-
-      {guideCarouselPosts.length > 0 && (
-        <GuideCarousel
-          title={postGroupTranslation?.headline || t(dictionary, "pages.home.blocks.postgroup.title")}
-          subtitle={postGroupTranslation?.subheadline || t(dictionary, "pages.home.blocks.postgroup.subtitle")}
-          ctaLabel={postGroupTranslation?.ctas?.[0]?.label || t(dictionary, "pages.home.blocks.postgroup.cta.label")}
-          ctaHref={`/${lang}/${blogSlug}`}
-          posts={guideCarouselPosts}
-          image={findBlock(blocks, "block_postgroup")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_postgroup").image}` : undefined}
-          dictionary={dictionary}
-          pageRegistry={pageRegistry}
-        />
-      )}
-
-      {faqItems.length > 0 && (() => {
-        const faqBlockData = findBlock(blocks, "block_faq");
-        const faqTranslation = faqBlockData?.translations?.[0];
-        const faqCta = faqTranslation?.ctas?.[0];
-        const faqCtaHref = faqCta?.page_route_id
-          ? resolveRouteId(faqCta.page_route_id, lang, pageRegistry) || `/${lang}`
-          : undefined;
-        return (
-          <FAQ
-            title={faqTranslation?.headline || t(dictionary, "pages.home.blocks.faq.title")}
-            subtitle={faqTranslation?.subheadline || undefined}
-            items={faqItems}
-            image={faqBlockData?.image ? `${DIRECTUS_URL}/assets/${faqBlockData.image}` : undefined}
-            ctaLabel={faqCta?.label}
-            ctaHref={faqCtaHref}
-            ctaVariant={faqCta?.variant}
+        >
+          <MiniQuoteForm
+            miniQuoteContent={miniQuoteBlock ? { config: miniQuoteBlock.config } : undefined}
+            pageId="home"
+            dictionary={dictionary}
+            pageRegistry={pageRegistry}
             lang={lang}
+            tOptions={{
+              quote_request_duration: slas?.quote_request_duration?.value ?? 3,
+            }}
+          />
+        </Hero>
+      </section>
+
+      <section id="features">
+        <Features
+          title={t(dictionary, "pages.home.features.title")}
+          subtitle={t(dictionary, "pages.home.features.subtitle")}
+          tPrefix="pages.home"
+          image={findBlock(blocks, "block_features")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_features").image}` : undefined}
+          dictionary={dictionary}
+        />
+      </section>
+
+      <section id="process">
+        <ProcessSteps
+          title={t(dictionary, "pages.home.process.title")}
+          subtitle={t(dictionary, "pages.home.process.subtitle")}
+          tPrefix="pages.home"
+          image={findBlock(blocks, "block_process")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_process").image}` : undefined}
+          tOptions={{
+            first_contact: slas?.first_contact?.value ?? 48,
+            quote_delivery_timeline: slas?.quote_delivery_timeline?.value ?? "3-5",
+            quote_request_duration: slas?.quote_request_duration?.value ?? 3,
+          }}
+          dictionary={dictionary}
+        />
+      </section>
+
+      <section id="recharging-guide">
+        {guideCarouselPosts.length > 0 && (
+          <GuideCarousel
+            title={postGroupTranslation?.headline || t(dictionary, "pages.home.blocks.postgroup.title")}
+            subtitle={postGroupTranslation?.subheadline || t(dictionary, "pages.home.blocks.postgroup.subtitle")}
+            ctaLabel={postGroupTranslation?.ctas?.[0]?.label || t(dictionary, "pages.home.blocks.postgroup.cta.label")}
+            ctaHref={`/${lang}/${blogSlug}`}
+            posts={guideCarouselPosts}
+            image={findBlock(blocks, "block_postgroup")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_postgroup").image}` : undefined}
+            dictionary={dictionary}
             pageRegistry={pageRegistry}
           />
-        );
-      })()}
+        )}
+      </section>
 
-      {testimonialItems.length > 0 && (
-        <Testimonials
-          headline={t(dictionary, "pages.home.blocks.testimonials.title")}
-          subheadline={t(dictionary, "pages.home.blocks.testimonials.subtitle")}
-          itemsConfig={testimonialItems.map((ti) => ({ id: ti.id, rating: ti.rating }))}
-          pageId="home"
-          image={findBlock(blocks, "block_testimonials")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_testimonials").image}` : undefined}
+      <section id="location">
+        <SwissMap
+          title={t(dictionary, "pages.home.location.title")}
+          subtitle={t(dictionary, "pages.home.location.subtitle")}
+          activeCantons={page?.config?.location?.activeCantons || ["GE", "VD", "FR", "VS"]}
+          statsConfig={[
+            { id: "cantonsCovered", icon: "Pin", value: stats.cantons ?? 4 },
+            { id: "certifiedInstallers", icon: "CheckCircle", value: stats.partners ?? 1 },
+            { id: "installationsDone", icon: "Zap", value: stats.installations ?? 550 },
+          ]}
+          tPrefix="pages.home"
           dictionary={dictionary}
         />
-      )}
+      </section>
+
+      <section id="faq">
+        {faqItems.length > 0 && (() => {
+          const faqBlockData = findBlock(blocks, "block_faq");
+          const faqTranslation = faqBlockData?.translations?.[0];
+          const faqCta = faqTranslation?.ctas?.[0];
+          const faqCtaHref = faqCta?.page_route_id
+            ? resolveRouteId(faqCta.page_route_id, lang, pageRegistry) || `/${lang}`
+            : undefined;
+          return (
+            <FAQ
+              title={faqTranslation?.headline || t(dictionary, "pages.home.blocks.faq.title")}
+              subtitle={faqTranslation?.subheadline || undefined}
+              items={faqItems}
+              image={faqBlockData?.image ? `${DIRECTUS_URL}/assets/${faqBlockData.image}` : undefined}
+              ctaLabel={faqCta?.label}
+              ctaHref={faqCtaHref}
+              ctaVariant={faqCta?.variant}
+              lang={lang}
+              pageRegistry={pageRegistry}
+            />
+          );
+        })()}
+      </section>
+
+      <section id="testimonials">
+        {testimonialItems.length > 0 && (
+          <Testimonials
+            headline={t(dictionary, "pages.home.blocks.testimonials.title")}
+            subheadline={t(dictionary, "pages.home.blocks.testimonials.subtitle")}
+            itemsConfig={testimonialItems.map((ti) => ({ id: ti.id, rating: ti.rating }))}
+            pageId="home"
+            image={findBlock(blocks, "block_testimonials")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_testimonials").image}` : undefined}
+            dictionary={dictionary}
+          />
+        )}
+      </section>
 
       <GetQuote
-        title={getQuoteTranslation?.headline || t(dictionary, "pages.home.blocks.get-quote.title")}
-        subtitle={getQuoteTranslation?.subheadline || t(dictionary, "pages.home.blocks.get-quote.subtitle")}
-        ctaLabel={ctaLabel}
+        title={t(dictionary, "pages.home.blocks.getquote.headline")}
+        subtitle={t(dictionary, "pages.home.blocks.getquote.subheadline")}
+        ctaLabel={t(dictionary, "pages.home.blocks.getquote.cta.label")}
         ctaHref={ctaHref}
+        note={t(dictionary, "pages.home.blocks.getquote.note")}
         image={getQuoteBlock?.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined}
       />
     </>

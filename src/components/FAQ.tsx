@@ -103,13 +103,13 @@ export function FAQ({
           {/* Right column: image (desktop only, sticky) */}
           {hasImage && (
             <div className="hidden lg:block lg:sticky lg:top-24 self-start">
-              <div className="relative rounded-2xl overflow-hidden aspect-[4/5]">
+              <div className="relative rounded-2xl overflow-hidden aspect-[4/5] max-w-lg mx-auto">
                 <img
-                  {...cmsImage(image, [400, 600])}
+                  {...cmsImage(image, [480, 640, 800], { quality: 80 })}
                   alt=""
                   loading="lazy"
-                  width={600}
-                  height={750}
+                  width={800}
+                  height={1000}
                   className="w-full h-full object-cover"
                   aria-hidden="true"
                 />

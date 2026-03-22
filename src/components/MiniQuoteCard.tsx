@@ -18,6 +18,7 @@ interface MiniQuoteCardProps {
   dictionary: Record<string, string>;
   pageRegistry: PageRegistryEntry[];
   lang: string;
+  interpolationValues?: Record<string, string>;
 }
 
 export function MiniQuoteCard({
@@ -26,13 +27,14 @@ export function MiniQuoteCard({
   dictionary,
   pageRegistry,
   lang,
+  interpolationValues = {},
 }: MiniQuoteCardProps) {
   const router = useRouter();
   const ph = usePostHog();
   const telemetry = useFormTelemetry({ formType: "mini-quote-card", locale: lang });
 
   const mqp = `pages.${pageId || "default"}.blocks.mini-quote`;
-  const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
+  const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, { ...interpolationValues, ...vars });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
