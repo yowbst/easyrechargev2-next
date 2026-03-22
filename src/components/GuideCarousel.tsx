@@ -56,9 +56,9 @@ export function GuideCarousel({
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
   const transformedPosts = posts || [];
-  const resolvedTitle = title || t(dictionary, "pages.home.blocks.postgroup.title");
-  const resolvedSubtitle = subtitle || t(dictionary, "pages.home.blocks.postgroup.subtitle");
-  const resolvedCtaLabel = ctaLabel || t(dictionary, "pages.home.blocks.postgroup.cta.label");
+  const resolvedTitle = title || "";
+  const resolvedSubtitle = subtitle || "";
+  const resolvedCtaLabel = ctaLabel || "";
 
   const carouselContent = (
     <div className="relative">

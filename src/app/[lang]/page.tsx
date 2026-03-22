@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchPage, fetchLayout, fetchPageRegistry } from "@/lib/directus-queries";
-import { extractPageDictionary, t } from "@/lib/i18n/dictionaries";
+import { extractPageDictionary, extractLayoutDictionary, t } from "@/lib/i18n/dictionaries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -92,7 +92,9 @@ export default async function Home({ params }: HomeProps) {
     fetchPageRegistry(),
   ]);
 
-  const dictionary = page ? extractPageDictionary("home", page, locale) : {};
+  const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
+  const pageDict = page ? extractPageDictionary("home", page, locale) : {};
+  const dictionary = { ...layoutDict, ...pageDict };
   const blocks = page?.blocks || [];
 
   const heroBlock = findBlock(blocks, "block_hero");
@@ -311,9 +313,9 @@ export default async function Home({ params }: HomeProps) {
       <section id="recharging-guide">
         {guideCarouselPosts.length > 0 && (
           <GuideCarousel
-            title={postGroupTranslation?.headline || t(dictionary, "pages.home.blocks.postgroup.title")}
-            subtitle={postGroupTranslation?.subheadline || t(dictionary, "pages.home.blocks.postgroup.subtitle")}
-            ctaLabel={postGroupTranslation?.ctas?.[0]?.label || t(dictionary, "pages.home.blocks.postgroup.cta.label")}
+            title={postGroupTranslation?.headline}
+            subtitle={postGroupTranslation?.subheadline}
+            ctaLabel={postGroupTranslation?.ctas?.[0]?.label}
             ctaHref={`/${lang}/${blogSlug}`}
             posts={guideCarouselPosts}
             image={findBlock(blocks, "block_postgroup")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_postgroup").image}` : undefined}

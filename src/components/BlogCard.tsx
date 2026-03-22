@@ -93,7 +93,7 @@ export function BlogCard({
             <div className={`flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-muted-foreground"}`}>
               <Clock className="h-3 w-3" />
               <span>
-                {t(dictionary, "shared.blogCard.readingTime.label_one", {
+                {t(dictionary, "shared.blogCard.readingTime.label", {
                   count: readingTime,
                 })}
               </span>

@@ -1,7 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
 import { LucideCmsIcon } from "./LucideCmsIcon";
-import { DIRECTUS_URL } from "@/lib/directus";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
@@ -43,14 +41,8 @@ export function Footer({
     layoutData?.footer_about_navigation?.items || [];
   const footerConfig = layoutData?.footer_config || {};
 
-  const logoColorId = layoutData?.logo_color;
-  const logoWhiteId = layoutData?.logo_white;
-  const logoSrc = logoColorId
-    ? `${DIRECTUS_URL}/assets/${logoColorId}`
-    : null;
-  const logoDarkSrc = logoWhiteId
-    ? `${DIRECTUS_URL}/assets/${logoWhiteId}`
-    : null;
+  const logoSrc = "/logo-color.svg";
+  const logoDarkSrc = "/logo-white.svg";
 
   const socials = footerConfig?.socials || [];
   const stepRows = footerConfig?.columns?.rows || [];
@@ -124,30 +116,22 @@ export function Footer({
   const columns: Record<string, React.ReactNode> = {
     brand: (
       <div key="brand">
-        {logoSrc ? (
-          <>
-            <Image
-              src={logoSrc}
-              alt="easyRecharge"
-              width={160}
-              height={40}
-              className="h-10 mb-3 dark:hidden"
-              style={{ width: "auto", height: "2.5rem" }}
-            />
-            <Image
-              src={logoDarkSrc || logoSrc}
-              alt="easyRecharge"
-              width={160}
-              height={40}
-              className="h-10 mb-3 hidden dark:block"
-              style={{ width: "auto", height: "2.5rem" }}
-            />
-          </>
-        ) : (
-          <span className="font-heading text-xl font-bold text-primary block mb-3">
-            easyRecharge
-          </span>
-        )}
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoSrc}
+            alt="easyRecharge"
+            className="h-10 mb-3 dark:hidden"
+            style={{ width: "auto", height: "2.5rem" }}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoDarkSrc}
+            alt="easyRecharge"
+            className="h-10 mb-3 hidden dark:block"
+            style={{ width: "auto", height: "2.5rem" }}
+          />
+        </>
         {brandTagline && !brandTagline.startsWith("[") && (
           <p className="text-sm text-muted-foreground mb-4">{brandTagline}</p>
         )}
@@ -206,13 +190,14 @@ export function Footer({
               if (!label || label.startsWith("[")) return null;
 
               const stepIcon = row.icon_lucide;
+              const isNumeric = /^\d+$/.test(stepIcon || "");
               return (
                 <li key={row.id} className="flex items-start gap-2">
-                  {stepIcon ? (
+                  {stepIcon && !isNumeric ? (
                     <LucideCmsIcon name={stepIcon} className="h-5 w-5 shrink-0 mt-0.5 text-primary" />
                   ) : (
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs shrink-0">
-                      {row.id}
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0 mt-0.5">
+                      {isNumeric ? stepIcon : row.id}
                     </span>
                   )}
                   <span>{label}</span>

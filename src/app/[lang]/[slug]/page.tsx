@@ -598,9 +598,9 @@ export default async function SlugPage({ params }: SlugPageProps) {
               return (
                 <section key={index} id="recharging-guide">
                   <GuideCarousel
-                    title={pgTranslation?.headline || t(dictionary, `${tPrefix}.blocks.postgroup.title`)}
-                    subtitle={pgTranslation?.subheadline || t(dictionary, `${tPrefix}.blocks.postgroup.subtitle`)}
-                    ctaLabel={pgTranslation?.ctas?.[0]?.label || t(dictionary, `${tPrefix}.blocks.postgroup.cta.label`)}
+                    title={pgTranslation?.headline}
+                    subtitle={pgTranslation?.subheadline}
+                    ctaLabel={pgTranslation?.ctas?.[0]?.label}
                     ctaHref={`/${lang}/${blogSlug}`}
                     posts={posts}
                     image={item.image ? `${DIRECTUS_URL}/assets/${item.image}` : undefined}

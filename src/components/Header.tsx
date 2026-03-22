@@ -1,10 +1,10 @@
 import Link from "next/link";
-import Image from "next/image";
+
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
 import { NavLink } from "./NavLink";
-import { DIRECTUS_URL } from "@/lib/directus";
+
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
@@ -48,14 +48,8 @@ export function Header({
   const headerNavItems = layoutData?.header_navigation?.items || [];
   const headerConfig = layoutData?.header_config || {};
 
-  const logoColorId = layoutData?.logo_color;
-  const logoWhiteId = layoutData?.logo_white;
-  const logoSrc = logoColorId
-    ? `${DIRECTUS_URL}/assets/${logoColorId}`
-    : null;
-  const logoDarkSrc = logoWhiteId
-    ? `${DIRECTUS_URL}/assets/${logoWhiteId}`
-    : null;
+  const logoSrc = "/logo-color.svg";
+  const logoDarkSrc = "/logo-white.svg";
 
   // Build nav links
   const navLinks = headerNavItems
@@ -111,33 +105,23 @@ export function Header({
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href={`/${lang}`} title="easyRecharge" className="flex items-center" data-testid="link-home">
-          {logoSrc ? (
-            <>
-              <Image
-                src={logoSrc}
-                alt="easyRecharge"
-                width={160}
-                height={40}
-                className="h-10 dark:hidden"
-                style={{ width: "auto", height: "2.5rem" }}
-                priority
-                data-testid="img-logo"
-              />
-              <Image
-                src={logoDarkSrc || logoSrc}
-                alt="easyRecharge"
-                width={160}
-                height={40}
-                className="h-10 hidden dark:block"
-                style={{ width: "auto", height: "2.5rem" }}
-                priority
-              />
-            </>
-          ) : (
-            <span className="font-heading text-xl font-bold text-primary">
-              easyRecharge
-            </span>
-          )}
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoSrc}
+              alt="easyRecharge"
+              className="h-10 dark:hidden"
+              style={{ width: "auto", height: "2.5rem" }}
+              data-testid="img-logo"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoDarkSrc}
+              alt="easyRecharge"
+              className="h-10 hidden dark:block"
+              style={{ width: "auto", height: "2.5rem" }}
+            />
+          </>
         </Link>
 
         {/* Desktop Navigation */}
