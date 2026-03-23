@@ -4,6 +4,7 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
 import { NavLink } from "./NavLink";
+import { EnvBadge } from "./EnvBadge";
 
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -123,6 +124,7 @@ export function Header({
             />
           </>
         </Link>
+        <EnvBadge />
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
