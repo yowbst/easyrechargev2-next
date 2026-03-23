@@ -6,19 +6,29 @@
 import { fetchPageRegistry, type PageRegistryEntry } from "./directus-queries";
 import { getRouteSlug, type AppLangSlug } from "./i18n/config";
 
-export type RouteType =
+export type SlugRoute =
   | { type: "cms-page"; routeId: string; entry: PageRegistryEntry }
   | { type: "quote"; routeId: string; entry: PageRegistryEntry }
   | { type: "contact"; routeId: string; entry: PageRegistryEntry }
   | { type: "blog-listing"; routeId: string; entry: PageRegistryEntry }
   | { type: "vehicles-listing"; routeId: string; entry: PageRegistryEntry }
+  | null;
+
+export type Sub1Route =
   | { type: "vehicle-detail"; slug: string; vehiclesEntry: PageRegistryEntry }
   | { type: "vehicle-brands"; vehiclesEntry: PageRegistryEntry }
+  | { type: "blog-listing"; routeId: string; entry: PageRegistryEntry }
+  | { type: "quote-success"; quoteEntry: PageRegistryEntry }
+  | { type: "quote-submission"; submissionId: string; quoteEntry: PageRegistryEntry }
+  | null;
+
+export type Sub2Route =
   | { type: "vehicle-brand-detail"; brandSlug: string; vehiclesEntry: PageRegistryEntry }
   | { type: "vehicle-model-detail"; brandSlug: string; vehicleSlug: string; vehiclesEntry: PageRegistryEntry }
   | { type: "blog-post"; blogSlug: string; categorySlug: string; postSlug: string; blogEntry: PageRegistryEntry }
-  | { type: "quote-success"; quoteEntry: PageRegistryEntry }
   | null;
+
+export type RouteType = SlugRoute | Sub1Route | Sub2Route;
 
 /**
  * Resolve a top-level slug (1-segment after lang) to a route type.
@@ -26,7 +36,7 @@ export type RouteType =
 export async function resolveSlugRoute(
   slug: string,
   lang: string,
-): Promise<RouteType> {
+): Promise<SlugRoute> {
   const registry = await fetchPageRegistry();
   const entry = registry.find((p) => p.slugs[lang] === slug);
 
@@ -56,7 +66,7 @@ export async function resolveSub1Route(
   slug: string,
   sub1: string,
   lang: string,
-): Promise<RouteType> {
+): Promise<Sub1Route> {
   const registry = await fetchPageRegistry();
   const entry = registry.find((p) => p.slugs[lang] === slug);
 
@@ -72,8 +82,13 @@ export async function resolveSub1Route(
     return { type: "vehicle-detail", slug: sub1, vehiclesEntry: entry };
   }
 
-  // Quote success: /{lang}/{quoteSlug}/{confirmationSegment}
+  // Quote: /{lang}/{quoteSlug}/{sub1}
+  // sub1 is either a confirmation segment or a submission UUID
   if (entry.id === "quote") {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (UUID_RE.test(sub1)) {
+      return { type: "quote-submission", submissionId: sub1, quoteEntry: entry };
+    }
     return { type: "quote-success", quoteEntry: entry };
   }
 
@@ -94,7 +109,7 @@ export async function resolveSub2Route(
   sub1: string,
   sub2: string,
   lang: string,
-): Promise<RouteType> {
+): Promise<Sub2Route> {
   const registry = await fetchPageRegistry();
   const entry = registry.find((p) => p.slugs[lang] === slug);
 
