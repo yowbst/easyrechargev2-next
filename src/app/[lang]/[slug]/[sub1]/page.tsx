@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { isValidLang, slugToDirectusLocale, getRouteSlug } from "@/lib/i18n/config";
@@ -28,6 +29,8 @@ import { wrapInGraph, buildVehicleProduct, buildBreadcrumbList } from "@/lib/seo
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
 import { VehicleDetailClient } from "@/components/VehicleDetailClient";
 import { GetQuote } from "@/components/GetQuote";
+import { QuoteSuccess as QuoteSuccessClient } from "@/components/quote/QuoteSuccess";
+import { QuoteSubmissionView as QuoteSubmissionViewClient } from "@/components/quote/QuoteSubmissionView";
 import {
   ArrowLeft,
   CheckCircle,
@@ -166,7 +169,7 @@ export async function generateMetadata({ params }: Sub1PageProps): Promise<Metad
     });
   }
 
-  if (route.type === "quote-success") {
+  if (route.type === "quote-success" || route.type === "quote-submission") {
     return {
       title: "easyRecharge",  // noindex page — no SEO title needed
       robots: { index: false, follow: false },
@@ -798,28 +801,88 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
   // Quote success
   if (route.type === "quote-success") {
-    const quotePage = await fetchPage("quote-success", locale);
-    const dictionary = quotePage ? extractPageDictionary("quote-success", quotePage, locale) : {};
-    const d = (key: string) => t(dictionary, key);
+    const [quotePage, layoutData, registry] = await Promise.all([
+      fetchPage("quote-success", locale),
+      fetchLayout(locale),
+      fetchPageRegistry(),
+    ]);
+    const dictionary = quotePage
+      ? extractPageDictionary("quote-success", quotePage, locale)
+      : {};
+
+    // Extract hero block data
+    const heroBlock = quotePage?.blocks?.find(
+      (b: any) => b?.collection === "block_hero",
+    )?.item;
+    const heroImageUrl = heroBlock?.image
+      ? `${DIRECTUS_URL}/assets/${heroBlock.image}`
+      : undefined;
+    const ctas: Array<{
+      label?: string;
+      type?: string;
+      variant?: string;
+      page_route_id?: string;
+    }> = heroBlock?.translations?.[0]?.ctas ?? [];
+
+    // SLA vars from global config
+    const gc = layoutData?.global_config ?? {};
+    const slas = gc?.slas ?? {};
+    const firstContact = slas?.first_contact?.value ?? 48;
+    const deliveryTimeline =
+      slas?.quote_delivery_timeline?.value ?? "3-5";
 
     return (
-      <div className="flex-1 flex items-center justify-center py-24">
-        <div className="text-center space-y-6 max-w-lg px-4">
-          <CheckCircle className="h-16 w-16 text-primary mx-auto" />
-          <h1 className="font-heading text-3xl font-bold">
-            {d("pages.quote-success.blocks.hero.title")}
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            {d("pages.quote-success.blocks.hero.subtitle")}
-          </p>
-          <Link
-            href={`/${lang}`}
-            className="inline-flex items-center justify-center rounded-lg px-8 h-9 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/80"
-          >
-            {d("pages.quote-success.blocks.hero.cta.label")}
-          </Link>
-        </div>
-      </div>
+      <Suspense>
+        <QuoteSuccessClient
+          lang={lang}
+          dictionary={dictionary}
+          heroImageUrl={heroImageUrl}
+          ctas={ctas}
+          slaVars={{
+            first_contact: firstContact,
+            quote_delivery_timeline: deliveryTimeline,
+          }}
+          quoteSlug={slug}
+          pageRegistry={registry}
+        />
+      </Suspense>
+    );
+  }
+
+  // Quote submission view
+  if (route.type === "quote-submission") {
+    const [quotePage, quoteViewPage, layoutData] = await Promise.all([
+      fetchPage("quote", locale),
+      fetchPage("quote-view", locale),
+      fetchLayout(locale),
+    ]);
+    const quoteDict = quotePage
+      ? extractPageDictionary("quote", quotePage, locale)
+      : {};
+    const viewDict = quoteViewPage
+      ? extractPageDictionary("quote-view", quoteViewPage, locale)
+      : {};
+    const dictionary = { ...quoteDict, ...viewDict };
+
+    const logoColorUrl = layoutData?.logo_color
+      ? `${DIRECTUS_URL}/assets/${layoutData.logo_color}`
+      : "/logo-color.svg";
+    const logoWhiteUrl = layoutData?.logo_white
+      ? `${DIRECTUS_URL}/assets/${layoutData.logo_white}`
+      : "/logo-white.svg";
+
+    return (
+      <Suspense>
+        <QuoteSubmissionViewClient
+          lang={lang}
+          submissionId={route.submissionId}
+          dictionary={dictionary}
+          quoteConfig={quotePage?.config || {}}
+          logoColorUrl={logoColorUrl}
+          logoWhiteUrl={logoWhiteUrl}
+          directusUrl={DIRECTUS_URL}
+        />
+      </Suspense>
     );
   }
 

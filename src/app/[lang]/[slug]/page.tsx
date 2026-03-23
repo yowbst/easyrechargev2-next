@@ -143,8 +143,8 @@ export default async function SlugPage({ params }: SlugPageProps) {
   // Interactive pages: render dedicated form components
   if (INTERACTIVE_PAGES.has(entry.id)) {
     if (entry.id === "quote") {
-      const logoSrc = layoutData?.logo_color ? `${DIRECTUS_URL}/assets/${layoutData.logo_color}` : undefined;
-      const logoDarkSrc = layoutData?.logo_white ? `${DIRECTUS_URL}/assets/${layoutData.logo_white}` : undefined;
+      const logoSrc = layoutData?.logo_color ? `${DIRECTUS_URL}/assets/${layoutData.logo_color}` : "/logo-color.svg";
+      const logoDarkSrc = layoutData?.logo_white ? `${DIRECTUS_URL}/assets/${layoutData.logo_white}` : "/logo-white.svg";
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const quoteHeroBlock = page?.blocks?.find((b: any) => b?.collection === "block_hero")?.item;
       const quoteHeroImage = quoteHeroBlock?.image ? `${DIRECTUS_URL}/assets/${quoteHeroBlock.image}` : undefined;

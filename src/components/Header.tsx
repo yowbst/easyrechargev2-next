@@ -154,7 +154,7 @@ export function Header({
                 title={ctaLink.label}
                 target={ctaLink.openInNewTab ? "_blank" : "_self"}
                 rel={ctaLink.openInNewTab ? "noopener noreferrer" : undefined}
-                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground [a]:hover:bg-primary/80 h-8 px-2.5 text-sm font-medium transition-all"
+                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground [a]:hover:bg-primary/80 min-h-9 px-4 text-sm font-medium transition-all"
                 data-testid="button-header-quote"
               >
                 {ctaLink.label}
@@ -163,7 +163,7 @@ export function Header({
               <Link
                 href={ctaLink.href}
                 title={ctaLink.label}
-                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground [a]:hover:bg-primary/80 h-8 px-2.5 text-sm font-medium transition-all"
+                className="hidden md:inline-flex w-44 items-center justify-center rounded-lg bg-primary text-primary-foreground [a]:hover:bg-primary/80 min-h-9 px-4 text-sm font-medium transition-all"
                 data-testid="button-header-quote"
               >
                 {ctaLink.label}

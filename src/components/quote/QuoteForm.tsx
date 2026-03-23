@@ -36,7 +36,6 @@ import { t } from "@/lib/i18n/dictionaries";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Link from "next/link";
-import Image from "next/image";
 import type { CountryCode } from "libphonenumber-js";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
@@ -536,28 +535,22 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
           <div className="hidden md:block" />
           <div className="flex md:justify-center">
             <Link href={`/${lang}`} data-testid="link-logo-home">
-              {logoSrc ? (
-                <>
-                  <Image
-                    src={logoSrc}
-                    alt="easyRecharge"
-                    width={160}
-                    height={40}
-                    className="h-8 md:h-10 w-auto dark:hidden"
-                    data-testid="img-logo-quote"
-                  />
-                  <Image
-                    src={logoDarkSrc || logoSrc}
-                    alt="easyRecharge"
-                    width={160}
-                    height={40}
-                    className="h-8 md:h-10 w-auto hidden dark:block"
-                    data-testid="img-logo-quote-dark"
-                  />
-                </>
-              ) : (
-                <span className="font-heading text-xl font-bold text-primary">easyRecharge</span>
-              )}
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={logoSrc || "/logo-color.svg"}
+                  alt="easyRecharge"
+                  className="h-8 md:h-10 w-auto dark:hidden"
+                  data-testid="img-logo-quote"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={logoDarkSrc || "/logo-white.svg"}
+                  alt="easyRecharge"
+                  className="h-8 md:h-10 w-auto hidden dark:block"
+                  data-testid="img-logo-quote-dark"
+                />
+              </>
             </Link>
           </div>
           <div className="flex justify-end items-center gap-2">
