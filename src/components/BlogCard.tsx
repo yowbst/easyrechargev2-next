@@ -67,7 +67,7 @@ export function BlogCard({
             loading="lazy"
             width={700}
             height={394}
-            className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${isDark ? "brightness-125" : ""}`}
+            className={`w-full h-full object-cover ${isDark ? "brightness-125" : ""}`}
           />
         </div>
         <div className={isCompact ? "p-4 flex flex-col flex-1" : "p-6"}>

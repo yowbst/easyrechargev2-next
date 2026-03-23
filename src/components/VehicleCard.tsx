@@ -89,7 +89,7 @@ export function VehicleCard({
               loading="lazy"
               width={700}
               height={394}
-              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">

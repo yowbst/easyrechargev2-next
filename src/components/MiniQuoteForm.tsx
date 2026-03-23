@@ -82,6 +82,8 @@ export function MiniQuoteForm({
   const [searchValue, setSearchValue] = useState("");
   const [isEditingLocation, setIsEditingLocation] = useState(false);
 
+  const currentStep = !housingStatus || isEditingHousingStatus ? 1 : !selectedLocality || isEditingLocation ? 2 : 3;
+
   useEffect(() => {
     if (!housingStatus) {
       setSelectedLocality(null);
@@ -122,6 +124,18 @@ export function MiniQuoteForm({
       {subtitle && (
         <p className="text-sm text-white/80 leading-snug">{subtitle}</p>
       )}
+
+      {/* Step progress */}
+      <div className="flex items-center gap-1.5">
+        {[1, 2, 3].map((step) => (
+          <div
+            key={step}
+            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+              step <= currentStep ? "bg-white" : "bg-white/25"
+            }`}
+          />
+        ))}
+      </div>
 
       {/* Housing Status Selection */}
       <div className="space-y-3">
