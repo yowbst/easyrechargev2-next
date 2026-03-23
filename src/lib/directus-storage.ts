@@ -9,9 +9,16 @@ function normalizePhone(raw: string | null | undefined): string | null {
   return raw;
 }
 
-/** Tag records with environment so dev/prod submissions are distinguishable. */
+/** Tag records with environment so dev/staging/prod submissions are distinguishable. */
 function getEnvironment(): string {
-  return process.env.NODE_ENV === "production" ? "production" : "development";
+  // VERCEL_ENV is set automatically by Vercel: "production" | "preview" | "development"
+  const vercelEnv = process.env.VERCEL_ENV;
+  // VERCEL_GIT_COMMIT_REF gives us the branch name
+  const branch = process.env.VERCEL_GIT_COMMIT_REF;
+
+  if (vercelEnv === "preview" || branch === "staging") return "staging";
+  if (vercelEnv === "production") return "production";
+  return "development";
 }
 
 interface CreateSessionData {
