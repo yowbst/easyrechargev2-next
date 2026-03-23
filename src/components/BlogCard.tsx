@@ -55,7 +55,7 @@ export function BlogCard({
   return (
     <Link href={articleUrl} title={title}>
       <Card
-        className={`overflow-hidden hover-elevate transition-all duration-300 h-full group ${
+        className={`overflow-hidden hover-elevate transition-all duration-300 h-full group pt-0 gap-0 ${
           isCompact ? "flex flex-col" : ""
         } ${isDark ? "bg-white/10 backdrop-blur-md border-white/15" : ""}`}
         data-testid={`card-blog-${id}`}

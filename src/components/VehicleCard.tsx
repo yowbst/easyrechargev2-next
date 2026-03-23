@@ -78,7 +78,7 @@ export function VehicleCard({
   return (
     <Link href={vehicleUrl} title={`${brand} ${model}`}>
       <Card
-        className="overflow-hidden hover-elevate transition-all duration-300 h-full"
+        className="overflow-hidden hover-elevate transition-all duration-300 h-full pt-0 gap-0"
         data-testid={`card-vehicle-${id}`}
       >
         <div className="aspect-video overflow-hidden relative">
