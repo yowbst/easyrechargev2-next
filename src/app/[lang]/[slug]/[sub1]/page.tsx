@@ -792,7 +792,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
         brandsSegment={brandsSegment}
         dictionary={dictionary}
         heroTitle={heroTranslation?.headline || t(dictionary, `${tPrefix}.blocks.hero.headline`)}
-        heroSubtitle={heroTranslation?.subheadline || t(dictionary, `${tPrefix}.blocks.hero.subheadline`, { count: brandsWithCounts.length })}
+        heroSubtitle={(heroTranslation?.subheadline || t(dictionary, `${tPrefix}.blocks.hero.subheadline`)).replace(/\{count\}/g, String(brandsWithCounts.length))}
         heroImage={heroImage}
         getQuoteBlock={getQuoteData}
       />

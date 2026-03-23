@@ -10,12 +10,14 @@ import {
   fetchBlogPosts,
   fetchVehicle,
   fetchVehicles,
+  fetchVehicleBrands,
   fetchPageRegistry,
   fetchLayout,
   fetchPage,
 } from "@/lib/directus-queries";
-import { VehicleBrandView } from "@/lib/vehicles/shared";
+import { VehicleBrandDetail } from "@/components/VehicleBrandDetail";
 import { transformDirectusVehicle, formatMinutes } from "@/lib/vehicleTransformer";
+import type { Vehicle } from "@/lib/vehicleTransformer";
 import { DIRECTUS_URL } from "@/lib/directus";
 import { cmsImage } from "@/lib/directusAssets";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -240,6 +242,48 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
         modifiedTime: post.date_updated,
         section: ct?.name || route.categorySlug,
       },
+    });
+  }
+
+  if (route.type === "vehicle-brand-detail") {
+    const locale = slugToDirectusLocale(lang);
+    const [rawVehicles, rawBrands, brandPage] = await Promise.all([
+      fetchVehicles(locale),
+      fetchVehicleBrands(locale),
+      fetchPage("vehicle-brand", locale),
+    ]);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const matchedBrand = (rawBrands || []).find((b: any) => b.slug === route.brandSlug);
+    const brandName = matchedBrand?.name || route.brandSlug;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const vehicleCount = (rawVehicles || []).filter((v: any) => v.brand?.slug === route.brandSlug).length;
+
+    const templateSeo = extractItemSEO(brandPage?.translations?.[0]?.seo);
+    const itemSeo = extractItemSEO(matchedBrand?.translations?.[0]?.seo);
+    const merged = mergeItemOverTemplate(itemSeo, templateSeo);
+    const resolved = resolveSEOFieldMappings(merged, {
+      brand: brandName,
+      count: vehicleCount,
+    });
+
+    const SITE_URL = getSiteUrl();
+    const currentPath = `/${lang}/${slug}/${sub1}/${sub2}`;
+    const otherLang = lang === "de" ? "fr" : "de";
+    const vehiclesSlugOther = getRouteSlug(otherLang, "vehicles");
+    const brandsSlugOther = getRouteSlug(otherLang, "brands");
+
+    return buildMetadata({
+      title: normalizeTitle(resolved?.title || `${brandName} - EV`),
+      description: truncate(resolved?.description || `${brandName} - ${vehicleCount} vehicles`),
+      canonical: `${SITE_URL}${currentPath}`,
+      ogImage: matchedBrand?.thumbnail ? resolveImageUrl(matchedBrand.thumbnail) : undefined,
+      ogType: "website",
+      lang,
+      alternates: buildAlternates({
+        [lang]: currentPath,
+        [otherLang]: `/${otherLang}/${vehiclesSlugOther}/${brandsSlugOther}/${route.brandSlug}`,
+      }),
     });
   }
 
@@ -1318,25 +1362,102 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
 
   // ── Vehicle brand detail ───────────────────────────────────────────
   if (route.type === "vehicle-brand-detail") {
-    const [vehicles, layoutData, vehiclesPage] = await Promise.all([
+    const [rawVehicles, rawBrands, layoutData, vehicleBrandPage, vehicleTemplatePage, registry] = await Promise.all([
       fetchVehicles(locale),
+      fetchVehicleBrands(locale),
       fetchLayout(locale),
-      fetchPage("vehicles", locale),
+      fetchPage("vehicle-brand", locale),
+      fetchPage("vehicle", locale),
+      fetchPageRegistry(),
     ]);
+
     const brandsSegment = getRouteSlug(lang, "brands");
+
+    // Build dictionary: layout + vehicle-brand page + vehicle template (for VehicleCard labels)
     const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
-    const pageDict = vehiclesPage ? extractPageDictionary("vehicles", vehiclesPage, locale) : {};
-    const vehicleDictionary = { ...layoutDict, ...pageDict };
+    const brandPageDict = vehicleBrandPage ? extractPageDictionary("vehicle-brand", vehicleBrandPage, locale) : {};
+    const vehicleTemplateDict = vehicleTemplatePage ? extractPageDictionary("vehicle", vehicleTemplatePage, locale) : {};
+    const dictionary = { ...layoutDict, ...brandPageDict, ...vehicleTemplateDict };
+
+    // Pre-interpolate SLA vars
+    const gc = layoutData?.global_config || {};
+    const slas = gc?.slas || {};
+    const slaVars: Record<string, string> = {
+      quote_request_duration: String(slas?.quote_request_duration?.value ?? 3),
+      first_contact: String(slas?.first_contact?.value ?? 48),
+    };
+    for (const key of Object.keys(dictionary)) {
+      for (const [varName, varVal] of Object.entries(slaVars)) {
+        if (dictionary[key].includes(`{${varName}}`)) {
+          dictionary[key] = dictionary[key].replace(new RegExp(`\\{${varName}\\}`, "g"), varVal);
+        }
+      }
+    }
+
+    // Find matching brand
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const matchedBrand = (rawBrands || []).find((b: any) => b.slug === route.brandSlug);
+    const brandName = matchedBrand?.name || route.brandSlug;
+
+    // Filter vehicles for this brand and transform
+    const brandVehicles = (rawVehicles || [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((v: any) => v.brand?.slug === route.brandSlug)
+      .map((dv: Record<string, unknown>) => transformDirectusVehicle(dv as Record<string, unknown>))
+      .filter((v: Vehicle | null): v is Vehicle => v !== null);
+
+    // Extract hero block
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const heroBlock = vehicleBrandPage?.blocks?.find((b: any) => b?.collection === "block_hero")?.item;
+    const heroImage = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
+    const heroIcon = vehicleBrandPage?.config?.hero?.icon || matchedBrand?.icon_simple || "Car";
+
+    // Extract getquote block
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getQuoteBlock = vehicleBrandPage?.blocks?.find((b: any) => b?.collection === "block_getquote")?.item;
+    const tPrefix = "pages.vehicle-brand";
+    const quoteEntry = registry.find((p) => p.id === "quote");
+    const quoteSlug = quoteEntry?.slugs[lang];
+    const ctaHref = quoteSlug ? `/${lang}/${quoteSlug}` : `/${lang}`;
+
+    const getQuoteData = getQuoteBlock ? {
+      headline: t(dictionary, `${tPrefix}.blocks.getquote.headline`, { brand: brandName }),
+      subheadline: t(dictionary, `${tPrefix}.blocks.getquote.subheadline`, { brand: brandName }),
+      ctaLabel: t(dictionary, `${tPrefix}.blocks.getquote.cta.label`, { brand: brandName }),
+      ctaHref,
+      note: t(dictionary, `${tPrefix}.blocks.getquote.note`, { brand: brandName }),
+      variant: getQuoteBlock.variant === "green" ? "primary" as const : "muted" as const,
+      image: getQuoteBlock.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined,
+    } : undefined;
+
+    // JSON-LD breadcrumbs
+    const SITE_URL = getSiteUrl();
+    const jsonLd = wrapInGraph(
+      buildBreadcrumbList([
+        { name: t(dictionary, "common.home"), url: `${SITE_URL}/${lang}` },
+        { name: t(dictionary, "pages.vehicle.breadcrumb.vehicles"), url: `${SITE_URL}/${lang}/${slug}` },
+        { name: t(dictionary, "pages.vehicle-brands.blocks.hero.headline"), url: `${SITE_URL}/${lang}/${slug}/${brandsSegment}` },
+        { name: brandName, url: `${SITE_URL}/${lang}/${slug}/${brandsSegment}/${route.brandSlug}` },
+      ]),
+    );
 
     return (
-      <VehicleBrandView
-        brandSlug={route.brandSlug}
-        vehicles={vehicles}
-        lang={lang}
-        vehiclesSegment={slug}
-        brandsSegment={brandsSegment}
-        dictionary={vehicleDictionary}
-      />
+      <>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <VehicleBrandDetail
+          brandName={brandName}
+          brandSlug={route.brandSlug}
+          vehicles={brandVehicles}
+          lang={lang}
+          vehiclesSegment={slug}
+          brandsSegment={brandsSegment}
+          dictionary={dictionary}
+          pageRegistry={registry}
+          heroIcon={heroIcon}
+          heroImage={heroImage}
+          getQuoteBlock={getQuoteData}
+        />
+      </>
     );
   }
 
