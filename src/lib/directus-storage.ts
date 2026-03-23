@@ -127,6 +127,7 @@ class DirectusStorage {
           ...data,
           phone: normalizePhone(data.phone),
           submission_count: 1,
+          environment: getEnvironment(),
         }),
         next: { revalidate: 0 },
       },
