@@ -169,7 +169,7 @@ export async function generateMetadata({ params }: Sub1PageProps): Promise<Metad
     });
   }
 
-  if (route.type === "quote-success" || route.type === "quote-submission") {
+  if ((route as { type: string }).type === "quote-success" || (route as { type: string }).type === "quote-submission") {
     return {
       title: "easyRecharge",  // noindex page — no SEO title needed
       robots: { index: false, follow: false },
