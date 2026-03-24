@@ -73,6 +73,7 @@ export async function generateMetadata({ params }: HomeProps): Promise<Metadata>
     canonical: `${SITE_URL}/${lang}`,
     ogImage: resolveOgImage(resolved, undefined, heroBlock?.image),
     ogType: "website",
+    robots: resolved?.noIndex ? "noindex, nofollow" : undefined,
     lang,
     alternates: buildAlternates({
       [lang]: `/${lang}`,

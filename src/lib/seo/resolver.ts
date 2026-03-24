@@ -204,7 +204,8 @@ export function resolveSEOFieldMappings(
 export function resolveImageUrl(imageId?: string): string | undefined {
   if (!imageId) return undefined;
   if (imageId.startsWith("http") || imageId.startsWith("/")) return imageId;
-  return `${DIRECTUS_URL}/assets/${imageId}`;
+  // Use the proxy route — Directus assets require auth and are not publicly accessible
+  return `/api/cms/assets/${imageId}`;
 }
 
 export function toAbsoluteImageUrl(imageUrl?: string): string | undefined {

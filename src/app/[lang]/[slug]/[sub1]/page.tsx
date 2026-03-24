@@ -21,7 +21,11 @@ import { buildMetadata } from "@/lib/seo/metadata";
 import {
   normalizeTitle,
   truncate,
+  extractItemSEO,
+  mergeItemOverTemplate,
+  resolveSEOFieldMappings,
   resolveImageUrl,
+  resolveOgImage,
   buildAlternates,
   getSiteUrl,
 } from "@/lib/seo/resolver";
@@ -138,29 +142,80 @@ export async function generateMetadata({ params }: Sub1PageProps): Promise<Metad
   if (!route) return {};
 
   const SITE_URL = getSiteUrl();
+  const locale = slugToDirectusLocale(lang);
 
+  // ── Vehicle detail: /{lang}/{vehiclesSlug}/{vehicleSlug} ──
   if (route.type === "vehicle-detail") {
-    const locale = slugToDirectusLocale(lang);
-    const directusVehicle = await fetchVehicle(route.slug, locale);
+    const [directusVehicle, templatePage] = await Promise.all([
+      fetchVehicle(route.slug, locale),
+      fetchPage("vehicle", locale),
+    ]);
     if (!directusVehicle) return {};
 
     const vehicle = transformDirectusVehicle(directusVehicle);
     if (!vehicle) return {};
 
-    const vehicleName = `${vehicle.brand} ${vehicle.model}`.trim();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dv = directusVehicle as Record<string, any>;
+    const brandName = vehicle.brand;
+    const modelName = vehicle.model;
+    const vehicleName = `${brandName} ${modelName}`.trim();
+
+    // Build comprehensive fieldMap matching source seoResolver
+    const acPower = dv.charging?.home_destination?.charge_power;
+    const dcMaxPower = dv.charging?.fast_charging?.charge_power_max;
+    const dcTime = dv.charging?.fast_charging?.charge_time;
+    const homeChargeTime = dv.charging?.home_destination?.charge_time;
+    const dcPort = dv.charging?.fast_charging?.charge_port;
+    const perf = dv.performance;
+    const realRangeMin = dv.real_range?.headline?.from?.value;
+    const realRangeMax = dv.real_range?.headline?.to?.value;
+
+    const fieldMap: Record<string, unknown> = {
+      brand: brandName,
+      model: modelName,
+      name: vehicleName,
+      slug: route.slug,
+      battery: vehicle.batteryDisplay,
+      range: vehicle.rangeDisplay,
+      efficiency: vehicle.efficiencyDisplay,
+      acPower: acPower?.value ? `${acPower.value} ${acPower.unit || "kW"}` : undefined,
+      dcPower: dcMaxPower?.value ? `${dcMaxPower.value} ${dcMaxPower.unit || "kW"}` : undefined,
+      chargeTime: homeChargeTime?.value ? formatMinutes(homeChargeTime.value) : undefined,
+      dcTime: dcTime?.value ? `${dcTime.value} ${dcTime.unit || "min"}` : undefined,
+      chargePort: typeof dcPort === "string" ? dcPort : undefined,
+      rangeMin: realRangeMin ? `${realRangeMin} km` : undefined,
+      rangeMax: realRangeMax ? `${realRangeMax} km` : undefined,
+      acceleration: perf?.acceleration_0_100?.value ? `${perf.acceleration_0_100.value} ${perf.acceleration_0_100.unit || "sec"}` : undefined,
+      topSpeed: perf?.top_speed?.value ? `${perf.top_speed.value} ${perf.top_speed.unit || "km/h"}` : undefined,
+      power: perf?.power?.ps?.value ? `${perf.power.ps.value} ${perf.power.ps.unit || "PS"}` : undefined,
+    };
+
+    // Vehicles have no item-level SEO — only template SEO
+    const templateSeo = extractItemSEO(templatePage?.translations?.[0]?.seo);
+    const merged = mergeItemOverTemplate(undefined, templateSeo);
+    const resolved = resolveSEOFieldMappings(merged, fieldMap);
+
+    const title = resolved?.title || vehicleName;
+    const description = resolved?.description || [vehicleName, vehicle.batteryDisplay, vehicle.rangeDisplay, vehicle.chargingDisplay].filter(Boolean).join(" | ");
+
+    const currentPath = `/${lang}/${slug}/${sub1}`;
     const otherLang = lang === "de" ? "fr" : "de";
     const vehiclesSlugOther = getRouteSlug(otherLang, "vehicles");
 
+    const vehicleImage = directusVehicle.thumbnail ? resolveImageUrl(directusVehicle.thumbnail) : undefined;
+    const heroImage = templatePage?.blocks?.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (b: any) => b.collection === "block_hero",
+    )?.item?.image;
+
     return buildMetadata({
-      title: normalizeTitle(vehicleName),
-      description: truncate(
-        [vehicleName, vehicle.batteryDisplay, vehicle.rangeDisplay, vehicle.chargingDisplay]
-          .filter(Boolean)
-          .join(" | "),
-      ),
-      canonical: `${SITE_URL}/${lang}/${slug}/${sub1}`,
-      ogImage: directusVehicle.thumbnail ? resolveImageUrl(directusVehicle.thumbnail) : undefined,
+      title: normalizeTitle(title),
+      description: truncate(description),
+      canonical: `${SITE_URL}${currentPath}`,
+      ogImage: resolveOgImage(resolved, vehicleImage, heroImage),
       ogType: "website",
+      robots: resolved?.noIndex ? "noindex, nofollow" : undefined,
       lang,
       alternates: buildAlternates({
         [lang]: `/${lang}/${slug}/${route.slug}`,
@@ -169,9 +224,56 @@ export async function generateMetadata({ params }: Sub1PageProps): Promise<Metad
     });
   }
 
+  // ── Vehicle brands listing: /{lang}/{vehiclesSlug}/{brandsSegment} ──
+  if (route.type === "vehicle-brands") {
+    const [templatePage, rawVehicles] = await Promise.all([
+      fetchPage("vehicle-brands", locale),
+      fetchVehicles(locale),
+    ]);
+
+    const vehicles = rawVehicles || [];
+    const brandNames = new Set<string>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const v of vehicles as any[]) {
+      if (v.brand?.name) brandNames.add(v.brand.name);
+    }
+
+    const fieldMap: Record<string, unknown> = {
+      count: brandNames.size,
+      vehicles: vehicles.length,
+    };
+
+    const templateSeo = extractItemSEO(templatePage?.translations?.[0]?.seo);
+    const resolved = resolveSEOFieldMappings(templateSeo, fieldMap);
+
+    const currentPath = `/${lang}/${slug}/${sub1}`;
+    const otherLang = lang === "de" ? "fr" : "de";
+    const vehiclesSlugOther = getRouteSlug(otherLang, "vehicles");
+    const brandsSlugOther = getRouteSlug(otherLang, "brands");
+
+    const heroImage = templatePage?.blocks?.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (b: any) => b.collection === "block_hero",
+    )?.item?.image;
+
+    return buildMetadata({
+      title: normalizeTitle(resolved?.title || "vehicle-brands"),
+      description: truncate(resolved?.description || ""),
+      canonical: `${SITE_URL}${currentPath}`,
+      ogImage: resolveOgImage(resolved, undefined, heroImage),
+      ogType: "website",
+      robots: resolved?.noIndex ? "noindex, nofollow" : undefined,
+      lang,
+      alternates: buildAlternates({
+        [lang]: currentPath,
+        [otherLang]: `/${otherLang}/${vehiclesSlugOther}/${brandsSlugOther}`,
+      }),
+    });
+  }
+
   if (route.type === "quote-success" || route.type === "quote-submission") {
     return {
-      title: "easyRecharge",  // noindex page — no SEO title needed
+      title: "easyRecharge",
       robots: { index: false, follow: false },
     };
   }

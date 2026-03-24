@@ -69,7 +69,21 @@ export async function generateMetadata({
   const page = await fetchPage(entry.id, locale);
   const translation = page?.translations?.[0];
   const seo = extractItemSEO(translation?.seo);
-  const resolved = resolveSEOFieldMappings(seo);
+
+  // Build fieldMap for listing pages that use {f:count}, {f:brands}, etc.
+  let fieldMap: Record<string, unknown> | undefined;
+  if (entry.id === "vehicles") {
+    const rawVehicles = await fetchVehicles(locale);
+    const vehicles = rawVehicles || [];
+    const brandNames = new Set<string>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const v of vehicles as any[]) {
+      if (v.brand?.name) brandNames.add(v.brand.name);
+    }
+    fieldMap = { count: vehicles.length, brands: brandNames.size };
+  }
+
+  const resolved = resolveSEOFieldMappings(seo, fieldMap);
 
   const SITE_URL = getSiteUrl();
   const langPaths: Record<string, string> = {};
@@ -88,6 +102,7 @@ export async function generateMetadata({
     canonical: `${SITE_URL}/${lang}/${slug}`,
     ogImage: resolveOgImage(resolved, undefined, heroBlock?.item?.image),
     ogType: "website",
+    robots: resolved?.noIndex ? "noindex, nofollow" : undefined,
     lang,
     alternates: buildAlternates(langPaths),
   });

@@ -200,17 +200,29 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
     const ct = post.category?.translations?.[0];
     const articleTitle = pt?.title || route.postSlug;
 
+    const imageUrl = post.image ? resolveImageUrl(post.image) : undefined;
+    const categoryName = ct?.name || route.categorySlug;
+
+    // Parse reading_time and build takeaways text for SEO interpolation
+    const readingTime = parseReadingTime(post.reading_time);
+    const takeaways = pt?.takeaways
+      ? decodeHtmlEntities(String(pt.takeaways).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim())
+      : undefined;
+
     const templateSeo = extractItemSEO(templatePage?.translations?.[0]?.seo);
     const itemSeo = extractItemSEO(pt?.seo);
     const merged = mergeItemOverTemplate(itemSeo, templateSeo);
     const resolved = resolveSEOFieldMappings(merged, {
       title: articleTitle,
-      category: ct?.name || route.categorySlug,
+      excerpt: pt?.excerpt || "",
+      category: categoryName,
       slug: route.postSlug,
+      readingTime: readingTime || undefined,
+      image: imageUrl,
+      takeaways,
     });
 
     const SITE_URL = getSiteUrl();
-    const imageUrl = post.image ? resolveImageUrl(post.image) : undefined;
     const currentPath = `/${lang}/${slug}/${sub1}/${sub2}`;
 
     const langPaths: Record<string, string> = {};
@@ -229,18 +241,25 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
       }
     }
 
+    // OG image with hero fallback from template page
+    const heroImage = templatePage?.blocks?.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (b: any) => b.collection === "block_hero",
+    )?.item?.image;
+
     return buildMetadata({
       title: normalizeTitle(resolved?.title || articleTitle),
       description: truncate(resolved?.description || articleTitle),
       canonical: `${SITE_URL}${currentPath}`,
-      ogImage: resolveOgImage(resolved, imageUrl),
+      ogImage: resolveOgImage(resolved, imageUrl, heroImage),
       ogType: "article",
+      robots: resolved?.noIndex ? "noindex, nofollow" : undefined,
       lang,
       alternates: buildAlternates(langPaths),
       articleMeta: {
         publishedTime: post.date_published || post.date_created,
         modifiedTime: post.date_updated,
-        section: ct?.name || route.categorySlug,
+        section: categoryName,
       },
     });
   }
@@ -260,12 +279,21 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
     const vehicleCount = (rawVehicles || []).filter((v: any) => v.brand?.slug === route.brandSlug).length;
 
     const templateSeo = extractItemSEO(brandPage?.translations?.[0]?.seo);
-    const itemSeo = extractItemSEO(matchedBrand?.translations?.[0]?.seo);
-    const merged = mergeItemOverTemplate(itemSeo, templateSeo);
+    // Source: brands don't have accessible item-level SEO — only template
+    const merged = mergeItemOverTemplate(undefined, templateSeo);
     const resolved = resolveSEOFieldMappings(merged, {
-      brand: brandName,
+      name: brandName,
       count: vehicleCount,
+      slug: route.brandSlug,
     });
+
+    // Language-specific fallbacks matching source
+    const fallbackTitle = lang === "de"
+      ? `${brandName} \u2013 Elektrofahrzeuge`
+      : `${brandName} \u2013 V\u00e9hicules \u00e9lectriques`;
+    const fallbackDesc = lang === "de"
+      ? `Entdecken Sie die ${vehicleCount} Elektrofahrzeuge von ${brandName}, kompatibel mit unseren Ladestationen.`
+      : `D\u00e9couvrez les ${vehicleCount} v\u00e9hicules \u00e9lectriques ${brandName} compatibles avec nos bornes de recharge.`;
 
     const SITE_URL = getSiteUrl();
     const currentPath = `/${lang}/${slug}/${sub1}/${sub2}`;
@@ -273,12 +301,19 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
     const vehiclesSlugOther = getRouteSlug(otherLang, "vehicles");
     const brandsSlugOther = getRouteSlug(otherLang, "brands");
 
+    const brandImage = matchedBrand?.thumbnail ? resolveImageUrl(matchedBrand.thumbnail) : undefined;
+    const heroImage = brandPage?.blocks?.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (b: any) => b.collection === "block_hero",
+    )?.item?.image;
+
     return buildMetadata({
-      title: normalizeTitle(resolved?.title || `${brandName} - EV`),
-      description: truncate(resolved?.description || `${brandName} - ${vehicleCount} vehicles`),
+      title: normalizeTitle(resolved?.title || fallbackTitle),
+      description: truncate(resolved?.description || fallbackDesc),
       canonical: `${SITE_URL}${currentPath}`,
-      ogImage: matchedBrand?.thumbnail ? resolveImageUrl(matchedBrand.thumbnail) : undefined,
+      ogImage: resolveOgImage(resolved, brandImage, heroImage),
       ogType: "website",
+      robots: resolved?.noIndex ? "noindex, nofollow" : undefined,
       lang,
       alternates: buildAlternates({
         [lang]: currentPath,
@@ -289,31 +324,80 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
 
   if (route.type === "vehicle-model-detail") {
     const locale = slugToDirectusLocale(lang);
-    const directusVehicle = await fetchVehicle(route.vehicleSlug, locale);
+    const [directusVehicle, templatePage] = await Promise.all([
+      fetchVehicle(route.vehicleSlug, locale),
+      fetchPage("vehicle", locale),
+    ]);
     if (!directusVehicle) return {};
 
     const vehicle = transformDirectusVehicle(directusVehicle);
     if (!vehicle) return {};
 
+    const dv = directusVehicle;
+    const brandName = vehicle.brand;
+    const modelName = vehicle.model;
+    const vehicleName = `${brandName} ${modelName}`.trim();
+
+    // Build comprehensive fieldMap matching source seoResolver
+    const acPower = dv.charging?.home_destination?.charge_power;
+    const dcMaxPower = dv.charging?.fast_charging?.charge_power_max;
+    const dcTime = dv.charging?.fast_charging?.charge_time;
+    const homeChargeTime = dv.charging?.home_destination?.charge_time;
+    const dcPort = dv.charging?.fast_charging?.charge_port;
+    const perf = dv.performance;
+    const realRangeMin = dv.real_range?.headline?.from?.value;
+    const realRangeMax = dv.real_range?.headline?.to?.value;
+
+    const fieldMap: Record<string, unknown> = {
+      brand: brandName,
+      model: modelName,
+      name: vehicleName,
+      slug: route.vehicleSlug,
+      battery: vehicle.batteryDisplay,
+      range: vehicle.rangeDisplay,
+      efficiency: vehicle.efficiencyDisplay,
+      acPower: acPower?.value ? `${acPower.value} ${acPower.unit || "kW"}` : undefined,
+      dcPower: dcMaxPower?.value ? `${dcMaxPower.value} ${dcMaxPower.unit || "kW"}` : undefined,
+      chargeTime: homeChargeTime?.value ? formatMinutes(homeChargeTime.value) : undefined,
+      dcTime: dcTime?.value ? `${dcTime.value} ${dcTime.unit || "min"}` : undefined,
+      chargePort: typeof dcPort === "string" ? dcPort : undefined,
+      rangeMin: realRangeMin ? `${realRangeMin} km` : undefined,
+      rangeMax: realRangeMax ? `${realRangeMax} km` : undefined,
+      acceleration: perf?.acceleration_0_100?.value ? `${perf.acceleration_0_100.value} ${perf.acceleration_0_100.unit || "sec"}` : undefined,
+      topSpeed: perf?.top_speed?.value ? `${perf.top_speed.value} ${perf.top_speed.unit || "km/h"}` : undefined,
+      power: perf?.power?.ps?.value ? `${perf.power.ps.value} ${perf.power.ps.unit || "PS"}` : undefined,
+    };
+
+    // Merge template SEO with field interpolation (vehicles have no item-level SEO)
+    const templateSeo = extractItemSEO(templatePage?.translations?.[0]?.seo);
+    const merged = mergeItemOverTemplate(undefined, templateSeo);
+    const resolved = resolveSEOFieldMappings(merged, fieldMap);
+
+    const title = resolved?.title || vehicleName;
+    const description = resolved?.description || [vehicleName, vehicle.batteryDisplay, vehicle.rangeDisplay, vehicle.chargingDisplay].filter(Boolean).join(" | ");
+
     const SITE_URL = getSiteUrl();
-    const vehicleName = `${vehicle.brand} ${vehicle.model}`.trim();
+    const currentPath = `/${lang}/${slug}/${sub1}/${sub2}`;
     const otherLang = lang === "de" ? "fr" : "de";
     const vehiclesSlugOther = getRouteSlug(otherLang, "vehicles");
     const brandSlugOther = route.brandSlug; // brand slug is lang-independent
 
+    const vehicleImage = directusVehicle.thumbnail ? resolveImageUrl(directusVehicle.thumbnail) : undefined;
+    const heroImage = templatePage?.blocks?.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (b: any) => b.collection === "block_hero",
+    )?.item?.image;
+
     return buildMetadata({
-      title: normalizeTitle(vehicleName),
-      description: truncate(
-        [vehicleName, vehicle.batteryDisplay, vehicle.rangeDisplay, vehicle.chargingDisplay]
-          .filter(Boolean)
-          .join(" | "),
-      ),
-      canonical: `${SITE_URL}/${lang}/${slug}/${sub1}/${sub2}`,
-      ogImage: directusVehicle.thumbnail ? resolveImageUrl(directusVehicle.thumbnail) : undefined,
+      title: normalizeTitle(title),
+      description: truncate(description),
+      canonical: `${SITE_URL}${currentPath}`,
+      ogImage: resolveOgImage(resolved, vehicleImage, heroImage),
       ogType: "website",
+      robots: resolved?.noIndex ? "noindex, nofollow" : undefined,
       lang,
       alternates: buildAlternates({
-        [lang]: `/${lang}/${slug}/${sub1}/${sub2}`,
+        [lang]: currentPath,
         [otherLang]: `/${otherLang}/${vehiclesSlugOther}/${brandSlugOther}/${route.vehicleSlug}`,
       }),
     });
