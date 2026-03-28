@@ -32,10 +32,10 @@ const nextConfig: NextConfig = {
       { source: "/espace-pour-partenaires/conditions-generales-partenaires", destination: "/fr/mentions-legales", permanent: true },
       { source: "/espace-pour-partenaires/:path*", destination: "/fr/contact", permanent: true },
       // Sitemap aliases — redirect legacy URLs to individual sitemaps
-      { source: "/sitemap.xml", destination: "/sitemap/cms.xml", permanent: false },
-      { source: "/sitemap_index.xml", destination: "/sitemap/cms.xml", permanent: true },
-      { source: "/sitemap-index.xml", destination: "/sitemap/cms.xml", permanent: true },
-      { source: "/wp-sitemap.xml", destination: "/sitemap/cms.xml", permanent: true },
+      { source: "/sitemap.xml", destination: "/api/sitemap-index", permanent: false },
+      { source: "/sitemap_index.xml", destination: "/api/sitemap-index", permanent: false },
+      { source: "/sitemap-index.xml", destination: "/api/sitemap-index", permanent: false },
+      { source: "/wp-sitemap.xml", destination: "/api/sitemap-index", permanent: false },
       // WordPress infrastructure → gone
       { source: "/wp-admin/:path*", destination: "/api/gone", permanent: false },
       { source: "/wp-login.php", destination: "/api/gone", permanent: false },
