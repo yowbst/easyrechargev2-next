@@ -102,6 +102,7 @@ export function MiniQuoteCard({
           locality: selectedLocality.locality,
           canton: selectedLocality.canton,
           formType: "mini-quote-card",
+          pageId: pageId ?? null,
           locale: lang,
           posthog: {
             phDistinctId: ph?.get_distinct_id?.() ?? null,

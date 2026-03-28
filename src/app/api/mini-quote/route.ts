@@ -5,7 +5,7 @@ import { storage } from "@/lib/directus-storage";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { housingStatus, postalCode, locality, canton, formType, locale } = body;
+    const { housingStatus, postalCode, locality, canton, formType, pageId, locale } = body;
 
     if (!housingStatus || !postalCode) {
       return NextResponse.json(
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       locale: locale ?? req.headers.get("accept-language")?.split(",")[0] ?? null,
       user_agent: req.headers.get("user-agent") ?? null,
       location_path: refererUrl?.pathname ?? null,
-      location_route: formType || "mini-quote-card",
+      location_route: pageId ?? null,
       location_params: refererUrl?.search.slice(1) || null,
       ph_distinct_id: body.posthog?.phDistinctId ?? null,
       ph_session_id: body.posthog?.phSessionId ?? null,
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       session: session.id,
       user: null,
       form_type: formType || "mini-quote-card",
-      location_route: formType || "mini-quote-card",
+      location_route: pageId ?? null,
       location_path: refererUrl?.pathname ?? null,
       location_params: refererUrl?.search.slice(1) || null,
       data: { housingStatus, postalCode, locality, canton },
