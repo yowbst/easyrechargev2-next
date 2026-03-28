@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       status: "success",
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, sessionToken });
   } catch (error) {
     console.error("[MiniQuote] Submission error:", error);
     return NextResponse.json(

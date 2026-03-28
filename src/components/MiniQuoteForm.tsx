@@ -104,28 +104,35 @@ export function MiniQuoteForm({
     setIsEditingLocation(false);
   };
 
-  const handleQuoteClick = () => {
-    if (!housingStatus || !selectedLocality) return;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Submit to Directus (fire and forget — don't block navigation)
-    fetch("/api/mini-quote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        housingStatus: getHousingStatusValue(housingStatus),
-        postalCode: selectedLocality.postalCode,
-        locality: selectedLocality.locality,
-        canton: selectedLocality.canton,
-        formType: "mini-quote-form",
-        locale: lang,
-      }),
-    }).catch(() => {});
+  const handleQuoteClick = async () => {
+    if (!housingStatus || !selectedLocality || isSubmitting) return;
+    setIsSubmitting(true);
 
     const params = new URLSearchParams({
       postalCode: selectedLocality.postalCode,
       locality: selectedLocality.locality,
       housingStatus: getHousingStatusValue(housingStatus),
     });
+
+    // Submit to Directus and pass session token to quote page for linking
+    try {
+      const res = await fetch("/api/mini-quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          housingStatus: getHousingStatusValue(housingStatus),
+          postalCode: selectedLocality.postalCode,
+          locality: selectedLocality.locality,
+          canton: selectedLocality.canton,
+          formType: "mini-quote-form",
+          locale: lang,
+        }),
+      });
+      const data = await res.json();
+      if (data.sessionToken) params.set("sessionToken", data.sessionToken);
+    } catch { /* navigate anyway */ }
 
     router.push(`${submitButtonLink}?${params.toString()}`);
   };

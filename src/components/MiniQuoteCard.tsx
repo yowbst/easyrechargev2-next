@@ -76,28 +76,13 @@ export function MiniQuoteCard({
     setIsEditingHousingStatus(false);
   };
 
-  const handleQuoteSubmit = () => {
-    if (!housingStatus || !selectedLocality) return;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleQuoteSubmit = async () => {
+    if (!housingStatus || !selectedLocality || isSubmitting) return;
+    setIsSubmitting(true);
     telemetry.trackSubmit(true, { housingStatus, postalCode: selectedLocality.postalCode });
     ph?.capture("mini_quote_submitted", { form_type: "mini-quote-card", page_id: pageId, locale: lang, housing_status: housingStatus });
-
-    // Submit to Directus (fire and forget — don't block navigation)
-    fetch("/api/mini-quote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        housingStatus,
-        postalCode: selectedLocality.postalCode,
-        locality: selectedLocality.locality,
-        canton: selectedLocality.canton,
-        formType: "mini-quote-card",
-        locale: lang,
-        posthog: {
-          phDistinctId: ph?.get_distinct_id?.() ?? null,
-          phSessionId: ph?.get_session_id?.() ?? null,
-        },
-      }),
-    }).catch(() => {});
 
     const params = new URLSearchParams({
       housingStatus,
@@ -105,6 +90,29 @@ export function MiniQuoteCard({
       locality: selectedLocality.locality,
       canton: selectedLocality.canton,
     });
+
+    // Submit to Directus and pass session token to quote page for linking
+    try {
+      const res = await fetch("/api/mini-quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          housingStatus,
+          postalCode: selectedLocality.postalCode,
+          locality: selectedLocality.locality,
+          canton: selectedLocality.canton,
+          formType: "mini-quote-card",
+          locale: lang,
+          posthog: {
+            phDistinctId: ph?.get_distinct_id?.() ?? null,
+            phSessionId: ph?.get_session_id?.() ?? null,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.sessionToken) params.set("sessionToken", data.sessionToken);
+    } catch { /* navigate anyway */ }
+
     router.push(`${submitLink}?${params.toString()}`);
   };
 
