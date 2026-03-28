@@ -107,6 +107,20 @@ export function MiniQuoteForm({
   const handleQuoteClick = () => {
     if (!housingStatus || !selectedLocality) return;
 
+    // Submit to Directus (fire and forget — don't block navigation)
+    fetch("/api/mini-quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        housingStatus: getHousingStatusValue(housingStatus),
+        postalCode: selectedLocality.postalCode,
+        locality: selectedLocality.locality,
+        canton: selectedLocality.canton,
+        formType: "mini-quote-form",
+        locale: lang,
+      }),
+    }).catch(() => {});
+
     const params = new URLSearchParams({
       postalCode: selectedLocality.postalCode,
       locality: selectedLocality.locality,
