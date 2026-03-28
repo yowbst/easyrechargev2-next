@@ -38,6 +38,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/fr", request.url), 301);
   }
 
+  // 2. Sitemap index — rewrite /sitemap.xml to API route (transparent)
+  if (pathname === "/sitemap.xml") {
+    return NextResponse.rewrite(new URL("/api/sitemap-index", request.url));
+  }
+
   // 2. WordPress infrastructure → 410 Gone
   for (const prefix of GONE_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(prefix)) {

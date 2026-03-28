@@ -38,13 +38,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  async rewrites() {
-    return [
-      // Serve sitemap index at /sitemap.xml via API route
-      { source: "/sitemap.xml", destination: "/api/sitemap-index" },
-    ];
-  },
-
   async headers() {
     return [
       {
