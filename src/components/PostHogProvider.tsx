@@ -32,6 +32,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       capture_pageview: false, // we handle this manually above
       capture_pageleave: true,
       persistence: "localStorage",
+      person_profiles: "identified_only",
+      capture_performance: true,
+      capture_exceptions: true,
       session_recording: {
         maskAllInputs: true,
         maskTextSelector: ".ph-no-capture",

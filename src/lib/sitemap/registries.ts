@@ -1,6 +1,6 @@
 /**
  * Sitemap URL registries — fetch URL entries from Directus for sitemap generation.
- * Ported from server/sitemap/*.ts
+ * Each registry returns entries for a specific content type.
  */
 
 import { directusFetch } from "@/lib/directus";
@@ -18,6 +18,22 @@ interface UrlEntry {
   changeFrequency?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
   priority?: number;
   alternates?: { languages: Record<string, string> };
+}
+
+function buildAlternates(paths: Partial<Record<"fr" | "de", string>>): Record<string, string> {
+  const languages: Record<string, string> = {};
+  if (paths.fr) {
+    languages["x-default"] = `${SITE_URL}${paths.fr}`;
+    languages.fr = `${SITE_URL}${paths.fr}`;
+  }
+  if (paths.de) languages.de = `${SITE_URL}${paths.de}`;
+  return languages;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isNoIndex(seo: any): boolean {
+  if (!seo) return false;
+  return !!(seo.no_index || seo.noIndex);
 }
 
 // ─── CMS Pages ───────────────────────────────────────────
@@ -38,15 +54,12 @@ export async function getCmsEntries(): Promise<UrlEntry[]> {
 
     const isHome = routeId === "home";
     const slugs: Partial<Record<"fr" | "de", string>> = {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const noIndexMap: Partial<Record<"fr" | "de", boolean>> = {};
 
     for (const t of page.translations || []) {
       const lang = LANG_MAP[t.languages_code];
       if (lang && t.slug != null) slugs[lang] = t.slug;
-      if (lang && t.seo) {
-        if (t.seo.no_index || t.seo.noIndex) noIndexMap[lang] = true;
-      }
+      if (lang && isNoIndex(t.seo)) noIndexMap[lang] = true;
     }
 
     const paths: Partial<Record<"fr" | "de", string>> = {};
@@ -60,9 +73,7 @@ export async function getCmsEntries(): Promise<UrlEntry[]> {
 
     if (!paths.fr && !paths.de) continue;
 
-    const languages: Record<string, string> = {};
-    if (paths.fr) languages.fr = `${SITE_URL}${paths.fr}`;
-    if (paths.de) languages.de = `${SITE_URL}${paths.de}`;
+    const languages = buildAlternates(paths);
 
     for (const lang of ["fr", "de"] as const) {
       const path = paths[lang];
@@ -97,10 +108,10 @@ export async function getBlogEntries(): Promise<UrlEntry[]> {
     if (lang && t.slug) blogSlugs[lang] = t.slug;
   }
 
-  // Fetch blog posts
+  // Fetch blog posts with SEO fields for noIndex check
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await directusFetch<{ data: any[] }>(
-    "/items/blog_posts?fields=id,date_updated,translations.slug,translations.languages_code,category.translations.slug,category.translations.languages_code&filter[status][_eq]=published&limit=1000",
+    "/items/blog_posts?fields=id,date_updated,translations.slug,translations.languages_code,translations.seo,category.translations.slug,category.translations.languages_code&filter[status][_eq]=published&limit=1000",
     { next: { revalidate: 300 } },
   );
 
@@ -109,9 +120,11 @@ export async function getBlogEntries(): Promise<UrlEntry[]> {
 
   for (const item of items) {
     const postSlugs: Partial<Record<"fr" | "de", string>> = {};
+    const noIndexMap: Partial<Record<"fr" | "de", boolean>> = {};
     for (const t of item.translations || []) {
       const lang = LANG_MAP[t.languages_code];
       if (lang && t.slug) postSlugs[lang] = t.slug;
+      if (lang && isNoIndex(t.seo)) noIndexMap[lang] = true;
     }
 
     const categorySlugs: Partial<Record<"fr" | "de", string>> = {};
@@ -128,13 +141,11 @@ export async function getBlogEntries(): Promise<UrlEntry[]> {
 
     if (!paths.fr && !paths.de) continue;
 
-    const languages: Record<string, string> = {};
-    if (paths.fr) languages.fr = `${SITE_URL}${paths.fr}`;
-    if (paths.de) languages.de = `${SITE_URL}${paths.de}`;
+    const languages = buildAlternates(paths);
 
     for (const lang of ["fr", "de"] as const) {
       const path = paths[lang];
-      if (!path) continue;
+      if (!path || noIndexMap[lang]) continue;
 
       entries.push({
         url: `${SITE_URL}${path}`,
@@ -152,35 +163,36 @@ export async function getBlogEntries(): Promise<UrlEntry[]> {
 // ─── Vehicles ────────────────────────────────────────────
 
 export async function getVehicleEntries(): Promise<UrlEntry[]> {
+  // Single API call for both vehicle detail pages and brand aggregation
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await directusFetch<{ data: any[] }>(
-    "/items/vehicles?fields=id,slug,date_updated&filter[status][_eq]=published&limit=1000",
+    "/items/vehicles?fields=id,slug,date_updated,brand.name,brand.slug&filter[status][_eq]=published&limit=1000",
     { next: { revalidate: 300 } },
   );
 
   const items = result?.data || [];
   const entries: UrlEntry[] = [];
 
+  // Vehicle detail pages
   for (const item of items) {
     if (!item.slug) continue;
 
-    const frPath = `/fr/${VEHICLE_ROUTES.fr.vehicles}/${item.slug}`;
-    const dePath = `/de/${VEHICLE_ROUTES.de.vehicles}/${item.slug}`;
-    const languages = {
-      fr: `${SITE_URL}${frPath}`,
-      de: `${SITE_URL}${dePath}`,
+    const paths = {
+      fr: `/fr/${VEHICLE_ROUTES.fr.vehicles}/${item.slug}`,
+      de: `/de/${VEHICLE_ROUTES.de.vehicles}/${item.slug}`,
     };
+    const languages = buildAlternates(paths);
 
     entries.push(
       {
-        url: `${SITE_URL}${frPath}`,
+        url: `${SITE_URL}${paths.fr}`,
         lastModified: item.date_updated,
         changeFrequency: "monthly",
         priority: 0.7,
         alternates: { languages },
       },
       {
-        url: `${SITE_URL}${dePath}`,
+        url: `${SITE_URL}${paths.de}`,
         lastModified: item.date_updated,
         changeFrequency: "monthly",
         priority: 0.7,
@@ -189,47 +201,35 @@ export async function getVehicleEntries(): Promise<UrlEntry[]> {
     );
   }
 
-  // Brand pages
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const vehiclesResult = await directusFetch<{ data: any[] }>(
-    "/items/vehicles?fields=brand.name,date_updated&filter[status][_eq]=published&limit=1000",
-    { next: { revalidate: 300 } },
-  );
-
-  const brandMap = new Map<string, string>();
-  for (const v of vehiclesResult?.data || []) {
+  // Brand pages — aggregate from vehicles data
+  const brandMap = new Map<string, { slug: string; lastmod: string }>();
+  for (const v of items) {
     const name = v.brand?.name;
-    if (!name) continue;
-    if (!brandMap.has(name) || (v.date_updated && v.date_updated > (brandMap.get(name) || ""))) {
-      brandMap.set(name, v.date_updated || "");
+    const slug = v.brand?.slug;
+    if (!name || !slug) continue;
+    const existing = brandMap.get(name);
+    if (!existing || (v.date_updated && v.date_updated > existing.lastmod)) {
+      brandMap.set(name, { slug, lastmod: v.date_updated || "" });
     }
   }
 
-  for (const [brandName, lastmod] of brandMap) {
-    const slug = brandName
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-
-    const frPath = `/fr/${VEHICLE_ROUTES.fr.vehicles}/${VEHICLE_ROUTES.fr.brands}/${slug}`;
-    const dePath = `/de/${VEHICLE_ROUTES.de.vehicles}/${VEHICLE_ROUTES.de.brands}/${slug}`;
-    const languages = {
-      fr: `${SITE_URL}${frPath}`,
-      de: `${SITE_URL}${dePath}`,
+  for (const [, { slug, lastmod }] of brandMap) {
+    const paths = {
+      fr: `/fr/${VEHICLE_ROUTES.fr.vehicles}/${VEHICLE_ROUTES.fr.brands}/${slug}`,
+      de: `/de/${VEHICLE_ROUTES.de.vehicles}/${VEHICLE_ROUTES.de.brands}/${slug}`,
     };
+    const languages = buildAlternates(paths);
 
     entries.push(
       {
-        url: `${SITE_URL}${frPath}`,
+        url: `${SITE_URL}${paths.fr}`,
         lastModified: lastmod || undefined,
         changeFrequency: "weekly",
         priority: 0.8,
         alternates: { languages },
       },
       {
-        url: `${SITE_URL}${dePath}`,
+        url: `${SITE_URL}${paths.de}`,
         lastModified: lastmod || undefined,
         changeFrequency: "weekly",
         priority: 0.8,
@@ -239,21 +239,20 @@ export async function getVehicleEntries(): Promise<UrlEntry[]> {
   }
 
   // Brand listing pages
-  const frBrandList = `/fr/${VEHICLE_ROUTES.fr.vehicles}/${VEHICLE_ROUTES.fr.brands}`;
-  const deBrandList = `/de/${VEHICLE_ROUTES.de.vehicles}/${VEHICLE_ROUTES.de.brands}`;
-  const brandListLanguages = {
-    fr: `${SITE_URL}${frBrandList}`,
-    de: `${SITE_URL}${deBrandList}`,
+  const brandListPaths = {
+    fr: `/fr/${VEHICLE_ROUTES.fr.vehicles}/${VEHICLE_ROUTES.fr.brands}`,
+    de: `/de/${VEHICLE_ROUTES.de.vehicles}/${VEHICLE_ROUTES.de.brands}`,
   };
+  const brandListLanguages = buildAlternates(brandListPaths);
   entries.push(
     {
-      url: `${SITE_URL}${frBrandList}`,
+      url: `${SITE_URL}${brandListPaths.fr}`,
       changeFrequency: "weekly",
       priority: 0.8,
       alternates: { languages: brandListLanguages },
     },
     {
-      url: `${SITE_URL}${deBrandList}`,
+      url: `${SITE_URL}${brandListPaths.de}`,
       changeFrequency: "weekly",
       priority: 0.8,
       alternates: { languages: brandListLanguages },

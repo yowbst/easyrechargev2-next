@@ -1,14 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { CONSENT_STORAGE_KEY, getConsent } from "@/lib/consent";
 
-const CONSENT_KEY = "cookie-consent";
-type ConsentState = "accepted" | "rejected" | null;
-
-export function getConsent(): ConsentState {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(CONSENT_KEY) as ConsentState;
-}
+export { getConsent };
 
 export function useCookieConsent() {
   const [hasDecided, setHasDecided] = useState(true); // default true to avoid flash
@@ -18,12 +13,12 @@ export function useCookieConsent() {
   }, []);
 
   const accept = useCallback(() => {
-    localStorage.setItem(CONSENT_KEY, "accepted");
+    localStorage.setItem(CONSENT_STORAGE_KEY, "accepted");
     setHasDecided(true);
   }, []);
 
   const reject = useCallback(() => {
-    localStorage.setItem(CONSENT_KEY, "rejected");
+    localStorage.setItem(CONSENT_STORAGE_KEY, "rejected");
     setHasDecided(true);
   }, []);
 

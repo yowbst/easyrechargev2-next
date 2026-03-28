@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
 import { directusFetch } from "@/lib/directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { getPostHogServer } from "@/lib/posthog-server";
 
 function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
   if (!raw) return { raw: null, international: null, countryCode: null, countryCallingCode: null };
@@ -37,6 +38,16 @@ export async function POST(req: Request) {
     const { firstName, lastName, email, phone, phoneCountry, message } = body;
 
     if (!firstName || !lastName || !email || !message) {
+      const posthog = getPostHogServer();
+      posthog.capture({
+        distinctId: "anonymous",
+        event: "server_form_validation_failed",
+        properties: {
+          form_type: "contact",
+          missing_fields: [!firstName && "firstName", !lastName && "lastName", !email && "email", !message && "message"].filter(Boolean),
+        },
+      });
+      after(() => posthog.flush());
       return NextResponse.json(
         { message: "Missing required fields" },
         { status: 400 },
@@ -108,19 +119,43 @@ export async function POST(req: Request) {
       };
 
       try {
-        await fetch(webhookUrl, {
+        const webhookRes = await fetch(webhookUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(webhookPayload),
         });
+        if (!webhookRes.ok) {
+          console.error("[Contact] Webhook returned:", webhookRes.status);
+          const posthog = getPostHogServer();
+          posthog.capture({
+            distinctId: "anonymous",
+            event: "server_webhook_failed",
+            properties: { form_type: "contact", status: webhookRes.status },
+          });
+          after(() => posthog.flush());
+        }
       } catch (err) {
         console.error("[Contact] Webhook failed:", err);
+        const posthog = getPostHogServer();
+        posthog.captureException(err, "anonymous", {
+          form_type: "contact",
+          context: "webhook_delivery",
+        });
+        after(() => posthog.flush());
       }
     }
 
     return NextResponse.json({ success: true, message: "Message reçu avec succès" });
   } catch (error) {
     console.error("[Contact] Submission error:", error);
+    try {
+      const posthog = getPostHogServer();
+      posthog.captureException(error, "anonymous", {
+        form_type: "contact",
+        context: "form_submission",
+      });
+      after(() => posthog.flush());
+    } catch { /* don't let PostHog break the error response */ }
     return NextResponse.json(
       { message: "Erreur lors de l'envoi du message" },
       { status: 500 },
