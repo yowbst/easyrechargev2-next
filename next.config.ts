@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      // Root → /fr
+      { source: "/", destination: "/fr", permanent: true },
       // WordPress exact redirects
       { source: "/contact", destination: "/fr/contact", permanent: true },
       { source: "/mentions-legales", destination: "/fr/mentions-legales", permanent: true },
@@ -34,6 +36,15 @@ const nextConfig: NextConfig = {
       { source: "/sitemap_index.xml", destination: "/sitemap/cms.xml", permanent: true },
       { source: "/sitemap-index.xml", destination: "/sitemap/cms.xml", permanent: true },
       { source: "/wp-sitemap.xml", destination: "/sitemap/cms.xml", permanent: true },
+      // WordPress infrastructure → gone
+      { source: "/wp-admin/:path*", destination: "/api/gone", permanent: false },
+      { source: "/wp-login.php", destination: "/api/gone", permanent: false },
+      { source: "/wp-content/:path*", destination: "/api/gone", permanent: false },
+      { source: "/wp-includes/:path*", destination: "/api/gone", permanent: false },
+      { source: "/feed/:path*", destination: "/api/gone", permanent: false },
+      { source: "/feed", destination: "/api/gone", permanent: false },
+      { source: "/xmlrpc.php", destination: "/api/gone", permanent: false },
+      { source: "/wp-json/:path*", destination: "/api/gone", permanent: false },
       // Language-prefixed blog redirects
       { source: "/:lang(fr|de|en)/guide-recharge/:slug", destination: "/:lang/blog/guide-recharge/:slug", permanent: true },
     ];
