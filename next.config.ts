@@ -29,10 +29,11 @@ const nextConfig: NextConfig = {
       { source: "/espace-pour-partenaires", destination: "/fr/contact", permanent: true },
       { source: "/espace-pour-partenaires/conditions-generales-partenaires", destination: "/fr/mentions-legales", permanent: true },
       { source: "/espace-pour-partenaires/:path*", destination: "/fr/contact", permanent: true },
-      // Sitemap aliases — redirect legacy sitemap URLs to sitemap index
-      { source: "/sitemap_index.xml", destination: "/sitemap.xml", permanent: true },
-      { source: "/sitemap-index.xml", destination: "/sitemap.xml", permanent: true },
-      { source: "/wp-sitemap.xml", destination: "/sitemap.xml", permanent: true },
+      // Sitemap aliases — redirect legacy URLs to individual sitemaps
+      { source: "/sitemap.xml", destination: "/sitemap/cms.xml", permanent: false },
+      { source: "/sitemap_index.xml", destination: "/sitemap/cms.xml", permanent: true },
+      { source: "/sitemap-index.xml", destination: "/sitemap/cms.xml", permanent: true },
+      { source: "/wp-sitemap.xml", destination: "/sitemap/cms.xml", permanent: true },
       // Language-prefixed blog redirects
       { source: "/:lang(fr|de|en)/guide-recharge/:slug", destination: "/:lang/blog/guide-recharge/:slug", permanent: true },
     ];
