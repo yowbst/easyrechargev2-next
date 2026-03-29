@@ -36,17 +36,21 @@ const nextConfig: NextConfig = {
       { source: "/sitemap_index.xml", destination: "/api/sitemap-index", permanent: false },
       { source: "/sitemap-index.xml", destination: "/api/sitemap-index", permanent: false },
       { source: "/wp-sitemap.xml", destination: "/api/sitemap-index", permanent: false },
-      // WordPress infrastructure → gone
+      // WordPress infrastructure → gone (directories & API)
       { source: "/wp-admin/:path*", destination: "/api/gone", permanent: false },
-      { source: "/wp-login.php", destination: "/api/gone", permanent: false },
       { source: "/wp-content/:path*", destination: "/api/gone", permanent: false },
       { source: "/wp-includes/:path*", destination: "/api/gone", permanent: false },
+      { source: "/wp-json/:path*", destination: "/api/gone", permanent: false },
       { source: "/feed/:path*", destination: "/api/gone", permanent: false },
       { source: "/feed", destination: "/api/gone", permanent: false },
       { source: "/xmlrpc.php", destination: "/api/gone", permanent: false },
-      { source: "/wp-json/:path*", destination: "/api/gone", permanent: false },
+      // WordPress PHP files (wp-login.php, wp-cron.php, wp-signup.php, etc.) → home
+      { source: "/wp-:slug.php", destination: "/fr", permanent: true },
       // Language-prefixed blog redirects
       { source: "/:lang(fr|de|en)/guide-recharge/:slug", destination: "/:lang/blog/guide-recharge/:slug", permanent: true },
+      // English not yet supported — redirect to French equivalent
+      { source: "/en", destination: "/fr", permanent: false },
+      { source: "/en/:path*", destination: "/fr/:path*", permanent: false },
     ];
   },
 

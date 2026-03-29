@@ -92,6 +92,8 @@ Route types per level:
 3. Trailing slash removal (301 redirect, except lang roots `/fr/`, `/de/`)
 4. Attribution cookie middleware — mirrors ad click URL params (gclid, fbclid, msclkid, etc.) into server-set cookies to bypass Safari ITP 7-day JS cookie limit
 
+**Important:** Prefer `next.config.ts` `redirects()` over middleware for URL redirects. Middleware causes issues with Vercel's Turbopack builds and should only be used when redirect logic requires request inspection (cookies, headers, geo). All static URL redirects (legacy WordPress paths, language redirects, slug aliases) belong in `next.config.ts`.
+
 WordPress 301 redirects (legacy URLs) are in `next.config.ts` `redirects()`.
 
 ---
