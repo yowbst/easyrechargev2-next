@@ -105,14 +105,20 @@ export function buildVehicleProduct(input: {
     url: input.url,
   };
 
-  if (input.priceCHF) {
-    product.offers = {
-      "@type": "Offer",
-      priceCurrency: "CHF",
-      price: input.priceCHF,
-      availability: "https://schema.org/InStock",
-    };
-  }
+  product.offers = input.priceCHF
+    ? {
+        "@type": "Offer",
+        priceCurrency: "CHF",
+        price: input.priceCHF,
+        availability: "https://schema.org/InStock",
+      }
+    : {
+        "@type": "Offer",
+        priceCurrency: "CHF",
+        price: 0,
+        availability: "https://schema.org/InStock",
+        url: input.url,
+      };
 
   const props: Array<{ "@type": string; name: string; value: string }> = [];
   if (input.batteryCapacity) {
