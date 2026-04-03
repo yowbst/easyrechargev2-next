@@ -30,10 +30,8 @@ import {
   getSiteUrl,
 } from "@/lib/seo/resolver";
 import { wrapInGraph, buildVehicleProduct, buildBreadcrumbList } from "@/lib/seo/jsonLd";
-import dynamic from "next/dynamic";
+import { LazyMiniQuoteCard as MiniQuoteCard } from "@/components/LazyMiniQuoteCard";
 import { VehicleDetailClient } from "@/components/VehicleDetailClient";
-
-const MiniQuoteCard = dynamic(() => import("@/components/MiniQuoteCard").then((m) => m.MiniQuoteCard), { ssr: false });
 import { GetQuote } from "@/components/GetQuote";
 import { QuoteSuccess as QuoteSuccessClient } from "@/components/quote/QuoteSuccess";
 import { QuoteSubmissionView as QuoteSubmissionViewClient } from "@/components/quote/QuoteSubmissionView";
