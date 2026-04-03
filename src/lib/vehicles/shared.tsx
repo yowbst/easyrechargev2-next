@@ -7,12 +7,33 @@ import { t } from "@/lib/i18n/dictionaries";
 import { GetQuote } from "@/components/GetQuote";
 import { cmsBgImage } from "@/lib/directusAssets";
 
-function getBrandIconComponent(
-  iconName?: string,
-): React.ComponentType<{ className?: string }> {
-  if (!iconName) return Car;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (SimpleIcons as any)[iconName] || Car;
+export function BrandIcon({
+  iconSvg,
+  iconName,
+  className,
+}: {
+  iconSvg?: string | null;
+  iconName?: string | null;
+  className?: string;
+}) {
+  if (iconSvg) {
+    // Replace hardcoded fills/strokes with currentColor so the icon inherits text color
+    const dynamicSvg = iconSvg
+      .replace(/fill="(?!none")[^"]*"/g, 'fill="currentColor"')
+      .replace(/stroke="(?!none")[^"]*"/g, 'stroke="currentColor"');
+    return (
+      <div
+        className={`${className} [&>svg]:w-full [&>svg]:h-full`}
+        dangerouslySetInnerHTML={{ __html: dynamicSvg }}
+      />
+    );
+  }
+  if (iconName) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Icon = (SimpleIcons as any)[iconName] || Car;
+    return <Icon className={className} />;
+  }
+  return <Car className={className} />;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,6 +133,7 @@ interface BrandWithCount {
   name: string;
   slug: string;
   icon_simple?: string;
+  icon_svg?: string | null;
   vehicleCount: number;
 }
 
@@ -213,10 +235,7 @@ export function VehicleBrandsListView({
                 >
                   <div className="border rounded-xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 h-full flex flex-col items-center text-center bg-card">
                     <div className="bg-muted rounded-lg p-4 mb-4">
-                      {(() => {
-                        const BrandIcon = getBrandIconComponent(brand.icon_simple);
-                        return <BrandIcon className="h-12 w-12" />;
-                      })()}
+                      <BrandIcon iconSvg={brand.icon_svg} iconName={brand.icon_simple} className="h-12 w-12" />
                     </div>
                     <h3 className="text-lg font-heading font-semibold mb-2">
                       {brand.name}

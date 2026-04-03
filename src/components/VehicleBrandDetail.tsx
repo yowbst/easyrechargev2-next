@@ -10,7 +10,7 @@ import { VehicleFilters } from "@/components/VehicleFilters";
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
 import { GetQuote } from "@/components/GetQuote";
 import { useVehicleFilters } from "@/hooks/useVehicleFilters";
-import { LucideCmsIcon } from "@/components/LucideCmsIcon";
+import { BrandIcon } from "@/lib/vehicles/shared";
 import type { Vehicle } from "@/lib/vehicleTransformer";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
@@ -24,6 +24,7 @@ interface VehicleBrandDetailProps {
   dictionary: Record<string, string>;
   pageRegistry: PageRegistryEntry[];
   heroIcon?: string;
+  heroIconSvg?: string | null;
   heroImage?: string;
   getQuoteBlock?: {
     headline: string;
@@ -46,6 +47,7 @@ export function VehicleBrandDetail({
   dictionary,
   pageRegistry,
   heroIcon,
+  heroIconSvg,
   heroImage,
   getQuoteBlock,
 }: VehicleBrandDetailProps) {
@@ -123,10 +125,7 @@ export function VehicleBrandDetail({
             <div
               className={`rounded-lg p-4 ${heroImage ? "bg-white/10 backdrop-blur" : "bg-background/90 backdrop-blur"}`}
             >
-              <LucideCmsIcon
-                name={heroIcon || "Car"}
-                className={`h-12 w-12 ${heroImage ? "text-white" : ""}`}
-              />
+              <BrandIcon iconSvg={heroIconSvg} iconName={heroIcon} className={`h-12 w-12 ${heroImage ? "text-white" : ""}`} />
             </div>
             <div>
               <h1

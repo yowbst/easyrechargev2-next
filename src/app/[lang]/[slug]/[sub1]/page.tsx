@@ -856,6 +856,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
         name: brand.name || "",
         slug: brand.slug || generateBrandSlug(brand.name || ""),
         icon_simple: brand.icon_simple,
+        icon_svg: brand.icon_svg || null,
         vehicleCount,
       };
     })

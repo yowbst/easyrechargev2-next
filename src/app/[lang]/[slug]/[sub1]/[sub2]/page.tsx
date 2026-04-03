@@ -1495,6 +1495,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const heroBlock = vehicleBrandPage?.blocks?.find((b: any) => b?.collection === "block_hero")?.item;
     const heroImage = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
     const heroIcon = vehicleBrandPage?.config?.hero?.icon || matchedBrand?.icon_simple || "Car";
+    const heroIconSvg = matchedBrand?.icon_svg || null;
 
     // Extract getquote block
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1538,6 +1539,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
           dictionary={dictionary}
           pageRegistry={registry}
           heroIcon={heroIcon}
+          heroIconSvg={heroIconSvg}
           heroImage={heroImage}
           getQuoteBlock={getQuoteData}
         />

@@ -9,6 +9,7 @@ import { t } from "@/lib/i18n/dictionaries";
 import { getRouteSlug } from "@/lib/i18n/config";
 import { resolveRouteId } from "@/lib/pageConfig";
 import { cmsBgImage } from "@/lib/directusAssets";
+import { BrandIcon } from "@/lib/vehicles/shared";
 import { VehicleCard } from "@/components/VehicleCard";
 import { VehicleFilters } from "@/components/VehicleFilters";
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
@@ -20,11 +21,7 @@ import type { PageRegistryEntry } from "@/lib/directus-queries";
 interface BrandData {
   name: string;
   iconName: string | null;
-}
-
-interface BrandWithIcon {
-  name: string;
-  icon: React.ComponentType<{ className?: string }>;
+  iconSvg: string | null;
 }
 
 interface VehiclesHubProps {
@@ -62,11 +59,7 @@ export function VehiclesHub({
 }: VehiclesHubProps) {
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
 
-  // Resolve brand icons client-side (components can't be serialized from server)
-  const brandsWithIcons: BrandWithIcon[] = useMemo(
-    () => brands.map((b) => ({ name: b.name, icon: Car })),
-    [brands],
-  );
+  // Brand data is passed from the server with icon info for client-side rendering
 
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,13 +82,13 @@ export function VehiclesHub({
 
   // Sort brands by vehicle count
   const sortedBrands = useMemo(() => {
-    return [...brandsWithIcons].sort((a, b) => {
+    return [...brands].sort((a, b) => {
       const countA = vehicles.filter((v) => normalizeName(v.brand) === normalizeName(a.name)).length;
       const countB = vehicles.filter((v) => normalizeName(v.brand) === normalizeName(b.name)).length;
       if (countB !== countA) return countB - countA;
       return String(a.name || "").localeCompare(String(b.name || ""));
     });
-  }, [brandsWithIcons, vehicles]);
+  }, [brands, vehicles]);
 
   // Shared filter state
   const filters = useVehicleFilters(vehicles);
@@ -165,7 +158,6 @@ export function VehiclesHub({
               {d("pages.vehicles.brandsFilters.badges.all", { count: vehicles.length })}
             </Badge>
             {sortedBrands.slice(0, 20).map((brand) => {
-              const Logo = brand.icon;
               const vehicleCount = vehicles.filter(
                 (v) => normalizeName(v.brand) === normalizeName(brand.name),
               ).length;
@@ -177,7 +169,7 @@ export function VehiclesHub({
                   onClick={() => { setSelectedBrand(brand.name); resetPage(); }}
                   data-testid={`badge-brand-${brand.name}`}
                 >
-                  {Logo && <Logo className="h-4 w-4" />}
+                  <BrandIcon iconSvg={brand.iconSvg} iconName={brand.iconName} className="h-4 w-4" />
                   {brand.name} ({vehicleCount})
                 </Badge>
               );
@@ -259,7 +251,8 @@ export function VehiclesHub({
                         efficiencyDisplay={vehicle.efficiencyDisplay}
                         pricePerRange={vehicle.pricePerRange}
                         charging={vehicle.charging}
-                        BrandLogo={brandData?.icon}
+                        brandIconSvg={brandData?.iconSvg}
+                        brandIconName={brandData?.iconName}
                         lang={lang}
                         dictionary={dictionary}
                       />

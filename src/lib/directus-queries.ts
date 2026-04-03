@@ -310,6 +310,7 @@ const VEHICLE_FIELDS = [
   "brand.id",
   "brand.name",
   "brand.icon_simple",
+  "brand.icon_svg",
   "brand.slug",
 ];
 

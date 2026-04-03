@@ -287,6 +287,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
     const brandNames = rawBrands.map((brand: any) => ({
       name: String(brand.name || ""),
       iconName: brand.icon_simple || null,
+      iconSvg: brand.icon_svg || null,
     }));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

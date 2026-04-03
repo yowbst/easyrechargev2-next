@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
 import { getRouteSlug } from "@/lib/i18n/config";
-import type { ComponentType, SVGProps } from "react";
+import { BrandIcon } from "@/lib/vehicles/shared";
 
 interface ChargingMetric {
   value?: number;
@@ -49,7 +49,8 @@ interface VehicleCardProps {
   efficiencyDisplay: string;
   pricePerRange: number;
   charging?: VehicleCharging;
-  BrandLogo?: ComponentType<SVGProps<SVGSVGElement>>;
+  brandIconSvg?: string | null;
+  brandIconName?: string | null;
   lang: string;
   dictionary: Record<string, string>;
 }
@@ -65,7 +66,8 @@ export function VehicleCard({
   efficiencyDisplay,
   pricePerRange,
   charging,
-  BrandLogo,
+  brandIconSvg,
+  brandIconName,
   lang,
   dictionary,
 }: VehicleCardProps) {
@@ -96,9 +98,9 @@ export function VehicleCard({
               <span className="text-muted-foreground text-sm">{brand} {model}</span>
             </div>
           )}
-          {BrandLogo && (
+          {(brandIconSvg || brandIconName) && (
             <div className="absolute top-4 left-4 bg-background/90 backdrop-blur rounded-lg p-2">
-              <BrandLogo className="h-6 w-6" />
+              <BrandIcon iconSvg={brandIconSvg} iconName={brandIconName} className="h-6 w-6" />
             </div>
           )}
           <div className="absolute top-4 right-4 bg-background/90 backdrop-blur rounded-lg p-2.5 flex flex-col gap-2 text-[11px] font-bold shadow-md border border-border/50 w-28">
