@@ -1,8 +1,6 @@
-"use client";
-
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import * as LucideIcons from "lucide-react";
+import { Star } from "lucide-react";
 
 interface HeroProps {
   title?: string;
@@ -51,7 +49,7 @@ export function Hero({
           {/* Trust Badge */}
           {!!rating && (
             <Badge className="mb-6 bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30">
-              <LucideIcons.Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+              <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
               <span>{rating}</span>
             </Badge>
           )}
