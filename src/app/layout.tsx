@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat, Open_Sans, JetBrains_Mono } from "next/font/google";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -43,6 +44,7 @@ export default function RootLayout({
             {children}
             <Toaster />
           </Providers>
+          <SpeedInsights />
         </body>
     </html>
   );
