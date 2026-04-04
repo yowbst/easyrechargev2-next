@@ -86,6 +86,11 @@ export function buildBlogPosting(input: {
 
 // ── Product (Vehicle) ───────────────────────────────────────────────────
 
+/**
+ * Build Product JSON-LD for a vehicle.
+ * Returns null when no price is available — Google requires offers,
+ * review, or aggregateRating for valid Product rich results.
+ */
 export function buildVehicleProduct(input: {
   name: string;
   brand: string;
@@ -95,7 +100,9 @@ export function buildVehicleProduct(input: {
   priceCHF?: number;
   batteryCapacity?: string;
   rangeKm?: string;
-}) {
+}): Record<string, unknown> | null {
+  if (!input.priceCHF) return null;
+
   const product: Record<string, unknown> = {
     "@type": "Product",
     name: input.name,
@@ -103,22 +110,13 @@ export function buildVehicleProduct(input: {
     description: input.description,
     image: input.imageUrl,
     url: input.url,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "CHF",
+      price: input.priceCHF,
+      availability: "https://schema.org/InStock",
+    },
   };
-
-  product.offers = input.priceCHF
-    ? {
-        "@type": "Offer",
-        priceCurrency: "CHF",
-        price: input.priceCHF,
-        availability: "https://schema.org/InStock",
-      }
-    : {
-        "@type": "Offer",
-        priceCurrency: "CHF",
-        price: 0,
-        availability: "https://schema.org/InStock",
-        url: input.url,
-      };
 
   const props: Array<{ "@type": string; name: string; value: string }> = [];
   if (input.batteryCapacity) {
@@ -160,9 +158,9 @@ export function buildFAQPage(
 
 // ── Graph wrapper ───────────────────────────────────────────────────────
 
-export function wrapInGraph(...schemas: Record<string, unknown>[]) {
+export function wrapInGraph(...schemas: (Record<string, unknown> | null)[]) {
   return {
     "@context": "https://schema.org",
-    "@graph": schemas,
+    "@graph": schemas.filter(Boolean),
   };
 }
