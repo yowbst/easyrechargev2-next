@@ -23,9 +23,15 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const SITE_URL = process.env.SITE_URL || "https://easyrecharge.ch";
+const isProduction = SITE_URL === "https://easyrecharge.ch" || SITE_URL === "https://www.easyrecharge.ch";
+
 export const metadata: Metadata = {
   title: "easyRecharge",
   description: "Installation de bornes de recharge pour véhicules électriques en Suisse",
+  ...(!isProduction && {
+    robots: { index: false, follow: false },
+  }),
 };
 
 export default function RootLayout({
