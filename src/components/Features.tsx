@@ -1,5 +1,13 @@
 import { Card } from "@/components/ui/card";
-import * as LucideIcons from "lucide-react";
+import {
+  Info, Shield, DollarSign, Users, MapPin, Clock, Award,
+  Zap, CheckCircle, Star, Heart, Settings, Lightbulb, Target,
+} from "lucide-react";
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Info, Shield, DollarSign, Users, MapPin, Clock, Award,
+  Zap, CheckCircle, Star, Heart, Settings, Lightbulb, Target,
+};
 import { cmsBgImage } from "@/lib/directusAssets";
 import { t } from "@/lib/i18n/dictionaries";
 
@@ -18,10 +26,8 @@ interface FeaturesProps {
 }
 
 function getIconComponent(iconName?: string) {
-  if (!iconName) return LucideIcons.Info;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const IconComponent = (LucideIcons as any)[iconName];
-  return IconComponent || LucideIcons.Info;
+  if (!iconName) return Info;
+  return ICON_MAP[iconName] || Info;
 }
 
 export function Features({ title, subtitle, itemsConfig = [], tPrefix, image, dictionary }: FeaturesProps) {

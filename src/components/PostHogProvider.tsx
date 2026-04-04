@@ -2,7 +2,7 @@
 
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 function PostHogPageView() {
@@ -23,29 +23,42 @@ function PostHogPageView() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_API_KEY;
-    if (!key) return;
+  const [ready, setReady] = useState(false);
 
-    posthog.init(key, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com",
-      capture_pageview: false, // we handle this manually above
-      capture_pageleave: true,
-      persistence: "localStorage",
-      person_profiles: "identified_only",
-      capture_performance: true,
-      capture_exceptions: true,
-      session_recording: {
-        maskAllInputs: true,
-        maskTextSelector: ".ph-no-capture",
-      },
-    });
+  useEffect(() => {
+    // Defer PostHog init until after the page is interactive
+    const init = () => {
+      const key = process.env.NEXT_PUBLIC_POSTHOG_API_KEY;
+      if (!key) return;
+
+      posthog.init(key, {
+        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com",
+        capture_pageview: false,
+        capture_pageleave: true,
+        persistence: "localStorage",
+        person_profiles: "identified_only",
+        capture_performance: true,
+        capture_exceptions: true,
+        session_recording: {
+          maskAllInputs: true,
+          maskTextSelector: ".ph-no-capture",
+        },
+      });
+      setReady(true);
+    };
+
+    // Wait for the browser to be idle before initializing
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(init, { timeout: 3000 });
+    } else {
+      setTimeout(init, 2000);
+    }
   }, []);
 
   return (
     <PHProvider client={posthog}>
       <Suspense fallback={null}>
-        <PostHogPageView />
+        {ready && <PostHogPageView />}
       </Suspense>
       {children}
     </PHProvider>

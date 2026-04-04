@@ -1,5 +1,13 @@
 import { Card } from "@/components/ui/card";
-import * as LucideIcons from "lucide-react";
+import {
+  Circle, FileText, Phone, CheckCircle, Wrench,
+  ClipboardList, Search, Truck, Settings, Zap,
+} from "lucide-react";
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Circle, FileText, Phone, CheckCircle, Wrench,
+  ClipboardList, Search, Truck, Settings, Zap,
+};
 import { cmsBgImage } from "@/lib/directusAssets";
 import { t } from "@/lib/i18n/dictionaries";
 
@@ -20,10 +28,8 @@ interface ProcessStepsProps {
 }
 
 function getIconComponent(iconName?: string) {
-  if (!iconName) return LucideIcons.Circle;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const IconComponent = (LucideIcons as any)[iconName];
-  return IconComponent || LucideIcons.Circle;
+  if (!iconName) return Circle;
+  return ICON_MAP[iconName] || Circle;
 }
 
 export function ProcessSteps({ title, subtitle, stepsConfig = [], tPrefix, image, tOptions, dictionary }: ProcessStepsProps) {

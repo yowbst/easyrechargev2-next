@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import * as LucideIcons from "lucide-react";
+import { Home, Building2, Key, MapPin } from "lucide-react";
+
+const HOUSING_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  Home, Building2, Key,
+};
 import { Button } from "@/components/ui/button";
 import { LocalityAutocomplete } from "@/components/LocalityAutocomplete";
 import { t } from "@/lib/i18n/dictionaries";
@@ -56,8 +60,7 @@ export function MiniQuoteForm({
 
   const getHousingStatusIcon = (key: string): React.ReactNode => {
     const iconName = housingStatusField?.icons?.[key];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const IconComponent = (LucideIcons as any)[iconName as string] || LucideIcons.Home;
+    const IconComponent = (iconName ? HOUSING_ICONS[iconName] : null) || Home;
     return <IconComponent className="h-5 w-5 text-white" />;
   };
 
@@ -213,7 +216,7 @@ export function MiniQuoteForm({
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-white/20">
-                  <LucideIcons.MapPin className="h-5 w-5 text-white" />
+                  <MapPin className="h-5 w-5 text-white" />
                 </div>
                 <span className="font-medium text-sm text-white">
                   {selectedLocality.postalCode} {selectedLocality.locality}

@@ -1,7 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Car } from "lucide-react";
-import * as SimpleIcons from "react-icons/si";
+import {
+  SiTesla, SiBmw, SiAudi, SiVolkswagen, SiPorsche, SiVolvo,
+  SiFord, SiToyota, SiHyundai, SiKia, SiNissan, SiRenault,
+  SiPeugeot, SiCitroen, SiFiat, SiOpel, SiSkoda, SiMazda,
+  SiHonda, SiSubaru, SiMini, SiSmart, SiSeat, SiDacia,
+  SiMg, SiPolestar, SiLucid,
+} from "react-icons/si";
+
+const SI_BRAND_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  SiTesla, SiBmw, SiAudi, SiVolkswagen, SiPorsche, SiVolvo,
+  SiFord, SiToyota, SiHyundai, SiKia, SiNissan, SiRenault,
+  SiPeugeot, SiCitroen, SiFiat, SiOpel, SiSkoda, SiMazda,
+  SiHonda, SiSubaru, SiMini, SiSmart, SiSeat, SiDacia,
+  SiMg, SiPolestar, SiLucid,
+};
 import { DIRECTUS_URL } from "@/lib/directus";
 import { t } from "@/lib/i18n/dictionaries";
 import { GetQuote } from "@/components/GetQuote";
@@ -29,8 +43,7 @@ export function BrandIcon({
     );
   }
   if (iconName) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Icon = (SimpleIcons as any)[iconName] || Car;
+    const Icon = SI_BRAND_ICONS[iconName] || Car;
     return <Icon className={className} />;
   }
   return <Car className={className} />;
