@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, List, ChevronDown, ChevronUp } from "lucide-react";
 import { BlogCard } from "@/components/BlogCard";
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
 import { GetQuote } from "@/components/GetQuote";
-import { cmsBgImage } from "@/lib/directusAssets";
 import { useVisibleTagSections } from "@/hooks/useVisibleTagSections";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -167,20 +167,30 @@ export function BlogListing({
       <section
         ref={heroRef}
         className="relative py-16 md:py-28 overflow-hidden"
-        style={hasImage ? { backgroundImage: `url(${cmsBgImage(heroImage!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
         onMouseMove={hasImage ? handleHeroMouseMove : undefined}
         onMouseLeave={hasImage ? handleHeroMouseLeave : undefined}
       >
         {hasImage && (
-          <div
-            className="absolute inset-0 transition-none"
-            aria-hidden="true"
-            style={{
-              background: spotlight
-                ? `radial-gradient(circle 280px at ${spotlight.x}px ${spotlight.y}px, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.78) 100%)`
-                : "rgba(15,23,42,0.75)",
-            }}
-          />
+          <>
+            <Image
+              src={heroImage!}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              quality={75}
+              className="object-cover object-center"
+            />
+            <div
+              className="absolute inset-0 transition-none"
+              aria-hidden="true"
+              style={{
+                background: spotlight
+                  ? `radial-gradient(circle 280px at ${spotlight.x}px ${spotlight.y}px, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.78) 100%)`
+                  : "rgba(15,23,42,0.75)",
+              }}
+            />
+          </>
         )}
         {!hasImage && <div className="absolute inset-0 bg-muted/50" aria-hidden="true" />}
 

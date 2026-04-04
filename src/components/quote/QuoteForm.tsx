@@ -35,6 +35,7 @@ import { getAttributionCompact } from "@/lib/attribution";
 import { t } from "@/lib/i18n/dictionaries";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import Image from "next/image";
 import Link from "next/link";
 import type { CountryCode } from "libphonenumber-js";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -581,7 +582,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   {/* Hero image with overlay headline */}
                   {heroImage ? (
                     <div className="relative h-56 overflow-hidden">
-                      <img src={heroImage} alt="" loading="lazy" width={672} height={224} className="w-full h-full object-cover" aria-hidden="true" />
+                      <Image src={heroImage} alt="" priority fill sizes="(max-width: 768px) 100vw, 672px" quality={75} className="object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-slate-900/10" />
                       <div className="absolute inset-0 flex flex-col justify-end p-6">
                         <h1 className="text-2xl font-heading font-bold text-white leading-tight">
