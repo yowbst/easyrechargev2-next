@@ -16,6 +16,7 @@ export function LocalityAutocomplete(props: {
   locale?: string;
   dataTestId?: string;
   inputClassName?: string;
+  iconClassName?: string;
   dropdownClassName?: string;
 }) {
   const { value, onValueChange, onSelect } = props;
@@ -28,7 +29,7 @@ export function LocalityAutocomplete(props: {
 
   return (
     <div className="relative">
-      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10 pointer-events-none" />
+      <MapPin className={props.iconClassName ?? "absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10 pointer-events-none"} />
       <Input
         value={value}
         onChange={(e) => {

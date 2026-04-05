@@ -108,10 +108,12 @@ export function MiniQuoteForm({
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
 
   const handleQuoteClick = async () => {
     if (!housingStatus || !selectedLocality || isSubmitting) return;
     setIsSubmitting(true);
+    setSubmitError(false);
 
     const params = new URLSearchParams({
       postalCode: selectedLocality.postalCode,
@@ -136,12 +138,17 @@ export function MiniQuoteForm({
       });
       if (!res.ok) {
         console.error("[MiniQuoteForm] API error:", res.status, await res.text().catch(() => ""));
-      } else {
-        const data = await res.json();
-        if (data.sessionToken) params.set("sessionToken", data.sessionToken);
+        setSubmitError(true);
+        setIsSubmitting(false);
+        return;
       }
+      const data = await res.json();
+      if (data.sessionToken) params.set("sessionToken", data.sessionToken);
     } catch (err) {
       console.error("[MiniQuoteForm] Submission failed:", err);
+      setSubmitError(true);
+      setIsSubmitting(false);
+      return;
     }
 
     router.push(`${submitButtonLink}?${params.toString()}`);
@@ -253,6 +260,7 @@ export function MiniQuoteForm({
               limit={8}
               locale={lang === "de" ? "de-DE" : "fr-FR"}
               dataTestId="input-postal-code"
+              iconClassName="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/70 z-10 pointer-events-none"
               inputClassName="h-12 pl-12 text-base rounded-md bg-white/10 border-white/30 focus:border-white hover:border-white/50 text-white placeholder:text-white/60"
               dropdownClassName="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-[200px] overflow-auto"
             />
@@ -261,10 +269,15 @@ export function MiniQuoteForm({
       )}
 
       {/* Submit */}
-      <div className="pt-2">
+      <div className="pt-2 space-y-2">
+        {submitError && (
+          <p className="text-sm text-red-300 text-center">
+            {lang === "de" ? "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut." : "Une erreur est survenue. Veuillez réessayer."}
+          </p>
+        )}
         <Button
           className="w-full h-12 font-semibold rounded-lg text-[14px]"
-          disabled={!housingStatus || !selectedLocality}
+          disabled={!housingStatus || !selectedLocality || isSubmitting}
           data-testid="button-mini-quote"
           onClick={handleQuoteClick}
         >

@@ -77,10 +77,12 @@ export function MiniQuoteCard({
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
 
   const handleQuoteSubmit = async () => {
     if (!housingStatus || !selectedLocality || isSubmitting) return;
     setIsSubmitting(true);
+    setSubmitError(false);
     telemetry.trackSubmit(true, { housingStatus, postalCode: selectedLocality.postalCode });
     ph?.capture("mini_quote_submitted", { form_type: "mini-quote-card", page_id: pageId, locale: lang, housing_status: housingStatus });
 
@@ -112,12 +114,17 @@ export function MiniQuoteCard({
       });
       if (!res.ok) {
         console.error("[MiniQuoteCard] API error:", res.status, await res.text().catch(() => ""));
-      } else {
-        const data = await res.json();
-        if (data.sessionToken) params.set("sessionToken", data.sessionToken);
+        setSubmitError(true);
+        setIsSubmitting(false);
+        return;
       }
+      const data = await res.json();
+      if (data.sessionToken) params.set("sessionToken", data.sessionToken);
     } catch (err) {
       console.error("[MiniQuoteCard] Submission failed:", err);
+      setSubmitError(true);
+      setIsSubmitting(false);
+      return;
     }
 
     router.push(`${submitLink}?${params.toString()}`);
@@ -236,10 +243,15 @@ export function MiniQuoteCard({
         )}
       </div>
 
-      <div className="mt-auto px-6 pb-6 pt-3">
+      <div className="mt-auto px-6 pb-6 pt-3 space-y-2">
+        {submitError && (
+          <p className="text-sm text-destructive text-center">
+            {lang === "de" ? "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut." : "Une erreur est survenue. Veuillez réessayer."}
+          </p>
+        )}
         <Button
           className="w-full h-11 font-semibold rounded-xl text-sm tracking-wide"
-          disabled={!housingStatus || !selectedLocality}
+          disabled={!housingStatus || !selectedLocality || isSubmitting}
           data-testid="button-submit-quote"
           onClick={handleQuoteSubmit}
         >

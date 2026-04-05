@@ -191,6 +191,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+  const miniQuoteSessionTokenRef = useRef<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     housingType: "",
     solarEquipment: "",
@@ -230,6 +231,11 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     const locality = params.get("locality");
     const postalCode = params.get("postalCode");
     const housingStatus = params.get("housingStatus");
+    const miniQuoteToken = params.get("sessionToken");
+
+    if (miniQuoteToken) {
+      miniQuoteSessionTokenRef.current = miniQuoteToken;
+    }
 
     if (locality || postalCode || housingStatus) {
       setFormData((prev) => ({
@@ -576,7 +582,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
             )}
 
             {/* Main Form Card */}
-            <Card className={`rounded-2xl border border-border/80 shadow-sm ${step === 0 ? "overflow-hidden" : "p-6"}`}>
+            <Card className={`rounded-2xl border border-border/80 shadow-sm ${step === 0 ? "overflow-hidden pt-0 gap-0" : "p-6"}`}>
               {/* Step 0: Welcome */}
               {step === 0 && (
                 <div>
@@ -1725,7 +1731,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         const res = await fetch("/api/quote", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ ...formData, attribution, posthog: phIds }),
+                          body: JSON.stringify({ ...formData, attribution, posthog: phIds, ...(miniQuoteSessionTokenRef.current && { miniQuoteSessionToken: miniQuoteSessionTokenRef.current }) }),
                         });
                         if (!res.ok) throw new Error("Submit failed");
                         const result = await res.json();

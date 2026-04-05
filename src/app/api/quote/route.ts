@@ -56,7 +56,10 @@ export async function POST(req: Request) {
     }
 
     // Persist to Directus
-    const sessionToken = randomUUID();
+    // Reuse the mini-quote session if the user came from the mini-quote form,
+    // so both submissions are linked under the same session.
+    const miniQuoteToken = body.miniQuoteSessionToken;
+    const sessionToken = miniQuoteToken || randomUUID();
     const phIds = body.posthog ?? {};
     const referer = req.headers.get("referer");
     const refererUrl = referer ? new URL(referer) : null;
@@ -81,7 +84,7 @@ export async function POST(req: Request) {
       date_terms_accepted: body.acceptTerms ? new Date().toISOString() : null,
     });
 
-    const { attribution: _a, posthog: _ph, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, ...quoteData } = body;
+    const { attribution: _a, posthog: _ph, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, miniQuoteSessionToken: _mqt, ...quoteData } = body;
 
     const submission = await storage.createFormSubmission({
       session: session.id,
