@@ -30,7 +30,7 @@ import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { PlaceAutocomplete } from "@/components/quote/PlaceAutocomplete";
 import { getCantonCode, CANTON_CODES } from "@shared/swiss-cantons";
-import { usePostHog } from "posthog-js/react";
+import { usePostHog } from "@/components/PostHogProvider";
 import { getAttributionCompact } from "@/lib/attribution";
 import { t } from "@/lib/i18n/dictionaries";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";

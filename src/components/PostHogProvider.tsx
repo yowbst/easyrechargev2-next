@@ -1,9 +1,11 @@
 "use client";
 
-import posthog from "posthog-js";
-import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
-import { useEffect, Suspense, useState } from "react";
+import { useEffect, useState, Suspense, createContext, useContext } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import type { PostHog } from "posthog-js";
+
+const PostHogContext = createContext<PostHog | null>(null);
+export const usePostHog = () => useContext(PostHogContext);
 
 function PostHogPageView() {
   const pathname = usePathname();
@@ -23,13 +25,14 @@ function PostHogPageView() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  const [ready, setReady] = useState(false);
+  const [client, setClient] = useState<PostHog | null>(null);
 
   useEffect(() => {
-    // Defer PostHog init until after the page is interactive
-    const init = () => {
+    const init = async () => {
       const key = process.env.NEXT_PUBLIC_POSTHOG_API_KEY;
       if (!key) return;
+
+      const posthog = (await import("posthog-js")).default;
 
       posthog.init(key, {
         api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com",
@@ -45,28 +48,25 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           maskTextSelector: ".ph-no-capture",
         },
       });
-      setReady(true);
+      setClient(posthog);
 
-      // Start session recording after a delay to avoid blocking main thread
-      setTimeout(() => {
-        posthog.startSessionRecording();
-      }, 5000);
+      // Start session recording after further delay
+      setTimeout(() => posthog.startSessionRecording(), 5000);
     };
 
-    // Wait for the browser to be idle before initializing
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(init, { timeout: 3000 });
+      requestIdleCallback(() => init(), { timeout: 3000 });
     } else {
-      setTimeout(init, 2000);
+      setTimeout(() => init(), 2000);
     }
   }, []);
 
   return (
-    <PHProvider client={posthog}>
+    <PostHogContext.Provider value={client}>
       <Suspense fallback={null}>
-        {ready && <PostHogPageView />}
+        {client && <PostHogPageView />}
       </Suspense>
       {children}
-    </PHProvider>
+    </PostHogContext.Provider>
   );
 }

@@ -8,7 +8,7 @@ import { Home, Building2, Key, MapPin, ChevronRight } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
 import { LocalityAutocomplete } from "@/components/LocalityAutocomplete";
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
-import { usePostHog } from "posthog-js/react";
+import { usePostHog } from "@/components/PostHogProvider";
 import type { LocalityResponse } from "@/lib/localities";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 

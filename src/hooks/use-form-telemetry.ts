@@ -3,7 +3,13 @@
 import { useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { getConsent } from "@/lib/consent";
-import posthog from "posthog-js";
+// Lazy PostHog access — the module is loaded async by PostHogProvider
+async function getPostHog() {
+  try {
+    const { default: posthog } = await import("posthog-js");
+    return posthog.__loaded ? posthog : null;
+  } catch { return null; }
+}
 
 interface FormEvent {
   eventType: "focus" | "change" | "blur" | "submit" | "submit_success" | "submit_error";
@@ -48,8 +54,10 @@ function getOrCreateSessionToken(): string {
     try { localStorage.setItem(LS_KEY, token); } catch { /* private mode */ }
     writeCookie(COOKIE_NAME, token);
     try {
-      posthog.register({ ftid: token });
-      posthog.setPersonProperties({ ftid: token });
+      getPostHog().then((ph) => {
+        ph?.register({ ftid: token });
+        ph?.setPersonProperties({ ftid: token });
+      });
     } catch { /* PostHog may not be initialized */ }
   }
 
@@ -74,20 +82,23 @@ export function useFormTelemetry(options: UseFormTelemetryOptions) {
       flushTimer.current = null;
     }
 
-    for (const event of eventsToSend) {
-      try {
-        posthog.capture("form_field_event", {
-          form_type: formType,
-          event_type: event.eventType,
-          field_name: event.fieldName,
-          field_value: event.fieldValue,
-          session_token: sessionToken.current,
-          locale,
-          location_path: pathname,
-          ...(event.eventPayload ?? {}),
-        });
-      } catch { /* PostHog may not be initialized */ }
-    }
+    getPostHog().then((posthog) => {
+      if (!posthog) return;
+      for (const event of eventsToSend) {
+        try {
+          posthog.capture("form_field_event", {
+            form_type: formType,
+            event_type: event.eventType,
+            field_name: event.fieldName,
+            field_value: event.fieldValue,
+            session_token: sessionToken.current,
+            locale,
+            location_path: pathname,
+            ...(event.eventPayload ?? {}),
+          });
+        } catch { /* PostHog may not be initialized */ }
+      }
+    });
   }, [formType, locale, pathname]);
 
   const scheduleFlush = useCallback(() => {

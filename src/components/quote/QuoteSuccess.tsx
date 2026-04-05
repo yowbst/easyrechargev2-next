@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { usePostHog } from "posthog-js/react";
+import { usePostHog } from "@/components/PostHogProvider";
 import { CheckCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

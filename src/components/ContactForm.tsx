@@ -22,7 +22,7 @@ import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
 import { cmsBgImage } from "@/lib/directusAssets";
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { getAttributionCompact } from "@/lib/attribution";
-import { usePostHog } from "posthog-js/react";
+import { usePostHog } from "@/components/PostHogProvider";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { PlaceAutocomplete } from "@/components/quote/PlaceAutocomplete";
 import { getCantonCode, CANTON_CODES } from "@shared/swiss-cantons";
