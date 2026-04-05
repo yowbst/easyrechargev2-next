@@ -48,11 +48,62 @@ export function getAttribution(): Attribution {
   };
 }
 
+/**
+ * Infer utm_source and utm_medium from ad click IDs when UTM params
+ * are not explicitly set. This ensures attribution is correct even
+ * when the landing page URL only contains a click ID (e.g. ?gclid=...).
+ */
+function inferUtmFromClickIds(attr: Attribution): Record<string, string> | null {
+  const utm = attr.utm ? { ...attr.utm } : {};
+
+  // Only infer if utm_source is not already set
+  if (utm.utm_source) return Object.keys(utm).length > 0 ? utm : null;
+
+  if (attr.gclid || attr.gbraid || attr.wbraid) {
+    utm.utm_source = utm.utm_source || "google";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.dclid) {
+    utm.utm_source = utm.utm_source || "google";
+    utm.utm_medium = utm.utm_medium || "display";
+  } else if (attr.fbc || attr.fbp) {
+    utm.utm_source = utm.utm_source || "facebook";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.msclkid) {
+    utm.utm_source = utm.utm_source || "bing";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.ttclid) {
+    utm.utm_source = utm.utm_source || "tiktok";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.li_fat_id) {
+    utm.utm_source = utm.utm_source || "linkedin";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.twclid) {
+    utm.utm_source = utm.utm_source || "twitter";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.sccid) {
+    utm.utm_source = utm.utm_source || "snapchat";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.epik) {
+    utm.utm_source = utm.utm_source || "pinterest";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.rdt_cid) {
+    utm.utm_source = utm.utm_source || "reddit";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  }
+
+  return Object.keys(utm).length > 0 ? utm : null;
+}
+
 export function getAttributionCompact(): Record<string, unknown> {
   const full = getAttribution();
   const result: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(full)) {
     if (v != null) result[k] = v;
   }
+
+  // Enrich UTM from click IDs
+  const enrichedUtm = inferUtmFromClickIds(full);
+  if (enrichedUtm) result.utm = enrichedUtm;
+
   return Object.keys(result).length > 0 ? result : {};
 }
