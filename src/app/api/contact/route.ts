@@ -74,6 +74,7 @@ export async function POST(req: Request) {
       first_name: firstName ?? null,
       last_name: lastName ?? null,
       phone: phone ?? null,
+      terms_accepted_at: body.acceptTerms ? new Date().toISOString() : null,
     });
 
     const { attribution: _a, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, ...contactData } = body;

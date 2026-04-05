@@ -39,6 +39,7 @@ interface CreateUserData {
   first_name?: string | null;
   last_name?: string | null;
   phone?: string | null;
+  terms_accepted_at?: string | null;
 }
 
 interface CreateSubmissionData {
@@ -112,6 +113,7 @@ class DirectusStorage {
             last_name: data.last_name || user.last_name,
             phone: normalizePhone(data.phone) || user.phone,
             submission_count: (user.submission_count || 0) + 1,
+            ...(data.terms_accepted_at && { terms_accepted_at: data.terms_accepted_at }),
           }),
           next: { revalidate: 0 },
         },
@@ -124,8 +126,11 @@ class DirectusStorage {
       {
         method: "POST",
         body: JSON.stringify({
-          ...data,
+          email: data.email,
+          first_name: data.first_name,
+          last_name: data.last_name,
           phone: normalizePhone(data.phone),
+          terms_accepted_at: data.terms_accepted_at || null,
           submission_count: 1,
           environment: getEnvironment(),
         }),
