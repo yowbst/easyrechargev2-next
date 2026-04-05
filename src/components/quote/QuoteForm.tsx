@@ -350,8 +350,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     isEmailValid &&
     isPhoneValid &&
     (formData.addressMode === "google"
-      ? (formData.address && formData.postalCode && formData.locality)
-      : (formData.postalCode && formData.locality && formData.streetName && formData.streetNb));
+      ? (formData.address && formData.postalCode && formData.locality && formData.canton)
+      : (formData.postalCode && formData.locality && formData.streetName && formData.streetNb && formData.canton));
 
   const canProceed = step === 1 ? isStep1Valid : step === 2 ? isStep2Valid : step === 3 ? isStep3Valid : step === 4 ? isStep4Valid : step === 5 ? isStep5Valid : step === 6 ? isStep6Valid : false;
 
