@@ -36,6 +36,19 @@ const AD_CLICK_PARAMS: Record<
   rdt_cid: { cookie: "_rdt_cid", maxAgeDays: 90 },
 };
 
+// ── LLM / AI referrer detection ────────────────────────────────────────
+const AI_REFERRERS: Record<string, string> = {
+  "chatgpt.com": "chatgpt",
+  "chat.openai.com": "chatgpt",
+  "perplexity.ai": "perplexity",
+  "claude.ai": "claude",
+  "gemini.google.com": "gemini",
+  "copilot.microsoft.com": "copilot",
+  "you.com": "you.com",
+  "phind.com": "phind",
+  "poe.com": "poe",
+};
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -109,6 +122,30 @@ export function proxy(request: NextRequest) {
         httpOnly: false,
         secure: request.nextUrl.protocol === "https:",
       });
+    }
+
+    // ── 8. AI/LLM referrer detection ─────────────────────────────────
+    // If no UTM params in URL and referrer is a known AI platform,
+    // set UTM cookies so form submissions capture the source.
+    const hasUtm = url.searchParams.has("utm_source");
+    if (!hasUtm) {
+      const referer = request.headers.get("referer") || "";
+      try {
+        const refHost = new URL(referer).hostname.replace(/^www\./, "");
+        const aiSource = AI_REFERRERS[refHost];
+        if (aiSource) {
+          response.cookies.set("_utm", JSON.stringify({
+            utm_source: aiSource,
+            utm_medium: "ai-referral",
+          }), {
+            maxAge: 30 * 86400,
+            path: "/",
+            sameSite: "lax",
+            httpOnly: false,
+            secure: request.nextUrl.protocol === "https:",
+          });
+        }
+      } catch { /* invalid referer URL — ignore */ }
     }
   }
 
