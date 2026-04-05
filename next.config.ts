@@ -28,6 +28,8 @@ const nextConfig: NextConfig = {
       { source: "/politique-de-cookies-ue", destination: "/fr/politique-de-confidentialite", permanent: true },
       { source: "/obtenir-un-devis", destination: "/fr/demande-devis", permanent: true },
       { source: "/obtenir-un-devis/:path*", destination: "/fr/demande-devis", permanent: true },
+      { source: "/blog", destination: "/fr/blog", permanent: true },
+      { source: "/demande-devis", destination: "/fr/demande-devis", permanent: true },
       { source: "/guide-recharge", destination: "/fr/blog", permanent: true },
       { source: "/conseils/guide-recharge", destination: "/fr/blog", permanent: true },
       { source: "/guide-recharge/:slug", destination: "/fr/blog/guide-recharge/:slug", permanent: true },
