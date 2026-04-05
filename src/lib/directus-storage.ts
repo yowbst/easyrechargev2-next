@@ -39,7 +39,7 @@ interface CreateUserData {
   first_name?: string | null;
   last_name?: string | null;
   phone?: string | null;
-  terms_accepted_at?: string | null;
+  date_terms_accepted?: string | null;
 }
 
 interface CreateSubmissionData {
@@ -113,7 +113,7 @@ class DirectusStorage {
             last_name: data.last_name || user.last_name,
             phone: normalizePhone(data.phone) || user.phone,
             submission_count: (user.submission_count || 0) + 1,
-            ...(data.terms_accepted_at && { terms_accepted_at: data.terms_accepted_at }),
+            ...(data.date_terms_accepted && { date_terms_accepted: data.date_terms_accepted }),
           }),
           next: { revalidate: 0 },
         },
@@ -130,7 +130,7 @@ class DirectusStorage {
           first_name: data.first_name,
           last_name: data.last_name,
           phone: normalizePhone(data.phone),
-          terms_accepted_at: data.terms_accepted_at || null,
+          date_terms_accepted: data.date_terms_accepted || null,
           submission_count: 1,
           environment: getEnvironment(),
         }),
