@@ -148,7 +148,14 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, attribution }),
+        body: JSON.stringify({
+          ...formData,
+          attribution,
+          posthog: {
+            phDistinctId: ph?.get_distinct_id?.() ?? null,
+            phSessionId: ph?.get_session_id?.() ?? null,
+          },
+        }),
       });
       const result = await res.json();
 

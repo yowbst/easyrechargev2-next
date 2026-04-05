@@ -110,9 +110,15 @@ export function MiniQuoteCard({
           },
         }),
       });
-      const data = await res.json();
-      if (data.sessionToken) params.set("sessionToken", data.sessionToken);
-    } catch { /* navigate anyway */ }
+      if (!res.ok) {
+        console.error("[MiniQuoteCard] API error:", res.status, await res.text().catch(() => ""));
+      } else {
+        const data = await res.json();
+        if (data.sessionToken) params.set("sessionToken", data.sessionToken);
+      }
+    } catch (err) {
+      console.error("[MiniQuoteCard] Submission failed:", err);
+    }
 
     router.push(`${submitLink}?${params.toString()}`);
   };

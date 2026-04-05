@@ -134,9 +134,15 @@ export function MiniQuoteForm({
           locale: lang,
         }),
       });
-      const data = await res.json();
-      if (data.sessionToken) params.set("sessionToken", data.sessionToken);
-    } catch { /* navigate anyway */ }
+      if (!res.ok) {
+        console.error("[MiniQuoteForm] API error:", res.status, await res.text().catch(() => ""));
+      } else {
+        const data = await res.json();
+        if (data.sessionToken) params.set("sessionToken", data.sessionToken);
+      }
+    } catch (err) {
+      console.error("[MiniQuoteForm] Submission failed:", err);
+    }
 
     router.push(`${submitButtonLink}?${params.toString()}`);
   };

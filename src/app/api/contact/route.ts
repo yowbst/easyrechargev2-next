@@ -90,6 +90,24 @@ export async function POST(req: Request) {
       status: "success",
     });
 
+    // Identify user in PostHog server-side (client may not have loaded yet)
+    try {
+      const posthog = getPostHogServer();
+      const distinctId = body.posthog?.phDistinctId;
+      if (distinctId) {
+        posthog.identify({
+          distinctId,
+          properties: {
+            email,
+            first_name: firstName,
+            last_name: lastName,
+            locale: req.headers.get("accept-language")?.split(",")[0] ?? null,
+          },
+        });
+        after(() => posthog.flush());
+      }
+    } catch { /* don't block submission */ }
+
     // Fire webhook
     const webhookUrl = await getContactWebhookUrl();
     if (webhookUrl) {
