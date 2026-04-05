@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { CookieBanner } from "@/components/CookieBanner";
+import { LazyCookieBanner as CookieBanner } from "@/components/LazyCookieBanner";
 import { fetchLayout, fetchPageRegistry } from "@/lib/directus-queries";
 import { extractLayoutDictionary } from "@/lib/i18n/dictionaries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";

@@ -27,9 +27,9 @@ import { Features } from "@/components/Features";
 import { ProcessSteps } from "@/components/ProcessSteps";
 import { FAQ } from "@/components/FAQ";
 import { GetQuote } from "@/components/GetQuote";
-import { Testimonials } from "@/components/Testimonials";
-import { GuideCarousel } from "@/components/GuideCarousel";
-import { SwissMap } from "@/components/SwissMap";
+import { LazyTestimonials as Testimonials } from "@/components/lazy";
+import { LazyGuideCarousel as GuideCarousel } from "@/components/lazy";
+import { LazySwissMap as SwissMap } from "@/components/lazy";
 import { MiniQuoteForm } from "@/components/MiniQuoteForm";
 
 export function generateStaticParams() {
