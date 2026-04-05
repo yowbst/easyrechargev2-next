@@ -218,6 +218,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     phoneCountry: "CH",
     addressMode: "google",
     address: "",
+    country: "CH",
     approval: "",
     comment: "",
     acceptTerms: false,
@@ -439,7 +440,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
       postalCode: "",
       locality: "",
       canton: "",
-      country: "",
+      country: "CH",
     }));
   };
 
