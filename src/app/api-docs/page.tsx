@@ -1,10 +1,15 @@
-import type { Metadata } from "next";
-import { SwaggerUI } from "./swagger-ui";
+"use client";
 
-export const metadata: Metadata = {
-  title: "API Documentation | easyRecharge",
-  robots: { index: false, follow: false },
-};
+import dynamic from "next/dynamic";
+
+const SwaggerUI = dynamic(() => import("./swagger-ui").then((m) => m.SwaggerUI), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center min-h-screen">
+      <p className="text-muted-foreground">Loading API documentation...</p>
+    </div>
+  ),
+});
 
 export default function ApiDocsPage() {
   return (

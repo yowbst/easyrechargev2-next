@@ -39,12 +39,18 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         person_profiles: "identified_only",
         capture_performance: true,
         capture_exceptions: true,
+        disable_session_recording: true,
         session_recording: {
           maskAllInputs: true,
           maskTextSelector: ".ph-no-capture",
         },
       });
       setReady(true);
+
+      // Start session recording after a delay to avoid blocking main thread
+      setTimeout(() => {
+        posthog.startSessionRecording();
+      }, 5000);
     };
 
     // Wait for the browser to be idle before initializing

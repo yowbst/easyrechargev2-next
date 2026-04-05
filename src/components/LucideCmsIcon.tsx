@@ -1,18 +1,50 @@
-"use client";
+import {
+  // Navigation & UI
+  Home, Menu, X, ChevronRight, ChevronDown, ChevronUp, ChevronLeft,
+  ArrowRight, ArrowLeft, ExternalLink, Link,
+  // Communication
+  Mail, Phone, MessageCircle, Send, AtSign,
+  // Social / brand
+  Globe, Facebook, Instagram, Twitter, Linkedin, Youtube, Github,
+  // Business
+  Building2, Briefcase, Users, UserCircle, Award, Star,
+  Shield, ShieldCheck, BadgeCheck, CheckCircle, Check,
+  // Location
+  MapPin, Map, Navigation, Compass,
+  // Content
+  FileText, BookOpen, Newspaper, PenLine, ClipboardList,
+  // Time & scheduling
+  Clock, Calendar, Timer,
+  // Technology
+  Zap, Plug, Battery, BatteryCharging, Wifi, Settings, Wrench,
+  // Nature & energy
+  Sun, Leaf, Lightbulb, Flame,
+  // Finance
+  DollarSign, CreditCard, Receipt, TrendingUp,
+  // Vehicles
+  Car, Truck,
+  // Misc
+  Heart, Info, AlertCircle, HelpCircle, Search, Eye, Download,
+  Key, Lock, Unlock, Target, Gift, Package, CircleDot, Circle,
+} from "lucide-react";
 
-import { useState, useEffect } from "react";
-import type { ComponentType } from "react";
-
-// Convert PascalCase icon name to kebab-case file name
-// e.g., "CheckCircle" → "check-circle", "MapPin" → "map-pin"
-function toKebab(name: string): string {
-  return name
-    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2")
-    .toLowerCase();
-}
-
-const iconCache = new Map<string, ComponentType<{ className?: string }>>();
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Home, Menu, X, ChevronRight, ChevronDown, ChevronUp, ChevronLeft,
+  ArrowRight, ArrowLeft, ExternalLink, Link,
+  Mail, Phone, MessageCircle, Send, AtSign,
+  Globe, Facebook, Instagram, Twitter, Linkedin, Youtube, Github,
+  Building2, Briefcase, Users, UserCircle, Award, Star,
+  Shield, ShieldCheck, BadgeCheck, CheckCircle, Check,
+  MapPin, Map, Navigation, Compass,
+  FileText, BookOpen, Newspaper, PenLine, ClipboardList,
+  Clock, Calendar, Timer,
+  Zap, Plug, Battery, BatteryCharging, Wifi, Settings, Wrench,
+  Sun, Leaf, Lightbulb, Flame,
+  DollarSign, CreditCard, Receipt, TrendingUp,
+  Car, Truck,
+  Heart, Info, AlertCircle, HelpCircle, Search, Eye, Download,
+  Key, Lock, Unlock, Target, Gift, Package, CircleDot, Circle,
+};
 
 type Props = {
   name?: string | null;
@@ -20,30 +52,8 @@ type Props = {
 };
 
 export function LucideCmsIcon({ name, className = "" }: Props) {
-  const [Icon, setIcon] = useState<ComponentType<{ className?: string }> | null>(
-    name && iconCache.has(name) ? iconCache.get(name)! : null,
-  );
-
-  useEffect(() => {
-    if (!name) return;
-    if (iconCache.has(name)) {
-      setIcon(() => iconCache.get(name)!);
-      return;
-    }
-    const kebab = toKebab(name);
-    import(`lucide-react/dist/esm/icons/${kebab}.js`)
-      .then((mod) => {
-        const Comp = mod.default || mod[name];
-        if (Comp) {
-          iconCache.set(name, Comp);
-          setIcon(() => Comp);
-        }
-      })
-      .catch(() => {
-        // Icon not found — silently ignore
-      });
-  }, [name]);
-
-  if (!Icon) return null;
-  return <Icon className={className} />;
+  if (!name) return null;
+  const IconComponent = ICON_MAP[name];
+  if (!IconComponent) return null;
+  return <IconComponent className={className} />;
 }
