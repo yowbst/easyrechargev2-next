@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
+import { cmsImage } from "@/lib/directusAssets";
 
 interface HeroProps {
   title?: string;
@@ -23,22 +23,22 @@ export function Hero({
   pageId,
   image,
 }: HeroProps) {
-  // Image is already a full Directus URL or a local path
   const resolvedImage = image || "/og-default.webp";
+  const optimised = cmsImage(resolvedImage, [640, 1024, 1920], { quality: 75 });
 
   return (
     // IMPORTANT: overflow-visible so autocomplete dropdown isn't clipped
     <section className="relative overflow-visible min-h-[950px] md:min-h-[1000px]">
       {/* Background Image with Overlay - Fixed Height */}
       <div className="absolute inset-0 h-[950px] md:h-[1000px] z-0">
-        <Image
-          src={resolvedImage}
-          alt="EV Charging"
-          fill
-          priority
-          sizes="100vw"
-          quality={75}
-          className="object-cover object-center"
+        <img
+          src={optimised.src}
+          srcSet={optimised.srcSet}
+          sizes={optimised.sizes}
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-slate-900/40" />
       </div>
