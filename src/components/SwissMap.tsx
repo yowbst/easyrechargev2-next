@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, CheckCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { t } from "@/lib/i18n/dictionaries";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,8 +59,28 @@ export function SwissMap({
   const [hoveredCanton, setHoveredCanton] = useState<string | null>(null);
   const [cantons, setCantons] = useState<Canton[]>([]);
   const [viewBox, setViewBox] = useState("0 0 1000 600");
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLElement>(null);
+
+  // Only start loading GeoJSON when the map section scrolls into view
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
+    if (!isVisible) return;
     fetch("https://labs.karavia.ch/swiss-boundaries-geojson/geojson-lv95/2020/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET.geojson")
       .then((res) => res.json())
       .then((cantonsGeo) => {
@@ -99,7 +119,7 @@ export function SwissMap({
       .catch((err) => {
         console.error("Error loading Swiss map:", err);
       });
-  }, []);
+  }, [isVisible]);
 
   function getBounds(features: AnyRecord[]) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -146,7 +166,7 @@ export function SwissMap({
   }
 
   return (
-    <section className="py-24">
+    <section ref={containerRef} className="py-24">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">{title}</h2>
