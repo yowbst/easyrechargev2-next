@@ -166,18 +166,32 @@ export default async function SlugPage({ params }: SlugPageProps) {
       const quoteHeroImage = quoteHeroBlock?.image ? `${DIRECTUS_URL}/assets/${quoteHeroBlock.image}` : undefined;
       const quotePageConfig = page?.config || {};
       const globalConfig = layoutData?.globalConfig ?? {};
+      const quoteHeroSizes = "(max-width: 768px) 100vw, 672px";
+      const quoteHeroPreload = quoteHeroImage
+        ? cmsImage(quoteHeroImage, [400, 672], { quality: 75 })
+        : undefined;
       return (
-        <QuoteForm
-          lang={lang}
-          dictionary={dictionary}
-          quoteSlug={slug}
-          logoSrc={logoSrc}
-          logoDarkSrc={logoDarkSrc}
-          heroImage={quoteHeroImage}
-          pageConfig={quotePageConfig}
-          globalConfig={globalConfig}
-          pageRegistry={registry}
-        />
+        <>
+          {quoteHeroPreload && (
+            <link
+              rel="preload"
+              as="image"
+              imageSrcSet={quoteHeroPreload.srcSet}
+              imageSizes={quoteHeroSizes}
+            />
+          )}
+          <QuoteForm
+            lang={lang}
+            dictionary={dictionary}
+            quoteSlug={slug}
+            logoSrc={logoSrc}
+            logoDarkSrc={logoDarkSrc}
+            heroImage={quoteHeroImage}
+            pageConfig={quotePageConfig}
+            globalConfig={globalConfig}
+            pageRegistry={registry}
+          />
+        </>
       );
     }
     if (entry.id === "contact") {
