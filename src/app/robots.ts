@@ -17,6 +17,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      allow: "/api/cms/assets/",
       disallow: ["/api/"],
     },
     sitemap: [
