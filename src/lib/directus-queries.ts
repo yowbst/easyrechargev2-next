@@ -90,7 +90,7 @@ export async function fetchLayout(locale: string = DIRECTUS_DEFAULT_LOCALE) {
   });
 
   const result = await directusFetch<{ data: AnyRecord | AnyRecord[] }>(path, {
-    next: { revalidate: 60, tags: ["layout"] },
+    next: { revalidate: 3600, tags: ["layout"] },
   });
 
   // site_settings is a singleton — Directus returns { data: {...} } not { data: [{...}] }
@@ -160,7 +160,7 @@ export async function fetchPage(
   });
 
   const result = await directusFetch<{ data: AnyRecord[] }>(path, {
-    next: { revalidate: 60, tags: [`page-${routeId}`] },
+    next: { revalidate: 3600, tags: [`page-${routeId}`] },
   });
 
   return result?.data?.[0] ?? null;
@@ -197,7 +197,7 @@ export async function fetchPageRegistry(): Promise<PageRegistryEntry[]> {
   });
 
   const result = await directusFetch<{ data: AnyRecord[] }>(path, {
-    next: { revalidate: 60, tags: ["page-registry"] },
+    next: { revalidate: 3600, tags: ["page-registry"] },
   });
 
   const pages = result?.data || [];
@@ -265,7 +265,7 @@ export async function fetchBlogPosts(
   });
 
   const result = await directusFetch<{ data: AnyRecord[] }>(path, {
-    next: { revalidate: 300, tags: ["blog-posts"] },
+    next: { revalidate: 3600, tags: ["blog-posts"] },
   });
 
   return (result?.data || []).filter(
@@ -297,7 +297,7 @@ export async function fetchBlogPost(
   });
 
   const result = await directusFetch<{ data: AnyRecord[] }>(path, {
-    next: { revalidate: 300, tags: [`blog-post-${slug}`] },
+    next: { revalidate: 3600, tags: [`blog-post-${slug}`] },
   });
 
   return result?.data?.[0] ?? null;
@@ -326,7 +326,7 @@ export async function fetchVehicles(
   });
 
   const result = await directusFetch<{ data: AnyRecord[] }>(path, {
-    next: { revalidate: 300, tags: ["vehicles"] },
+    next: { revalidate: 3600, tags: ["vehicles"] },
   });
 
   return result?.data || [];
@@ -348,7 +348,7 @@ export async function fetchVehicle(
   });
 
   const result = await directusFetch<{ data: AnyRecord[] }>(path, {
-    next: { revalidate: 300, tags: [`vehicle-${slug}`] },
+    next: { revalidate: 3600, tags: [`vehicle-${slug}`] },
   });
 
   return result?.data?.[0] ?? null;
@@ -368,7 +368,7 @@ export async function fetchVehicleBrands(
   });
 
   const result = await directusFetch<{ data: AnyRecord[] }>(path, {
-    next: { revalidate: 300, tags: ["vehicle-brands"] },
+    next: { revalidate: 3600, tags: ["vehicle-brands"] },
   });
 
   return result?.data || [];

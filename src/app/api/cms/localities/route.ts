@@ -34,12 +34,12 @@ export async function GET(req: Request) {
 
     const data = await directusFetch(
       `/items/${LOCALITIES_COLLECTION}?${params.toString()}`,
-      { next: { revalidate: 30 } },
+      { next: { revalidate: 86400 } },
     );
 
     return NextResponse.json(data, {
       headers: {
-        "Cache-Control": "public, max-age=30, stale-while-revalidate=300",
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
       },
     });
   } catch (error) {

@@ -22,7 +22,7 @@ async function getContactWebhookUrl(): Promise<string | null> {
   try {
     const result = await directusFetch<{ data: { global_config?: { webhooks?: { contact?: string } } }[] }>(
       `/items/site_settings?fields=global_config&filter[status][_eq]=published`,
-      { next: { revalidate: 300 } },
+      { next: { revalidate: 3600 } },
     );
     const raw = result?.data;
     const record = Array.isArray(raw) ? raw[0] : raw;

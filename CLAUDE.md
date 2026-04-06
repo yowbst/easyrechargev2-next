@@ -140,8 +140,9 @@ Forms persist to Directus via REST API (no local DB):
 
 ### ISR Revalidation
 
-- **Time-based:** Content pages 60s, blog/vehicles 300s
-- **On-demand:** `POST /api/webhooks/directus` receives Directus webhook events, calls `revalidatePath("/", "layout")` to invalidate affected pages
+- **Time-based:** All content 3600s (1 hour) — serves as safety net only
+- **On-demand (primary):** `POST /api/webhooks/directus` receives Directus webhook events, calls `revalidatePath("/", "layout")` to invalidate affected pages immediately
+- **Rationale:** On-demand webhook handles instant updates; long time-based intervals minimize Vercel ISR write costs
 
 ### Directus Assets
 

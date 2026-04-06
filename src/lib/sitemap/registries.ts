@@ -42,7 +42,7 @@ export async function getCmsEntries(): Promise<UrlEntry[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await directusFetch<{ data: any[] }>(
     "/items/pages?fields=id,route_id,type,date_updated,translations.slug,translations.languages_code,translations.seo&filter[_or][0][type][_eq]=static&filter[_or][1][type][_eq]=app&limit=200",
-    { next: { revalidate: 300 } },
+    { next: { revalidate: 3600 } },
   );
 
   const pages = result?.data || [];
@@ -99,7 +99,7 @@ export async function getBlogEntries(): Promise<UrlEntry[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const blogPageResult = await directusFetch<{ data: any[] }>(
     "/items/pages?fields=translations.slug,translations.languages_code&filter[route_id][_eq]=blog&limit=1",
-    { next: { revalidate: 300 } },
+    { next: { revalidate: 3600 } },
   );
   const blogPage = blogPageResult?.data?.[0];
   const blogSlugs: Record<"fr" | "de", string> = { fr: "blog", de: "blog" };
@@ -112,7 +112,7 @@ export async function getBlogEntries(): Promise<UrlEntry[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await directusFetch<{ data: any[] }>(
     "/items/blog_posts?fields=id,date_updated,translations.slug,translations.languages_code,translations.seo,category.translations.slug,category.translations.languages_code&filter[status][_eq]=published&limit=1000",
-    { next: { revalidate: 300 } },
+    { next: { revalidate: 3600 } },
   );
 
   const items = result?.data || [];
@@ -167,7 +167,7 @@ export async function getVehicleEntries(): Promise<UrlEntry[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await directusFetch<{ data: any[] }>(
     "/items/vehicles?fields=id,slug,date_updated,brand.name,brand.slug&filter[status][_eq]=published&limit=1000",
-    { next: { revalidate: 300 } },
+    { next: { revalidate: 3600 } },
   );
 
   const items = result?.data || [];
