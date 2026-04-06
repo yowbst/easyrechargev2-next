@@ -22,6 +22,7 @@ import {
 } from "@/lib/seo/jsonLd";
 import { DIRECTUS_URL } from "@/lib/directus";
 import { resolveRouteId } from "@/lib/pageConfig";
+import { cmsImage } from "@/lib/directusAssets";
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -137,6 +138,10 @@ export default async function Home({ params }: HomeProps) {
     heroSubtitleRaw,
   );
   const heroImage = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
+  const heroSizes = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px";
+  const heroPreload = heroImage
+    ? { srcSet: cmsImage(heroImage, [640, 1024, 1920], { quality: 75 }).srcSet, sizes: heroSizes }
+    : undefined;
   // Hero checks: read from block translation content (not block root content)
   const heroTranslationChecks = heroTranslation?.content?.checks;
   const heroChecksConfig = heroTranslationChecks
@@ -272,6 +277,7 @@ export default async function Home({ params }: HomeProps) {
           rating={heroRating}
           image={heroImage}
           pageId="home"
+          preloadImage={heroPreload}
         >
           <MiniQuoteForm
             miniQuoteContent={miniQuoteBlock ? { config: miniQuoteBlock.config } : undefined}
