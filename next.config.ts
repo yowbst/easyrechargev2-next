@@ -72,6 +72,20 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         ],
       },
+      // Long cache for static assets (fonts, images, GeoJSON)
+      {
+        source: "/:path*.(geojson|woff2|woff|ico|webp|png|jpg|svg)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      // CMS asset proxy — cache for 1 day (content may change)
+      {
+        source: "/api/cms/assets/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
+      },
     ];
   },
 };
