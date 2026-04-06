@@ -10,7 +10,7 @@ export function getOpenApiSpec() {
     info: {
       title: "easyRecharge API",
       description:
-        "Internal API for the easyRecharge Next.js application. Handles form submissions, CMS asset proxying, locality search, and Directus webhook revalidation.",
+        "Internal API for the easyRecharge Next.js application. Handles form submissions, CMS asset proxying, and locality search.",
       version: "2.0.0",
     },
     servers: [{ url: "", description: "Current server" }],
@@ -256,46 +256,6 @@ export function getOpenApiSpec() {
         },
       },
 
-      "/api/webhooks/directus": {
-        post: {
-          tags: ["Webhooks"],
-          summary: "Directus content revalidation webhook",
-          description:
-            "Receives Directus webhook events on content changes and triggers Next.js ISR revalidation for affected pages. Authenticated via x-webhook-secret header.",
-          security: [{ webhookSecret: [] }],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/DirectusWebhookPayload" },
-              },
-            },
-          },
-          responses: {
-            "200": {
-              description: "Revalidation triggered",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      revalidated: { type: "integer", example: 2 },
-                      tags: {
-                        type: "array",
-                        items: { type: "string" },
-                        example: ["blog-posts", "blog-post-my-post"],
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            "401": { description: "Invalid or missing webhook secret" },
-            "400": { description: "Missing collection in payload" },
-          },
-        },
-      },
-
       "/api/docs": {
         get: {
           tags: ["Documentation"],
@@ -405,14 +365,6 @@ export function getOpenApiSpec() {
     },
 
     components: {
-      securitySchemes: {
-        webhookSecret: {
-          type: "apiKey",
-          in: "header",
-          name: "x-webhook-secret",
-          description: "Directus webhook secret (DIRECTUS_WEBHOOK_SECRET env var)",
-        },
-      },
       schemas: {
         QuoteRequest: {
           type: "object",
@@ -495,30 +447,6 @@ export function getOpenApiSpec() {
                     properties: { name: { type: "string", example: "Vaud" } },
                   },
                 },
-              },
-            },
-          },
-        },
-
-        DirectusWebhookPayload: {
-          type: "object",
-          required: ["collection"],
-          properties: {
-            collection: {
-              type: "string",
-              enum: ["site_settings", "pages", "blog_posts", "vehicles", "vehicle_brands"],
-              example: "blog_posts",
-            },
-            key: { type: "string", description: "Single item key" },
-            keys: {
-              type: "array",
-              items: { type: "string" },
-              description: "Multiple item keys",
-            },
-            payload: {
-              type: "object",
-              properties: {
-                slug: { type: "string" },
               },
             },
           },

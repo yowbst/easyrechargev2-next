@@ -35,7 +35,7 @@ Required in `.env.local` (not committed):
 DIRECTUS_URL=https://easyrechargev2-directus-production.up.railway.app
 DIRECTUS_STATIC_TOKEN=<token>
 SITE_URL=https://easyrecharge.ch
-DIRECTUS_WEBHOOK_SECRET=<secret>
+
 NEXT_PUBLIC_POSTHOG_API_KEY=<key>
 NEXT_PUBLIC_POSTHOG_HOST=<host>
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=<key>
@@ -140,9 +140,7 @@ Forms persist to Directus via REST API (no local DB):
 
 ### ISR Revalidation
 
-- **Time-based:** All content 3600s (1 hour) — serves as safety net only
-- **On-demand (primary):** `POST /api/webhooks/directus` receives Directus webhook events, calls `revalidatePath("/", "layout")` to invalidate affected pages immediately
-- **Rationale:** On-demand webhook handles instant updates; long time-based intervals minimize Vercel ISR write costs
+- **Time-based only:** All content 3600s (1 hour). No on-demand webhook — content updates appear within 1 hour of publishing in Directus.
 
 ### Directus Assets
 
@@ -254,7 +252,7 @@ Dictionary strings can contain `{quote_request_duration}`, `{first_contact}`, `{
 | `/api/form-submissions/[id]` | GET | Retrieve submission (QuoteSuccess page) |
 | `/api/cms/localities` | GET | Swiss locality search (autocomplete) |
 | `/api/cms/assets/[id]` | GET | Directus asset proxy (auth required) |
-| `/api/webhooks/directus` | POST | ISR revalidation on content changes |
+
 | `/api/docs` | GET | OpenAPI 3.0 spec (JSON) |
 | `/api/debug/urls` | GET | List all generated URLs by type |
 | `/api-docs` | — | Swagger UI (interactive docs page) |
