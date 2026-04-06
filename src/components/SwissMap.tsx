@@ -81,7 +81,7 @@ export function SwissMap({
 
   useEffect(() => {
     if (!isVisible) return;
-    fetch("https://labs.karavia.ch/swiss-boundaries-geojson/geojson-lv95/2020/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET.geojson")
+    fetch("/swiss-cantons.geojson")
       .then((res) => res.json())
       .then((cantonsGeo) => {
         if (!cantonsGeo?.features) return;
