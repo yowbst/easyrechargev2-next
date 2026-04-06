@@ -11,6 +11,7 @@ interface HeroProps {
   children?: React.ReactNode;
   pageId?: string;
   image?: string;
+  preloadImage?: { srcSet: string; sizes: string };
 }
 
 export function Hero({
@@ -22,22 +23,31 @@ export function Hero({
   children,
   pageId,
   image,
+  preloadImage,
 }: HeroProps) {
   const resolvedImage = image || "/og-default.webp";
   const optimised = cmsImage(resolvedImage, [640, 1024, 1920], { quality: 75 });
 
   return (
-    // IMPORTANT: overflow-visible so autocomplete dropdown isn't clipped
-    <section className="relative overflow-visible min-h-[950px] md:min-h-[1000px]">
+    <>
+      {preloadImage && (
+        <link
+          rel="preload"
+          as="image"
+          imageSrcSet={preloadImage.srcSet}
+          imageSizes={preloadImage.sizes}
+        />
+      )}
+      {/* IMPORTANT: overflow-visible so autocomplete dropdown isn't clipped */}
+      <section className="relative overflow-visible min-h-[950px] md:min-h-[1000px]">
       {/* Background Image with Overlay - Fixed Height */}
       <div className="absolute inset-0 h-[950px] md:h-[1000px] z-0">
         <img
           src={optimised.src}
           srcSet={optimised.srcSet}
-          sizes={optimised.sizes}
+          sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
           alt=""
           fetchPriority="high"
-          decoding="async"
           className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-slate-900/40" />
@@ -88,5 +98,6 @@ export function Hero({
         </div>
       </div>
     </section>
+    </>
   );
 }
