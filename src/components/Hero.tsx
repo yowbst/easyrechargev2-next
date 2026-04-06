@@ -48,9 +48,9 @@ export function Hero({
           sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
           alt=""
           fetchPriority="high"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-center brightness-105 saturate-105 dark:brightness-100 dark:saturate-100"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-slate-900/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 to-slate-900/30 dark:from-slate-900/80 dark:to-slate-900/40" />
       </div>
 
       {/* Content */}
