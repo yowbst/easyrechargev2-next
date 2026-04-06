@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Car } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
@@ -54,21 +54,6 @@ export function VehicleBrandDetail({
   const d = (key: string, vars?: Record<string, string | number>) =>
     t(dictionary, key, vars);
 
-  // Spotlight effect for hero
-  const heroRef = useRef<HTMLElement>(null);
-  const [spotlight, setSpotlight] = useState<{ x: number; y: number } | null>(
-    null,
-  );
-  const handleHeroMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      const rect = heroRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      setSpotlight({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    },
-    [],
-  );
-  const handleHeroMouseLeave = useCallback(() => setSpotlight(null), []);
-
   // Shared filter state
   const filters = useVehicleFilters(vehicles);
   const { filteredVehicles } = filters;
@@ -93,24 +78,13 @@ export function VehicleBrandDetail({
 
       {/* Hero */}
       <section
-        ref={heroRef}
         className="relative py-16 md:py-24 overflow-hidden"
-        onMouseMove={heroImage ? handleHeroMouseMove : undefined}
-        onMouseLeave={heroImage ? handleHeroMouseLeave : undefined}
       >
         {heroImage && (
           <Image src={heroImage} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
         )}
         {heroImage ? (
-          <div
-            className="absolute inset-0 transition-all duration-200"
-            aria-hidden="true"
-            style={{
-              background: spotlight
-                ? `radial-gradient(circle 280px at ${spotlight.x}px ${spotlight.y}px, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.78) 100%)`
-                : "rgba(15,23,42,0.75)",
-            }}
-          />
+          <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />
         ) : (
           <div className="absolute inset-0 bg-muted/50" aria-hidden="true" />
         )}

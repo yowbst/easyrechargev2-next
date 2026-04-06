@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,18 +77,6 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
     subject: "",
     message: "",
   });
-
-  // Hero spotlight effect
-  const heroRef = useRef<HTMLElement>(null);
-  const [spotlight, setSpotlight] = useState<{ x: number; y: number } | null>(null);
-
-  const handleHeroMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    const rect = heroRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setSpotlight({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  }, []);
-
-  const handleHeroMouseLeave = useCallback(() => setSpotlight(null), []);
 
   const handleFieldChange = (field: string, value: string) => {
     telemetry.trackChange(field, value);
@@ -234,23 +222,13 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
     <div>
       {/* Hero Section */}
       <section
-        ref={heroRef}
         className="relative py-20 md:py-28 overflow-hidden"
-        onMouseMove={hasHeroImage ? handleHeroMouseMove : undefined}
-        onMouseLeave={hasHeroImage ? handleHeroMouseLeave : undefined}
       >
         {hasHeroImage && (
           <Image src={heroImage!} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
         )}
         {hasHeroImage ? (
-          <div
-            className="absolute inset-0 transition-all duration-200"
-            style={{
-              background: spotlight
-                ? `radial-gradient(circle 280px at ${spotlight.x}px ${spotlight.y}px, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.78) 100%)`
-                : "rgba(15,23,42,0.75)",
-            }}
-          />
+          <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />
         ) : (
           <div className="absolute inset-0 bg-muted/30" />
         )}

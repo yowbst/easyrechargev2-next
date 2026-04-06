@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, List, ChevronDown, ChevronUp } from "lucide-react";
@@ -57,16 +57,6 @@ export function BlogListing({
 }: BlogListingProps) {
   const hasImage = !!heroImage;
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
-
-  // Spotlight effect
-  const heroRef = useRef<HTMLElement>(null);
-  const [spotlight, setSpotlight] = useState<{ x: number; y: number } | null>(null);
-  const handleHeroMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    const rect = heroRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setSpotlight({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  }, []);
-  const handleHeroMouseLeave = useCallback(() => setSpotlight(null), []);
 
   // Separate guide posts from other posts
   const guidePosts = useMemo(
@@ -165,10 +155,7 @@ export function BlogListing({
     <div>
       {/* Hero Section */}
       <section
-        ref={heroRef}
         className="relative py-16 md:py-28 overflow-hidden"
-        onMouseMove={hasImage ? handleHeroMouseMove : undefined}
-        onMouseLeave={hasImage ? handleHeroMouseLeave : undefined}
       >
         {hasImage && (() => {
           return (
@@ -182,15 +169,7 @@ export function BlogListing({
                 sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
                 className="object-cover object-center"
               />
-              <div
-                className="absolute inset-0 transition-none"
-                aria-hidden="true"
-                style={{
-                  background: spotlight
-                    ? `radial-gradient(circle 280px at ${spotlight.x}px ${spotlight.y}px, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.78) 100%)`
-                    : "rgba(15,23,42,0.75)",
-                }}
-              />
+              <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />
             </>
           );
         })()}

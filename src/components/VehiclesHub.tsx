@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,16 +64,6 @@ export function VehiclesHub({
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Spotlight effect for hero
-  const heroRef = useRef<HTMLElement>(null);
-  const [spotlight, setSpotlight] = useState<{ x: number; y: number } | null>(null);
-  const handleHeroMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    const rect = heroRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setSpotlight({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  }, []);
-  const handleHeroMouseLeave = useCallback(() => setSpotlight(null), []);
-
   // Vehicle brands from actual vehicle data
   const vehicleBrands = useMemo(
     () => Array.from(new Set(vehicles.map((v) => v.brand).filter(Boolean))),
@@ -114,24 +104,13 @@ export function VehiclesHub({
     <div className="flex-1">
       {/* Hero Section */}
       <section
-        ref={heroRef}
         className="relative py-16 md:py-28 overflow-hidden"
-        onMouseMove={heroImage ? handleHeroMouseMove : undefined}
-        onMouseLeave={heroImage ? handleHeroMouseLeave : undefined}
       >
         {heroImage && (
           <Image src={heroImage} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
         )}
         {heroImage && (
-          <div
-            className="absolute inset-0"
-            aria-hidden="true"
-            style={{
-              background: spotlight
-                ? `radial-gradient(circle 280px at ${spotlight.x}px ${spotlight.y}px, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.78) 100%)`
-                : "rgba(15,23,42,0.75)",
-            }}
-          />
+          <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />
         )}
         {!heroImage && <div className="absolute inset-0 bg-muted/50" aria-hidden="true" />}
 
