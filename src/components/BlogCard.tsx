@@ -22,6 +22,7 @@ interface BlogCardProps {
   tag?: string;
   showCategory?: boolean;
   variant?: "default" | "compact" | "dark";
+  priority?: boolean;
   dictionary: Record<string, string>;
   pageRegistry: PageRegistryEntry[];
 }
@@ -39,6 +40,7 @@ export function BlogCard({
   tag,
   showCategory = true,
   variant = "default",
+  priority = false,
   dictionary,
   pageRegistry,
 }: BlogCardProps) {
@@ -64,7 +66,8 @@ export function BlogCard({
           <img
             {...cmsImage(image, [400, 700])}
             alt={title}
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
             width={700}
             height={394}
             className={`w-full h-full object-cover ${isDark ? "brightness-125" : ""}`}

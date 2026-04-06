@@ -358,6 +358,7 @@ export function BlogListing({
                           <BlogCard
                             key={post.id}
                             {...post}
+                            priority={tagIndex === 0 && index < 3}
                             dictionary={dictionary}
                             pageRegistry={pageRegistry}
                           />,
@@ -367,6 +368,7 @@ export function BlogListing({
                         <BlogCard
                           key={post.id}
                           {...post}
+                          priority={tagIndex === 0 && index < 3}
                           dictionary={dictionary}
                           pageRegistry={pageRegistry}
                         />,
@@ -396,6 +398,7 @@ export function BlogListing({
                         <BlogCard
                           key={post.id}
                           {...post}
+                          priority={index < 3}
                           dictionary={dictionary}
                           pageRegistry={pageRegistry}
                         />,
@@ -405,6 +408,7 @@ export function BlogListing({
                       <BlogCard
                         key={post.id}
                         {...post}
+                        priority={index < 3}
                         dictionary={dictionary}
                         pageRegistry={pageRegistry}
                       />,
@@ -451,10 +455,11 @@ export function BlogListing({
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredPosts.map((post) => (
+              {filteredPosts.map((post, index) => (
                 <BlogCard
                   key={post.id}
                   {...post}
+                  priority={index < 3}
                   dictionary={dictionary}
                   pageRegistry={pageRegistry}
                 />
