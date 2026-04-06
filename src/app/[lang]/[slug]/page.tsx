@@ -21,6 +21,7 @@ import { VehicleBrandsListView } from "@/lib/vehicles/shared";
 import { VehiclesHub } from "@/components/VehiclesHub";
 import { transformDirectusVehicle, type Vehicle } from "@/lib/vehicleTransformer";
 import { DIRECTUS_URL } from "@/lib/directus";
+import { cmsImage } from "@/lib/directusAssets";
 import { getDateLocale, getRouteSlug } from "@/lib/i18n/config";
 import { resolveRouteId, resolveRouteLinks } from "@/lib/pageConfig";
 import { Hero } from "@/components/Hero";
@@ -246,19 +247,35 @@ export default async function SlugPage({ params }: SlugPageProps) {
       };
     });
 
+    const blogHeroUrl = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
+    const blogHeroSizes = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px";
+    const blogHeroPreload = blogHeroUrl
+      ? cmsImage(blogHeroUrl, [640, 1024, 1920], { quality: 75 })
+      : undefined;
+
     return (
-      <BlogListing
-        posts={transformedPosts}
-        heroTitle={heroTranslation?.headline || t(dictionary, "pages.blog.blocks.hero.headline")}
-        heroSubtitle={heroTranslation?.subheadline || t(dictionary, "pages.blog.blocks.hero.subheadline")}
-        heroImage={heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined}
-        guideSectionTitle={t(dictionary, "pages.blog.rechargingGuide.headline")}
-        guideSectionSubtitle={t(dictionary, "pages.blog.rechargingGuide.subheadline", { count: transformedPosts.length })}
-        getQuoteBlock={getQuoteBlock ? { variant: getQuoteBlock.variant, image: getQuoteBlock.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined } : undefined}
-        dictionary={dictionary}
-        pageRegistry={registry}
-        lang={lang}
-      />
+      <>
+        {blogHeroPreload && (
+          <link
+            rel="preload"
+            as="image"
+            imageSrcSet={blogHeroPreload.srcSet}
+            imageSizes={blogHeroSizes}
+          />
+        )}
+        <BlogListing
+          posts={transformedPosts}
+          heroTitle={heroTranslation?.headline || t(dictionary, "pages.blog.blocks.hero.headline")}
+          heroSubtitle={heroTranslation?.subheadline || t(dictionary, "pages.blog.blocks.hero.subheadline")}
+          heroImage={blogHeroUrl}
+          guideSectionTitle={t(dictionary, "pages.blog.rechargingGuide.headline")}
+          guideSectionSubtitle={t(dictionary, "pages.blog.rechargingGuide.subheadline", { count: transformedPosts.length })}
+          getQuoteBlock={getQuoteBlock ? { variant: getQuoteBlock.variant, image: getQuoteBlock.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined } : undefined}
+          dictionary={dictionary}
+          pageRegistry={registry}
+          lang={lang}
+        />
+      </>
     );
   }
 

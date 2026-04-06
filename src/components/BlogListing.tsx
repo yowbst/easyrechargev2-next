@@ -177,10 +177,9 @@ export function BlogListing({
               <img
                 src={opt.src}
                 srcSet={opt.srcSet}
-                sizes={opt.sizes}
+                sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
                 alt=""
                 fetchPriority="high"
-                decoding="async"
                 className="absolute inset-0 w-full h-full object-cover object-center"
               />
               <div
