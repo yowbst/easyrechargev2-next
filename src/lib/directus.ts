@@ -26,7 +26,7 @@ export async function directusFetch<T = Record<string, unknown>>(
 
   const { next: nextOptions, ...fetchInit } = init;
 
-  const maxAttempts = 2;
+  const maxAttempts = 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const res = await fetch(url, {
@@ -37,7 +37,17 @@ export async function directusFetch<T = Record<string, unknown>>(
       });
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`Directus ${res.status}: ${text}`);
+        const status = res.status;
+        // 404, 502, 503 are transient during Directus restarts — retry before failing
+        const isTransientStatus = status === 404 || status === 502 || status === 503;
+        if (isTransientStatus && attempt < maxAttempts) {
+          console.warn(
+            `[Directus] ${status} on attempt ${attempt}, retrying in ${attempt}s: ${path}`,
+          );
+          await new Promise((r) => setTimeout(r, attempt * 1000));
+          continue;
+        }
+        throw new Error(`Directus ${status}: ${text}`);
       }
       return res.json() as Promise<T>;
     } catch (err: unknown) {
@@ -46,12 +56,13 @@ export async function directusFetch<T = Record<string, unknown>>(
         error.name === "TimeoutError" || error.code === "UND_ERR_CONNECT_TIMEOUT";
       const isRetryable =
         isTimeout ||
-        error.message?.includes("503") ||
+        error.message?.includes("fetch failed") ||
         error.message?.includes("pressure");
       if (isRetryable && attempt < maxAttempts) {
         console.warn(
-          `[Directus] ${isTimeout ? "Timeout" : "Server error"} on attempt ${attempt}, retrying: ${path}`,
+          `[Directus] ${isTimeout ? "Timeout" : "Connection error"} on attempt ${attempt}, retrying in ${attempt}s: ${path}`,
         );
+        await new Promise((r) => setTimeout(r, attempt * 1000));
         continue;
       }
       throw err;
