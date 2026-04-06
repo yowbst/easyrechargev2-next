@@ -86,7 +86,7 @@ export function VehicleCard({
         <div className="aspect-video overflow-hidden relative">
           {image ? (
             <img
-              {...cmsImage(image, [400, 700])}
+              {...cmsImage(image, [400, 700], { quality: 65 })}
               alt={`${brand} ${model}`}
               loading="lazy"
               width={700}

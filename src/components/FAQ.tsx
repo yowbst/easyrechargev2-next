@@ -105,7 +105,7 @@ export function FAQ({
             <div className="hidden lg:block lg:sticky lg:top-24 self-start">
               <div className="relative rounded-2xl overflow-hidden aspect-[4/5] max-w-lg mx-auto">
                 <img
-                  {...cmsImage(image, [480, 640, 800], { quality: 80 })}
+                  {...cmsImage(image, [480, 640, 800], { quality: 65 })}
                   alt=""
                   loading="lazy"
                   width={800}

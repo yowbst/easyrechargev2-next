@@ -26,7 +26,7 @@ export function cmsImage(
   widths: number[] = [640, 1024],
   opts?: { quality?: number },
 ) {
-  const q = opts?.quality ?? 75;
+  const q = opts?.quality ?? 65;
   const largest = Math.max(...widths);
   return {
     src: cmsUrl(src, Math.min(...widths), q),

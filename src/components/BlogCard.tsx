@@ -64,7 +64,7 @@ export function BlogCard({
       >
         <div className={isCompact ? "h-48 overflow-hidden" : "aspect-video overflow-hidden"}>
           <img
-            {...cmsImage(image, [400, 700])}
+            {...cmsImage(image, [400, 700], { quality: 65 })}
             alt={title}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : undefined}
