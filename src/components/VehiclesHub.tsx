@@ -8,7 +8,7 @@ import { Car, ChevronRight } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
 import { getRouteSlug } from "@/lib/i18n/config";
 import { resolveRouteId } from "@/lib/pageConfig";
-import { cmsBgImage } from "@/lib/directusAssets";
+import Image from "next/image";
 import { BrandIcon } from "@/lib/vehicles/shared";
 import { VehicleCard } from "@/components/VehicleCard";
 import { VehicleFilters } from "@/components/VehicleFilters";
@@ -116,10 +116,12 @@ export function VehiclesHub({
       <section
         ref={heroRef}
         className="relative py-16 md:py-28 overflow-hidden"
-        style={heroImage ? { backgroundImage: `url(${cmsBgImage(heroImage)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
         onMouseMove={heroImage ? handleHeroMouseMove : undefined}
         onMouseLeave={heroImage ? handleHeroMouseLeave : undefined}
       >
+        {heroImage && (
+          <Image src={heroImage} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+        )}
         {heroImage && (
           <div
             className="absolute inset-0"

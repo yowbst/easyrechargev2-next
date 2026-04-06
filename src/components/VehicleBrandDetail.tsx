@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft, Car } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
-import { cmsBgImage } from "@/lib/directusAssets";
+import Image from "next/image";
 import { VehicleCard } from "@/components/VehicleCard";
 import { VehicleFilters } from "@/components/VehicleFilters";
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
@@ -95,18 +95,12 @@ export function VehicleBrandDetail({
       <section
         ref={heroRef}
         className="relative py-16 md:py-24 overflow-hidden"
-        style={
-          heroImage
-            ? {
-                backgroundImage: `url(${cmsBgImage(heroImage)})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : undefined
-        }
         onMouseMove={heroImage ? handleHeroMouseMove : undefined}
         onMouseLeave={heroImage ? handleHeroMouseLeave : undefined}
       >
+        {heroImage && (
+          <Image src={heroImage} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+        )}
         {heroImage ? (
           <div
             className="absolute inset-0 transition-all duration-200"

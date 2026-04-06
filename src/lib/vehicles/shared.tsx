@@ -19,7 +19,6 @@ const SI_BRAND_ICONS: Record<string, React.ComponentType<{ className?: string }>
 import { DIRECTUS_URL } from "@/lib/directus";
 import { t } from "@/lib/i18n/dictionaries";
 import { GetQuote } from "@/components/GetQuote";
-import { cmsBgImage } from "@/lib/directusAssets";
 
 export function BrandIcon({
   iconSvg,
@@ -202,11 +201,14 @@ export function VehicleBrandsListView({
       {/* Hero */}
       <section
         className="relative py-16 md:py-24 overflow-hidden"
-        style={heroImage ? { backgroundImage: `url(${cmsBgImage(heroImage)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       >
-        {heroImage ? (
-          <div className="absolute inset-0 bg-slate-900/75" />
-        ) : (
+        {heroImage && (
+          <>
+            <Image src={heroImage} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+            <div className="absolute inset-0 bg-slate-900/75" />
+          </>
+        )}
+        {!heroImage && (
           <div className="absolute inset-0 bg-muted/50" />
         )}
         <div className="relative z-10 container mx-auto px-4">

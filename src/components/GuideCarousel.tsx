@@ -5,7 +5,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback } from "react";
-import { cmsBgImage } from "@/lib/directusAssets";
+import Image from "next/image";
 import { BlogCard } from "@/components/BlogCard";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -130,9 +130,9 @@ export function GuideCarousel({
     return (
       <section
         className="relative py-24 overflow-hidden border-y"
-        style={{ backgroundImage: `url(${cmsBgImage(image!)})`, backgroundSize: "cover", backgroundPosition: "center" }}
         data-testid="section-guide-carousel"
       >
+        <Image src={image!} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
         <div className="absolute inset-0 bg-slate-900/70" />
 
         <div className="relative z-10 container mx-auto px-4">

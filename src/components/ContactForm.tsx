@@ -19,7 +19,7 @@ import {
   User, Users, Building2,
 } from "lucide-react";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
-import { cmsBgImage } from "@/lib/directusAssets";
+import Image from "next/image";
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { getAttributionCompact } from "@/lib/attribution";
 import { usePostHog } from "@/components/PostHogProvider";
@@ -236,10 +236,12 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
       <section
         ref={heroRef}
         className="relative py-20 md:py-28 overflow-hidden"
-        style={hasHeroImage ? { backgroundImage: `url(${cmsBgImage(heroImage!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
         onMouseMove={hasHeroImage ? handleHeroMouseMove : undefined}
         onMouseLeave={hasHeroImage ? handleHeroMouseLeave : undefined}
       >
+        {hasHeroImage && (
+          <Image src={heroImage!} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+        )}
         {hasHeroImage ? (
           <div
             className="absolute inset-0 transition-all duration-200"

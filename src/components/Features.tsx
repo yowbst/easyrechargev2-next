@@ -8,7 +8,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Info, Shield, DollarSign, Users, MapPin, Clock, Award,
   Zap, CheckCircle, Star, Heart, Settings, Lightbulb, Target,
 };
-import { cmsBgImage } from "@/lib/directusAssets";
+import Image from "next/image";
 import { t } from "@/lib/i18n/dictionaries";
 
 interface FeatureItemConfig {
@@ -47,9 +47,13 @@ export function Features({ title, subtitle, itemsConfig = [], tPrefix, image, di
   return (
     <section
       className="relative py-24 overflow-hidden"
-      style={hasImage ? { backgroundImage: `url(${cmsBgImage(image!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
     >
-      {hasImage && <div className="absolute inset-0 bg-slate-900/70" />}
+      {hasImage && (
+        <>
+          <Image src={image!} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+          <div className="absolute inset-0 bg-slate-900/70" />
+        </>
+      )}
 
       <div className="relative z-10 container mx-auto px-4">
         <div className="text-center mb-12">

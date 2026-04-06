@@ -8,7 +8,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Circle, FileText, Phone, CheckCircle, Wrench,
   ClipboardList, Search, Truck, Settings, Zap,
 };
-import { cmsBgImage } from "@/lib/directusAssets";
+import Image from "next/image";
 import { t } from "@/lib/i18n/dictionaries";
 
 interface ProcessStepConfig {
@@ -47,10 +47,14 @@ export function ProcessSteps({ title, subtitle, stepsConfig = [], tPrefix, image
   return (
     <section
       className="relative py-24 overflow-hidden"
-      style={hasImage ? { backgroundImage: `url(${cmsBgImage(image!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
     >
       {!hasImage && <div className="absolute inset-0 bg-muted/30" />}
-      {hasImage && <div className="absolute inset-0 bg-slate-900/70" />}
+      {hasImage && (
+        <>
+          <Image src={image!} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+          <div className="absolute inset-0 bg-slate-900/70" />
+        </>
+      )}
 
       <div className="relative z-10 container mx-auto px-4">
         <div className="text-center mb-12">

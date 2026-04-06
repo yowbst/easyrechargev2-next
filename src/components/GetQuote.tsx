@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cmsBgImage } from "@/lib/directusAssets";
+import Image from "next/image";
 
 interface GetQuoteProps {
   title: string;
@@ -44,10 +44,14 @@ export function GetQuote({
   return (
     <section
       className={`relative overflow-hidden ${hasImage ? "py-24" : styles.section} ${className}`}
-      style={hasImage ? { backgroundImage: `url(${cmsBgImage(image!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       data-testid="section-get-quote"
     >
-      {hasImage && <div className="absolute inset-0 bg-slate-900/70" />}
+      {hasImage && (
+        <>
+          <Image src={image!} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+          <div className="absolute inset-0 bg-slate-900/70" />
+        </>
+      )}
       <div className="relative z-10 container mx-auto px-4 text-center">
         <h2 className={`text-3xl md:text-4xl font-heading font-bold mb-4 ${hasImage ? "text-white" : ""}`}>
           {title}

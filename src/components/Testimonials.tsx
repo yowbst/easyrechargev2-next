@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import { cmsBgImage } from "@/lib/directusAssets";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { t } from "@/lib/i18n/dictionaries";
 
@@ -69,9 +69,13 @@ export function Testimonials({ headline, subheadline, itemsConfig = [], pageId, 
   return (
     <section
       className="relative py-24 overflow-hidden"
-      style={hasImage ? { backgroundImage: `url(${cmsBgImage(image!)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
     >
-      {hasImage && <div className="absolute inset-0 bg-slate-900/70" />}
+      {hasImage && (
+        <>
+          <Image src={image!} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+          <div className="absolute inset-0 bg-slate-900/70" />
+        </>
+      )}
 
       <div className="relative z-10 container mx-auto px-4">
         <div className="text-center mb-12">

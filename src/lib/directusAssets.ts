@@ -39,7 +39,3 @@ export function cmsImage(
   };
 }
 
-/** Return a single optimised URL for use in CSS background-image. */
-export function cmsBgImage(src: string, width = 1920, quality = 75) {
-  return cmsUrl(src, width, quality);
-}
