@@ -18,8 +18,8 @@ import {
 import { VehicleBrandDetail } from "@/components/VehicleBrandDetail";
 import { transformDirectusVehicle, formatMinutes } from "@/lib/vehicleTransformer";
 import type { Vehicle } from "@/lib/vehicleTransformer";
+import Image from "next/image";
 import { DIRECTUS_URL } from "@/lib/directus";
-import { cmsImage } from "@/lib/directusAssets";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
   normalizeTitle,
@@ -543,13 +543,14 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
         <div className="flex-1">
           {/* Hero image with overlay text */}
           <section className="relative h-80 sm:h-96 md:h-[28rem] lg:h-[32rem] overflow-hidden">
-            <img
-              {...cmsImage(imageUrl, [640, 1024, 1200], { quality: 80 })}
+            <Image
+              src={imageUrl}
               alt={articleTitle}
-              fetchPriority="high"
-              width={1200}
-              height={600}
-              className="absolute inset-0 w-full h-full object-cover"
+              fill
+              priority
+              quality={65}
+              sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1200px"
+              className="object-cover"
               data-testid="img-article-hero"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
@@ -914,12 +915,14 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
                   <div className="lg:col-span-8">
                     {/* Image */}
                     <div className="aspect-video overflow-hidden rounded-2xl mb-6 relative bg-muted/20">
-                      <img
-                        {...cmsImage(vehicle.image, [400, 800], { quality: 85 })}
+                      <Image
+                        src={vehicle.image}
                         alt={vehicleName}
-                        width={800}
-                        height={450}
-                        className="w-full h-full object-cover"
+                        fill
+                        priority
+                        quality={65}
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        className="object-cover"
                         data-testid="img-vehicle-hero"
                       />
                     </div>

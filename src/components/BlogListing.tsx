@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, List, ChevronDown, ChevronUp } from "lucide-react";
 import { BlogCard } from "@/components/BlogCard";
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
 import { GetQuote } from "@/components/GetQuote";
-import { cmsImage } from "@/lib/directusAssets";
 import { useVisibleTagSections } from "@/hooks/useVisibleTagSections";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -171,16 +171,16 @@ export function BlogListing({
         onMouseLeave={hasImage ? handleHeroMouseLeave : undefined}
       >
         {hasImage && (() => {
-          const opt = cmsImage(heroImage!, [640, 1024, 1920], { quality: 75 });
           return (
             <>
-              <img
-                src={opt.src}
-                srcSet={opt.srcSet}
-                sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
+              <Image
+                src={heroImage!}
                 alt=""
-                fetchPriority="high"
-                className="absolute inset-0 w-full h-full object-cover object-center"
+                fill
+                priority
+                quality={60}
+                sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
+                className="object-cover object-center"
               />
               <div
                 className="absolute inset-0 transition-none"

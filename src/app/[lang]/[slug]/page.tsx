@@ -21,7 +21,6 @@ import { VehicleBrandsListView } from "@/lib/vehicles/shared";
 import { VehiclesHub } from "@/components/VehiclesHub";
 import { transformDirectusVehicle, type Vehicle } from "@/lib/vehicleTransformer";
 import { DIRECTUS_URL } from "@/lib/directus";
-import { cmsImage } from "@/lib/directusAssets";
 import { getDateLocale, getRouteSlug } from "@/lib/i18n/config";
 import { resolveRouteId, resolveRouteLinks } from "@/lib/pageConfig";
 import { Hero } from "@/components/Hero";
@@ -166,32 +165,18 @@ export default async function SlugPage({ params }: SlugPageProps) {
       const quoteHeroImage = quoteHeroBlock?.image ? `${DIRECTUS_URL}/assets/${quoteHeroBlock.image}` : undefined;
       const quotePageConfig = page?.config || {};
       const globalConfig = layoutData?.globalConfig ?? {};
-      const quoteHeroSizes = "(max-width: 768px) 100vw, 672px";
-      const quoteHeroPreload = quoteHeroImage
-        ? cmsImage(quoteHeroImage, [400, 672], { quality: 75 })
-        : undefined;
       return (
-        <>
-          {quoteHeroPreload && (
-            <link
-              rel="preload"
-              as="image"
-              imageSrcSet={quoteHeroPreload.srcSet}
-              imageSizes={quoteHeroSizes}
-            />
-          )}
-          <QuoteForm
-            lang={lang}
-            dictionary={dictionary}
-            quoteSlug={slug}
-            logoSrc={logoSrc}
-            logoDarkSrc={logoDarkSrc}
-            heroImage={quoteHeroImage}
-            pageConfig={quotePageConfig}
-            globalConfig={globalConfig}
-            pageRegistry={registry}
-          />
-        </>
+        <QuoteForm
+          lang={lang}
+          dictionary={dictionary}
+          quoteSlug={slug}
+          logoSrc={logoSrc}
+          logoDarkSrc={logoDarkSrc}
+          heroImage={quoteHeroImage}
+          pageConfig={quotePageConfig}
+          globalConfig={globalConfig}
+          pageRegistry={registry}
+        />
       );
     }
     if (entry.id === "contact") {
@@ -262,34 +247,20 @@ export default async function SlugPage({ params }: SlugPageProps) {
     });
 
     const blogHeroUrl = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
-    const blogHeroSizes = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px";
-    const blogHeroPreload = blogHeroUrl
-      ? cmsImage(blogHeroUrl, [640, 1024, 1920], { quality: 75 })
-      : undefined;
 
     return (
-      <>
-        {blogHeroPreload && (
-          <link
-            rel="preload"
-            as="image"
-            imageSrcSet={blogHeroPreload.srcSet}
-            imageSizes={blogHeroSizes}
-          />
-        )}
-        <BlogListing
-          posts={transformedPosts}
-          heroTitle={heroTranslation?.headline || t(dictionary, "pages.blog.blocks.hero.headline")}
-          heroSubtitle={heroTranslation?.subheadline || t(dictionary, "pages.blog.blocks.hero.subheadline")}
-          heroImage={blogHeroUrl}
-          guideSectionTitle={t(dictionary, "pages.blog.rechargingGuide.headline")}
-          guideSectionSubtitle={t(dictionary, "pages.blog.rechargingGuide.subheadline", { count: transformedPosts.length })}
-          getQuoteBlock={getQuoteBlock ? { variant: getQuoteBlock.variant, image: getQuoteBlock.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined } : undefined}
-          dictionary={dictionary}
-          pageRegistry={registry}
-          lang={lang}
-        />
-      </>
+      <BlogListing
+        posts={transformedPosts}
+        heroTitle={heroTranslation?.headline || t(dictionary, "pages.blog.blocks.hero.headline")}
+        heroSubtitle={heroTranslation?.subheadline || t(dictionary, "pages.blog.blocks.hero.subheadline")}
+        heroImage={blogHeroUrl}
+        guideSectionTitle={t(dictionary, "pages.blog.rechargingGuide.headline")}
+        guideSectionSubtitle={t(dictionary, "pages.blog.rechargingGuide.subheadline", { count: transformedPosts.length })}
+        getQuoteBlock={getQuoteBlock ? { variant: getQuoteBlock.variant, image: getQuoteBlock.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined } : undefined}
+        dictionary={dictionary}
+        pageRegistry={registry}
+        lang={lang}
+      />
     );
   }
 
