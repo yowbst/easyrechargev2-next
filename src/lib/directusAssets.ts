@@ -29,7 +29,7 @@ export function cmsImage(
   const q = opts?.quality ?? 75;
   const largest = Math.max(...widths);
   return {
-    src: cmsUrl(src, largest, q),
+    src: cmsUrl(src, Math.min(...widths), q),
     srcSet: widths.map((w) => `${cmsUrl(src, w, q)} ${w}w`).join(", "),
     sizes: widths
       .slice(0, -1)
