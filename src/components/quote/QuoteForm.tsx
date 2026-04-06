@@ -27,8 +27,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
-import { APIProvider } from "@vis.gl/react-google-maps";
-import { PlaceAutocomplete } from "@/components/quote/PlaceAutocomplete";
+import dynamic from "next/dynamic";
+
+const LazyPlaceAutocomplete = dynamic(
+  () => import("@/components/quote/PlaceAutocomplete").then((m) => m.PlaceAutocomplete),
+  { ssr: false },
+);
+const LazyAPIProvider = dynamic(
+  () => import("@vis.gl/react-google-maps").then((m) => m.APIProvider),
+  { ssr: false },
+);
 import { getCantonCode, CANTON_CODES } from "@shared/swiss-cantons";
 import { usePostHog } from "@/components/PostHogProvider";
 import { getAttributionCompact } from "@/lib/attribution";
@@ -1276,15 +1284,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                       <>
                         {/* Only hide search after a place is actually selected (which populates streetName) */}
                         <div className={formData.streetName ? "hidden" : ""}>
-                          <APIProvider apiKey={googleMapsApiKey} libraries={["places"]}>
-                            <PlaceAutocomplete
+                          <LazyAPIProvider apiKey={googleMapsApiKey} libraries={["places"]}>
+                            <LazyPlaceAutocomplete
                               id="address"
                               value={formData.address}
                               onChange={(value) => handleFieldChange("address", value)}
                               onPlaceSelect={handlePlaceSelect}
                               placeholder={tq("steps.contact.fields.address.placeholder") || undefined}
                             />
-                          </APIProvider>
+                          </LazyAPIProvider>
                         </div>
 
                         {/* Display editable address component fields */}

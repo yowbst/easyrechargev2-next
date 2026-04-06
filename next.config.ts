@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // Inline critical CSS to reduce render-blocking requests
     optimizeCss: true,
+    optimizePackageImports: ["lucide-react", "@vis.gl/react-google-maps"],
   },
 
   images: {

@@ -55,9 +55,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     };
 
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(() => init(), { timeout: 3000 });
+      requestIdleCallback(() => init(), { timeout: 5000 });
     } else {
-      setTimeout(() => init(), 2000);
+      setTimeout(() => init(), 4000);
     }
   }, []);
 
