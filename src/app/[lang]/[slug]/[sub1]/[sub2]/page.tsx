@@ -9,7 +9,7 @@ import {
   fetchBlogPost,
   fetchBlogPosts,
   fetchVehicle,
-  fetchVehicles,
+  fetchVehiclesByBrand,
   fetchVehicleBrands,
   fetchPageRegistry,
   fetchLayout,
@@ -266,8 +266,8 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
 
   if (route.type === "vehicle-brand-detail") {
     const locale = slugToDirectusLocale(lang);
-    const [rawVehicles, rawBrands, brandPage] = await Promise.all([
-      fetchVehicles(locale),
+    const [brandVehicles, rawBrands, brandPage] = await Promise.all([
+      fetchVehiclesByBrand(route.brandSlug, locale),
       fetchVehicleBrands(locale),
       fetchPage("vehicle-brand", locale),
     ]);
@@ -275,8 +275,7 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const matchedBrand = (rawBrands || []).find((b: any) => b.slug === route.brandSlug);
     const brandName = matchedBrand?.name || route.brandSlug;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const vehicleCount = (rawVehicles || []).filter((v: any) => v.brand?.slug === route.brandSlug).length;
+    const vehicleCount = brandVehicles.length;
 
     const templateSeo = extractItemSEO(brandPage?.translations?.[0]?.seo);
     // Source: brands don't have accessible item-level SEO — only template
@@ -1450,7 +1449,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
   // ── Vehicle brand detail ───────────────────────────────────────────
   if (route.type === "vehicle-brand-detail") {
     const [rawVehicles, rawBrands, layoutData, vehicleBrandPage, vehicleTemplatePage, registry] = await Promise.all([
-      fetchVehicles(locale),
+      fetchVehiclesByBrand(route.brandSlug, locale),
       fetchVehicleBrands(locale),
       fetchLayout(locale),
       fetchPage("vehicle-brand", locale),
@@ -1486,10 +1485,8 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const matchedBrand = (rawBrands || []).find((b: any) => b.slug === route.brandSlug);
     const brandName = matchedBrand?.name || route.brandSlug;
 
-    // Filter vehicles for this brand and transform
+    // Transform vehicles (already filtered by brand from Directus)
     const brandVehicles = (rawVehicles || [])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((v: any) => v.brand?.slug === route.brandSlug)
       .map((dv: Record<string, unknown>) => transformDirectusVehicle(dv as Record<string, unknown>))
       .filter((v: Vehicle | null): v is Vehicle => v !== null);
 

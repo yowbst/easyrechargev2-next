@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { cmsImage } from "@/lib/directusAssets";
+import Image from "next/image";
 import {
   Clock,
   Plug,
@@ -85,13 +85,14 @@ export function VehicleCard({
       >
         <div className="aspect-video overflow-hidden relative">
           {image ? (
-            <img
-              {...cmsImage(image, [400, 700], { quality: 65 })}
+            <Image
+              src={image}
               alt={`${brand} ${model}`}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+              quality={65}
               loading="lazy"
-              width={700}
-              height={394}
-              className="w-full h-full object-cover"
+              className="object-cover"
             />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">

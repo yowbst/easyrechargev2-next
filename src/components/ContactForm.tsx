@@ -20,11 +20,16 @@ import {
 } from "lucide-react";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { getAttributionCompact } from "@/lib/attribution";
 import { usePostHog } from "@/components/PostHogProvider";
-import { APIProvider } from "@vis.gl/react-google-maps";
 import { PlaceAutocomplete } from "@/components/quote/PlaceAutocomplete";
+
+const APIProvider = dynamic(
+  () => import("@vis.gl/react-google-maps").then(m => m.APIProvider),
+  { ssr: false },
+);
 import { getCantonCode, CANTON_CODES } from "@shared/swiss-cantons";
 import { GetQuote } from "@/components/GetQuote";
 import { toast } from "sonner";

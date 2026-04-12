@@ -14,11 +14,8 @@ import {
 } from "@/lib/seo/resolver";
 import { wrapInGraph, buildBreadcrumbList, buildFAQPage } from "@/lib/seo/jsonLd";
 import { extractPageDictionary, extractLayoutDictionary, t } from "@/lib/i18n/dictionaries";
-import { QuoteForm } from "@/components/quote/QuoteForm";
-import { ContactForm } from "@/components/ContactForm";
-import { BlogListing } from "@/components/BlogListing";
+import dynamic from "next/dynamic";
 import { VehicleBrandsListView } from "@/lib/vehicles/shared";
-import { VehiclesHub } from "@/components/VehiclesHub";
 import { transformDirectusVehicle, type Vehicle } from "@/lib/vehicleTransformer";
 import { DIRECTUS_URL } from "@/lib/directus";
 import { getDateLocale, getRouteSlug } from "@/lib/i18n/config";
@@ -28,10 +25,14 @@ import { Features } from "@/components/Features";
 import { ProcessSteps } from "@/components/ProcessSteps";
 import { FAQ } from "@/components/FAQ";
 import { GetQuote } from "@/components/GetQuote";
-import { Testimonials } from "@/components/Testimonials";
-import { GuideCarousel } from "@/components/GuideCarousel";
-import { SwissMap } from "@/components/SwissMap";
-import { MiniQuoteForm } from "@/components/MiniQuoteForm";
+import { LazySwissMap as SwissMap, LazyTestimonials as Testimonials, LazyGuideCarousel as GuideCarousel } from "@/components/lazy";
+
+// Heavy client components — dynamic import so each page only loads what it needs
+const QuoteForm = dynamic(() => import("@/components/quote/QuoteForm").then(m => m.QuoteForm));
+const ContactForm = dynamic(() => import("@/components/ContactForm").then(m => m.ContactForm));
+const BlogListing = dynamic(() => import("@/components/BlogListing").then(m => m.BlogListing));
+const VehiclesHub = dynamic(() => import("@/components/VehiclesHub").then(m => m.VehiclesHub));
+const MiniQuoteForm = dynamic(() => import("@/components/MiniQuoteForm").then(m => m.MiniQuoteForm));
 
 interface SlugPageProps {
   params: Promise<{ lang: string; slug: string }>;

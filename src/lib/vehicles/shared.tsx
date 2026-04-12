@@ -204,7 +204,7 @@ export function VehicleBrandsListView({
       >
         {heroImage && (
           <>
-            <Image src={heroImage} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+            <Image src={heroImage} alt="" fill priority quality={60} sizes="100vw" className="object-cover object-center" />
             <div className="absolute inset-0 bg-slate-900/75" />
           </>
         )}

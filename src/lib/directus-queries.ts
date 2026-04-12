@@ -305,13 +305,18 @@ export async function fetchBlogPost(
 
 // ─── Vehicles ────────────────────────────────────────────
 
-const VEHICLE_FIELDS = [
+// Listing pages — only fields needed by transformDirectusVehicle + cards
+const VEHICLE_LIST_FIELDS = [
+  "id", "slug", "model", "thumbnail", "status",
+  "battery", "range", "efficiency", "fastcharge", "price_per_range",
+  "charging.home_destination",
+  "brand.id", "brand.name", "brand.icon_simple", "brand.icon_svg", "brand.slug",
+];
+
+// Detail pages — wildcard is safe here (single vehicle, minimal waste)
+const VEHICLE_DETAIL_FIELDS = [
   "*",
-  "brand.id",
-  "brand.name",
-  "brand.icon_simple",
-  "brand.icon_svg",
-  "brand.slug",
+  "brand.id", "brand.name", "brand.icon_simple", "brand.icon_svg", "brand.slug",
 ];
 
 export async function fetchVehicles(
@@ -319,7 +324,7 @@ export async function fetchVehicles(
 ) {
   const path = buildItemsQuery({
     collection: "vehicles",
-    fields: VEHICLE_FIELDS,
+    fields: VEHICLE_LIST_FIELDS,
     filter: { "[status][_eq]": "published" },
     deep: { "[translations][_filter][languages_code][_eq]": locale },
     limit: 1000,
@@ -332,13 +337,35 @@ export async function fetchVehicles(
   return result?.data || [];
 }
 
+export async function fetchVehiclesByBrand(
+  brandSlug: string,
+  locale: string = DIRECTUS_DEFAULT_LOCALE,
+) {
+  const path = buildItemsQuery({
+    collection: "vehicles",
+    fields: VEHICLE_LIST_FIELDS,
+    filter: {
+      "[status][_eq]": "published",
+      "[brand][slug][_eq]": brandSlug,
+    },
+    deep: { "[translations][_filter][languages_code][_eq]": locale },
+    limit: 200,
+  });
+
+  const result = await directusFetch<{ data: AnyRecord[] }>(path, {
+    next: { revalidate: 3600, tags: ["vehicles", `vehicles-brand-${brandSlug}`] },
+  });
+
+  return result?.data || [];
+}
+
 export async function fetchVehicle(
   slug: string,
   locale: string = DIRECTUS_DEFAULT_LOCALE,
 ) {
   const path = buildItemsQuery({
     collection: "vehicles",
-    fields: VEHICLE_FIELDS,
+    fields: VEHICLE_DETAIL_FIELDS,
     filter: {
       "[status][_eq]": "published",
       "[slug][_eq]": slug,
@@ -356,12 +383,17 @@ export async function fetchVehicle(
 
 // ─── Vehicle Brands ──────────────────────────────────────
 
+const BRAND_FIELDS = [
+  "id", "name", "slug", "icon_simple", "icon_svg", "status",
+  "translations.*",
+];
+
 export async function fetchVehicleBrands(
   locale: string = DIRECTUS_DEFAULT_LOCALE,
 ) {
   const path = buildItemsQuery({
     collection: "vehicle_brands",
-    fields: ["*", "translations.*"],
+    fields: BRAND_FIELDS,
     filter: { "[status][_eq]": "published" },
     deep: { "[translations][_filter][languages_code][_eq]": locale },
     limit: 200,

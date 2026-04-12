@@ -3,9 +3,9 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Clock } from "lucide-react";
-import { cmsImage } from "@/lib/directusAssets";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
@@ -62,15 +62,15 @@ export function BlogCard({
         } ${isDark ? "bg-white/10 backdrop-blur-md border-white/15" : ""}`}
         data-testid={`card-blog-${id}`}
       >
-        <div className={isCompact ? "h-48 overflow-hidden" : "aspect-video overflow-hidden"}>
-          <img
-            {...cmsImage(image, [400, 700], { quality: 65 })}
+        <div className={`relative ${isCompact ? "h-48 overflow-hidden" : "aspect-video overflow-hidden"}`}>
+          <Image
+            src={image}
             alt={title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+            quality={65}
             loading={priority ? "eager" : "lazy"}
-            fetchPriority={priority ? "high" : undefined}
-            width={700}
-            height={394}
-            className={`w-full h-full object-cover ${isDark ? "brightness-125" : ""}`}
+            className={`object-cover ${isDark ? "brightness-125" : ""}`}
           />
         </div>
         <div className={isCompact ? "p-4 flex flex-col flex-1" : "p-6"}>

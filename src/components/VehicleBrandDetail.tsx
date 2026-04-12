@@ -81,7 +81,7 @@ export function VehicleBrandDetail({
         className="relative py-16 md:py-24 overflow-hidden"
       >
         {heroImage && (
-          <Image src={heroImage} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+          <Image src={heroImage} alt="" fill priority quality={60} sizes="100vw" className="object-cover object-center" />
         )}
         {heroImage ? (
           <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />
