@@ -32,7 +32,7 @@ npm run lint         # ESLint
 
 Required in `.env.local` (not committed):
 ```
-DIRECTUS_URL=https://easyrechargev2-directus-production.up.railway.app
+DIRECTUS_URL=https://cms.easyrecharge.ch
 DIRECTUS_STATIC_TOKEN=<token>
 SITE_URL=https://easyrecharge.ch
 

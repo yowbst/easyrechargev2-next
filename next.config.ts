@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "easyrechargev2-directus-production.up.railway.app",
+        hostname: "cms.easyrecharge.ch",
       },
     ],
   },
