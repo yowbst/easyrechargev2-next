@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { isValidLang, slugToDirectusLocale, getRouteSlug } from "@/lib/i18n/config";
 import { resolveSub1Route } from "@/lib/route-resolver";
 import {
@@ -16,7 +17,6 @@ import { extractLayoutDictionary, extractPageDictionary, t } from "@/lib/i18n/di
 import { VehicleBrandsListView } from "@/lib/vehicles/shared";
 import { transformDirectusVehicle, formatMinutes } from "@/lib/vehicleTransformer";
 import { DIRECTUS_URL } from "@/lib/directus";
-import { cmsImage } from "@/lib/directusAssets";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
   normalizeTitle,
@@ -465,12 +465,14 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                   <div className="lg:col-span-8">
                     <div className="aspect-video overflow-hidden rounded-2xl mb-6 relative bg-muted/20">
-                      <img
-                        {...cmsImage(vehicle.image, [400, 800], { quality: 85 })}
+                      <Image
+                        src={vehicle.image}
                         alt={vehicleName}
-                        width={800}
-                        height={450}
-                        className="w-full h-full object-cover"
+                        fill
+                        priority
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        quality={85}
+                        className="object-cover"
                         data-testid="img-vehicle-hero"
                       />
                     </div>
