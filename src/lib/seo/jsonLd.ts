@@ -84,60 +84,6 @@ export function buildBlogPosting(input: {
   };
 }
 
-// ── Product (Vehicle) ───────────────────────────────────────────────────
-
-/**
- * Build Product JSON-LD for a vehicle.
- * Returns null when no price is available — Google requires offers,
- * review, or aggregateRating for valid Product rich results.
- */
-export function buildVehicleProduct(input: {
-  name: string;
-  brand: string;
-  description: string;
-  imageUrl: string;
-  url: string;
-  priceCHF?: number;
-  batteryCapacity?: string;
-  rangeKm?: string;
-}): Record<string, unknown> | null {
-  if (!input.priceCHF) return null;
-
-  const product: Record<string, unknown> = {
-    "@type": "Product",
-    name: input.name,
-    brand: { "@type": "Brand", name: input.brand },
-    description: input.description,
-    image: input.imageUrl,
-    url: input.url,
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "CHF",
-      price: input.priceCHF,
-      availability: "https://schema.org/InStock",
-    },
-  };
-
-  const props: Array<{ "@type": string; name: string; value: string }> = [];
-  if (input.batteryCapacity) {
-    props.push({
-      "@type": "PropertyValue",
-      name: "Battery Capacity",
-      value: input.batteryCapacity,
-    });
-  }
-  if (input.rangeKm) {
-    props.push({
-      "@type": "PropertyValue",
-      name: "Range",
-      value: input.rangeKm,
-    });
-  }
-  if (props.length) product.additionalProperty = props;
-
-  return product;
-}
-
 // ── FAQPage ─────────────────────────────────────────────────────────────
 
 export function buildFAQPage(
@@ -154,6 +100,68 @@ export function buildFAQPage(
       },
     })),
   };
+}
+
+// ── Car (Vehicle) ──────────────────────────────────────────────────────
+
+/**
+ * Build Car JSON-LD for a vehicle page.
+ * Uses @type "Car" (schema.org/Car extends Vehicle).
+ * No offers/price — easyRecharge provides charging info, not vehicle sales.
+ */
+export function buildVehicleCar(input: {
+  name: string;
+  brand: string;
+  description: string;
+  imageUrl: string;
+  url: string;
+  vehicleConfiguration?: string;
+  properties?: {
+    batteryCapacity?: string;
+    range?: string;
+    acChargingPower?: string;
+    dcMaxChargingPower?: string;
+    chargePort?: string;
+    efficiency?: string;
+  };
+}): Record<string, unknown> {
+  const car: Record<string, unknown> = {
+    "@type": "Car",
+    name: input.name,
+    brand: { "@type": "Brand", name: input.brand },
+    description: input.description,
+    image: input.imageUrl,
+    url: input.url,
+    fuelType: "https://schema.org/ElectricFuel",
+  };
+
+  if (input.vehicleConfiguration) {
+    car.vehicleConfiguration = input.vehicleConfiguration;
+  }
+
+  const props: Array<{ "@type": string; name: string; value: string }> = [];
+  const p = input.properties;
+  if (p?.batteryCapacity) {
+    props.push({ "@type": "PropertyValue", name: "Battery Capacity", value: p.batteryCapacity });
+  }
+  if (p?.range) {
+    props.push({ "@type": "PropertyValue", name: "Range", value: p.range });
+  }
+  if (p?.acChargingPower) {
+    props.push({ "@type": "PropertyValue", name: "AC Charging Power", value: p.acChargingPower });
+  }
+  if (p?.dcMaxChargingPower) {
+    props.push({ "@type": "PropertyValue", name: "DC Max Charging Power", value: p.dcMaxChargingPower });
+  }
+  if (p?.chargePort) {
+    props.push({ "@type": "PropertyValue", name: "Charge Port", value: p.chargePort });
+  }
+  if (p?.efficiency) {
+    props.push({ "@type": "PropertyValue", name: "Efficiency", value: p.efficiency });
+  }
+  if (props.length) car.additionalProperty = props;
+
+  return car;
 }
 
 // ── Graph wrapper ───────────────────────────────────────────────────────

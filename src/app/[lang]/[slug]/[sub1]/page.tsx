@@ -9,13 +9,14 @@ import {
   fetchVehicle,
   fetchVehicleBrands,
   fetchVehicles,
+  fetchBlogPosts,
   fetchLayout,
   fetchPage,
   fetchPageRegistry,
 } from "@/lib/directus-queries";
 import { extractLayoutDictionary, extractPageDictionary, t } from "@/lib/i18n/dictionaries";
-import { VehicleBrandsListView } from "@/lib/vehicles/shared";
-import { transformDirectusVehicle, formatMinutes } from "@/lib/vehicleTransformer";
+import { VehicleBrandsListView, BrandIcon } from "@/lib/vehicles/shared";
+import { transformDirectusVehicle, formatMinutes, type Vehicle } from "@/lib/vehicleTransformer";
 import { DIRECTUS_URL } from "@/lib/directus";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -29,7 +30,24 @@ import {
   buildAlternates,
   getSiteUrl,
 } from "@/lib/seo/resolver";
-import { wrapInGraph, buildVehicleProduct, buildBreadcrumbList } from "@/lib/seo/jsonLd";
+import { wrapInGraph, buildVehicleCar, buildBreadcrumbList, buildFAQPage } from "@/lib/seo/jsonLd";
+import {
+  generateVehicleIntro,
+  generateChargingAdvice,
+  generateCostEstimate,
+  generateVehicleFAQ,
+  generateTechSpecsIntro,
+  generateRealRangeIntro,
+  generateChargingFeaturesIntro,
+} from "@/lib/vehicle-content";
+import {
+  VehicleSeoAdvice,
+  VehicleSeoCost,
+  VehicleSeoFAQ,
+} from "@/components/VehicleSeoSections";
+import { findSameBrandVehicles, findSimilarVehicles } from "@/lib/vehicles/related";
+import { transformBlogPost } from "@/lib/blog/transform";
+import { RelatedContent } from "@/components/RelatedContent";
 import dynamic from "next/dynamic";
 import { LazyMiniQuoteCard as MiniQuoteCard } from "@/components/LazyMiniQuoteCard";
 import { GetQuote } from "@/components/GetQuote";
@@ -39,6 +57,8 @@ const QuoteSuccessClient = dynamic(() => import("@/components/quote/QuoteSuccess
 const QuoteSubmissionViewClient = dynamic(() => import("@/components/quote/QuoteSubmissionView").then(m => m.QuoteSubmissionView));
 import {
   ArrowLeft,
+  ChevronRight,
+  ChevronDown,
   CheckCircle,
   Battery,
   Car,
@@ -76,6 +96,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import {
   Table,
   TableHeader,
@@ -91,16 +112,18 @@ function SpecRow({
   icon: Icon,
   label,
   value,
+  tooltip,
 }: {
   icon?: React.ComponentType<{ className?: string }>;
   label: string;
   value: React.ReactNode;
+  tooltip?: string;
 }) {
   return (
     <div className="flex justify-between items-center py-1.5">
       <span className="text-muted-foreground flex items-center gap-1.5 text-sm">
-        {Icon && <Icon className="h-4 w-4" />}
-        {label}
+        {Icon && <Icon className="h-4 w-4 shrink-0" />}
+        {tooltip ? <InfoTooltip content={tooltip}>{label}</InfoTooltip> : label}
       </span>
       <span className="font-medium text-sm">{value ?? "-"}</span>
     </div>
@@ -322,20 +345,21 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
   // Vehicle detail
   if (route.type === "vehicle-detail") {
-    const [directusVehicle, { dict: dictionary, page: vehiclePage }, registry] = await Promise.all([
+    const [directusVehicle, { dict: dictionary, layoutData, page: vehiclePage }, registry, allRawVehicles, allBlogPosts] = await Promise.all([
       fetchVehicle(route.slug, locale),
       buildDictionary("vehicle"),
       fetchPageRegistry(),
+      fetchVehicles(locale),
+      fetchBlogPosts(locale),
     ]);
     if (!directusVehicle) notFound();
 
     const vehicle = transformDirectusVehicle(directusVehicle);
     if (!vehicle) notFound();
 
-    const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
-    const df = (key: string, fallback: string, vars?: Record<string, string | number>) => {
+    const d = (key: string, vars?: Record<string, string | number>) => {
       const val = t(dictionary, key, vars);
-      return val === key ? fallback : val;
+      return val === key ? `[${key}]` : val;
     };
 
     // --- Extract rich vehicle data ---
@@ -406,6 +430,27 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
       return fmtField(val);
     };
 
+    // SEO content generation
+    const seoLocale = lang as "fr" | "de";
+    const tariffCHF = layoutData?.global_config?.electricity_tariff_chf ?? 0.32;
+    const seoIntro = generateVehicleIntro(vehicle, homeChargingDetails, dictionary, dv);
+    const seoAdvice = generateChargingAdvice(dv, vehicle, homeChargingDetails, dictionary, seoLocale);
+    const seoCost = generateCostEstimate(vehicle, tariffCHF, dictionary);
+    const seoFaq = generateVehicleFAQ(vehicle, dv, homeChargingDetails, seoCost, dictionary, seoLocale);
+    const seoTechSpecs = generateTechSpecsIntro(vehicle, dv, seoLocale);
+    const seoRealRange = generateRealRangeIntro(vehicle, dv, seoLocale);
+    const seoChargingFeatures = generateChargingFeaturesIntro(vehicle, dv, seoLocale);
+
+    // Related content
+    const allVehicles = allRawVehicles.map(transformDirectusVehicle).filter(Boolean) as Vehicle[];
+    const sameBrandVehicles = findSameBrandVehicles(vehicle, allVehicles, 5);
+    const similarVehicles = findSimilarVehicles(vehicle, allVehicles, 5);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const featuredPosts = allBlogPosts
+      .filter((p: any) => p.featured === true && p.translations?.length > 0)
+      .slice(0, 3)
+      .map((p: any) => transformBlogPost(p, lang));
+
     // JSON-LD
     const SITE_URL = getSiteUrl();
     const currentPath = `/${lang}/${slug}/${sub1}`;
@@ -415,20 +460,30 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
     const jsonLd = wrapInGraph(
       buildBreadcrumbList([
-        { name: d("common.home"), url: `${SITE_URL}/${lang}` },
-        { name: df("pages.vehicle.breadcrumb.vehicles", lang === "de" ? "Fahrzeuge" : "Vehicules"), url: `${SITE_URL}/${lang}/${slug}` },
+        { name: d("pages.vehicle.breadcrumb.vehicles"), url: `${SITE_URL}/${lang}/${slug}` },
         { name: brandName, url: `${SITE_URL}/${lang}/${slug}/${brandsSegment}/${brandSlug}` },
         { name: vehicleName, url: `${SITE_URL}${currentPath}` },
       ]),
-      buildVehicleProduct({
+      buildVehicleCar({
         name: vehicleName,
         brand: vehicle.brand,
         description: description || `${vehicleName} - EV charging specifications`,
         imageUrl: absoluteImage,
         url: `${SITE_URL}${currentPath}`,
-        batteryCapacity: vehicle.batteryDisplay,
-        rangeKm: vehicle.rangeDisplay,
+        vehicleConfiguration: perf?.drive_type ? safeStr(perf.drive_type) : undefined,
+        properties: {
+          batteryCapacity: vehicle.batteryDisplay,
+          range: vehicle.rangeDisplay,
+          acChargingPower: acPower?.value ? `${acPower.value} ${acPower.unit || "kW"}` : undefined,
+          dcMaxChargingPower: dcMaxPower?.value ? `${dcMaxPower.value} ${dcMaxPower.unit || "kW"}` : undefined,
+          chargePort: typeof dcPort === "string" ? dcPort : undefined,
+          efficiency: vehicle.efficiencyDisplay,
+        },
       }),
+      seoFaq ? buildFAQPage(seoFaq.items.map((item) => ({
+        question: item.question,
+        answer: item.answer,
+      }))) : null,
     );
 
     // GetQuote block
@@ -444,211 +499,238 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-        {/* Back Button */}
-        <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        {/* Breadcrumbs */}
+        <nav aria-label="breadcrumb" className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="container mx-auto px-4 py-3">
-            <Link
-              href={`/${lang}/${slug}/${brandsSegment}/${brandSlug}`}
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {df("pages.vehicle.subheader.back", brandName, { brand: brandName })}
-            </Link>
+            <ol className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
+              <li>
+                <Link href={`/${lang}/${slug}`} className="hover:text-foreground transition-colors">
+                  {d("pages.vehicle.breadcrumb.vehicles")}
+                </Link>
+              </li>
+              <li><ChevronRight className="h-3.5 w-3.5 shrink-0" /></li>
+              <li>
+                <Link href={`/${lang}/${slug}/${brandsSegment}/${brandSlug}`} className="hover:text-foreground transition-colors">
+                  {brandName}
+                </Link>
+              </li>
+              <li><ChevronRight className="h-3.5 w-3.5 shrink-0" /></li>
+              <li className="text-foreground font-medium truncate max-w-[200px]">{vehicle.model}</li>
+            </ol>
           </div>
         </nav>
 
         <div className="flex-1">
-          {/* SECTION 1: Hero + Key Specs + Sidebar */}
-          <section className="py-12">
-            <div className="container mx-auto px-4">
-              <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                  <div className="lg:col-span-8">
-                    <div className="aspect-video overflow-hidden rounded-2xl mb-6 relative bg-muted/20">
+          {/* HERO: image + specs + intro text + sidebar */}
+          <section id="hero" className="min-h-[calc(100vh-4rem-2.75rem)] pt-4 sm:pt-6 pb-10 sm:pb-12 flex flex-col">
+            <div className="container mx-auto px-4 w-full flex-1 flex flex-col">
+                <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-12 flex-1 items-stretch">
+
+                  {/* Left: image top, content bottom */}
+                  <div className="flex flex-col">
+                    <div className="aspect-video overflow-hidden rounded-2xl relative bg-muted/20">
                       <Image
                         src={vehicle.image}
                         alt={vehicleName}
                         fill
                         priority
-                        sizes="(max-width: 768px) 100vw, 800px"
-                        quality={85}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 66vw"
+                        quality={90}
                         className="object-cover"
                         data-testid="img-vehicle-hero"
                       />
+                      <div className="absolute top-3 left-3">
+                        <div className="rounded-lg p-2 shadow-sm backdrop-blur-sm bg-background/80">
+                          <BrandIcon
+                            iconSvg={dv.brand?.icon_svg ?? null}
+                            iconName={dv.brand?.icon_simple ?? null}
+                            className="h-8 w-8"
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3 mb-2">
-                      <Badge variant="secondary">{vehicle.brand}</Badge>
-                    </div>
-                    <h1 className="text-4xl font-heading font-bold mb-4">{vehicle.model}</h1>
+                    <div className="mt-auto pt-6" />
+
+                    <h1 className="text-xl sm:text-2xl font-heading font-bold mb-6">{vehicle.brand} {vehicle.model}</h1>
 
                     {description && (
-                      <p className="text-lg text-muted-foreground mb-8">{description}</p>
+                      <p className="text-base leading-relaxed text-muted-foreground mb-10">{description}</p>
                     )}
 
                     {/* 6 Stat Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Battery className="h-5 w-5 text-primary" />
-                          <span className="text-sm text-muted-foreground">{d("pages.vehicle.specs.battery")}</span>
+                    <h2 className="text-xs font-heading font-semibold uppercase tracking-widest text-muted-foreground mb-3">{d("pages.vehicle.sections.keySpecs")}</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-10">
+                      <Card className="p-3 sm:p-4">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                          <Battery className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                          <span className="text-xs sm:text-sm text-muted-foreground"><InfoTooltip content={d("pages.vehicle.tooltips.battery")}>{d("pages.vehicle.specs.battery")}</InfoTooltip></span>
                         </div>
-                        <div className="text-2xl font-bold">{vehicle.batteryDisplay}</div>
+                        <div className="text-lg sm:text-2xl font-bold">{vehicle.batteryDisplay}</div>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Car className="h-5 w-5 text-primary" />
-                          <span className="text-sm text-muted-foreground">{d("pages.vehicle.specs.range")}</span>
+                      <Card className="p-3 sm:p-4">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                          <Car className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                          <span className="text-xs sm:text-sm text-muted-foreground"><InfoTooltip content={d("pages.vehicle.tooltips.range")}>{d("pages.vehicle.specs.range")}</InfoTooltip></span>
                         </div>
-                        <div className="text-2xl font-bold">{vehicle.rangeDisplay}</div>
+                        <div className="text-lg sm:text-2xl font-bold">{vehicle.rangeDisplay}</div>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Zap className="h-5 w-5 text-primary" />
-                          <span className="text-sm text-muted-foreground">{d("pages.vehicle.specs.dcCharge")}</span>
+                      <Card className="p-3 sm:p-4">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                          <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                          <span className="text-xs sm:text-sm text-muted-foreground"><InfoTooltip content={d("pages.vehicle.tooltips.dcCharge")}>{d("pages.vehicle.specs.dcCharge")}</InfoTooltip></span>
                         </div>
-                        <div className="text-2xl font-bold">{dcMaxPower ? fmtField(dcMaxPower) : vehicle.chargingDisplay}</div>
+                        <div className="text-lg sm:text-2xl font-bold">{dcMaxPower ? fmtField(dcMaxPower) : vehicle.chargingDisplay}</div>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Plug className="h-5 w-5 text-primary" />
-                          <span className="text-sm text-muted-foreground">{d("pages.vehicle.specs.acPower")}</span>
+                      <Card className="p-3 sm:p-4">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                          <Plug className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                          <span className="text-xs sm:text-sm text-muted-foreground"><InfoTooltip content={d("pages.vehicle.tooltips.acPower")}>{d("pages.vehicle.specs.acPower")}</InfoTooltip></span>
                         </div>
-                        <div className="text-2xl font-bold">{acPower ? fmtField(acPower) : "-"}</div>
+                        <div className="text-lg sm:text-2xl font-bold">{acPower ? fmtField(acPower) : "-"}</div>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Gauge className="h-5 w-5 text-primary" />
-                          <span className="text-sm text-muted-foreground">{d("pages.vehicle.specs.efficiency")}</span>
+                      <Card className="p-3 sm:p-4">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                          <Gauge className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                          <span className="text-xs sm:text-sm text-muted-foreground"><InfoTooltip content={d("pages.vehicle.tooltips.efficiency")}>{d("pages.vehicle.specs.efficiency")}</InfoTooltip></span>
                         </div>
-                        <div className="text-2xl font-bold">{vehicle.efficiencyDisplay}</div>
+                        <div className="text-lg sm:text-2xl font-bold">{vehicle.efficiencyDisplay}</div>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <BadgeDollarSign className="h-5 w-5 text-primary" />
-                          <span className="text-sm text-muted-foreground">{d("pages.vehicle.specs.pricePerRange")}</span>
+                      <Card className="p-3 sm:p-4">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                          <BadgeDollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                          <span className="text-xs sm:text-sm text-muted-foreground"><InfoTooltip content={d("pages.vehicle.tooltips.pricePerRange")}>{d("pages.vehicle.specs.pricePerRange")}</InfoTooltip></span>
                         </div>
-                        <div className="text-2xl font-bold">{vehicle.pricePerRangeDisplay}</div>
+                        <div className="text-lg sm:text-2xl font-bold">{vehicle.pricePerRangeDisplay}</div>
                       </Card>
                     </div>
+
+                    {/* Intro text */}
+                    {seoIntro && (
+                      <div className="space-y-3 mb-8">
+                        <h2 className="text-xl sm:text-2xl font-heading font-bold mb-2">{seoIntro.title}</h2>
+                        <p className="text-base text-muted-foreground leading-relaxed">{seoIntro.text}</p>
+                        {seoIntro.text2 && (
+                          <p className="text-base text-muted-foreground leading-relaxed">{seoIntro.text2}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Discover more */}
+                    <a href="#charging-advice" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                      {d("pages.vehicle.cta.discoverMore")}
+                      <ChevronDown className="h-4 w-4" />
+                    </a>
                   </div>
 
-                  {/* Sidebar */}
-                  <aside className="lg:col-span-4">
-                    <div className="lg:sticky lg:top-24 space-y-5">
-                      <MiniQuoteCard
-                        pageId="vehicle"
-                        dictionary={dictionary}
-                        pageRegistry={registry}
-                        lang={lang}
-                        interpolationValues={{ model: vehicle.model, brand: vehicle.brand }}
-                      />
-                    </div>
+                  {/* Right: MiniQuoteCard sticky */}
+                  <aside className="lg:sticky lg:top-24 self-start">
+                    <MiniQuoteCard
+                      pageId="vehicle"
+                      dictionary={dictionary}
+                      pageRegistry={registry}
+                      lang={lang}
+                      interpolationValues={{ model: vehicle.model, brand: vehicle.brand }}
+                    />
                   </aside>
                 </div>
-              </div>
             </div>
           </section>
 
-          {/* SECTION 2: HOME CHARGING */}
-          <section className="py-12 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="max-w-6xl mx-auto">
-                <h2 className="text-3xl font-heading font-bold mb-8">{d("pages.vehicle.sections.homeCharging")}</h2>
+          {/* SEO: Charging advice */}
+          <div id="charging-advice" className="scroll-mt-20 bg-muted/30">
+          {seoAdvice && (
+            <VehicleSeoAdvice
+              title={seoAdvice.title}
+              intro={seoAdvice.intro}
+              items={seoAdvice.items}
+              recommendedLabel={d("pages.vehicle.advice.recommendedLabel")}
+            />
+          )}
+          </div>
 
-                {homeChargingDetails.length > 0 && (
-                  <Card className="overflow-hidden mb-6">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{d("pages.vehicle.homeCharging.table.chargingPoint.name")}</TableHead>
-                          <TableHead>{d("pages.vehicle.homeCharging.table.power")}</TableHead>
-                          <TableHead>{d("pages.vehicle.homeCharging.table.time")}</TableHead>
-                          <TableHead className="text-right">{d("pages.vehicle.homeCharging.table.speed")}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(() => {
-                          const hasOptional = homeChargingDetails.some((r) => String(r.charging_point || "").startsWith("optional-"));
-                          const optionalIndex = hasOptional
-                            ? homeChargingDetails.findIndex((r) => String(r.charging_point || "").startsWith("optional-"))
-                            : -1;
-                          const summaryRow = (
-                            <TableRow key="summary" className="bg-primary/10 font-semibold text-base hover:bg-primary/10">
-                              <TableCell>{d("pages.vehicle.homeCharging.summary")}</TableCell>
-                              <TableCell>{acPower ? fmtField(acPower) : "-"}</TableCell>
-                              <TableCell>{homeCharging?.charge_time?.value ? formatMinutes(homeCharging.charge_time.value) : "-"}</TableCell>
-                              <TableCell className="text-right">{homeCharging?.charge_speed ? fmtField(homeCharging.charge_speed) : "-"}</TableCell>
-                            </TableRow>
-                          );
-                          const rows: React.ReactNode[] = [];
-                          homeChargingDetails.forEach((row, i) => {
-                            const cp = String(row.charging_point || "");
-                            const isSubcategory = cp.startsWith("standard-") || cp.startsWith("optional-");
-                            if (hasOptional && i === optionalIndex) {
-                              rows.push(summaryRow);
-                              rows.push(<TableRow key="spacer" className="hover:bg-transparent"><TableCell colSpan={4} className="p-0 h-4" /></TableRow>);
-                            }
-                            if (isSubcategory) {
-                              rows.push(<TableRow key={i} className="bg-muted/40"><TableCell colSpan={4} className="font-semibold text-sm py-2">{d(`pages.vehicle.homeCharging.table.chargingPoint.values.${cp}`)}</TableCell></TableRow>);
-                              return;
-                            }
-                            const isLimited = row.is_limited || row.limited;
-                            rows.push(
-                              <TableRow key={i}>
-                                <TableCell className="font-medium">{d(`pages.vehicle.homeCharging.table.chargingPoint.values.${cp}`)}</TableCell>
-                                <TableCell>
-                                  {row.charge_power ? fmtField(row.charge_power) : "-"}
-                                  {isLimited && <span className="text-muted-foreground ml-1" title={d("pages.vehicle.homeCharging.table.limitedTooltip")}>*</span>}
-                                </TableCell>
-                                <TableCell>{row.charge_time?.value ? formatMinutes(row.charge_time.value) : "-"}</TableCell>
-                                <TableCell className="text-right">{row.charge_speed?.value ? `${row.charge_speed.value} ${row.charge_speed.unit || "km/h"}` : "-"}</TableCell>
-                              </TableRow>,
-                            );
-                          });
-                          if (!hasOptional) rows.push(summaryRow);
-                          return rows;
-                        })()}
-                      </TableBody>
-                    </Table>
-                    {homeChargingDetails.some((r) => r.is_limited || r.limited) && (
-                      <div className="px-4 py-2 text-xs text-muted-foreground border-t">* {d("pages.vehicle.homeCharging.table.limitedNote")}</div>
-                    )}
-                  </Card>
-                )}
-              </div>
-            </div>
-          </section>
+          {/* SEO: Cost estimate */}
+          <div id="charging-cost" className="scroll-mt-20">
+          {seoCost && (
+            <VehicleSeoCost
+              data={seoCost}
+              colLabels={{
+                homeChargingTitle: d("pages.vehicle.cost.homeChargingTitle"),
+                homeChargingIntro: d("pages.vehicle.cost.homeChargingIntro"),
+                inputsSubtitle: d("pages.vehicle.cost.subtitle"),
+                inputsLabel: d("pages.vehicle.cost.inputsLabel"),
+                scenario: d("pages.vehicle.cost.colScenario"),
+                kwh: d("pages.vehicle.cost.colKwh"),
+                kwhSolar: d("pages.vehicle.cost.colKwhSolar"),
+                kwhNetwork: d("pages.vehicle.cost.colKwhNetwork"),
+                cost: d("pages.vehicle.cost.colCost"),
+                tariffLabel: d("pages.vehicle.cost.tariffLabel"),
+                tariffUnit: d("pages.vehicle.cost.tariffUnit"),
+                dailyKmLabel: d("pages.vehicle.cost.dailyKmLabel"),
+                dailyKmUnit: d("pages.vehicle.cost.dailyKmUnit"),
+                fuelPriceLabel: d("pages.vehicle.cost.fuelPriceLabel"),
+                fuelPriceUnit: d("pages.vehicle.cost.fuelPriceUnit"),
+                fuelConsumptionLabel: d("pages.vehicle.cost.fuelConsumptionLabel"),
+                fuelConsumptionUnit: d("pages.vehicle.cost.fuelConsumptionUnit"),
+                savingsTitle: d("pages.vehicle.cost.savingsTitle"),
+                savingsInputsLabel: d("pages.vehicle.cost.savingsInputsLabel"),
+                savingsCardLabel: d("pages.vehicle.cost.savingsCardLabel"),
+                savingsPerMonth: d("pages.vehicle.cost.savingsPerMonth"),
+                savingsPerYear: d("pages.vehicle.cost.savingsPerYear"),
+                vsPetrol: d("pages.vehicle.cost.vsPetrol"),
+                vsEv: d("pages.vehicle.cost.vsEv"),
+                networkTitle: d("pages.vehicle.cost.networkTitle"),
+                networkHome: d("pages.vehicle.cost.networkHome"),
+                networkHomeDesc: d("pages.vehicle.cost.networkHomeDesc"),
+                networkPublicAc: d("pages.vehicle.cost.networkPublicAc"),
+                networkPublicAcDesc: d("pages.vehicle.cost.networkPublicAcDesc"),
+                networkPublicDc: d("pages.vehicle.cost.networkPublicDc"),
+                networkPublicDcDesc: d("pages.vehicle.cost.networkPublicDcDesc"),
+                networkSavingsVsPublic: d("pages.vehicle.cost.networkSavingsVsPublic"),
+                networkIntro: d("pages.vehicle.cost.networkIntro"),
+                savingsIntro: d("pages.vehicle.cost.savingsIntro"),
+                savingsLabel: d("pages.vehicle.cost.savingsLabel"),
+                lossLabel: d("pages.vehicle.cost.lossLabel"),
+                solarLabel: d("pages.vehicle.cost.solarLabel"),
+                solarUnit: d("pages.vehicle.cost.solarUnit"),
+              }}
+            />
+          )}
+          </div>
 
           {/* SECTION 3: Fast Charging + Smart Charging */}
           {(fastChargingData || plugCharge || v2x) && (
-            <section className="py-12">
+            <section id="charging-features" className="py-12 scroll-mt-20 bg-muted/30">
               <div className="container mx-auto px-4">
-                <div className="max-w-6xl mx-auto">
+                  <h2 className="text-xl sm:text-2xl font-heading font-bold mb-4">{d("pages.vehicle.sections.chargingFeatures", { brand: vehicle.brand, model: vehicle.model })}</h2>
+                  {seoChargingFeatures && (
+                    <p className="text-base text-muted-foreground leading-relaxed mb-8">{seoChargingFeatures}</p>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {fastChargingData && (
                       <Card className="p-6">
-                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <h3 className="text-base sm:text-lg font-heading font-semibold mb-4 flex items-center gap-2">
                           <BatteryCharging className="h-5 w-5 text-primary" />
                           {d("pages.vehicle.sections.dcFastCharging")}
                         </h3>
                         <div className="space-y-1">
-                          <SpecRow icon={Plug} label={d("pages.vehicle.fastCharging.port")} value={safeStr(dcPort)} />
-                          <SpecRow icon={Zap} label={d("pages.vehicle.fastCharging.maxPower")} value={dcMaxPower ? fmtField(dcMaxPower) : "-"} />
-                          <SpecRow icon={Gauge} label={d("pages.vehicle.fastCharging.avgPower")} value={dcAvgPower ? fmtField(dcAvgPower) : "-"} />
+                          <SpecRow icon={Plug} label={d("pages.vehicle.fastCharging.port")} value={safeStr(dcPort)} tooltip={d("pages.vehicle.tooltips.dcPort")} />
+                          <SpecRow icon={Zap} label={d("pages.vehicle.fastCharging.maxPower")} value={dcMaxPower ? fmtField(dcMaxPower) : "-"} tooltip={d("pages.vehicle.tooltips.dcMaxPower")} />
+                          <SpecRow icon={Gauge} label={d("pages.vehicle.fastCharging.avgPower")} value={dcAvgPower ? fmtField(dcAvgPower) : "-"} tooltip={d("pages.vehicle.tooltips.dcAvgPower")} />
                           <SpecRow
                             icon={Clock}
                             label={d("pages.vehicle.fastCharging.time")}
                             value={dcTime?.value ? `${dcTime.value} ${dcTime.unit || "min"}${dcTime.range ? ` (${dcTime.range.from?.value || "?"}${dcTime.range.from?.unit || ""} → ${dcTime.range.to?.value || "?"}${dcTime.range.to?.unit || ""})` : ""}` : "-"}
+                            tooltip={d("pages.vehicle.tooltips.dcTime")}
                           />
-                          <SpecRow icon={Rocket} label={d("pages.vehicle.fastCharging.speed")} value={dcSpeed ? fmtField(dcSpeed) : "-"} />
+                          <SpecRow icon={Rocket} label={d("pages.vehicle.fastCharging.speed")} value={dcSpeed ? fmtField(dcSpeed) : "-"} tooltip={d("pages.vehicle.tooltips.dcSpeed")} />
                           {batteryPreconditioning && (
                             <div className="flex justify-between items-start sm:items-center py-1.5">
                               <span className="text-muted-foreground text-sm flex items-center gap-1.5">
                                 <Thermometer className="h-4 w-4 shrink-0" />
-                                {d("pages.vehicle.fastCharging.preconditioning")}
+                                <InfoTooltip content={d("pages.vehicle.tooltips.preconditioning")}>{d("pages.vehicle.fastCharging.preconditioningShort")}</InfoTooltip>
                               </span>
-                              <div className="flex flex-col-reverse items-end gap-1 sm:flex-row sm:items-center sm:gap-2">
+                              <div className="flex flex-wrap items-center justify-end gap-1">
                                 {batteryPreconditioning.precond_possible && batteryPreconditioning.auto_using_navigation && (
                                   <span className="text-xs text-muted-foreground">{d("pages.vehicle.fastCharging.preconditioningAutoUsingNav")}</span>
                                 )}
@@ -662,7 +744,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
                     {(plugCharge || autocharge != null || v2x) && (
                       <Card className="p-6">
-                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <h3 className="text-base sm:text-lg font-heading font-semibold mb-4 flex items-center gap-2">
                           <Zap className="h-5 w-5 text-primary" />
                           {d("pages.vehicle.sections.smartCharging")}
                         </h3>
@@ -671,7 +753,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                             <div className="flex justify-between items-center py-1.5">
                               <span className="text-muted-foreground text-sm flex items-center gap-1.5">
                                 <Plug className="h-4 w-4 shrink-0" />
-                                {d("pages.vehicle.smartCharging.plugCharge")}
+                                <InfoTooltip content={d("pages.vehicle.tooltips.plugCharge")}>{d("pages.vehicle.smartCharging.plugCharge")}</InfoTooltip>
                               </span>
                               <div className="flex items-center gap-2">
                                 {plugCharge.supported_protocol && <span className="text-xs text-muted-foreground">{safeStr(plugCharge.supported_protocol)}</span>}
@@ -683,7 +765,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                             <div className="flex justify-between items-center py-1.5">
                               <span className="text-muted-foreground text-sm flex items-center gap-1.5">
                                 <Wifi className="h-4 w-4 shrink-0" />
-                                {d("pages.vehicle.smartCharging.autocharge")}
+                                <InfoTooltip content={d("pages.vehicle.tooltips.autocharge")}>{d("pages.vehicle.smartCharging.autocharge")}</InfoTooltip>
                               </span>
                               <BooleanBadge supported={autocharge} tYes={d("pages.vehicle.common.yes")} tNo={d("pages.vehicle.common.no")} />
                             </div>
@@ -692,7 +774,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                             <>
                               <div className="py-3"><Separator /></div>
                               <div className="flex justify-between items-center py-1.5">
-                                <span className="text-muted-foreground text-sm flex items-center gap-1.5"><PlugZap className="h-4 w-4 shrink-0" />{d("pages.vehicle.smartCharging.v2l")}</span>
+                                <span className="text-muted-foreground text-sm flex items-center gap-1.5"><PlugZap className="h-4 w-4 shrink-0" /><InfoTooltip content={d("pages.vehicle.tooltips.v2l")}>{d("pages.vehicle.smartCharging.v2lShort")}</InfoTooltip></span>
                                 <div className="flex items-center gap-2">
                                   {v2x.vehicle_to_load?.supported && v2x.vehicle_to_load?.max_output_power && (
                                     <span className="text-xs text-muted-foreground">{v2x.vehicle_to_load.max_output_power.value} {v2x.vehicle_to_load.max_output_power.unit}</span>
@@ -701,7 +783,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                                 </div>
                               </div>
                               <div className="flex justify-between items-center py-1.5">
-                                <span className="text-muted-foreground text-sm flex items-center gap-1.5"><Home className="h-4 w-4 shrink-0" />{d("pages.vehicle.smartCharging.v2h")}</span>
+                                <span className="text-muted-foreground text-sm flex items-center gap-1.5"><Home className="h-4 w-4 shrink-0" /><InfoTooltip content={d("pages.vehicle.tooltips.v2h")}>{d("pages.vehicle.smartCharging.v2hShort")}</InfoTooltip></span>
                                 <div className="flex items-center gap-2">
                                   {(v2x.vehicle_to_home?.ac_supported || v2x.vehicle_to_home?.dc_supported) && (v2x.vehicle_to_home?.ac_max_output_power || v2x.vehicle_to_home?.dc_max_output_power) && (
                                     <span className="text-xs text-muted-foreground">{fmtField(v2x.vehicle_to_home.ac_max_output_power || v2x.vehicle_to_home.dc_max_output_power)}</span>
@@ -710,7 +792,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                                 </div>
                               </div>
                               <div className="flex justify-between items-center py-1.5">
-                                <span className="text-muted-foreground text-sm flex items-center gap-1.5"><Network className="h-4 w-4 shrink-0" />{d("pages.vehicle.smartCharging.v2g")}</span>
+                                <span className="text-muted-foreground text-sm flex items-center gap-1.5"><Network className="h-4 w-4 shrink-0" /><InfoTooltip content={d("pages.vehicle.tooltips.v2g")}>{d("pages.vehicle.smartCharging.v2gShort")}</InfoTooltip></span>
                                 <div className="flex items-center gap-2">
                                   {(v2x.vehicle_to_grid?.ac_supported || v2x.vehicle_to_grid?.dc_supported) && (v2x.vehicle_to_grid?.ac_max_output_power || v2x.vehicle_to_grid?.dc_max_output_power) && (
                                     <span className="text-xs text-muted-foreground">{fmtField(v2x.vehicle_to_grid.ac_max_output_power || v2x.vehicle_to_grid.dc_max_output_power)}</span>
@@ -724,15 +806,19 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                       </Card>
                     )}
                   </div>
-                </div>
               </div>
             </section>
           )}
 
           {/* SECTION 4: Real World Range */}
+          <div id="real-range" className="scroll-mt-20">
           {realRange && (coldCombined || mildCombined) && (
             <VehicleDetailClient
               dictionary={dictionary}
+              brand={vehicle.brand}
+              model={vehicle.model}
+              lang={lang}
+              intro={seoRealRange ?? undefined}
               realRange={realRange}
               coldCity={coldCity}
               coldHighway={coldHighway}
@@ -744,22 +830,25 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
               realRangeMax={realRangeMax}
             />
           )}
+          </div>
 
           {/* SECTION 5: Battery + Performance + Dimensions */}
           {(batteryDetails || perf || dims) && (
-            <section className="py-12">
+            <section id="tech-specs" className="py-12 scroll-mt-20 bg-muted/30">
               <div className="container mx-auto px-4">
-                <div className="max-w-6xl mx-auto">
-                  <h2 className="text-3xl font-heading font-bold mb-8">{d("pages.vehicle.sections.techSpecs")}</h2>
+                  <h2 className="text-xl sm:text-2xl font-heading font-bold mb-4">{d("pages.vehicle.sections.techSpecsOf", { brand: vehicle.brand, model: vehicle.model })}</h2>
+                  {seoTechSpecs && (
+                    <p className="text-base text-muted-foreground leading-relaxed mb-8">{seoTechSpecs}</p>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {batteryDetails && (
                       <Card className="p-6">
-                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Battery className="h-5 w-5 text-primary" />{d("pages.vehicle.techSpecs.battery")}</h3>
+                        <h3 className="text-base sm:text-lg font-heading font-semibold mb-4 flex items-center gap-2"><Battery className="h-5 w-5 text-primary" />{d("pages.vehicle.techSpecs.battery")}</h3>
                         <div className="space-y-1">
-                          {batteryDetails.nominal_capacity && <SpecRow icon={BatteryFull} label={d("pages.vehicle.techSpecs.nominalCapacity")} value={fmtField(batteryDetails.nominal_capacity)} />}
-                          {batteryDetails.useable_capacity && <SpecRow icon={BatteryMedium} label={d("pages.vehicle.techSpecs.useableCapacity")} value={fmtField(batteryDetails.useable_capacity)} />}
-                          {(batteryDetails.type || batteryDetails.battery_type) && <SpecRow icon={FlaskConical} label={d("pages.vehicle.techSpecs.type")} value={safeStr(batteryDetails.type || batteryDetails.battery_type)} />}
-                          {batteryDetails.architecture && <SpecRow icon={Layers} label={d("pages.vehicle.techSpecs.architecture")} value={fmtField(batteryDetails.architecture)} />}
+                          {batteryDetails.nominal_capacity && <SpecRow icon={BatteryFull} label={d("pages.vehicle.techSpecs.nominalCapacity")} value={fmtField(batteryDetails.nominal_capacity)} tooltip={d("pages.vehicle.tooltips.nominalCapacity")} />}
+                          {batteryDetails.useable_capacity && <SpecRow icon={BatteryMedium} label={d("pages.vehicle.techSpecs.useableCapacity")} value={fmtField(batteryDetails.useable_capacity)} tooltip={d("pages.vehicle.tooltips.useableCapacity")} />}
+                          {(batteryDetails.type || batteryDetails.battery_type) && <SpecRow icon={FlaskConical} label={d("pages.vehicle.techSpecs.type")} value={safeStr(batteryDetails.type || batteryDetails.battery_type)} tooltip={d("pages.vehicle.tooltips.batteryType")} />}
+                          {batteryDetails.architecture && <SpecRow icon={Layers} label={d("pages.vehicle.techSpecs.architecture")} value={fmtField(batteryDetails.architecture)} tooltip={d("pages.vehicle.tooltips.batteryArchitecture")} />}
                           {(batteryDetails.warranty_period || batteryDetails.warranty_mileage) && (
                             <SpecRow icon={ShieldCheck} label={d("pages.vehicle.techSpecs.warranty")} value={[batteryDetails.warranty_period ? fmtField(batteryDetails.warranty_period) : null, batteryDetails.warranty_mileage ? fmtField(batteryDetails.warranty_mileage) : null].filter(Boolean).join(" / ")} />
                           )}
@@ -768,30 +857,32 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                     )}
                     {perf && (
                       <Card className="p-6">
-                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Rocket className="h-5 w-5 text-primary" />{d("pages.vehicle.techSpecs.performance")}</h3>
+                        <h3 className="text-base sm:text-lg font-heading font-semibold mb-4 flex items-center gap-2"><Rocket className="h-5 w-5 text-primary" />{d("pages.vehicle.techSpecs.performance")}</h3>
                         <div className="space-y-1">
-                          {perf.acceleration_0_100 && <SpecRow icon={Timer} label={d("pages.vehicle.techSpecs.acceleration")} value={fmtField(perf.acceleration_0_100)} />}
+                          {perf.acceleration_0_100 && <SpecRow icon={Timer} label={d("pages.vehicle.techSpecs.acceleration")} value={fmtField(perf.acceleration_0_100)} tooltip={d("pages.vehicle.tooltips.acceleration")} />}
                           {perf.top_speed && <SpecRow icon={Gauge} label={d("pages.vehicle.techSpecs.topSpeed")} value={fmtField(perf.top_speed)} />}
                           {perf.power?.ps && <SpecRow icon={Zap} label={d("pages.vehicle.techSpecs.powerPs")} value={fmtField(perf.power.ps)} />}
-                          {perf.torque && <SpecRow icon={RotateCcw} label={d("pages.vehicle.techSpecs.torque")} value={fmtField(perf.torque)} />}
-                          {perf.drive_type && <SpecRow icon={Car} label={d("pages.vehicle.techSpecs.driveType")} value={safeStr(perf.drive_type)} />}
+                          {perf.torque && <SpecRow icon={RotateCcw} label={d("pages.vehicle.techSpecs.torque")} value={fmtField(perf.torque)} tooltip={d("pages.vehicle.tooltips.torque")} />}
+                          {perf.drive_type && <SpecRow icon={Car} label={d("pages.vehicle.techSpecs.driveType")} value={safeStr(perf.drive_type)} tooltip={d("pages.vehicle.tooltips.driveType")} />}
                         </div>
                       </Card>
                     )}
                     {dims && (
                       <Card className="p-6">
-                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Ruler className="h-5 w-5 text-primary" />{d("pages.vehicle.techSpecs.dimensions")}</h3>
+                        <h3 className="text-base sm:text-lg font-heading font-semibold mb-4 flex items-center gap-2"><Ruler className="h-5 w-5 text-primary" />{d("pages.vehicle.techSpecs.dimensions")}</h3>
                         <div className="space-y-1">
-                          {(dims.length || dims.width || dims.height) && (
-                            <SpecRow icon={Maximize2} label={d("pages.vehicle.techSpecs.lxwxh")} value={[dims.length?.value, dims.width?.value, dims.height?.value].filter(Boolean).join(" x ") + (dims.length?.unit ? ` ${dims.length.unit}` : " mm")} />
-                          )}
-                          {dims.wheelbase && <SpecRow icon={ArrowLeftRight} label={d("pages.vehicle.techSpecs.wheelbase")} value={fmtField(dims.wheelbase)} />}
+                          {(dims.length || dims.width || dims.height) && (() => {
+                            const toM = (v: number | undefined) => v ? (v / 1000).toFixed(2) : null;
+                            const vals = [toM(dims.length?.value), toM(dims.width?.value), toM(dims.height?.value)].filter(Boolean);
+                            return <SpecRow icon={Maximize2} label={d("pages.vehicle.techSpecs.lxwxh")} value={vals.join(" x ") + " m"} />;
+                          })()}
+                          {dims.wheelbase && <SpecRow icon={ArrowLeftRight} label={d("pages.vehicle.techSpecs.wheelbase")} value={dims.wheelbase?.value ? `${(dims.wheelbase.value / 1000).toFixed(2)} m` : fmtField(dims.wheelbase)} tooltip={d("pages.vehicle.tooltips.wheelbase")} />}
                           {(dims.weight_unladen_eu || dims.weight) && <SpecRow icon={Scale} label={d("pages.vehicle.techSpecs.weight")} value={fmtField(dims.weight_unladen_eu || dims.weight)} />}
                           {dims.cargo_volume && <SpecRow icon={Package} label={d("pages.vehicle.techSpecs.cargo")} value={fmtField(dims.cargo_volume)} />}
                           {dims.seats && <SpecRow icon={Users} label={d("pages.vehicle.techSpecs.seats")} value={fmtField(dims.seats)} />}
                           {dims.tow_hitch_possible != null && (
                             <div className="flex justify-between items-center py-1.5">
-                              <span className="text-muted-foreground text-sm flex items-center gap-1.5"><Truck className="h-4 w-4 shrink-0" />{d("pages.vehicle.techSpecs.towHitch")}</span>
+                              <span className="text-muted-foreground text-sm flex items-center gap-1.5"><Truck className="h-4 w-4 shrink-0" /><InfoTooltip content={d("pages.vehicle.tooltips.towingWeight")}>{d("pages.vehicle.techSpecs.towHitch")}</InfoTooltip></span>
                               <div className="flex items-center gap-2">
                                 {dims.tow_hitch_possible && dims.towing_weight_braked && <span className="text-xs text-muted-foreground">{fmtField(dims.towing_weight_braked)}</span>}
                                 <BooleanBadge supported={dims.tow_hitch_possible} tYes={d("pages.vehicle.common.yes")} tNo={d("pages.vehicle.common.no")} />
@@ -802,10 +893,20 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                       </Card>
                     )}
                   </div>
-                </div>
               </div>
             </section>
           )}
+
+          {/* SEO: FAQ */}
+          <div id="faq" className="scroll-mt-20">
+          {seoFaq && seoFaq.items.length > 0 && (
+            <VehicleSeoFAQ
+              title={seoFaq.title}
+              intro={seoFaq.intro}
+              items={seoFaq.items}
+            />
+          )}
+          </div>
 
           {/* GetQuote CTA */}
           {hasGetQuoteBlock && (
@@ -819,6 +920,23 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
               image={getQuoteImage}
             />
           )}
+
+          {/* Internal linking */}
+          <RelatedContent
+            sameBrand={sameBrandVehicles}
+            similar={similarVehicles}
+            featuredPosts={featuredPosts}
+            lang={lang}
+            pageRegistry={registry}
+            strings={{
+              sectionTitle: d("pages.vehicle.related.sectionTitle"),
+              sameBrand: d("pages.vehicle.related.sameBrand"),
+              similar: d("pages.vehicle.related.similar"),
+              featuredPosts: d("pages.vehicle.related.featuredPosts"),
+            }}
+            brandName={brandName}
+            modelName={vehicle.model}
+          />
         </div>
       </>
     );

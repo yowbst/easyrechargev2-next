@@ -1,0 +1,273 @@
+{
+    "common": {
+        "yes": "Oui",
+        "no": "Non"
+    },
+    "breadcrumb": {
+        "vehicles": "Véhicules électriques"
+    },
+    "subheader": {
+        "back": "Retour aux véhicules"
+    },
+    "cta": {
+        "discoverMore": "En savoir plus"
+    },
+    "specs": {
+        "battery": "Batterie",
+        "range": "Autonomie",
+        "dcCharge": "Puissance de charge DC",
+        "acPower": "Puissance de charge AC",
+        "efficiency": "Consommation",
+        "pricePerRange": "Prix / Autonomie"
+    },
+    "sections": {
+        "homeCharging": "Recharge à domicile",
+        "keySpecs": "Caractéristiques clés",
+        "chargingFeatures": "Recharge rapide de la {brand} {model}",
+        "dcFastCharging": "Recharge rapide DC",
+        "smartCharging": "Recharge intelligente",
+        "realRange": "Autonomie réelle",
+        "realRangeOf": "Autonomie réelle de la {brand} {model}",
+        "techSpecs": "Caractéristiques techniques",
+        "techSpecsOf": "Caractéristiques techniques de la {brand} {model}"
+    },
+    "intro": {
+        "title": "Recharger la {name} en Suisse",
+        "text": "La {brand} {model}, avec sa batterie de {battery} et son autonomie de {range}, se recharge en {chargeTime11kw} à domicile avec une borne 11 kW triphasée. Voici tout ce qu'il faut savoir pour recharger votre {model} chez vous en Suisse : temps de recharge par type de prise, coût estimé et conseils d'installation.",
+        "text2": "Le chargeur embarqué AC de la {model} accepte jusqu'à {acPower} — c'est lui qui détermine la vitesse de recharge à domicile ou sur une borne publique lente. En recharge rapide DC, la puissance maximale est de {dcPower}, idéal pour récupérer l'autonomie du quotidien en une courte pause. Avec une consommation de {efficiency}, chaque 100 km revient à environ {costPer100km} CHF au tarif résidentiel suisse moyen (0.32 CHF/kWh)."
+    },
+    "homeCharging": {
+        "port": "Type de port",
+        "power": "Puissance",
+        "time": "Temps",
+        "speed": "Vitesse",
+        "location": "Emplacement",
+        "summary": "En résumé",
+        "table": {
+            "chargingPoint": {
+                "name": "Point de recharge",
+                "values": {
+                    "wall-plug": "Prise murale domestique",
+                    "1-phase-16a": "Monophasé 16A",
+                    "1-phase-32a": "Monophasé 32A",
+                    "3-phase-16a": "Triphasé 16A",
+                    "3-phase-32a": "Triphasé 32A",
+                    "standard-6-6-kw-on-board-charger": "Chargeur embarqué standard 6.6 kW",
+                    "standard-7-2-kw-on-board-charger": "Chargeur embarqué standard 7.2 kW",
+                    "standard-7-4-kw-on-board-charger": "Chargeur embarqué standard 7.4 kW",
+                    "standard-11-0-kw-on-board-charger": "Chargeur embarqué standard 11 kW",
+                    "optional-11-0kw-on-board-charger": "Chargeur embarqué optionnel 11 kW",
+                    "optional-22-0kw-on-board-charger": "Chargeur embarqué optionnel 22 kW"
+                }
+            },
+            "maxPower": "Puissance max.",
+            "power": "Puissance",
+            "time": "Temps",
+            "speed": "Vitesse"
+        }
+    },
+    "fastCharging": {
+        "port": "Type de port",
+        "maxPower": "Puissance max.",
+        "avgPower": "Puissance moy.",
+        "time": "Temps",
+        "speed": "Vitesse",
+        "preconditioning": "Préchauffage de la batterie",
+        "preconditioningShort": "Précond.",
+        "preconditioningTooltip": "Prépare automatiquement la batterie à une température optimale avant une charge rapide, réduisant le temps de charge et préservant la durée de vie de la batterie.",
+        "preconditioningAutoUsingNav": "Auto. avec navigation"
+    },
+    "smartCharging": {
+        "plugCharge": "Plug & Charge",
+        "plugChargeTooltip": "Permet le démarrage automatique d'une session de recharge dans les stations de recharge CCS compatibles, conformément à la norme ISO 15118.",
+        "autocharge": "Autocharge",
+        "autochargeTooltip": "Permet le démarrage automatique d'un processus de recharge dans les stations de recharge CCS prises en charge.",
+        "v2l": "Vehicle-to-Load (V2L)",
+        "v2lShort": "V2L (Load)",
+        "v2lTooltip": "Permet d'utiliser la batterie du véhicule pour alimenter des appareils électriques externes via une prise domestique intégrée.",
+        "v2h": "Vehicle-to-Home (V2H)",
+        "v2hShort": "V2H (Home)",
+        "v2hTooltip": "Permet d'alimenter votre domicile avec l'énergie stockée dans la batterie du véhicule, utile en cas de coupure de courant ou pour réduire votre consommation réseau",
+        "v2g": "Vehicle-to-Grid (V2G)",
+        "v2gShort": "V2G (Grid)",
+        "v2gTooltip": "Permet de renvoyer l'énergie de la batterie vers le réseau électrique, contribuant à l'équilibrage du réseau et pouvant générer des revenus."
+    },
+    "realRange": {
+        "cold": "Temps froid",
+        "coldDesc": "Le « pire scénario » basé sur une température de -10 °C et l'utilisation du chauffage.",
+        "mild": "Temps doux",
+        "mildDesc": "Le « meilleur scénario » basé sur une température de 23 °C et sans utilisation de la climatisation.",
+        "city": "Conduite en ville",
+        "highway": "Conduite sur l'autoroute",
+        "highwayTooltip": "Une vitesse constante de 110 km/h est supposée",
+        "combined": "Conduite combinée"
+    },
+    "techSpecs": {
+        "battery": "Batterie",
+        "performance": "Performance",
+        "dimensions": "Dimensions",
+        "nominalCapacity": "Capacité nominale",
+        "nominalCapacityTooltip": "Capacité totale de la batterie telle que spécifiée par le constructeur, incluant la réserve non accessible pour protéger la durée de vie de la batterie.",
+        "useableCapacity": "Capacité utilisable",
+        "useableCapacityTooltip": "Capacité réellement disponible pour la conduite. La différence avec la capacité nominale correspond à la réserve tampon qui protège la batterie contre les charges et décharges extrêmes.",
+        "architecture": "Architecture",
+        "type": "Type",
+        "warranty": "Garantie",
+        "warrantyTooltip": "",
+        "acceleration": "Accélération (0-100km/h)",
+        "topSpeed": "Vitesse max.",
+        "powerPs": "Puissance",
+        "driveType": "Transmission",
+        "torque": "Couple",
+        "lxwxh": "Lon. x Lar. x Hau.",
+        "seats": "Places",
+        "weight": "Poids",
+        "wheelbase": "Empattement",
+        "cargo": "Coffre",
+        "towHitch": "Attelage",
+        "towHitchTooltip": "Avec système de freinage"
+    },
+    "advice": {
+        "title": "Quelle prise pour recharger votre {brand} {model} ?",
+        "intro": "Le choix de la prise de recharge dépend de votre usage quotidien et de votre installation électrique. Le chargeur embarqué de votre {model} accepte jusqu'à {acMax} kW en courant alternatif : une borne plus puissante ne chargera pas plus vite que cette limite. Voici nos recommandations par type de branchement.",
+        "recommendedLabel": "Recommandé",
+        "wall-plug": {
+            "description": "Dépannage uniquement. {time} pour une charge complète. Risque de surchauffe si utilisation prolongée. Non recommandé comme solution permanente."
+        },
+        "1-phase-10a": {
+            "description": "Dépannage uniquement. {time} pour une charge complète. Risque de surchauffe si utilisation prolongée. Non recommandé comme solution permanente."
+        },
+        "1-phase-16a": {
+            "description": "Solution économique (~CHF 200-400 d'installation). {time} de charge. Suffisant si vous roulez moins de 50 km/jour.",
+            "descriptionNotExploited": "Solution économique (~CHF 200-400). {time} de charge. Puissance limitée par le chargeur embarqué de votre véhicule à {acMax} kW."
+        },
+        "1-phase-32a": {
+            "description": "Bon compromis qualité-prix. {time} de charge. Installation par un électricien certifié ESTI (~CHF 1'500-2'500).",
+            "descriptionNotExploited": "Le chargeur embarqué de votre {model} est limité à {acMax} kW : cette borne ne chargera pas plus vite qu'une {acMax} kW."
+        },
+        "3-phase-16a": {
+            "description": "Recommandé. {time} de charge. Nécessite un raccordement triphasé (standard en Suisse). Installation ~CHF 2'000-3'500.",
+            "descriptionNotExploited": "Le chargeur embarqué de votre {model} est limité à {acMax} kW : cette borne ne chargera pas plus vite qu'une borne {acMax} kW."
+        },
+        "3-phase-32a": {
+            "description": "Exploitée pleinement. {time} de charge. Pour les professionnels ou usage intensif. Installation ~CHF 2'500-4'000.",
+            "descriptionNotExploited": "Non exploitée par votre {model} (chargeur embarqué limité à {acMax} kW). Une borne 11 kW offre les mêmes performances pour moins cher."
+        }
+    },
+    "cost": {
+        "title": "Coût de recharge de la {brand} {model}",
+        "subtitle": "Combien coûte la recharge à domicile, sur le réseau public ou en comparaison avec un véhicule thermique ? Simulez vos coûts mensuels en ajustant les paramètres ci-dessous.",
+        "inputsLabel": "Vos paramètres de simulation",
+        "fullCharge": "Charge utile (10→80%)",
+        "daily": "Charge quotidienne (~{dailyKm} km)",
+        "monthly": "Coût mensuel (~{monthlyKm} km/mois)",
+        "homeChargingTitle": "Recharge à domicile",
+        "homeChargingIntro": "Le tableau ci-dessous estime le coût de recharge à domicile selon trois scénarios : une charge utile (10→80 %), une charge quotidienne basée sur votre distance journalière, et le coût mensuel projeté. Les valeurs sont calculées en temps réel selon votre tarif d'électricité et, si vous avez une installation solaire, la part couverte par votre propre production.",
+        "colScenario": "Scénario",
+        "colKwh": "kWh",
+        "colKwhSolar": "☀ Production solaire",
+        "colKwhNetwork": "Cons. réseau",
+        "colCost": "Coût",
+        "tariffLabel": "Votre tarif",
+        "tariffUnit": "CHF/kWh",
+        "dailyKmLabel": "Distance journalière",
+        "dailyKmUnit": "km",
+        "fuelPriceLabel": "Prix essence",
+        "fuelPriceUnit": "CHF/L",
+        "fuelConsumptionLabel": "Conso.",
+        "fuelConsumptionUnit": "L/100km",
+        "savingsTitle": "Coût selon la technologie",
+        "savingsInputsLabel": "Paramètres du véhicule thermique",
+        "savingsCardLabel": "Coût selon la technologie",
+        "savingsPerMonth": "mois",
+        "savingsPerYear": "an",
+        "vsPetrol": "Véhicule thermique",
+        "vsEv": "Véhicule électrique",
+        "networkTitle": "Coût selon le lieu de recharge",
+        "networkHome": "Charge à domicile",
+        "networkHomeDesc": "Borne murale / wallbox",
+        "networkPublicAc": "Charge publique AC",
+        "networkPublicAcDesc": "Supermarché, parking (~0.45 CHF/kWh)",
+        "networkPublicDc": "Charge publique DC (rapide)",
+        "networkPublicDcDesc": "Autoroute, GoFast, Ionity (~0.65 CHF/kWh)",
+        "networkSavingsVsPublic": "Domicile vs. réseau public",
+        "networkIntro": "Le lieu de recharge influe directement sur votre budget. Recharger à domicile avec votre propre borne wallbox est jusqu'à 2 à 3 fois moins cher que sur le réseau public suisse. Voici la comparaison pour votre kilométrage.",
+        "savingsIntro": "Rouler à l'électrique est nettement plus économique qu'un véhicule thermique équivalent. L'écart se creuse encore si vous rechargez principalement à domicile au tarif résidentiel.",
+        "savingsLabel": "Économies de",
+        "lossLabel": "Perte de",
+        "solarLabel": "Installation photovoltaïque",
+        "solarUnit": "%"
+    },
+    "tooltips": {
+        "battery": "Capacité totale de la batterie haute tension du véhicule. Détermine l'autonomie maximale et le coût par recharge.",
+        "range": "Autonomie selon le cycle WLTP (Worldwide Harmonized Light Vehicles Test Procedure). L'autonomie réelle varie selon la température, le style de conduite et le relief.",
+        "dcCharge": "Puissance maximale acceptée en courant continu (DC) sur une borne rapide. Plus la valeur est élevée, plus la recharge rapide est rapide.",
+        "acPower": "Puissance maximale du chargeur embarqué en courant alternatif (AC). Détermine la vitesse de recharge à domicile ou sur une borne publique AC.",
+        "efficiency": "Consommation d'énergie en Wh par km. Plus la valeur est basse, plus le véhicule est économe en énergie.",
+        "pricePerRange": "Coût estimé en électricité par kilomètre d'autonomie, basé sur le tarif moyen suisse.",
+        "dcPort": "Type de connecteur utilisé pour la recharge rapide DC. CCS (Combined Charging System) est le standard européen.",
+        "dcMaxPower": "Puissance de charge maximale atteignable en pointe sur une borne rapide DC. La puissance réelle diminue au fur et à mesure que la batterie se remplit.",
+        "dcAvgPower": "Puissance moyenne entre 10% et 80% de charge. Indicateur plus réaliste que la puissance maximale pour estimer le temps de recharge rapide.",
+        "dcTime": "Temps nécessaire pour passer de 10% à 80% sur une borne rapide DC. Au-delà de 80%, la vitesse de charge ralentit significativement.",
+        "dcSpeed": "Kilomètres d'autonomie récupérés par minute de charge rapide DC.",
+        "preconditioning": "Le véhicule préchauffe ou refroidit la batterie avant d'arriver à une borne rapide pour optimiser la vitesse de charge.",
+        "plugCharge": "Plug & Charge permet de lancer la recharge simplement en branchant le câble, sans badge ni application. L'authentification se fait automatiquement.",
+        "autocharge": "La borne reconnaît automatiquement le véhicule (par adresse MAC) et lance la recharge sans intervention.",
+        "v2l": "Vehicle-to-Load : le véhicule peut alimenter des appareils électriques externes (jusqu'à la puissance indiquée) via une prise intégrée.",
+        "v2h": "Vehicle-to-Home : le véhicule peut alimenter votre domicile en cas de coupure de courant ou pour optimiser votre autoconsommation solaire.",
+        "v2g": "Vehicle-to-Grid : le véhicule peut réinjecter de l'énergie dans le réseau électrique, permettant de vendre de l'électricité aux heures de pointe.",
+        "nominalCapacity": "Capacité physique totale de la batterie. Une partie est réservée comme tampon de sécurité par le constructeur.",
+        "useableCapacity": "Capacité réellement disponible pour la conduite, après déduction du tampon de sécurité. C'est cette valeur qui détermine l'autonomie.",
+        "batteryType": "Chimie des cellules de la batterie. Les types courants sont NMC (nickel-manganèse-cobalt) et LFP (lithium-fer-phosphate).",
+        "batteryArchitecture": "Tension nominale du pack batterie. Une tension plus élevée (800V) permet une charge rapide plus puissante.",
+        "acceleration": "Temps pour passer de 0 à 100 km/h. Les véhicules électriques ont un couple instantané, offrant des accélérations souvent supérieures aux thermiques.",
+        "torque": "Force de rotation du moteur. Sur un véhicule électrique, le couple maximal est disponible dès 0 km/h.",
+        "driveType": "Configuration de transmission : traction (avant), propulsion (arrière) ou intégrale (AWD, 4 roues motrices).",
+        "wheelbase": "Distance entre les essieux avant et arrière. Un empattement plus long offre généralement plus d'espace intérieur et de stabilité.",
+        "towingWeight": "Poids maximal remorquable avec une remorque freinée. Vérifiez la compatibilité avec votre attelage."
+    },
+    "faq": {
+        "title": "Questions fréquentes sur la {name}",
+        "intro": "Questions fréquentes sur la recharge de la {name} en Suisse, basées sur ses données techniques.",
+        "chargeTime": {
+            "question": "Combien de temps pour recharger la {name} à domicile ?",
+            "answer": "{chargeTime11kw} avec une borne 11 kW triphasée, {chargeTime2_3kw} avec une prise domestique 2.3 kW. Le chargeur embarqué de la {model} accepte un maximum de {acMax} kW en courant alternatif."
+        },
+        "whichCharger": {
+            "question": "Quelle borne choisir pour la {name} ?",
+            "answer": "Une borne 11 kW triphasée est recommandée pour la {model}. Le chargeur embarqué accepte jusqu'à {acMax} kW en AC. {notExploitedNote}"
+        },
+        "costPerCharge": {
+            "question": "Combien coûte une recharge complète de la {name} en Suisse ?",
+            "answer": "Environ CHF {fullChargeCost} à domicile au tarif moyen suisse de CHF {tariff}/kWh. Pour un usage quotidien de 50 km, comptez environ CHF {dailyCost} par jour."
+        },
+        "installation": {
+            "question": "Faut-il une installation spéciale pour recharger la {name} ?",
+            "answer": "Une borne murale nécessite un raccordement par un électricien certifié ESTI. En Suisse, la plupart des habitations disposent déjà d'un raccordement triphasé, ce qui facilite l'installation d'une borne 11 kW."
+        },
+        "fastCharging": {
+            "question": "La {name} est-elle compatible avec la recharge rapide ?",
+            "answer": "Oui, via port {dcPort}, jusqu'à {dcMaxPower} de puissance maximale. Temps de charge de 10% à 80% : {dcTime}.",
+            "answerAlt": "Ce véhicule ne dispose pas de recharge rapide DC."
+        },
+        "realRange": {
+            "question": "Quelle est l'autonomie réelle de la {name} en Suisse ?",
+            "answer": "{rangeMax} km en conditions optimales (temps doux, ville). En hiver : {coldCombined} km. Sur autoroute : {mildHighway} km.",
+            "answerAlt": "L'autonomie WLTP annoncée est de {range}. Les conditions réelles (température, conduite, terrain) peuvent faire varier cette valeur."
+        }
+    },
+    "related": {
+        "sectionTitle": "À découvrir en lien avec la {brand} {model}",
+        "sameBrand": "Autres {brand}",
+        "similar": "Véhicules similaires",
+        "featuredPosts": "Nos guides recharge"
+    },
+    "card": {
+        "title": "Recharge à domicile",
+        "chargePort": "Type de port",
+        "chargeTime": "Temps",
+        "chargePower": "Puissance",
+        "chargeSpeed": "Vitesse moyenne",
+        "portLocation": "Emplacement du port"
+    }
+}

@@ -1,0 +1,273 @@
+{
+  "common": {
+    "yes": "Ja",
+    "no": "Nein"
+  },
+  "breadcrumb": {
+    "vehicles": "Elektrofahrzeuge"
+  },
+  "subheader": {
+    "back": "Zurück zu den Fahrzeugen"
+  },
+  "cta": {
+    "discoverMore": "Mehr entdecken"
+  },
+  "specs": {
+    "battery": "Batterie",
+    "range": "Reichweite",
+    "dcCharge": "DC-Ladeleistung",
+    "acPower": "AC-Ladeleistung",
+    "efficiency": "Verbrauch",
+    "pricePerRange": "Preis / Reichweite"
+  },
+  "sections": {
+    "homeCharging": "Laden zuhause",
+    "keySpecs": "Technische Eckdaten",
+    "chargingFeatures": "Schnellladen beim {brand} {model}",
+    "dcFastCharging": "DC-Schnellladen",
+    "smartCharging": "Intelligentes Laden",
+    "realRange": "Reale Reichweite",
+    "realRangeOf": "Reale Reichweite des {brand} {model}",
+    "techSpecs": "Technische Daten",
+    "techSpecsOf": "Technische Daten des {brand} {model}"
+  },
+  "intro": {
+    "title": "{name} in der Schweiz laden",
+    "text": "Der {brand} {model} mit seiner {battery}-Batterie und einer Reichweite von {range} lässt sich zu Hause mit einer 11-kW-Dreiphasen-Wallbox in {chargeTime11kw} vollständig laden. Hier finden Sie alles Wissenswerte zum Laden Ihres {model} zu Hause in der Schweiz: Ladezeiten nach Steckertyp, geschätzte Kosten und Installationshinweise.",
+    "text2": "Das On-Board-Ladegerät des {model} unterstützt bis zu {acPower} Wechselstrom — dieser Wert bestimmt die Ladegeschwindigkeit zu Hause oder an einer öffentlichen AC-Ladestation. Beim DC-Schnellladen sind bis zu {dcPower} möglich, genug, um in einer kurzen Pause ausreichend Reichweite für den Alltag zu laden. Bei einem Verbrauch von {efficiency} kostet 100 km zum Schweizer Haushaltsdurchschnittstarif (0,32 CHF/kWh) etwa {costPer100km} CHF."
+  },
+  "homeCharging": {
+    "port": "Anschlusstyp",
+    "power": "Leistung",
+    "time": "Zeit",
+    "speed": "Geschwindigkeit",
+    "location": "Ort",
+    "summary": "Zusammenfassung",
+    "table": {
+      "chargingPoint": {
+        "name": "Ladepunkt",
+        "values": {
+          "wall-plug": "Haushaltssteckdose",
+          "1-phase-16a": "Einphasig 16A",
+          "1-phase-32a": "Einphasig 32A",
+          "3-phase-16a": "Dreiphasig 16A",
+          "3-phase-32a": "Dreiphasig 32A",
+          "standard-6-6-kw-on-board-charger": "Standard-Onboard-Lader 6.6 kW",
+          "standard-7-2-kw-on-board-charger": "Standard-Onboard-Lader 7.2 kW",
+          "standard-7-4-kw-on-board-charger": "Standard-Onboard-Lader 7.4 kW",
+          "standard-11-0-kw-on-board-charger": "Standard-Onboard-Lader 11 kW",
+          "optional-11-0kw-on-board-charger": "Optionaler Onboard-Lader 11 kW",
+          "optional-22-0kw-on-board-charger": "Optionaler Onboard-Lader 22 kW"
+        }
+      },
+      "maxPower": "Max. Leistung",
+      "power": "Leistung",
+      "time": "Zeit",
+      "speed": "Geschwindigkeit"
+    }
+  },
+  "fastCharging": {
+    "port": "Anschlusstyp",
+    "maxPower": "Max. Leistung",
+    "avgPower": "Durchschn. Leistung",
+    "time": "Zeit",
+    "speed": "Geschwindigkeit",
+    "preconditioning": "Batterievorkonditionierung",
+    "preconditioningShort": "Vorkond.",
+    "preconditioningTooltip": "Bereitet die Batterie automatisch auf eine optimale Temperatur vor einem Schnellladevorgang vor, um die Ladezeit zu verkürzen und die Batterielebensdauer zu schonen.",
+    "preconditioningAutoUsingNav": "Auto. mit Navigation"
+  },
+  "smartCharging": {
+    "plugCharge": "Plug & Charge",
+    "plugChargeTooltip": "Ermöglicht den automatischen Start eines Ladevorgangs an kompatiblen CCS-Ladestationen gemäss ISO 15118.",
+    "autocharge": "Autocharge",
+    "autochargeTooltip": "Ermöglicht den automatischen Start eines Ladevorgangs an unterstützten CCS-Ladestationen.",
+    "v2l": "Vehicle-to-Load (V2L)",
+    "v2lShort": "V2L (Load)",
+    "v2lTooltip": "Ermöglicht die Nutzung der Fahrzeugbatterie zur Stromversorgung externer Geräte über eine integrierte Haushaltssteckdose.",
+    "v2h": "Vehicle-to-Home (V2H)",
+    "v2hShort": "V2H (Home)",
+    "v2hTooltip": "Ermöglicht die Stromversorgung Ihres Zuhauses mit der in der Fahrzeugbatterie gespeicherten Energie – nützlich bei Stromausfällen oder zur Reduzierung des Netzverbrauchs.",
+    "v2g": "Vehicle-to-Grid (V2G)",
+    "v2gShort": "V2G (Grid)",
+    "v2gTooltip": "Ermöglicht die Rückspeisung von Batterieenergie ins Stromnetz, trägt zur Netzstabilisierung bei und kann Einnahmen generieren."
+  },
+  "realRange": {
+    "cold": "Kaltes Wetter",
+    "coldDesc": "Das «Worst-Case-Szenario» basierend auf einer Temperatur von -10 °C und Heizungsbetrieb.",
+    "mild": "Mildes Wetter",
+    "mildDesc": "Das «Best-Case-Szenario» basierend auf einer Temperatur von 23 °C ohne Klimaanlagenbetrieb.",
+    "city": "Stadtfahrt",
+    "highway": "Autobahnfahrt",
+    "highwayTooltip": "Es wird eine konstante Geschwindigkeit von 110 km/h angenommen",
+    "combined": "Kombiniert"
+  },
+  "techSpecs": {
+    "battery": "Batterie",
+    "performance": "Leistung",
+    "dimensions": "Abmessungen",
+    "nominalCapacity": "Nennkapazität",
+    "nominalCapacityTooltip": "Gesamtkapazität der Batterie gemäss Herstellerangabe, einschliesslich der nicht zugänglichen Reserve zum Schutz der Batterielebensdauer.",
+    "useableCapacity": "Nutzbare Kapazität",
+    "useableCapacityTooltip": "Tatsächlich für die Fahrt verfügbare Kapazität. Die Differenz zur Nennkapazität entspricht dem Pufferspeicher, der die Batterie vor extremen Lade- und Entladevorgängen schützt.",
+    "architecture": "Architektur",
+    "type": "Typ",
+    "warranty": "Garantie",
+    "warrantyTooltip": "",
+    "acceleration": "Beschleunigung (0–100 km/h)",
+    "topSpeed": "Höchstgeschwindigkeit",
+    "powerPs": "Leistung",
+    "driveType": "Antrieb",
+    "torque": "Drehmoment",
+    "lxwxh": "L x B x H",
+    "seats": "Sitze",
+    "weight": "Gewicht",
+    "wheelbase": "Radstand",
+    "cargo": "Kofferraum",
+    "towHitch": "Anhängerkupplung",
+    "towHitchTooltip": "Mit Bremssystem"
+  },
+  "advice": {
+    "title": "Welcher Anschluss zum Laden Ihres {brand} {model}?",
+    "intro": "Die Wahl des Ladeanschlusses hängt von Ihrer täglichen Nutzung und Ihrer Elektroinstallation ab. Das On-Board-Ladegerät Ihres {model} akzeptiert maximal {acMax} kW Wechselstrom: Eine leistungsstärkere Wallbox lädt nicht schneller als dieses Limit. Hier unsere Empfehlungen nach Anschlusstyp.",
+    "recommendedLabel": "Empfohlen",
+    "wall-plug": {
+      "description": "Nur als Notlösung. {time} für eine Vollladung. Überhitzungsgefahr bei Dauerbetrieb. Nicht als Dauerlösung empfohlen."
+    },
+    "1-phase-10a": {
+      "description": "Nur als Notlösung. {time} für eine Vollladung. Überhitzungsgefahr bei Dauerbetrieb. Nicht als Dauerlösung empfohlen."
+    },
+    "1-phase-16a": {
+      "description": "Günstige Lösung (~CHF 200-400 Installation). {time} Ladezeit. Ausreichend, wenn Sie weniger als 50 km/Tag fahren.",
+      "descriptionNotExploited": "Günstige Lösung (~CHF 200-400). {time} Ladezeit. Leistung begrenzt durch das On-Board-Ladegerät Ihres Fahrzeugs auf {acMax} kW."
+    },
+    "1-phase-32a": {
+      "description": "Gutes Preis-Leistungs-Verhältnis. {time} Ladezeit. Installation durch ESTI-zertifizierten Elektriker (~CHF 1'500-2'500).",
+      "descriptionNotExploited": "Das On-Board-Ladegerät Ihres {model} ist auf {acMax} kW begrenzt: Diese Wallbox lädt nicht schneller als eine {acMax}-kW-Wallbox."
+    },
+    "3-phase-16a": {
+      "description": "Empfohlen. {time} Ladezeit. Erfordert Dreiphasenanschluss (in der Schweiz Standard). Installation ~CHF 2'000-3'500.",
+      "descriptionNotExploited": "Das On-Board-Ladegerät Ihres {model} ist auf {acMax} kW begrenzt: Diese Wallbox lädt nicht schneller als eine {acMax}-kW-Wallbox."
+    },
+    "3-phase-32a": {
+      "description": "Volle Ausnutzung. {time} Ladezeit. Für Gewerbetreibende oder intensive Nutzung. Installation ~CHF 2'500-4'000.",
+      "descriptionNotExploited": "Wird von Ihrem {model} nicht ausgenutzt (On-Board-Ladegerät begrenzt auf {acMax} kW). Eine 11-kW-Wallbox bietet die gleiche Leistung für weniger Geld."
+    }
+  },
+  "cost": {
+    "title": "Ladekosten für den {brand} {model}",
+    "subtitle": "Was kostet das Laden zu Hause, an öffentlichen Stationen oder im Vergleich zum Verbrenner? Simulieren Sie Ihre monatlichen Kosten, indem Sie die Parameter unten anpassen.",
+    "inputsLabel": "Ihre Simulationsparameter",
+    "fullCharge": "Nutzladung (10→80%)",
+    "daily": "Tägliches Laden (~{dailyKm} km)",
+    "monthly": "Monatskosten (~{monthlyKm} km/Monat)",
+    "homeChargingTitle": "Laden zu Hause",
+    "homeChargingIntro": "Die folgende Tabelle schätzt die Ladekosten zu Hause in drei Szenarien: eine Nutzladung (10→80 %), eine tägliche Ladung basierend auf Ihrer täglichen Fahrleistung und die monatlichen Gesamtkosten. Die Werte werden in Echtzeit anhand Ihres Stromtarifs berechnet – und bei einer Photovoltaikanlage unter Berücksichtigung Ihres Eigenverbrauchsanteils.",
+    "colScenario": "Szenario",
+    "colKwh": "kWh",
+    "colKwhSolar": "☀ Solarproduktion",
+    "colKwhNetwork": "Netzverbrauch",
+    "colCost": "Kosten",
+    "tariffLabel": "Ihr Tarif",
+    "tariffUnit": "CHF/kWh",
+    "dailyKmLabel": "Tägliche Strecke",
+    "dailyKmUnit": "km",
+    "fuelPriceLabel": "Benzinpreis",
+    "fuelPriceUnit": "CHF/L",
+    "fuelConsumptionLabel": "Verbr.",
+    "fuelConsumptionUnit": "L/100km",
+    "savingsTitle": "Kosten nach Technologie",
+    "savingsInputsLabel": "Parameter des Verbrenners",
+    "savingsCardLabel": "Kosten nach Technologie",
+    "savingsPerMonth": "Monat",
+    "savingsPerYear": "Jahr",
+    "vsPetrol": "Verbrenner",
+    "vsEv": "Elektrofahrzeug",
+    "networkTitle": "Kosten nach Ladeort",
+    "networkHome": "Laden zu Hause",
+    "networkHomeDesc": "Wallbox / Ladestation",
+    "networkPublicAc": "Öffentlich laden AC",
+    "networkPublicAcDesc": "Supermarkt, Parkhaus (~0.45 CHF/kWh)",
+    "networkPublicDc": "Öffentlich laden DC (Schnell)",
+    "networkPublicDcDesc": "Autobahn, GoFast, Ionity (~0.65 CHF/kWh)",
+    "networkSavingsVsPublic": "Zuhause vs. öffentliches Netz",
+    "networkIntro": "Der Ladeort beeinflusst Ihr Budget direkt. Das Laden zu Hause mit Ihrer eigenen Wallbox ist bis zu 2- bis 3-mal günstiger als an öffentlichen Ladestationen in der Schweiz. Hier der Vergleich für Ihre Kilometerleistung.",
+    "savingsIntro": "Elektrisch fahren ist deutlich günstiger als ein vergleichbares Verbrennerfahrzeug. Der Unterschied wird noch grösser, wenn Sie hauptsächlich zu Hause zum Haushaltstarif laden.",
+    "savingsLabel": "Einsparungen von",
+    "lossLabel": "Verlust von",
+    "solarLabel": "Photovoltaikanlage",
+    "solarUnit": "%"
+  },
+  "tooltips": {
+    "battery": "Gesamtkapazität der Hochvoltbatterie des Fahrzeugs. Bestimmt die maximale Reichweite und die Kosten pro Ladung.",
+    "range": "Reichweite nach WLTP-Zyklus (Worldwide Harmonized Light Vehicles Test Procedure). Die tatsächliche Reichweite variiert je nach Temperatur, Fahrstil und Gelände.",
+    "dcCharge": "Maximale Gleichstrom-Ladeleistung (DC) an einer Schnellladestation. Je höher der Wert, desto schneller die Schnellladung.",
+    "acPower": "Maximale Ladeleistung des On-Board-Ladegeräts für Wechselstrom (AC). Bestimmt die Ladegeschwindigkeit zu Hause oder an öffentlichen AC-Ladestationen.",
+    "efficiency": "Energieverbrauch in Wh pro km. Je niedriger der Wert, desto sparsamer ist das Fahrzeug.",
+    "pricePerRange": "Geschätzte Stromkosten pro Kilometer Reichweite, basierend auf dem schweizerischen Durchschnittstarif.",
+    "dcPort": "Steckertyp für DC-Schnellladung. CCS (Combined Charging System) ist der europäische Standard.",
+    "dcMaxPower": "Maximale Spitzenladeleistung an einer DC-Schnellladestation. Die tatsächliche Leistung sinkt mit zunehmendem Ladestand.",
+    "dcAvgPower": "Durchschnittliche Ladeleistung zwischen 10% und 80%. Ein realistischerer Indikator als die Spitzenleistung für die Schätzung der Schnellladezeit.",
+    "dcTime": "Benötigte Zeit, um von 10% auf 80% an einer DC-Schnellladestation zu laden. Über 80% hinaus verlangsamt sich die Ladegeschwindigkeit deutlich.",
+    "dcSpeed": "Kilometer Reichweite pro Minute DC-Schnellladung.",
+    "preconditioning": "Das Fahrzeug wärmt oder kühlt die Batterie vor der Ankunft an einer Schnellladestation vor, um die Ladegeschwindigkeit zu optimieren.",
+    "plugCharge": "Plug & Charge ermöglicht das Starten des Ladevorgangs durch einfaches Einstecken des Kabels, ohne Ladekarte oder App. Die Authentifizierung erfolgt automatisch.",
+    "autocharge": "Die Ladestation erkennt das Fahrzeug automatisch (über MAC-Adresse) und startet den Ladevorgang ohne Eingriff.",
+    "v2l": "Vehicle-to-Load: Das Fahrzeug kann externe elektrische Geräte (bis zur angegebenen Leistung) über eine integrierte Steckdose versorgen.",
+    "v2h": "Vehicle-to-Home: Das Fahrzeug kann Ihr Zuhause bei Stromausfall versorgen oder den Eigenverbrauch Ihrer Solaranlage optimieren.",
+    "v2g": "Vehicle-to-Grid: Das Fahrzeug kann Energie ins Stromnetz zurückspeisen, um zu Spitzenzeiten Strom zu verkaufen.",
+    "nominalCapacity": "Physische Gesamtkapazität der Batterie. Ein Teil wird vom Hersteller als Sicherheitspuffer reserviert.",
+    "useableCapacity": "Tatsächlich für das Fahren verfügbare Kapazität nach Abzug des Sicherheitspuffers. Dieser Wert bestimmt die Reichweite.",
+    "batteryType": "Zellchemie der Batterie. Gängige Typen sind NMC (Nickel-Mangan-Kobalt) und LFP (Lithium-Eisenphosphat).",
+    "batteryArchitecture": "Nennspannung des Batteriepacks. Eine höhere Spannung (800V) ermöglicht eine leistungsstärkere Schnellladung.",
+    "acceleration": "Zeit von 0 auf 100 km/h. Elektrofahrzeuge haben ein sofortiges Drehmoment und bieten oft bessere Beschleunigungswerte als Verbrenner.",
+    "torque": "Drehkraft des Motors. Bei Elektrofahrzeugen steht das maximale Drehmoment ab 0 km/h zur Verfügung.",
+    "driveType": "Antriebskonfiguration: Frontantrieb, Heckantrieb oder Allradantrieb (AWD).",
+    "wheelbase": "Abstand zwischen Vorder- und Hinterachse. Ein längerer Radstand bietet in der Regel mehr Innenraum und Stabilität.",
+    "towingWeight": "Maximale Anhängelast mit gebremsten Anhänger. Prüfen Sie die Kompatibilität mit Ihrer Anhängerkupplung."
+  },
+  "faq": {
+    "title": "Häufige Fragen zum {name}",
+    "intro": "Häufige Fragen zur Ladung des {name} in der Schweiz, basierend auf den technischen Daten des Fahrzeugs.",
+    "chargeTime": {
+      "question": "Wie lange dauert das Laden des {name} zu Hause?",
+      "answer": "{chargeTime11kw} mit einer 11-kW-Dreiphasen-Wallbox, {chargeTime2_3kw} mit einer Haushaltssteckdose (2,3 kW). Das On-Board-Ladegerät des {model} akzeptiert maximal {acMax} kW Wechselstrom."
+    },
+    "whichCharger": {
+      "question": "Welche Wallbox für den {name}?",
+      "answer": "Eine 11-kW-Dreiphasen-Wallbox wird für den {model} empfohlen. Das On-Board-Ladegerät akzeptiert bis zu {acMax} kW AC. {notExploitedNote}"
+    },
+    "costPerCharge": {
+      "question": "Was kostet eine Vollladung des {name} in der Schweiz?",
+      "answer": "Etwa CHF {fullChargeCost} zu Hause beim schweizerischen Durchschnittstarif von CHF {tariff}/kWh. Für eine tägliche Nutzung von 50 km rechnen Sie mit etwa CHF {dailyCost} pro Tag."
+    },
+    "installation": {
+      "question": "Brauche ich eine spezielle Installation zum Laden des {name}?",
+      "answer": "Eine Wallbox erfordert die Installation durch einen ESTI-zertifizierten Elektriker. In der Schweiz verfügen die meisten Wohngebäude bereits über einen Dreiphasenanschluss, was die Installation einer 11-kW-Wallbox erleichtert."
+    },
+    "fastCharging": {
+      "question": "Ist der {name} mit Schnellladung kompatibel?",
+      "answer": "Ja, über {dcPort}-Anschluss mit bis zu {dcMaxPower} maximaler Ladeleistung. Ladezeit von 10% auf 80%: {dcTime}.",
+      "answerAlt": "Dieses Fahrzeug verfügt nicht über DC-Schnellladung."
+    },
+    "realRange": {
+      "question": "Welche reale Reichweite hat der {name} in der Schweiz?",
+      "answer": "{rangeMax} km unter optimalen Bedingungen (mildes Wetter, Stadt). Im Winter: {coldCombined} km. Auf der Autobahn: {mildHighway} km.",
+      "answerAlt": "Die angegebene WLTP-Reichweite beträgt {range}. Reale Bedingungen (Temperatur, Fahrweise, Gelände) können diesen Wert beeinflussen."
+    }
+  },
+  "related": {
+    "sectionTitle": "Entdecken Sie mehr zum {brand} {model}",
+    "sameBrand": "Weitere {brand}-Modelle",
+    "similar": "Ähnliche Fahrzeuge",
+    "featuredPosts": "Unsere Ladeleitfäden"
+  },
+  "card": {
+    "title": "Laden zuhause",
+    "chargePort": "Anschlusstyp",
+    "chargeTime": "Zeit",
+    "chargePower": "Leistung",
+    "chargeSpeed": "Durchschn. Ladegeschwindigkeit",
+    "portLocation": "Anschlussposition"
+  }
+}
