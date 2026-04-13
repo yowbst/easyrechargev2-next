@@ -873,10 +873,10 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     // SEO content generation
     const seoLocale = lang as "fr" | "de";
     const tariffCHF = layoutData?.global_config?.electricity_tariff_chf ?? 0.32;
-    const seoIntro = generateVehicleIntro(vehicle, homeChargingDetails, seoLocale, directusVehicle);
-    const seoAdvice = generateChargingAdvice(directusVehicle, vehicle, homeChargingDetails, seoLocale);
-    const seoCost = generateCostEstimate(vehicle, tariffCHF, seoLocale);
-    const seoFaq = generateVehicleFAQ(vehicle, directusVehicle, homeChargingDetails, seoCost, seoLocale);
+    const seoIntro = generateVehicleIntro(vehicle, homeChargingDetails, dictionary, directusVehicle);
+    const seoAdvice = generateChargingAdvice(directusVehicle, vehicle, homeChargingDetails, dictionary, seoLocale);
+    const seoCost = generateCostEstimate(vehicle, tariffCHF, dictionary);
+    const seoFaq = generateVehicleFAQ(vehicle, directusVehicle, homeChargingDetails, seoCost, dictionary, seoLocale);
     const seoTechSpecs = generateTechSpecsIntro(vehicle, directusVehicle, seoLocale);
     const seoRealRange = generateRealRangeIntro(vehicle, directusVehicle, seoLocale);
     const seoChargingFeatures = generateChargingFeaturesIntro(vehicle, directusVehicle, seoLocale);
