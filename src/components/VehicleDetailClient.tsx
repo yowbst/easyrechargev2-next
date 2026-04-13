@@ -70,7 +70,7 @@ export function VehicleDetailClient({
           <Tabs defaultValue="mild">
             <div className="mb-8">
               <h2 className="text-xl sm:text-2xl font-heading font-bold">
-                {d("pages.vehicle.sections.realRangeOf", { brand, model })}
+                {d("pages.vehicle.sections.realRangeOf", { brand: brand || "", model: model || "" })}
               </h2>
               {intro && (
                 <p className="text-base text-muted-foreground leading-relaxed mt-2">{intro}</p>
