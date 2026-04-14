@@ -37,7 +37,14 @@ import {
   wrapInGraph,
   buildBlogPosting,
   buildBreadcrumbList,
+  buildFAQPage,
 } from "@/lib/seo/jsonLd";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { resolveRouteLinks } from "@/lib/pageConfig";
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
 import { GetQuote } from "@/components/GetQuote";
@@ -386,6 +393,10 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const articleBody = pt.body || "";
     const expertAdvice = pt.expert_advice || "";
     const takeaways = pt.takeaways || "";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const faqItems: Array<{ question: string; answer: string }> = Array.isArray(pt.faq_json) ? pt.faq_json : [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const customSchema: Record<string, unknown> | null = pt.schema_json && typeof pt.schema_json === "object" ? pt.schema_json as Record<string, unknown> : null;
     const categoryName = ct?.name || df("pages.blog-post.defaultCategory", "Guide");
     const readingTime = parseReadingTime(post.reading_time);
 
@@ -438,13 +449,16 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
         url: `${SITE_URL}${currentPath}`,
         langCode,
       }),
+      faqItems.length > 0 ? buildFAQPage(faqItems) : null,
+      customSchema,
     );
 
-    // Strip Directus WYSIWYG editor classes/attributes, then resolve internal links
+    // Strip Directus WYSIWYG editor classes/attributes and trailing <hr>, then resolve internal links
     const cleanBody = articleBody
       .replace(/\s?class="css-[^"]*"/g, "")
       .replace(/\s?data-slate-[a-z-]*="[^"]*"/g, "")
-      .replace(/\s?data-slate-[a-z-]*/g, "");
+      .replace(/\s?data-slate-[a-z-]*/g, "")
+      .replace(/(<hr\s*\/?>[\s\n]*)+$/i, "");
     const safeBody = resolveRouteLinks(cleanBody, lang, registry);
 
     return (
@@ -592,6 +606,29 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
                         })}
                       </div>
                     )}
+
+                    {/* FAQ */}
+                    {faqItems.length > 0 && (
+                      <div className="mt-10">
+                        <h2 className="text-xl sm:text-2xl font-heading font-bold mb-4">
+                          {df("pages.blog-post.faq.title", lang === "de" ? "Häufige Fragen" : "Questions fréquentes")}
+                        </h2>
+                        <Accordion className="w-full">
+                          {faqItems.map((item, index) => (
+                            <AccordionItem key={index} value={`faq-${index}`}>
+                              <AccordionTrigger className="text-left hover:no-underline w-full justify-between gap-4">
+                                {item.question}
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                  {item.answer}
+                                </p>
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </div>
+                    )}
                   </article>
 
                   {/* Sidebar */}
@@ -619,7 +656,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
                                 {df("pages.blog-post.expertAdvice.title", lang === "de" ? "Expertenrat" : "Conseil d'expert")}
                               </span>
                             </div>
-                            <blockquote className="text-sm leading-relaxed text-foreground/80 italic border-l-2 border-primary/30 pl-3">
+                            <blockquote className="text-sm leading-loose text-foreground/80 border-l-2 border-primary/30 pl-3">
                               <div
                                 dangerouslySetInnerHTML={{ __html: expertAdvice }}
                               />
@@ -644,7 +681,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
                               </span>
                             </div>
                             <div
-                              className="prose prose-sm dark:prose-invert max-w-none prose-p:text-sm prose-p:leading-relaxed prose-li:text-sm prose-li:leading-relaxed prose-ul:my-2 prose-ol:my-2 prose-p:text-foreground/80 prose-li:text-foreground/80"
+                              className="prose prose-sm dark:prose-invert max-w-none prose-p:text-sm prose-p:leading-loose prose-li:text-sm prose-li:leading-loose prose-ul:my-3 prose-ol:my-3 prose-li:my-1.5 prose-p:text-foreground/80 prose-li:text-foreground/80"
                               data-testid="article-takeaways-content"
                             >
                               <div
