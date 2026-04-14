@@ -440,8 +440,12 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
       }),
     );
 
-    // Resolve internal route links in body HTML
-    const safeBody = resolveRouteLinks(articleBody, lang, registry);
+    // Strip Directus WYSIWYG editor classes/attributes, then resolve internal links
+    const cleanBody = articleBody
+      .replace(/\s?class="css-[^"]*"/g, "")
+      .replace(/\s?data-slate-[a-z-]*="[^"]*"/g, "")
+      .replace(/\s?data-slate-[a-z-]*/g, "");
+    const safeBody = resolveRouteLinks(cleanBody, lang, registry);
 
     return (
       <>
@@ -544,7 +548,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
                     {/* Article body */}
                     <div
                       className={[
-                        "prose dark:prose-invert max-w-prose",
+                        "prose dark:prose-invert max-w-none",
                         "prose-p:leading-[1.8] prose-p:text-base prose-p:text-foreground/85",
                         "prose-headings:font-heading prose-headings:tracking-tight prose-headings:text-foreground",
                         "prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4",
