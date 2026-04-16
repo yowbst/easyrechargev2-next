@@ -433,6 +433,14 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const absoluteImage = imageUrl.startsWith("http") ? imageUrl : `${SITE_URL}${imageUrl}`;
     const langCode = lang === "de" ? "de-CH" : lang === "en" ? "en" : "fr-CH";
 
+    // Check if customSchema already contains a FAQPage to avoid duplicates
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const customSchemaHasFaq = customSchema && (
+      (customSchema as any)["@type"] === "FAQPage" ||
+      Array.isArray((customSchema as any)["@graph"]) &&
+        (customSchema as any)["@graph"].some((s: any) => s?.["@type"] === "FAQPage")
+    );
+
     const jsonLd = wrapInGraph(
       buildBreadcrumbList([
         { name: "Blog", url: `${SITE_URL}/${lang}/${slug}` },
@@ -449,7 +457,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
         url: `${SITE_URL}${currentPath}`,
         langCode,
       }),
-      faqItems.length > 0 ? buildFAQPage(faqItems) : null,
+      !customSchemaHasFaq && faqItems.length > 0 ? buildFAQPage(faqItems) : null,
       customSchema,
     );
 
