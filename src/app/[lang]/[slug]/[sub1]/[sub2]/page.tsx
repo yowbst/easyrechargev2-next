@@ -906,6 +906,21 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
     const pageDict = localitiesPage ? extractPageDictionary("locality-subsidies", localitiesPage, locale) : {};
     const dictionary = { ...layoutDict, ...pageDict };
+
+    // Pre-interpolate SLA vars
+    const gc = layoutData?.global_config || {};
+    const slas = gc?.slas || {};
+    const slaVars: Record<string, string> = {
+      quote_request_duration: String(slas?.quote_request_duration?.value ?? 3),
+      first_contact: String(slas?.first_contact?.value ?? 48),
+    };
+    for (const key of Object.keys(dictionary)) {
+      for (const [varName, varVal] of Object.entries(slaVars)) {
+        if (dictionary[key].includes(`{${varName}}`)) {
+          dictionary[key] = dictionary[key].replace(new RegExp(`\\{${varName}\\}`, "g"), varVal);
+        }
+      }
+    }
     const d = (key: string, vars?: Record<string, string | number>) => {
       const val = t(dictionary, key, vars);
       return val === key ? `[${key}]` : val;
@@ -992,6 +1007,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
           subsidies={subsidies}
           cantonArticle={cantonArticle}
           dictionary={dictionary}
+          pageRegistry={registry}
           lang={lang}
           quoteHref={quoteHref}
         />

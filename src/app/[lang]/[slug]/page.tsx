@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands } from "@/lib/directus-queries";
+import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands, fetchAllLocalitySlugs } from "@/lib/directus-queries";
+import Link from "next/link";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -327,6 +328,85 @@ export default async function SlugPage({ params }: SlugPageProps) {
         heroImage={heroImage}
         getQuoteBlock={getQuoteData}
       />
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Localities hub
+  // ---------------------------------------------------------------------------
+  if (entry.id === "localities") {
+    const allLocalities = await fetchAllLocalitySlugs();
+    const subsidiesSegment = getRouteSlug(lang, "subsidies");
+
+    // Group by canton
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const byCanton: Record<string, Array<{ slug: string; name: string; postalCode: string }>> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const loc of allLocalities as any[]) {
+      const canton = loc.canton_2l || "??";
+      if (!byCanton[canton]) byCanton[canton] = [];
+      byCanton[canton].push({ slug: loc.slug, name: loc.name, postalCode: loc.postal_code });
+    }
+    // Sort cantons alphabetically, localities by postal code within each
+    const sortedCantons = Object.keys(byCanton).sort();
+    for (const c of sortedCantons) {
+      byCanton[c].sort((a, b) => a.postalCode.localeCompare(b.postalCode));
+    }
+
+    const totalCount = allLocalities.length;
+
+    return (
+      <div className="flex-1">
+        <section className="py-10 sm:py-14">
+          <div className="container mx-auto px-4">
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold mb-2">
+              {t(dictionary, `pages.localities.h1`, { count: totalCount })}
+            </h1>
+            <p className="text-base text-muted-foreground leading-relaxed mb-10">
+              {t(dictionary, `pages.localities.intro`, { count: totalCount })}
+            </p>
+
+            {/* Canton quick nav */}
+            <div className="flex flex-wrap gap-2 mb-10">
+              {sortedCantons.map((canton) => (
+                <a
+                  key={canton}
+                  href={`#canton-${canton}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium hover:bg-muted/50 transition-colors"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/canton-coats/${canton}.svg`} alt="" className="h-4 w-4" />
+                  {canton} <span className="text-muted-foreground text-xs">({byCanton[canton].length})</span>
+                </a>
+              ))}
+            </div>
+
+            {/* Localities by canton */}
+            <div className="space-y-10">
+              {sortedCantons.map((canton) => (
+                <section key={canton} id={`canton-${canton}`} className="scroll-mt-20">
+                  <h2 className="text-lg font-heading font-semibold mb-4 sticky top-16 bg-background/95 backdrop-blur py-2 -mx-1 px-1 z-10 flex items-center gap-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/canton-coats/${canton}.svg`} alt="" className="h-5 w-5" />
+                    {canton} <span className="text-muted-foreground text-sm font-normal">({byCanton[canton].length})</span>
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-1.5">
+                    {byCanton[canton].map((loc) => (
+                      <Link
+                        key={loc.slug}
+                        href={`/${lang}/${slug}/${loc.slug}/${subsidiesSegment}`}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors py-0.5"
+                      >
+                        {loc.postalCode} {loc.name}
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
     );
   }
 

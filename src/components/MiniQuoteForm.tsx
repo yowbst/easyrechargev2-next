@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Building2, Key, MapPin } from "lucide-react";
+import { Home, Building2, Key, MapPin, CheckCircle } from "lucide-react";
 
 const HOUSING_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Home, Building2, Key,
@@ -84,6 +84,18 @@ export function MiniQuoteForm({
   const [selectedLocality, setSelectedLocality] = useState<LocalityResponse | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [hasChargingSubsidy, setHasChargingSubsidy] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!selectedLocality?.id) {
+      setHasChargingSubsidy(null);
+      return;
+    }
+    fetch(`/api/cms/localities/${selectedLocality.id}/subsidies`)
+      .then((r) => r.json())
+      .then((d) => setHasChargingSubsidy(d.hasChargingSubsidy ?? false))
+      .catch(() => setHasChargingSubsidy(null));
+  }, [selectedLocality?.id]);
 
   const currentStep = !housingStatus || isEditingHousingStatus ? 1 : !selectedLocality || isEditingLocation ? 2 : 3;
 
@@ -223,31 +235,39 @@ export function MiniQuoteForm({
       {housingStatus && !isEditingHousingStatus && (
         <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
           {selectedLocality && !isEditingLocation ? (
-            <div
-              className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur"
-              data-testid="card-selected-location"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-white/20">
-                  <MapPin className="h-5 w-5 text-white" />
-                </div>
-                <span className="font-medium text-sm text-white">
-                  {selectedLocality.postalCode} {selectedLocality.locality}
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  setIsEditingLocation(true);
-                  setSearchValue(`${selectedLocality.postalCode} ${selectedLocality.locality}`);
-                  setSelectedLocality(null);
-                }}
-                data-testid="button-change-location"
-                className="text-white text-sm font-medium hover:underline transition-all"
-                type="button"
+            <>
+              <div
+                className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur"
+                data-testid="card-selected-location"
               >
-                {modifyLabel}
-              </button>
-            </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-white/20">
+                    <MapPin className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="font-medium text-sm text-white">
+                    {selectedLocality.postalCode} {selectedLocality.locality}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsEditingLocation(true);
+                    setSearchValue(`${selectedLocality.postalCode} ${selectedLocality.locality}`);
+                    setSelectedLocality(null);
+                  }}
+                  data-testid="button-change-location"
+                  className="text-white text-sm font-medium hover:underline transition-all"
+                  type="button"
+                >
+                  {modifyLabel}
+                </button>
+              </div>
+              {hasChargingSubsidy === true && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/20 text-green-200 text-xs font-medium animate-in fade-in duration-300">
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t(dictionary, `${bp}.subsidyAvailable`, { locality: `${selectedLocality.postalCode} ${selectedLocality.locality}` })}</span>
+                </div>
+              )}
+            </>
           ) : (
             <LocalityAutocomplete
               value={searchValue}

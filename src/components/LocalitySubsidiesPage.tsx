@@ -7,6 +7,8 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { PageRegistryEntry } from "@/lib/directus-queries";
+import { LazyMiniQuoteCard as MiniQuoteCard } from "@/components/LazyMiniQuoteCard";
 import {
   Accordion,
   AccordionContent,
@@ -68,6 +70,7 @@ interface LocalitySubsidiesPageProps {
   subsidies: Subsidy[];
   cantonArticle: { title: string; href: string } | null;
   dictionary: Record<string, string>;
+  pageRegistry: PageRegistryEntry[];
   lang: string;
   quoteHref: string;
 }
@@ -105,9 +108,11 @@ export function LocalitySubsidiesPage({
   subsidies,
   cantonArticle,
   dictionary,
+  pageRegistry,
   lang,
   quoteHref,
 }: LocalitySubsidiesPageProps) {
+  const cityDisplay = `${locality.postalCode} ${locality.name}`;
   const P = "pages.locality-subsidies.";
   const d = (key: string, vars?: Record<string, string | number>) => {
     const val = t(dictionary, P + key, vars);
@@ -125,7 +130,7 @@ export function LocalitySubsidiesPage({
   );
 
   const hasSubsidies = subsidies.length > 0;
-  const personalCount = chargingInfra.length + otherIncentives.length;
+  const chargingCount = chargingInfra.length;
 
   // Top highlight for intro
   const topAmount = getTopChfAmount(chargingInfra);
@@ -136,18 +141,23 @@ export function LocalitySubsidiesPage({
       : "";
 
   // FAQ data
-  const topSummary = chargingInfra[0]
-    ? `${chargingInfra[0].name} (${chargingInfra[0].contributor.name})${topAmount ? ` avec jusqu'à CHF ${topAmount.toLocaleString("fr-CH")}` : ""}.`
+  const topProgram = chargingInfra[0];
+  const topSummary = topProgram
+    ? d("faq.a1TopSummary", {
+        program: topProgram.name,
+        contributor: topProgram.contributor.name,
+        amount: topAmount ? `CHF ${topAmount.toLocaleString("fr-CH")}` : "",
+      })
     : "";
 
   const faqItems = [
     {
-      question: d("faq.q1", { ville: locality.name }),
-      answer: d("faq.a1", { count: personalCount, topSummary }),
+      question: d("faq.q1", { city: cityDisplay }),
+      answer: d("faq.a1", { count: chargingCount, topSummary }),
     },
     { question: d("faq.q2"), answer: d("faq.a2") },
     {
-      question: d("faq.q3", { ville: locality.name }),
+      question: d("faq.q3", { city: cityDisplay }),
       answer: d("faq.a3"),
     },
   ];
@@ -159,13 +169,13 @@ export function LocalitySubsidiesPage({
         <div className="container mx-auto px-4 py-3">
           <ol className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
             <li>
-              <Link href={`/${lang}`} className="hover:text-foreground transition-colors">
+              <Link href={`/${lang}/${pageRegistry.find((p) => p.id === "localities")?.slugs[lang] || "localites"}`} className="hover:text-foreground transition-colors">
                 {d("breadcrumb.localities")}
               </Link>
             </li>
             <li><ChevronRight className="h-3.5 w-3.5 shrink-0" /></li>
             <li className="text-foreground font-medium truncate max-w-[200px]">
-              {locality.name}
+              {cityDisplay}
             </li>
             <li><ChevronRight className="h-3.5 w-3.5 shrink-0" /></li>
             <li className="text-foreground font-medium">
@@ -175,168 +185,178 @@ export function LocalitySubsidiesPage({
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="py-10 sm:py-14">
-        <div className="container mx-auto px-4">
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold mb-4">
-            {d("h1", { ville: locality.name })}
-          </h1>
-          <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
-            {hasSubsidies
-              ? d("intro", {
-                  ville: locality.name,
-                  canton: locality.cantonName,
-                  count: personalCount,
-                  topHighlight,
-                })
-              : d("introNoSubsidy", { ville: locality.name })}
-          </p>
-          {!hasSubsidies && (
-            <Link
-              href={quoteHref}
-              className="inline-flex items-center gap-2 mt-6 rounded-lg bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              {d("cta.label")}
-            </Link>
-          )}
-        </div>
-      </section>
+      {/* Page-level 2-column layout: content + sticky sidebar */}
+      <div className="container mx-auto px-4 py-10 sm:py-14">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
+          {/* Sticky sidebar — must be first for row-span-full to work */}
+          <aside className="lg:sticky lg:top-24 self-start lg:col-start-2 lg:row-start-1 lg:row-span-full">
+            <MiniQuoteCard
+              pageId="locality-subsidies"
+              dictionary={dictionary}
+              pageRegistry={pageRegistry}
+              lang={lang}
+              interpolationValues={{ localityDisplay: cityDisplay, city: locality.name, postalCode: locality.postalCode }}
+              defaultLocality={{
+                id: "",
+                postalCode: locality.postalCode,
+                locality: locality.name,
+                canton: locality.cantonName,
+              }}
+            />
+          </aside>
 
-      {/* Charging infrastructure */}
-      {chargingInfra.length > 0 && (
-        <section className="py-10 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
-              {d("sections.chargingInfrastructure")}
-            </h2>
-            <div className="grid gap-4">
-              {chargingInfra.map((s) => (
-                <SubsidyCard key={s.source_id} subsidy={s} d={d} />
-              ))}
+          {/* Main content column */}
+          <div className="lg:col-start-1 lg:row-start-1 space-y-10">
+            {/* Hero */}
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-heading font-bold mb-4">
+                {d("h1", { city: cityDisplay })}
+              </h1>
+              <p className="text-base text-muted-foreground leading-relaxed">
+                {hasSubsidies
+                  ? d("intro", {
+                      city: cityDisplay,
+                      canton: locality.cantonName,
+                      count: chargingCount,
+                      topHighlight,
+                    })
+                  : d("introNoSubsidy", { city: cityDisplay })}
+              </p>
+              {!hasSubsidies && (
+                <Link
+                  href={quoteHref}
+                  className="inline-flex items-center gap-2 mt-6 rounded-lg bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  {d("cta.label")}
+                </Link>
+              )}
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Other incentives */}
-      {otherIncentives.length > 0 && (
-        <section className="py-10">
-          <div className="container mx-auto px-4">
-            <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
-              {d("sections.otherIncentives")}
-            </h2>
-            <Accordion className="w-full">
-              {otherIncentives.map((s, i) => (
-                <AccordionItem key={s.source_id} value={`other-${i}`}>
-                  <AccordionTrigger className="text-left hover:no-underline gap-4">
-                    <span className="flex items-center gap-2">
-                      {(() => {
-                        const Icon = CATEGORY_ICONS[s.category] || Zap;
-                        return <Icon className="h-4 w-4 text-primary shrink-0" />;
-                      })()}
-                      {s.name}
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <SubsidyCardContent subsidy={s} d={d} />
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </section>
-      )}
-
-      {/* Business section */}
-      {businessOnly.length > 0 && (
-        <section className="py-10 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
-              {d("sections.business")}
-            </h2>
-            <Accordion className="w-full">
-              {businessOnly.map((s, i) => (
-                <AccordionItem key={s.source_id} value={`biz-${i}`}>
-                  <AccordionTrigger className="text-left hover:no-underline gap-4">
-                    {s.name}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <SubsidyCardContent subsidy={s} d={d} />
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </section>
-      )}
-
-      {/* Contextual links */}
-      <section className="py-10">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
-            {d("sections.links")}
-          </h2>
-          <div className="grid gap-3">
-            {cantonArticle && (
-              <Link
-                href={cantonArticle.href}
-                className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-              >
-                <FileText className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm font-medium">{cantonArticle.title}</span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
-              </Link>
+            {/* Charging infrastructure */}
+            {chargingInfra.length > 0 && (
+              <section>
+                <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
+                  {d("sections.chargingInfrastructure")}
+                </h2>
+                <div className="grid gap-4">
+                  {chargingInfra.map((s) => (
+                    <SubsidyCard key={s.source_id} subsidy={s} d={d} />
+                  ))}
+                </div>
+              </section>
             )}
-            <Link
-              href={quoteHref}
-              className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-            >
-              <Zap className="h-5 w-5 text-primary shrink-0" />
-              <span className="text-sm font-medium">{d("links.quote")}</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
-            </Link>
+
+            {/* Other incentives */}
+            {otherIncentives.length > 0 && (
+              <section>
+                <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
+                  {d("sections.otherIncentives")}
+                </h2>
+                <Accordion className="w-full">
+                  {otherIncentives.map((s, i) => (
+                    <AccordionItem key={s.source_id} value={`other-${i}`}>
+                      <AccordionTrigger className="text-left hover:no-underline gap-4">
+                        <span className="flex items-center gap-2">
+                          {(() => {
+                            const Icon = CATEGORY_ICONS[s.category] || Zap;
+                            return <Icon className="h-4 w-4 text-primary shrink-0" />;
+                          })()}
+                          {s.name}
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SubsidyCardContent subsidy={s} d={d} />
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </section>
+            )}
+
+            {/* Business section */}
+            {businessOnly.length > 0 && (
+              <section>
+                <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
+                  {d("sections.business")}
+                </h2>
+                <Accordion className="w-full">
+                  {businessOnly.map((s, i) => (
+                    <AccordionItem key={s.source_id} value={`biz-${i}`}>
+                      <AccordionTrigger className="text-left hover:no-underline gap-4">
+                        {s.name}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SubsidyCardContent subsidy={s} d={d} />
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </section>
+            )}
+
+            {/* Contextual links */}
+            <section>
+              <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
+                {d("sections.links")}
+              </h2>
+              <div className="grid gap-3">
+                {cantonArticle && (
+                  <Link
+                    href={cantonArticle.href}
+                    className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <FileText className="h-5 w-5 text-primary shrink-0" />
+                    <span className="text-sm font-medium">{cantonArticle.title}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
+                  </Link>
+                )}
+                <Link
+                  href={quoteHref}
+                  className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                >
+                  <Zap className="h-5 w-5 text-primary shrink-0" />
+                  <span className="text-sm font-medium">{d("links.quote")}</span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
+                </Link>
+              </div>
+            </section>
+
+            {/* FAQ */}
+            {hasSubsidies && (
+              <section>
+                <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
+                  {d("sections.faq")}
+                </h2>
+                <Accordion className="w-full">
+                  {faqItems.map((item, i) => (
+                    <AccordionItem key={i} value={`faq-${i}`}>
+                      <AccordionTrigger className="text-left hover:no-underline w-full justify-between gap-4">
+                        {item.question}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {item.answer}
+                        </p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </section>
+            )}
+
+            {/* Last updated */}
+            {locality.subsidiesFetchedAt && (
+              <p className="text-xs text-muted-foreground">
+                {d("lastUpdated", {
+                  date: new Date(locality.subsidiesFetchedAt).toLocaleDateString(
+                    lang === "de" ? "de-CH" : "fr-CH",
+                    { day: "numeric", month: "long", year: "numeric" },
+                  ),
+                })}
+              </p>
+            )}
           </div>
         </div>
-      </section>
-
-      {/* FAQ */}
-      {hasSubsidies && (
-        <section className="py-10 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
-              {d("sections.faq")}
-            </h2>
-            <Accordion className="w-full">
-              {faqItems.map((item, i) => (
-                <AccordionItem key={i} value={`faq-${i}`}>
-                  <AccordionTrigger className="text-left hover:no-underline w-full justify-between gap-4">
-                    {item.question}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {item.answer}
-                    </p>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </section>
-      )}
-
-      {/* Last updated */}
-      {locality.subsidiesFetchedAt && (
-        <div className="container mx-auto px-4 py-4">
-          <p className="text-xs text-muted-foreground">
-            {d("lastUpdated", {
-              date: new Date(locality.subsidiesFetchedAt).toLocaleDateString(
-                lang === "de" ? "de-CH" : "fr-CH",
-                { day: "numeric", month: "long", year: "numeric" },
-              ),
-            })}
-          </p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -12,6 +12,7 @@ export type SlugRoute =
   | { type: "contact"; routeId: string; entry: PageRegistryEntry }
   | { type: "blog-listing"; routeId: string; entry: PageRegistryEntry }
   | { type: "vehicles-listing"; routeId: string; entry: PageRegistryEntry }
+  | { type: "localities-listing"; routeId: string; entry: PageRegistryEntry }
   | null;
 
 export type Sub1Route =
@@ -54,6 +55,10 @@ export async function resolveSlugRoute(
 
   if (entry.id === "vehicles") {
     return { type: "vehicles-listing", routeId: entry.id, entry };
+  }
+
+  if (entry.id === "localities") {
+    return { type: "localities-listing", routeId: entry.id, entry };
   }
 
   return { type: "cms-page", routeId: entry.id, entry };

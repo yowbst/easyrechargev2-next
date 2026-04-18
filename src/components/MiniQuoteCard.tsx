@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Home, Building2, Key, MapPin, ChevronRight } from "lucide-react";
+import { Home, Building2, Key, MapPin, ChevronRight, CheckCircle } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
 import { LocalityAutocomplete } from "@/components/LocalityAutocomplete";
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
@@ -19,6 +19,7 @@ interface MiniQuoteCardProps {
   pageRegistry: PageRegistryEntry[];
   lang: string;
   interpolationValues?: Record<string, string>;
+  defaultLocality?: LocalityResponse;
 }
 
 export function MiniQuoteCard({
@@ -28,6 +29,7 @@ export function MiniQuoteCard({
   pageRegistry,
   lang,
   interpolationValues = {},
+  defaultLocality,
 }: MiniQuoteCardProps) {
   const router = useRouter();
   const ph = usePostHog();
@@ -58,9 +60,22 @@ export function MiniQuoteCard({
 
   const [housingStatus, setHousingStatus] = useState("");
   const [isEditingHousingStatus, setIsEditingHousingStatus] = useState(false);
-  const [selectedLocality, setSelectedLocality] = useState<LocalityResponse | null>(null);
-  const [searchValue, setSearchValue] = useState("");
+  const [selectedLocality, setSelectedLocality] = useState<LocalityResponse | null>(defaultLocality ?? null);
+  const [searchValue, setSearchValue] = useState(defaultLocality ? `${defaultLocality.postalCode} ${defaultLocality.locality}` : "");
   const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [hasChargingSubsidy, setHasChargingSubsidy] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!selectedLocality?.id) {
+      setHasChargingSubsidy(null);
+      return;
+    }
+    const locale = lang === "de" ? "de-DE" : "fr-FR";
+    fetch(`/api/cms/localities/${selectedLocality.id}/subsidies?locale=${locale}`)
+      .then((r) => r.json())
+      .then((d) => setHasChargingSubsidy(d.hasChargingSubsidy ?? false))
+      .catch(() => setHasChargingSubsidy(null));
+  }, [selectedLocality?.id, lang]);
 
   const getHousingTypeLabel = (type: string) => {
     const labelKey = type === "co-owner" ? "coOwner" : type;
@@ -205,23 +220,31 @@ export function MiniQuoteCard({
         {housingStatus && !isEditingHousingStatus && (
           <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
             {selectedLocality && !isEditingLocation ? (
-              <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10" data-testid="card-selected-location">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/15">
-                    <MapPin className="h-4 w-4 text-primary" />
+              <>
+                <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10" data-testid="card-selected-location">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/15">
+                      <MapPin className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="font-medium text-sm text-foreground">
+                      {selectedLocality.postalCode} {selectedLocality.locality}
+                    </span>
                   </div>
-                  <span className="font-medium text-sm text-foreground">
-                    {selectedLocality.postalCode} {selectedLocality.locality}
-                  </span>
+                  <button
+                    onClick={() => { setIsEditingLocation(true); setSearchValue(`${selectedLocality.postalCode} ${selectedLocality.locality}`); setSelectedLocality(null); }}
+                    className="text-primary text-xs font-medium hover:underline"
+                    data-testid="button-change-location"
+                  >
+                    {d(`${mqp}.form.modify`)}
+                  </button>
                 </div>
-                <button
-                  onClick={() => { setIsEditingLocation(true); setSearchValue(`${selectedLocality.postalCode} ${selectedLocality.locality}`); setSelectedLocality(null); }}
-                  className="text-primary text-xs font-medium hover:underline"
-                  data-testid="button-change-location"
-                >
-                  {d(`${mqp}.form.modify`)}
-                </button>
-              </div>
+                {hasChargingSubsidy === true && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 text-xs font-medium animate-in fade-in duration-300">
+                    <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>{d(`${mqp}.subsidyAvailable`, { locality: `${selectedLocality.postalCode} ${selectedLocality.locality}` })}</span>
+                  </div>
+                )}
+              </>
             ) : (
               <LocalityAutocomplete
                 value={searchValue}

@@ -442,7 +442,7 @@ export async function fetchLocality(
 export async function fetchAllLocalitySlugs() {
   const path = buildItemsQuery({
     collection: "localities",
-    fields: ["slug", "postal_code", "name"],
+    fields: ["slug", "postal_code", "name", "canton_2l"],
     filter: { "[slug][_nnull]": "true" },
     limit: 5000,
   });
