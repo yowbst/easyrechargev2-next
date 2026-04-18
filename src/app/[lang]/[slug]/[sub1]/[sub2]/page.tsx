@@ -194,21 +194,8 @@ export async function generateStaticParams() {
     }
   }
 
-  // Locality subsidy pages
-  const localitiesPage = registry.find((p) => p.id === "localities");
-  if (localitiesPage) {
-    const allSlugs = await fetchAllLocalitySlugs();
-    for (const lang of ["fr", "de"] as const) {
-      const localitiesSlug = localitiesPage.slugs[lang];
-      const subsidiesSlug = getRouteSlug(lang, "subsidies");
-      if (!localitiesSlug) continue;
-      for (const loc of allSlugs) {
-        if (loc.slug) {
-          params.push({ lang, slug: localitiesSlug, sub1: loc.slug, sub2: subsidiesSlug });
-        }
-      }
-    }
-  }
+  // Locality subsidy pages — skip static generation (8,150 pages).
+  // dynamicParams = true ensures they render on-demand with ISR.
 
   return params;
 }
