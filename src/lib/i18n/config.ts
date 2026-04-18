@@ -37,6 +37,8 @@ const routeSlugs: Record<string, Record<AppLangSlug, string>> = {
   vehicles: { fr: "vehicules", de: "fahrzeuge", en: "vehicles" },
   brands: { fr: "marques", de: "marken", en: "brands" },
   quote: { fr: "devis", de: "offerte", en: "quote" },
+  localities: { fr: "localites", de: "ortschaften", en: "localities" },
+  subsidies: { fr: "subventions", de: "subventionen", en: "subsidies" },
 };
 
 export function getRouteSlug(

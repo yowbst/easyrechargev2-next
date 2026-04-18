@@ -11,6 +11,9 @@ import {
   fetchVehicle,
   fetchVehiclesByBrand,
   fetchVehicleBrands,
+  fetchLocality,
+  fetchAllLocalitySlugs,
+  fetchCantonArticle,
   fetchPageRegistry,
   fetchLayout,
   fetchPage,
@@ -38,7 +41,9 @@ import {
   buildBlogPosting,
   buildBreadcrumbList,
   buildFAQPage,
+  buildGovernmentService,
 } from "@/lib/seo/jsonLd";
+import { LocalitySubsidiesPage } from "@/components/LocalitySubsidiesPage";
 import {
   Accordion,
   AccordionContent,
@@ -189,6 +194,22 @@ export async function generateStaticParams() {
     }
   }
 
+  // Locality subsidy pages
+  const localitiesPage = registry.find((p) => p.id === "localities");
+  if (localitiesPage) {
+    const allSlugs = await fetchAllLocalitySlugs();
+    for (const lang of ["fr", "de"] as const) {
+      const localitiesSlug = localitiesPage.slugs[lang];
+      const subsidiesSlug = getRouteSlug(lang, "subsidies");
+      if (!localitiesSlug) continue;
+      for (const loc of allSlugs) {
+        if (loc.slug) {
+          params.push({ lang, slug: localitiesSlug, sub1: loc.slug, sub2: subsidiesSlug });
+        }
+      }
+    }
+  }
+
   return params;
 }
 
@@ -332,7 +353,51 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
     });
   }
 
+  // ── Locality subsidies ────────────────────────────────────────────
+  if (route.type === "locality-subsidies") {
+    const locale = slugToDirectusLocale(lang);
+    const locality = await fetchLocality(route.localitySlug, locale);
+    if (!locality) return {};
 
+    const cantonName = locality.canton?.translations?.[0]?.name || locality.canton_2l;
+    const ville = locality.name;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subsidies: any[] = locality.translations?.[0]?.subsidies || [];
+    const personalCount = subsidies.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (s: any) => s.audiences?.includes("personal"),
+    ).length;
+
+    const SITE_URL = getSiteUrl();
+    const currentPath = `/${lang}/${slug}/${sub1}/${sub2}`;
+    const otherLang = lang === "de" ? "fr" : "de";
+    const otherLocalitiesSlug = getRouteSlug(otherLang, "localities");
+    const otherSubsidiesSlug = getRouteSlug(otherLang, "subsidies");
+    // Use translated slug if available, fall back to root slug
+    const otherLocSlug = locality.translations?.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (tr: any) => tr.languages_code === slugToDirectusLocale(otherLang),
+    )?.slug || locality.slug;
+
+    const title = lang === "de"
+      ? `Förderung Ladestation in ${ville} (${cantonName})`
+      : `Subventions borne de recharge à ${ville} (${cantonName})`;
+    const description = lang === "de"
+      ? `Förderprogramme für Ladestationen in ${ville} (${locality.postal_code}). ${personalCount} Programme verfügbar.`
+      : `Aides pour installer une borne de recharge à ${ville} (${locality.postal_code}). ${personalCount} programmes disponibles.`;
+
+    return buildMetadata({
+      title: normalizeTitle(title),
+      description: truncate(description),
+      canonical: `${SITE_URL}${currentPath}`,
+      ogType: "website",
+      lang,
+      alternates: buildAlternates({
+        [lang]: currentPath,
+        [otherLang]: `/${otherLang}/${otherLocalitiesSlug}/${otherLocSlug}/${otherSubsidiesSlug}`,
+      }),
+    });
+  }
 
   return {};
 }
@@ -824,6 +889,122 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
           heroImage={heroImage}
           getQuoteBlock={getQuoteData}
         />
+      </>
+    );
+  }
+
+  // ── Locality subsidies ─────────────────────────────────────────
+  if (route.type === "locality-subsidies") {
+    const [locality, layoutData, localitiesPage, registry] = await Promise.all([
+      fetchLocality(route.localitySlug, locale),
+      fetchLayout(locale),
+      fetchPage("locality-subsidies", locale),
+      fetchPageRegistry(),
+    ]);
+    if (!locality) notFound();
+
+    const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
+    const pageDict = localitiesPage ? extractPageDictionary("locality-subsidies", localitiesPage, locale) : {};
+    const dictionary = { ...layoutDict, ...pageDict };
+    const d = (key: string, vars?: Record<string, string | number>) => {
+      const val = t(dictionary, key, vars);
+      return val === key ? `[${key}]` : val;
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subsidies: any[] = locality.translations?.[0]?.subsidies || [];
+    const cantonName = locality.canton?.translations?.[0]?.name || locality.canton_2l;
+
+    // Canton article
+    const cantonArticleRaw = await fetchCantonArticle(locality.canton_2l, locale);
+    let cantonArticle: { title: string; href: string } | null = null;
+    if (cantonArticleRaw) {
+      const blogEntry = registry.find((p) => p.id === "blog");
+      const blogSlug = blogEntry?.slugs[lang] || "blog";
+      const artTranslation = cantonArticleRaw.translations?.[0];
+      const catTranslation = cantonArticleRaw.category?.translations?.[0];
+      if (artTranslation?.slug && catTranslation?.slug) {
+        cantonArticle = {
+          title: artTranslation.title || d("pages.locality-subsidies.links.cantonArticle", { canton: cantonName }),
+          href: `/${lang}/${blogSlug}/${catTranslation.slug}/${artTranslation.slug}`,
+        };
+      }
+    }
+
+    // Quote href
+    const quoteEntry = registry.find((p) => p.id === "quote");
+    const quoteHref = quoteEntry ? `/${lang}/${quoteEntry.slugs[lang]}` : `/${lang}`;
+
+    // JSON-LD
+    const SITE_URL = getSiteUrl();
+    const currentPath = `/${lang}/${slug}/${sub1}/${sub2}`;
+    const localitiesLabel = d("pages.locality-subsidies.breadcrumb.localities");
+    const subsidiesLabel = d("pages.locality-subsidies.breadcrumb.subsidies");
+
+    const chargingSubsidies = subsidies.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (s: any) => s.category === "charging-infrastructure",
+    );
+
+    const jsonLd = wrapInGraph(
+      buildBreadcrumbList([
+        { name: localitiesLabel, url: `${SITE_URL}/${lang}/${slug}` },
+        { name: locality.name, url: `${SITE_URL}/${lang}/${slug}/${sub1}` },
+        { name: subsidiesLabel, url: `${SITE_URL}${currentPath}` },
+      ]),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...chargingSubsidies.slice(0, 3).map((s: any) =>
+        buildGovernmentService({
+          name: s.name,
+          description: s.description?.slice(0, 200) || "",
+          providerName: s.contributor?.name || "",
+          areaServed: { name: locality.name, postalCode: locality.postal_code },
+          url: s.site_url || undefined,
+        }),
+      ),
+      subsidies.length > 0 ? buildFAQPage([
+        {
+          question: lang === "de"
+            ? `Welche Förderungen gibt es für Ladestationen in ${locality.name}?`
+            : `Quelles subventions pour une borne de recharge à ${locality.name} ?`,
+          answer: lang === "de"
+            ? `${subsidies.length} Förderprogramme sind in ${locality.name} (${locality.postal_code}) verfügbar.`
+            : `${subsidies.length} programmes de subventions sont disponibles à ${locality.name} (${locality.postal_code}).`,
+        },
+      ]) : null,
+    );
+
+    // GetQuote
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getQuoteBlock = localitiesPage?.blocks?.find((b: any) => b?.collection === "block_getquote")?.item;
+
+    return (
+      <>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <LocalitySubsidiesPage
+          locality={{
+            name: locality.name,
+            postalCode: locality.postal_code,
+            canton2l: locality.canton_2l,
+            cantonName,
+            subsidiesFetchedAt: locality.subsidies_fetched_at,
+          }}
+          subsidies={subsidies}
+          cantonArticle={cantonArticle}
+          dictionary={dictionary}
+          lang={lang}
+          quoteHref={quoteHref}
+        />
+        {getQuoteBlock && (
+          <GetQuote
+            title={d("pages.locality-subsidies.cta.title")}
+            subtitle={d("pages.locality-subsidies.cta.subtitle")}
+            ctaLabel={d("pages.locality-subsidies.cta.label")}
+            ctaHref={quoteHref}
+            variant={getQuoteBlock.variant === "green" ? "primary" : "muted"}
+            image={getQuoteBlock.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined}
+          />
+        )}
       </>
     );
   }

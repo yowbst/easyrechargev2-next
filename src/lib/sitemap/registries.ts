@@ -12,6 +12,11 @@ const VEHICLE_ROUTES = {
   de: { vehicles: "fahrzeuge", brands: "marken" },
 } as const;
 
+const LOCALITY_ROUTES = {
+  fr: { localities: "localites", subsidies: "subventions" },
+  de: { localities: "ortschaften", subsidies: "subventionen" },
+} as const;
+
 interface UrlEntry {
   url: string;
   lastModified?: string;
@@ -258,6 +263,47 @@ export async function getVehicleEntries(): Promise<UrlEntry[]> {
       alternates: { languages: brandListLanguages },
     },
   );
+
+  return entries;
+}
+
+// ─── Locality Subsidies ─────────────────────────────────
+
+export async function getLocalitySubsidyEntries(): Promise<UrlEntry[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await directusFetch<{ data: any[] }>(
+    "/items/localities?fields=slug,subsidies_fetched_at&filter[slug][_nnull]=true&limit=5000",
+    { next: { revalidate: 3600, tags: ["localities-sitemap"] } },
+  );
+
+  const items = result?.data || [];
+  const entries: UrlEntry[] = [];
+
+  for (const item of items) {
+    if (!item.slug) continue;
+
+    const frPath = `/fr/${LOCALITY_ROUTES.fr.localities}/${item.slug}/${LOCALITY_ROUTES.fr.subsidies}`;
+    const dePath = `/de/${LOCALITY_ROUTES.de.localities}/${item.slug}/${LOCALITY_ROUTES.de.subsidies}`;
+
+    const languages = buildAlternates({ fr: frPath, de: dePath });
+
+    entries.push(
+      {
+        url: `${SITE_URL}${frPath}`,
+        lastModified: item.subsidies_fetched_at || undefined,
+        changeFrequency: "monthly",
+        priority: 0.6,
+        alternates: { languages },
+      },
+      {
+        url: `${SITE_URL}${dePath}`,
+        lastModified: item.subsidies_fetched_at || undefined,
+        changeFrequency: "monthly",
+        priority: 0.6,
+        alternates: { languages },
+      },
+    );
+  }
 
   return entries;
 }

@@ -405,3 +405,81 @@ export async function fetchVehicleBrands(
 
   return result?.data || [];
 }
+
+// ─── Localities ─────────────────────────────────────────
+
+const LOCALITY_FIELDS = [
+  "id", "postal_code", "name", "slug", "canton_2l",
+  "subsidies_fetched_at",
+  "translations.*",
+  "canton.*", "canton.translations.*",
+];
+
+export async function fetchLocality(
+  slug: string,
+  locale: string = DIRECTUS_DEFAULT_LOCALE,
+) {
+  const deep: AnyRecord = {
+    "[translations][_filter][languages_code][_eq]": locale,
+    "[canton][translations][_filter][languages_code][_eq]": locale,
+  };
+
+  const path = buildItemsQuery({
+    collection: "localities",
+    fields: LOCALITY_FIELDS,
+    filter: { "[slug][_eq]": slug },
+    deep,
+    limit: 1,
+  });
+
+  const result = await directusFetch<{ data: AnyRecord[] }>(path, {
+    next: { revalidate: 3600, tags: [`locality-${slug}`] },
+  });
+
+  return result?.data?.[0] ?? null;
+}
+
+export async function fetchAllLocalitySlugs() {
+  const path = buildItemsQuery({
+    collection: "localities",
+    fields: ["slug", "postal_code", "name"],
+    filter: { "[slug][_nnull]": "true" },
+    limit: 5000,
+  });
+
+  const result = await directusFetch<{ data: AnyRecord[] }>(path, {
+    next: { revalidate: 3600, tags: ["localities"] },
+  });
+
+  return result?.data || [];
+}
+
+export async function fetchCantonArticle(
+  canton2l: string,
+  locale: string = DIRECTUS_DEFAULT_LOCALE,
+) {
+  const deep: AnyRecord = {
+    "[translations][_filter][languages_code][_eq]": locale,
+    "[category][translations][_filter][languages_code][_eq]": locale,
+  };
+
+  const path = buildItemsQuery({
+    collection: "blog_posts",
+    fields: [
+      "id", "translations.slug", "translations.title",
+      "category.translations.slug",
+    ],
+    filter: {
+      "[status][_eq]": "published",
+      "[canton][code][_eq]": canton2l,
+    },
+    deep,
+    limit: 1,
+  });
+
+  const result = await directusFetch<{ data: AnyRecord[] }>(path, {
+    next: { revalidate: 3600, tags: [`canton-article-${canton2l}`] },
+  });
+
+  return result?.data?.[0] ?? null;
+}

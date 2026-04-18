@@ -3,6 +3,7 @@ import {
   getCmsEntries,
   getBlogEntries,
   getVehicleEntries,
+  getLocalitySubsidyEntries,
 } from "@/lib/sitemap/registries";
 
 const SITE_URL = process.env.SITE_URL || "https://easyrecharge.ch";
@@ -11,6 +12,7 @@ const SEGMENTS: Record<string, () => ReturnType<typeof getCmsEntries>> = {
   "cms.xml": getCmsEntries,
   "blog.xml": getBlogEntries,
   "vehicles.xml": getVehicleEntries,
+  "localities.xml": getLocalitySubsidyEntries,
 };
 
 function escapeXml(str: string): string {

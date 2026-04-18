@@ -164,6 +164,34 @@ export function buildVehicleCar(input: {
   return car;
 }
 
+// ── GovernmentService (subsidies) ──────────────────────────────────────
+
+export function buildGovernmentService(input: {
+  name: string;
+  description: string;
+  providerName: string;
+  areaServed: { name: string; postalCode: string };
+  url?: string;
+}): Record<string, unknown> {
+  const service: Record<string, unknown> = {
+    "@type": "GovernmentService",
+    name: input.name,
+    description: input.description,
+    serviceType: "Subsidy",
+    provider: {
+      "@type": "GovernmentOrganization",
+      name: input.providerName,
+    },
+    areaServed: {
+      "@type": "City",
+      name: input.areaServed.name,
+      postalCode: input.areaServed.postalCode,
+    },
+  };
+  if (input.url) service.url = input.url;
+  return service;
+}
+
 // ── Graph wrapper ───────────────────────────────────────────────────────
 
 export function wrapInGraph(...schemas: (Record<string, unknown> | null)[]) {

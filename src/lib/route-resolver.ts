@@ -26,6 +26,7 @@ export type Sub2Route =
   | { type: "vehicle-brand-detail"; brandSlug: string; vehiclesEntry: PageRegistryEntry }
   | { type: "vehicle-model-detail"; brandSlug: string; vehicleSlug: string; vehiclesEntry: PageRegistryEntry }
   | { type: "blog-post"; blogSlug: string; categorySlug: string; postSlug: string; blogEntry: PageRegistryEntry }
+  | { type: "locality-subsidies"; localitySlug: string; localitiesEntry: PageRegistryEntry }
   | null;
 
 export type RouteType = SlugRoute | Sub1Route | Sub2Route;
@@ -135,6 +136,14 @@ export async function resolveSub2Route(
       postSlug: sub2,
       blogEntry: entry,
     };
+  }
+
+  // Localities: /{lang}/{localitiesSlug}/{localitySlug}/{subsidiesSegment}
+  if (entry.id === "localities") {
+    const subsidiesSegment = getRouteSlug(lang, "subsidies");
+    if (sub2 === subsidiesSegment) {
+      return { type: "locality-subsidies", localitySlug: sub1, localitiesEntry: entry };
+    }
   }
 
   return null;
