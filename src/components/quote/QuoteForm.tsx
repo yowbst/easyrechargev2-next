@@ -1772,7 +1772,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         }).catch(() => {});
 
                         const confirmSegment = tq("steps.finalize.fields.confirmation_segment");
-                        const seg = confirmSegment.startsWith("[") ? "confirmation" : confirmSegment;
+                        const seg = confirmSegment.includes(".") || confirmSegment.startsWith("[") ? "confirmation" : confirmSegment;
                         const successPath = quoteSlug ? `/${lang}/${quoteSlug}/${seg}` : `/${lang}`;
                         const qs = new URLSearchParams();
                         const name = formData.firstName.trim();
