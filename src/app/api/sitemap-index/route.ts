@@ -1,5 +1,5 @@
 const SITE_URL = process.env.SITE_URL || "https://easyrecharge.ch";
-const SEGMENTS = ["cms", "blog", "vehicles"];
+const SEGMENTS = ["cms", "blog", "vehicles", "localities"];
 
 export function GET() {
   const entries = SEGMENTS.map(
