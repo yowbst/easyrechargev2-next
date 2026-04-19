@@ -458,6 +458,13 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const authorCredentials = author?.translations?.[0]?.credentials || null;
     const authorPortrait = author?.portrait ? `${DIRECTUS_URL}/assets/${author.portrait}` : null;
 
+    // Tags
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tagNames: string[] = (post.tags || []).map((tj: any) => {
+      const tag = tj?.blog_tags_id;
+      return tag?.translations?.[0]?.name || tag?.name || null;
+    }).filter(Boolean);
+
     const dateValue = post.date_published || post.date_created;
     const formattedDate = dateValue
       ? new Date(dateValue).toLocaleDateString(getDateLocale(lang), {
@@ -565,12 +572,22 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
             <div className="absolute inset-x-0 bottom-0 text-white">
               <div className="container mx-auto px-4 pb-8 md:pb-12">
                 <div className="max-w-3xl">
-                  <Badge
-                    className="mb-3 bg-white/15 text-white hover:bg-white/25 border-white/20 backdrop-blur-sm text-xs font-medium tracking-wide uppercase"
-                    data-testid="badge-article-category"
-                  >
-                    {categoryName}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <Badge
+                      className="bg-white/15 text-white hover:bg-white/25 border-white/20 backdrop-blur-sm text-xs font-medium tracking-wide uppercase"
+                      data-testid="badge-article-category"
+                    >
+                      {categoryName}
+                    </Badge>
+                    {tagNames.map((tag) => (
+                      <Badge
+                        key={tag}
+                        className="bg-white/10 text-white/80 border-white/15 backdrop-blur-sm text-xs font-medium"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
                   <h1
                     className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-heading font-bold leading-[1.15] tracking-tight"
                     data-testid="text-article-title"
@@ -670,25 +687,6 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
                       )}
                     </div>
 
-                    {/* Tags */}
-                    {post.tags?.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-10 pt-6 border-t">
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {post.tags.map((tagJunction: any) => {
-                          const tag = tagJunction?.blog_tags_id;
-                          const tagName = tag?.translations?.[0]?.name || tag?.name;
-                          if (!tagName) return null;
-                          return (
-                            <span
-                              key={tag.id}
-                              className="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground"
-                            >
-                              {tagName}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
 
                     {/* FAQ */}
                     {faqItems.length > 0 && (
