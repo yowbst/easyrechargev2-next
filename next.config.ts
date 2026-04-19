@@ -57,6 +57,10 @@ const nextConfig: NextConfig = {
       { source: "/wp-:slug.php", destination: "/fr", permanent: true },
       // Language-prefixed blog redirects
       { source: "/:lang(fr|de|en)/guide-recharge/:slug", destination: "/:lang/blog/guide-recharge/:slug", permanent: true },
+      // Blog post slug redirects (renamed articles)
+      { source: "/:lang(fr|de)/blog/:cat/quelles-sont-les-demarches-pour-installer-une-borne-de-recharge-en-tant-que-proprietaire", destination: "/:lang/blog/:cat/quelles-sont-les-demarches-administratives-en-tant-que-co-proprietaire-en-ppe-pour-installer-une-borne-de-recharge", permanent: true },
+      { source: "/:lang(fr|de)/blog/:cat/quelles-sont-les-demarches-en-tant-que-locataire-pour-installer-une-borne-de-recharge", destination: "/:lang/blog/:cat/quelles-sont-les-demarches-administratives-en-tant-que-co-proprietaire-en-ppe-pour-installer-une-borne-de-recharge", permanent: true },
+      { source: "/:lang(fr|de)/blog/:cat/en-installant-une-borne-de-recharge-en-tant-que-co-proprietaire-qui-prend-en-charge-les-couts", destination: "/:lang/blog/:cat/en-installant-une-borne-en-tant-que-locataire-qui-prend-en-charge-les-couts", permanent: true },
       // English not yet supported — redirect to French equivalent
       { source: "/en", destination: "/fr", permanent: false },
       { source: "/en/:path*", destination: "/fr/:path*", permanent: false },
