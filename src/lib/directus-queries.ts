@@ -237,6 +237,9 @@ const BLOG_FIELDS = [
   "category.translations.*",
   "tags.blog_tags_id.*",
   "tags.blog_tags_id.translations.*",
+  "author.name",
+  "author.portrait",
+  "author.translations.*",
 ];
 
 export async function fetchBlogPosts(
@@ -254,6 +257,7 @@ export async function fetchBlogPosts(
     "[translations][_filter][languages_code][_eq]": locale,
     "[category][translations][_filter][languages_code][_eq]": locale,
     "[tags][blog_tags_id][translations][_filter][languages_code][_eq]": locale,
+    "[author][translations][_filter][languages_code][_eq]": locale,
   };
 
   const path = buildItemsQuery({
@@ -286,6 +290,7 @@ export async function fetchBlogPost(
     "[translations][_filter][languages_code][_eq]": locale,
     "[category][translations][_filter][languages_code][_eq]": locale,
     "[tags][blog_tags_id][translations][_filter][languages_code][_eq]": locale,
+    "[author][translations][_filter][languages_code][_eq]": locale,
   };
 
   const path = buildItemsQuery({
@@ -309,7 +314,7 @@ export async function fetchBlogPost(
 const VEHICLE_LIST_FIELDS = [
   "id", "slug", "model", "thumbnail", "status",
   "battery", "range", "efficiency", "fastcharge", "price_per_range",
-  "charging.home_destination",
+  "charging",
   "brand.id", "brand.name", "brand.icon_simple", "brand.icon_svg", "brand.slug",
 ];
 

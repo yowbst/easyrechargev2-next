@@ -452,6 +452,12 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const categoryName = ct?.name || df("pages.blog-post.defaultCategory", "Guide");
     const readingTime = parseReadingTime(post.reading_time);
 
+    // Author
+    const author = post.author;
+    const authorName = author?.name || null;
+    const authorCredentials = author?.translations?.[0]?.credentials || null;
+    const authorPortrait = author?.portrait ? `${DIRECTUS_URL}/assets/${author.portrait}` : null;
+
     const dateValue = post.date_published || post.date_created;
     const formattedDate = dateValue
       ? new Date(dateValue).toLocaleDateString(getDateLocale(lang), {
@@ -597,6 +603,23 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
                           { count: readingTime })}
                       </span>
                     </div>
+                    {authorName && (
+                      <>
+                        <span className="text-white/40" aria-hidden="true">|</span>
+                        <div className="flex items-center gap-1.5">
+                          {authorPortrait && (
+                            <Image
+                              src={authorPortrait}
+                              alt={authorName}
+                              width={20}
+                              height={20}
+                              className="rounded-full ring-1 ring-white/30"
+                            />
+                          )}
+                          <span>{authorName}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

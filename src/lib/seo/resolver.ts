@@ -214,15 +214,26 @@ export function toAbsoluteImageUrl(imageUrl?: string): string | undefined {
   return `${SITE_URL}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
 }
 
+/** Append Directus image transform params for OG images */
+function withOgTransform(url?: string): string | undefined {
+  if (!url) return undefined;
+  // Only transform Directus asset URLs (proxy or direct)
+  if (url.includes("/assets/") || url.includes("/api/cms/assets/")) {
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}format=webp&quality=80&width=1200&height=630&fit=cover`;
+  }
+  return url;
+}
+
 export function resolveOgImage(
   resolvedSeo: CmsSEO | undefined,
   contentImage?: string,
   heroImage?: string,
 ): string | undefined {
   if (resolvedSeo?.image)
-    return toAbsoluteImageUrl(resolveImageUrl(resolvedSeo.image));
-  if (contentImage) return toAbsoluteImageUrl(contentImage);
-  if (heroImage) return toAbsoluteImageUrl(resolveImageUrl(heroImage));
+    return withOgTransform(toAbsoluteImageUrl(resolveImageUrl(resolvedSeo.image)));
+  if (contentImage) return withOgTransform(toAbsoluteImageUrl(contentImage));
+  if (heroImage) return withOgTransform(toAbsoluteImageUrl(resolveImageUrl(heroImage)));
   return undefined;
 }
 
