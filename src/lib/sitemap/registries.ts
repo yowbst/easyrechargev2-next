@@ -287,17 +287,24 @@ export async function getLocalitySubsidyEntries(): Promise<UrlEntry[]> {
 
     const languages = buildAlternates({ fr: frPath, de: dePath });
 
+    // Ensure W3C date format (append Z if no timezone)
+    const lastMod = item.subsidies_fetched_at
+      ? (item.subsidies_fetched_at.endsWith("Z") || item.subsidies_fetched_at.includes("+")
+          ? item.subsidies_fetched_at
+          : `${item.subsidies_fetched_at}Z`)
+      : undefined;
+
     entries.push(
       {
         url: `${SITE_URL}${frPath}`,
-        lastModified: item.subsidies_fetched_at || undefined,
+        lastModified: lastMod,
         changeFrequency: "monthly",
         priority: 0.6,
         alternates: { languages },
       },
       {
         url: `${SITE_URL}${dePath}`,
-        lastModified: item.subsidies_fetched_at || undefined,
+        lastModified: lastMod,
         changeFrequency: "monthly",
         priority: 0.6,
         alternates: { languages },
