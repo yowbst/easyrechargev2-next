@@ -523,7 +523,11 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
         langCode,
       }),
       !customSchemaHasFaq && faqItems.length > 0 ? buildFAQPage(faqItems) : null,
-      customSchema,
+      // Flatten customSchema @graph items into our graph (avoid nested @graph)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(Array.isArray((customSchema as any)?.["@graph"])
+        ? (customSchema as any)["@graph"]
+        : customSchema ? [customSchema] : []),
     );
 
     // Strip Directus WYSIWYG editor classes/attributes and trailing <hr>, then resolve internal links
