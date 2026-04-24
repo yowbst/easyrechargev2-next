@@ -147,6 +147,17 @@ export function proxy(request: NextRequest) {
         }
       } catch { /* invalid referer URL — ignore */ }
     }
+
+    // ── 9. Landing page cookie (set once per session) ─────────────────
+    if (!request.cookies.get("_landing_page")) {
+      response.cookies.set("_landing_page", url.pathname + url.search, {
+        maxAge: 30 * 86400,
+        path: "/",
+        sameSite: "lax",
+        httpOnly: false,
+        secure: request.nextUrl.protocol === "https:",
+      });
+    }
   }
 
   return response;

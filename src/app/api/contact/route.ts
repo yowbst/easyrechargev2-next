@@ -79,7 +79,7 @@ export async function POST(req: Request) {
 
     const { attribution: _a, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, ...contactData } = body;
 
-    await storage.createFormSubmission({
+    const submission = await storage.createFormSubmission({
       session: session.id,
       user: formUser.id,
       form_type: "contact",
@@ -113,8 +113,10 @@ export async function POST(req: Request) {
     if (webhookUrl) {
       const webhookPayload = {
         submission: {
+          id: submission.id,
           formType: "contact",
           submittedAt: new Date().toISOString(),
+          environment: process.env.VERCEL_ENV || "development",
           data: {
             company: body.company || null,
             address: body.address || null,
@@ -129,11 +131,27 @@ export async function POST(req: Request) {
           },
         },
         user: {
+          id: formUser.id,
           email,
           firstName,
           lastName,
           phone: parsePhone(phone, phoneCountry),
         },
+        session: {
+          id: session.id,
+          token: session.session_token ?? null,
+          locale: req.headers.get("accept-language")?.split(",")[0] ?? null,
+          userAgent: req.headers.get("user-agent") ?? null,
+          ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        },
+        posthog: (() => {
+          const phDistinctId = body.posthog?.phDistinctId ?? null;
+          const posthogDashboard = "https://eu.posthog.com/project/103083";
+          return {
+            distinctId: phDistinctId,
+            personUrl: phDistinctId ? `${posthogDashboard}/person/${phDistinctId}` : null,
+          };
+        })(),
         attribution: body.attribution ?? {},
       };
 

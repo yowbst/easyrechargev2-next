@@ -118,15 +118,19 @@ export async function POST(req: Request) {
     // Fire webhook
     const webhookUrl = await getQuoteWebhookUrl();
     if (webhookUrl) {
+      const phDistinctId = phIds.phDistinctId ?? null;
+      const posthogDashboard = "https://eu.posthog.com/project/103083";
+
       const webhookPayload = {
         submission: {
           id: submission.id,
-          sessionId: session.id,
           formType: "quote",
           locationRoute: "quote",
           locationHost: refererUrl?.host ?? req.headers.get("host") ?? null,
           locationPath: refererUrl?.pathname ?? null,
           submittedAt: new Date().toISOString(),
+          environment: process.env.VERCEL_ENV || "development",
+          miniQuoteSessionToken: miniQuoteToken || null,
           data: quoteData,
         },
         user: {
@@ -137,9 +141,15 @@ export async function POST(req: Request) {
           phone: parsePhone(phone, phoneCountry),
         },
         session: {
+          id: session.id,
+          token: session.session_token ?? null,
           locale: req.headers.get("accept-language")?.split(",")[0] ?? null,
           userAgent: req.headers.get("user-agent") ?? null,
           ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        },
+        posthog: {
+          distinctId: phDistinctId,
+          personUrl: phDistinctId ? `${posthogDashboard}/person/${phDistinctId}` : null,
         },
         attribution: body.attribution ?? {},
       };
