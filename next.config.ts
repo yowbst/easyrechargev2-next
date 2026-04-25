@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  crossOrigin: "anonymous",
 
   experimental: {
     // Inline critical CSS to reduce render-blocking requests
