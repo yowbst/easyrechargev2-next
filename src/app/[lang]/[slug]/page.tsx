@@ -245,6 +245,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
         category: ct?.name || "Guide",
         categorySlug: ct?.slug || "guide",
         categoryId: post.category?.category_id || post.category?.key || post.category?.id || "",
+        featured: post.featured === true,
         tags,
       };
     });

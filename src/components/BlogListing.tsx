@@ -22,6 +22,7 @@ interface TransformedPost {
   category: string;
   categorySlug: string;
   categoryId: string;
+  featured?: boolean;
   tags: Array<{ id: string; name: string; slug: string }>;
 }
 

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Clock } from "lucide-react";
+import { Clock, Star } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
@@ -23,6 +23,7 @@ interface BlogCardProps {
   showCategory?: boolean;
   variant?: "default" | "compact" | "dark";
   priority?: boolean;
+  featured?: boolean;
   dictionary: Record<string, string>;
   pageRegistry: PageRegistryEntry[];
 }
@@ -41,6 +42,7 @@ export function BlogCard({
   showCategory = true,
   variant = "default",
   priority = false,
+  featured = false,
   dictionary,
   pageRegistry,
 }: BlogCardProps) {
@@ -72,6 +74,11 @@ export function BlogCard({
             loading={priority ? "eager" : "lazy"}
             className={`object-cover ${isDark ? "brightness-125" : ""}`}
           />
+          {featured && (
+            <div className="absolute top-2 right-2 p-1.5 rounded-full bg-yellow-500/90 text-white shadow-sm">
+              <Star className="h-3 w-3 fill-current" />
+            </div>
+          )}
         </div>
         <div className={isCompact ? "p-4 flex flex-col flex-1" : "p-6"}>
           <div className={`flex items-center gap-2 flex-wrap ${isCompact ? "mb-2" : "mb-3"}`}>
