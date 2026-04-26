@@ -19,8 +19,8 @@ import {
   Zap, Plug, Battery, BatteryCharging, Wifi, Settings, Wrench,
   // Nature & energy
   Sun, Leaf, Lightbulb, Flame,
-  // Finance
-  DollarSign, CreditCard, Receipt, TrendingUp,
+  // Finance & Legal
+  DollarSign, CreditCard, Receipt, TrendingUp, Scale, Glasses,
   // Vehicles
   Car, Truck,
   // Misc
@@ -40,7 +40,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Clock, Calendar, Timer,
   Zap, Plug, Battery, BatteryCharging, Wifi, Settings, Wrench,
   Sun, Leaf, Lightbulb, Flame,
-  DollarSign, CreditCard, Receipt, TrendingUp,
+  DollarSign, CreditCard, Receipt, TrendingUp, Scale, Glasses,
   Car, Truck,
   Heart, Info, AlertCircle, HelpCircle, Search, Eye, Download,
   Key, Lock, Unlock, Target, Gift, Package, CircleDot, Circle,
