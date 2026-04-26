@@ -46,6 +46,7 @@ interface SwissMapProps {
   statsConfig?: StatConfig[];
   tPrefix: string;
   dictionary: Record<string, string>;
+  cantonCoats?: Record<string, string>;
 }
 
 export function SwissMap({
@@ -54,6 +55,7 @@ export function SwissMap({
   activeCantons = ["GE", "VD", "FR", "VS", "JU", "NE"],
   statsConfig = [],
   tPrefix,
+  cantonCoats = {},
   dictionary,
 }: SwissMapProps) {
   const [hoveredCanton, setHoveredCanton] = useState<string | null>(null);
@@ -227,14 +229,16 @@ export function SwissMap({
               {hoveredCanton && (
                 <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm border rounded-xl p-4 shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[200px]">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={`/canton-coats/${hoveredCanton}.svg`}
-                      alt=""
-                      loading="lazy"
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 object-contain shrink-0"
-                    />
+                    {cantonCoats[hoveredCanton] && (
+                      <img
+                        src={cantonCoats[hoveredCanton]}
+                        alt=""
+                        loading="lazy"
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 object-contain shrink-0"
+                      />
+                    )}
                     <div>
                       <div className="font-semibold text-sm leading-tight">
                         {cantons.find((c) => c.properties.abbr === hoveredCanton)?.properties.name}

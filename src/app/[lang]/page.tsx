@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchPage, fetchLayout, fetchPageRegistry } from "@/lib/directus-queries";
+import { fetchPage, fetchLayout, fetchPageRegistry, fetchCantonCoats } from "@/lib/directus-queries";
 import { extractPageDictionary, extractLayoutDictionary, t } from "@/lib/i18n/dictionaries";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -88,10 +88,11 @@ export default async function Home({ params }: HomeProps) {
   if (!isValidLang(lang)) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [page, layoutData, pageRegistry] = await Promise.all([
+  const [page, layoutData, pageRegistry, cantonCoats] = await Promise.all([
     fetchPage("home", locale),
     fetchLayout(locale),
     fetchPageRegistry(),
+    fetchCantonCoats(),
   ]);
 
   const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
@@ -340,6 +341,7 @@ export default async function Home({ params }: HomeProps) {
           ]}
           tPrefix="pages.home"
           dictionary={dictionary}
+          cantonCoats={cantonCoats}
         />
       </section>
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands, fetchAllLocalitySlugs } from "@/lib/directus-queries";
+import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands, fetchAllLocalitySlugs, fetchCantonCoats } from "@/lib/directus-queries";
 import Link from "next/link";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -129,9 +129,10 @@ export default async function SlugPage({ params }: SlugPageProps) {
   if (!entry) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [page, layoutData] = await Promise.all([
+  const [page, layoutData, cantonCoats] = await Promise.all([
     fetchPage(entry.id, locale),
     fetchLayout(locale),
+    fetchCantonCoats(),
   ]);
   if (!page) notFound();
 
@@ -338,7 +339,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
     const allLocalities = await fetchAllLocalitySlugs();
     const subsidiesSegment = getRouteSlug(lang, "subsidies");
 
-    // Group by canton
+    // Group by canton (cantonCoats already fetched above)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const byCanton: Record<string, Array<{ slug: string; name: string; postalCode: string }>> = {};
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -374,8 +375,10 @@ export default async function SlugPage({ params }: SlugPageProps) {
                   href={`#canton-${canton}`}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium hover:bg-muted/50 transition-colors"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/canton-coats/${canton}.svg`} alt="" className="h-4 w-4" />
+                  {cantonCoats[canton] && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={cantonCoats[canton]} alt="" className="h-4 w-4" />
+                  )}
                   {canton} <span className="text-muted-foreground text-xs">({byCanton[canton].length})</span>
                 </a>
               ))}
@@ -386,8 +389,10 @@ export default async function SlugPage({ params }: SlugPageProps) {
               {sortedCantons.map((canton) => (
                 <section key={canton} id={`canton-${canton}`} className="scroll-mt-20">
                   <h2 className="text-lg font-heading font-semibold mb-4 sticky top-16 bg-background/95 backdrop-blur py-2 -mx-1 px-1 z-10 flex items-center gap-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/canton-coats/${canton}.svg`} alt="" className="h-5 w-5" />
+                    {cantonCoats[canton] && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={cantonCoats[canton]} alt="" className="h-5 w-5" />
+                    )}
                     {canton} <span className="text-muted-foreground text-sm font-normal">({byCanton[canton].length})</span>
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-1.5">
@@ -724,6 +729,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
                     ]}
                     tPrefix={tPrefix}
                     dictionary={dictionary}
+                    cantonCoats={cantonCoats}
                   />
                 </section>
               );

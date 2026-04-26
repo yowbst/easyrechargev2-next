@@ -411,6 +411,31 @@ export async function fetchVehicleBrands(
   return result?.data || [];
 }
 
+// ─── Cantons ────────────────────────────────────────────
+
+export async function fetchCantonCoats(): Promise<Record<string, string>> {
+  // Access cantons via localities relation (direct cantons access may be restricted)
+  const path = buildItemsQuery({
+    collection: "localities",
+    fields: ["canton_2l", "canton.coat_of_arms"],
+    limit: 5000,
+  });
+
+  const result = await directusFetch<{ data: AnyRecord[] }>(path, {
+    next: { revalidate: 86400, tags: ["canton-coats"] },
+  });
+
+  const coats: Record<string, string> = {};
+  for (const loc of result?.data || []) {
+    const code = loc.canton_2l;
+    const coatId = loc.canton?.coat_of_arms;
+    if (code && coatId && !coats[code]) {
+      coats[code] = `/api/cms/assets/${coatId}`;
+    }
+  }
+  return coats;
+}
+
 // ─── Localities ─────────────────────────────────────────
 
 const LOCALITY_FIELDS = [
@@ -447,7 +472,7 @@ export async function fetchLocality(
 export async function fetchAllLocalitySlugs() {
   const path = buildItemsQuery({
     collection: "localities",
-    fields: ["slug", "postal_code", "name", "canton_2l"],
+    fields: ["slug", "postal_code", "name", "canton_2l", "canton.coat_of_arms"],
     filter: { "[slug][_nnull]": "true" },
     limit: 5000,
   });

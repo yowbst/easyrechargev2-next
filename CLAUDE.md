@@ -13,6 +13,16 @@ npm run start        # Run production build
 npm run lint         # ESLint
 ```
 
+## Deploy
+
+Work happens on the `staging` branch. To deploy to both staging and production:
+
+```bash
+git push origin staging && git checkout main && git merge staging && git push origin main && git checkout staging
+```
+
+Pushing to `staging` triggers a Vercel preview deploy; pushing to `main` triggers the production deploy. Both can be done in one go.
+
 ## Tech Stack
 
 - **Framework:** Next.js 16 (App Router), React 19, TypeScript 5
