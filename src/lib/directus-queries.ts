@@ -418,6 +418,7 @@ export async function fetchCantonCoats(): Promise<Record<string, string>> {
   const path = buildItemsQuery({
     collection: "localities",
     fields: ["canton_2l", "canton.coat_of_arms"],
+    filter: { "[canton_2l][_neq]": "LI" },
     limit: 5000,
   });
 
@@ -473,7 +474,7 @@ export async function fetchAllLocalitySlugs() {
   const path = buildItemsQuery({
     collection: "localities",
     fields: ["slug", "postal_code", "name", "canton_2l", "canton.coat_of_arms"],
-    filter: { "[slug][_nnull]": "true" },
+    filter: { "[slug][_nnull]": "true", "[canton_2l][_neq]": "LI" },
     limit: 5000,
   });
 

@@ -272,7 +272,7 @@ export async function getVehicleEntries(): Promise<UrlEntry[]> {
 export async function getLocalitySubsidyEntries(): Promise<UrlEntry[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await directusFetch<{ data: any[] }>(
-    "/items/localities?fields=slug,subsidies_fetched_at&filter[slug][_nnull]=true&limit=5000",
+    "/items/localities?fields=slug,subsidies_fetched_at&filter[slug][_nnull]=true&filter[canton_2l][_neq]=LI&limit=5000",
     { next: { revalidate: 3600, tags: ["localities-sitemap"] } },
   );
 
