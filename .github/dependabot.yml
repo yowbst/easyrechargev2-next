@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      posthog:
+        patterns:
+          - "posthog-js"
+          - "posthog-node"
+          - "@posthog/*"
+    allow:
+      - dependency-name: "posthog-js"
+      - dependency-name: "posthog-node"
+      - dependency-name: "@posthog/*"
+    target-branch: "staging"
+    commit-message:
+      prefix: "deps"
