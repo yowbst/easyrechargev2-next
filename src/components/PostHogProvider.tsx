@@ -48,6 +48,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           maskTextSelector: ".ph-no-capture",
         },
         logs: {
+          captureConsoleLogs: true,
           serviceName: "easyrecharge-web",
           environment: process.env.NODE_ENV,
         },
