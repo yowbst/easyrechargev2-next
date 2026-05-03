@@ -47,6 +47,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           maskAllInputs: true,
           maskTextSelector: ".ph-no-capture",
         },
+        logs: {
+          serviceName: "easyrecharge-web",
+          environment: process.env.NODE_ENV,
+        },
       });
       setClient(posthog);
 
