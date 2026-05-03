@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { DIRECTUS_URL } from "@/lib/directus";
+import { serverLog } from "@/lib/posthog-server";
 
 /**
  * Proxy Directus asset files (images, etc.).
@@ -40,6 +41,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("[Asset proxy] Error:", error);
+    serverLog("ERROR", "Asset proxy failed", { route: "assets", asset_id: id, error: error instanceof Error ? error.message : String(error) });
     return new NextResponse(null, { status: 502 });
   }
 }

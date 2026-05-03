@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { directusFetch, DIRECTUS_DEFAULT_LOCALE } from "@/lib/directus";
+import { serverLog } from "@/lib/posthog-server";
 
 const LOCALITIES_COLLECTION =
   process.env.DIRECTUS_LOCALITIES_COLLECTION || "localities";
@@ -44,6 +45,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("[Localities] Error:", error);
+    serverLog("ERROR", "Localities fetch failed", { route: "localities", error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: "Failed to fetch localities" },
       { status: 500 },

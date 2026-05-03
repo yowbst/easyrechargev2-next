@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { after } from "next/server";
 import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
-import { getPostHogServer } from "@/lib/posthog-server";
+import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 
 export async function POST(req: Request) {
   try {
@@ -48,19 +48,16 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, sessionToken });
   } catch (error) {
-    const posthog = getPostHogServer();
-    const distinctId = "server";
-    posthog.capture({
-      distinctId,
-      event: "server_mini_quote_error",
-      properties: {
-        error_message: error instanceof Error ? error.message : String(error),
-        error_stack: error instanceof Error ? error.stack : undefined,
-      },
-    });
-    after(() => posthog.flush());
-
     console.error("[MiniQuote] Submission error:", error);
+    serverLog("ERROR", "Mini-quote submission failed", { route: "mini-quote", error: error instanceof Error ? error.message : String(error) });
+    try {
+      const posthog = getPostHogServer();
+      posthog.captureException(error, "anonymous", {
+        form_type: "mini-quote",
+        context: "form_submission",
+      });
+      after(() => posthog.flush());
+    } catch { /* don't let PostHog break the error response */ }
     return NextResponse.json(
       { success: false, message: "Server error" },
       { status: 500 },

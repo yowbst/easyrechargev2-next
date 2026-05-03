@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
 import { directusFetch } from "@/lib/directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { getPostHogServer } from "@/lib/posthog-server";
+import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 
 function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
   if (!raw) return { raw: null, international: null, countryCode: null, countryCallingCode: null };
@@ -163,6 +163,7 @@ export async function POST(req: Request) {
         });
         if (!webhookRes.ok) {
           console.error("[Contact] Webhook returned:", webhookRes.status);
+          serverLog("WARNING", "Webhook returned non-OK status", { route: "contact", status: webhookRes.status });
           const posthog = getPostHogServer();
           posthog.capture({
             distinctId: "anonymous",
@@ -173,6 +174,7 @@ export async function POST(req: Request) {
         }
       } catch (err) {
         console.error("[Contact] Webhook failed:", err);
+        serverLog("ERROR", "Webhook delivery failed", { route: "contact", error: err instanceof Error ? err.message : String(err) });
         const posthog = getPostHogServer();
         posthog.captureException(err, "anonymous", {
           form_type: "contact",
@@ -185,6 +187,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, message: "Message reçu avec succès" });
   } catch (error) {
     console.error("[Contact] Submission error:", error);
+    serverLog("ERROR", "Contact submission failed", { route: "contact", error: error instanceof Error ? error.message : String(error) });
     try {
       const posthog = getPostHogServer();
       posthog.captureException(error, "anonymous", {

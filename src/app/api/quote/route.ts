@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
 import { directusFetch } from "@/lib/directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { getPostHogServer } from "@/lib/posthog-server";
+import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 
 function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
   if (!raw) return { raw: null, international: null, countryCode: null, countryCallingCode: null };
@@ -162,6 +162,7 @@ export async function POST(req: Request) {
         });
         if (!webhookRes.ok) {
           console.error("[Quote] Webhook returned:", webhookRes.status);
+          serverLog("WARNING", "Webhook returned non-OK status", { route: "quote", status: webhookRes.status, submission_id: submission.id });
           const posthog = getPostHogServer();
           posthog.capture({
             distinctId: phIds.phDistinctId ?? "anonymous",
@@ -172,6 +173,7 @@ export async function POST(req: Request) {
         }
       } catch (err) {
         console.error("[Quote] Webhook failed:", err);
+        serverLog("ERROR", "Webhook delivery failed", { route: "quote", submission_id: submission.id, error: err instanceof Error ? err.message : String(err) });
         const posthog = getPostHogServer();
         posthog.captureException(err, phIds.phDistinctId ?? "anonymous", {
           form_type: "quote",
@@ -185,6 +187,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, submissionId: submission.id });
   } catch (error) {
     console.error("[Quote] Submission error:", error);
+    serverLog("ERROR", "Quote submission failed", { route: "quote", error: error instanceof Error ? error.message : String(error) });
     try {
       const posthog = getPostHogServer();
       posthog.captureException(error, "anonymous", {

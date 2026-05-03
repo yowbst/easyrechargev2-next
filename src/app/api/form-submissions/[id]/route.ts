@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { storage } from "@/lib/directus-storage";
+import { serverLog } from "@/lib/posthog-server";
 
 export async function GET(
   _req: Request,
@@ -16,6 +17,7 @@ export async function GET(
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     console.error("[FormSubmissions] GET error:", error);
+    serverLog("ERROR", "Form submission fetch failed", { route: "form-submissions", error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { success: false, message: "Server error" },
       { status: 500 },
