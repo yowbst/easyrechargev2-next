@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { directusFetch, DIRECTUS_DEFAULT_LOCALE } from "@/lib/directus";
+import { serverLog } from "@/lib/posthog-server";
 
 /**
  * GET /api/cms/localities/:id/subsidies
@@ -35,7 +36,9 @@ export async function GET(
       { hasChargingSubsidy },
       { headers: { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" } },
     );
-  } catch {
+  } catch (error) {
+    console.error("[Subsidies] Error:", error);
+    serverLog("WARNING", "Subsidies check failed, returning default", { route: "localities/subsidies", locality_id: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ hasChargingSubsidy: false });
   }
 }

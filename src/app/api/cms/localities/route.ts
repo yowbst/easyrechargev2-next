@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { directusFetch, DIRECTUS_DEFAULT_LOCALE } from "@/lib/directus";
-import { serverLog } from "@/lib/posthog-server";
+import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 
 const LOCALITIES_COLLECTION =
   process.env.DIRECTUS_LOCALITIES_COLLECTION || "localities";
@@ -46,6 +46,11 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error("[Localities] Error:", error);
     serverLog("ERROR", "Localities fetch failed", { route: "localities", error: error instanceof Error ? error.message : String(error) });
+    try {
+      const posthog = getPostHogServer();
+      posthog.captureException(error, "anonymous", { context: "localities_search" });
+      after(() => posthog.flush());
+    } catch { /* don't let PostHog break the error response */ }
     return NextResponse.json(
       { error: "Failed to fetch localities" },
       { status: 500 },

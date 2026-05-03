@@ -4,6 +4,7 @@ import {
   getBlogEntries,
   getVehicleEntries,
 } from "@/lib/sitemap/registries";
+import { serverLog } from "@/lib/posthog-server";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -65,6 +66,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("[Debug URLs] Error:", error);
+    serverLog("ERROR", "Debug URLs fetch failed", { route: "debug/urls", error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: "Failed to fetch URLs" },
       { status: 500 },
