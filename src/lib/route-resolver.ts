@@ -21,6 +21,7 @@ export type Sub1Route =
   | { type: "blog-listing"; routeId: string; entry: PageRegistryEntry }
   | { type: "quote-success"; quoteEntry: PageRegistryEntry }
   | { type: "quote-submission"; submissionId: string; quoteEntry: PageRegistryEntry }
+  | { type: "locality-redirect"; localitySlug: string; localitiesEntry: PageRegistryEntry }
   | null;
 
 export type Sub2Route =
@@ -101,6 +102,11 @@ export async function resolveSub1Route(
   // Blog category page: /{lang}/{blogSlug}/{categorySlug} — render as blog listing
   if (entry.id === "blog") {
     return { type: "blog-listing", routeId: entry.id, entry };
+  }
+
+  // Localities: /{lang}/{localitiesSlug}/{localitySlug} → redirect to subsidies sub-page
+  if (entry.id === "localities") {
+    return { type: "locality-redirect", localitySlug: sub1, localitiesEntry: entry };
   }
 
   return null;

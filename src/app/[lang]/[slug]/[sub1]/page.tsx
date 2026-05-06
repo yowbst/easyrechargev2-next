@@ -1118,5 +1118,11 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     redirect(`/${lang}/${slug}`);
   }
 
+  if (route.type === "locality-redirect") {
+    const { permanentRedirect } = await import("next/navigation");
+    const subsidiesSegment = getRouteSlug(lang, "subsidies");
+    permanentRedirect(`/${lang}/${slug}/${route.localitySlug}/${subsidiesSegment}`);
+  }
+
   notFound();
 }
