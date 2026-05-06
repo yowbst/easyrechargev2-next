@@ -2,6 +2,12 @@ import { directusFetch } from "./directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import type { FormSession, FormUser, FormSubmission } from "@shared/types";
 
+/** Truncate a string to fit Directus VARCHAR columns (default 255). */
+function truncate(value: string | null | undefined, max = 255): string | null {
+  if (!value) return null;
+  return value.length > max ? value.slice(0, max) : value;
+}
+
 function normalizePhone(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const parsed = parsePhoneNumberFromString(raw);
@@ -75,7 +81,13 @@ class DirectusStorage {
         "/items/form_sessions",
         {
           method: "POST",
-          body: JSON.stringify({ ...data, environment: getEnvironment() }),
+          body: JSON.stringify({
+            ...data,
+            user_agent: truncate(data.user_agent),
+            location_path: truncate(data.location_path),
+            location_params: truncate(data.location_params),
+            environment: getEnvironment(),
+          }),
           next: { revalidate: 0 },
         },
       );
