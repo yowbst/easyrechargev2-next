@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { after } from "next/server";
+import { NextResponse, after } from "next/server";
 import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
@@ -10,6 +9,18 @@ export async function POST(req: Request) {
     const { housingStatus, postalCode, locality, canton, formType, pageId, locale } = body;
 
     if (!housingStatus || !postalCode) {
+      const missing = [!housingStatus && "housingStatus", !postalCode && "postalCode"].filter(Boolean) as string[];
+      serverLog("WARNING", "Mini-quote validation failed", { route: "mini-quote", missing_fields: missing.join(",") });
+      const posthog = getPostHogServer();
+      posthog.capture({
+        distinctId: "anonymous",
+        event: "server_form_validation_failed",
+        properties: {
+          form_type: "mini-quote",
+          missing_fields: missing,
+        },
+      });
+      after(() => posthog.flush());
       return NextResponse.json(
         { success: false, message: "Missing required fields" },
         { status: 400 },

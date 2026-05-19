@@ -11,6 +11,7 @@ export async function GET(
     const result = await storage.getSubmissionById(id);
 
     if (!result) {
+      serverLog("WARNING", "Form submission not found", { route: "form-submissions", id });
       return NextResponse.json({ success: false }, { status: 404 });
     }
 

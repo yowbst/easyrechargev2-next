@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import {
   getCmsEntries,
   getBlogEntries,
   getVehicleEntries,
 } from "@/lib/sitemap/registries";
-import { serverLog } from "@/lib/posthog-server";
+import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -67,6 +67,11 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error("[Debug URLs] Error:", error);
     serverLog("ERROR", "Debug URLs fetch failed", { route: "debug/urls", error: error instanceof Error ? error.message : String(error) });
+    try {
+      const posthog = getPostHogServer();
+      posthog.captureException(error, "anonymous", { context: "debug_urls" });
+      after(() => posthog.flush());
+    } catch { /* don't let PostHog break the error response */ }
     return NextResponse.json(
       { error: "Failed to fetch URLs" },
       { status: 500 },
