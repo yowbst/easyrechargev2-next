@@ -143,6 +143,7 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          lang,
           attribution,
           posthog: {
             phDistinctId: ph?.get_distinct_id?.() ?? null,
