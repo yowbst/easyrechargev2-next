@@ -102,7 +102,7 @@ export async function POST(req: Request) {
             email,
             first_name: firstName,
             last_name: lastName,
-            locale: req.headers.get("accept-language")?.split(",")[0] ?? null,
+            locale: lang ?? req.headers.get("accept-language")?.split(",")[0] ?? null,
           },
         });
         after(() => posthog.flush());
