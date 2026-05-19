@@ -45,6 +45,7 @@ interface CreateUserData {
   first_name?: string | null;
   last_name?: string | null;
   phone?: string | null;
+  language?: string | null;
   date_terms_accepted?: string | null;
 }
 
@@ -124,6 +125,7 @@ class DirectusStorage {
             first_name: data.first_name || user.first_name,
             last_name: data.last_name || user.last_name,
             phone: normalizePhone(data.phone) || user.phone,
+            language: data.language || user.language,
             submission_count: (user.submission_count || 0) + 1,
             ...(data.date_terms_accepted && { date_terms_accepted: data.date_terms_accepted }),
           }),
@@ -142,6 +144,7 @@ class DirectusStorage {
           first_name: data.first_name,
           last_name: data.last_name,
           phone: normalizePhone(data.phone),
+          language: data.language || null,
           date_terms_accepted: data.date_terms_accepted || null,
           submission_count: 1,
           environment: getEnvironment(),

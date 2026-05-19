@@ -19,6 +19,7 @@ export interface FormUser {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
+  language: string | null;
   submission_count: number;
   date_created: string;
   date_updated: string;
