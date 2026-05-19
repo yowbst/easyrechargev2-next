@@ -16,7 +16,7 @@ function normalizePhone(raw: string | null | undefined): string | null {
 }
 
 /** Tag records with environment so dev/staging/prod submissions are distinguishable. */
-function getEnvironment(): string {
+export function getEnvironment(): "development" | "staging" | "production" {
   // VERCEL_ENV is set automatically by Vercel: "production" | "preview" | "development"
   const vercelEnv = process.env.VERCEL_ENV;
   // VERCEL_GIT_COMMIT_REF gives us the branch name

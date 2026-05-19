@@ -4,6 +4,7 @@ import { storage } from "@/lib/directus-storage";
 import { directusFetch } from "@/lib/directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
+import { runDispatch, normalizeCanton, type DispatchResult } from "@/lib/dispatch";
 
 function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
   if (!raw) return { raw: null, international: null, countryCode: null, countryCallingCode: null };
@@ -87,6 +88,14 @@ export async function POST(req: Request) {
 
     const { attribution: _a, posthog: _ph, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, miniQuoteSessionToken: _mqt, lang: _lang, ...quoteData } = body;
 
+    // Normalize canton before persistence so downstream consumers (CRM, ledger,
+    // Make payload) all see the 2-letter code. The form sometimes writes the
+    // localized name (e.g. "Valais" instead of "VS").
+    const normalizedCanton = normalizeCanton(typeof quoteData.canton === "string" ? quoteData.canton : null);
+    if (normalizedCanton && quoteData.canton !== normalizedCanton) {
+      quoteData.canton = normalizedCanton;
+    }
+
     const submission = await storage.createFormSubmission({
       session: session.id,
       user: formUser.id,
@@ -96,6 +105,16 @@ export async function POST(req: Request) {
       location_params: refererUrl?.search.slice(1) || null,
       data: quoteData,
       status: "success",
+    });
+
+    // Resolve partner dispatch. Gated by DISPATCH_MODE env var (off|shadow|live).
+    // Returns a payload-ready object embedded in the Make webhook below.
+    // runDispatch never throws — failures are logged and surface as an empty result.
+    const dispatchResult: DispatchResult = await runDispatch({
+      submissionId: submission.id,
+      rawCanton: normalizedCanton ?? (typeof quoteData.canton === "string" ? quoteData.canton : null),
+      email,
+      locale: (lang === "de" ? "de" : "fr"),
     });
 
     // Identify user in PostHog server-side (client may not have loaded yet)
@@ -154,6 +173,7 @@ export async function POST(req: Request) {
           personUrl: phDistinctId ? `${posthogDashboard}/person/${phDistinctId}` : null,
         },
         attribution: body.attribution ?? {},
+        dispatch: dispatchResult,
       };
 
       try {
