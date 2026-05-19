@@ -35,7 +35,7 @@ async function getQuoteWebhookUrl(): Promise<string | null> {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { firstName, lastName, email, phone, phoneCountry } = body;
+    const { firstName, lastName, email, phone, phoneCountry, lang } = body;
 
     if (!firstName || !lastName || !email) {
       const posthog = getPostHogServer();
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     const session = await storage.createOrGetFormSession(sessionToken, {
       session_token: sessionToken,
       form_type: "quote",
-      locale: req.headers.get("accept-language")?.split(",")[0] ?? null,
+      locale: lang ?? req.headers.get("accept-language")?.split(",")[0] ?? null,
       user_agent: req.headers.get("user-agent") ?? null,
       location_path: refererUrl?.pathname ?? null,
       location_route: "quote",
@@ -81,10 +81,11 @@ export async function POST(req: Request) {
       first_name: firstName ?? null,
       last_name: lastName ?? null,
       phone: phone ?? null,
+      language: lang ?? null,
       date_terms_accepted: body.acceptTerms ? new Date().toISOString() : null,
     });
 
-    const { attribution: _a, posthog: _ph, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, miniQuoteSessionToken: _mqt, ...quoteData } = body;
+    const { attribution: _a, posthog: _ph, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, miniQuoteSessionToken: _mqt, lang: _lang, ...quoteData } = body;
 
     const submission = await storage.createFormSubmission({
       session: session.id,
@@ -139,11 +140,12 @@ export async function POST(req: Request) {
           firstName,
           lastName,
           phone: parsePhone(phone, phoneCountry),
+          language: lang ?? null,
         },
         session: {
           id: session.id,
           token: session.session_token ?? null,
-          locale: req.headers.get("accept-language")?.split(",")[0] ?? null,
+          locale: lang ?? req.headers.get("accept-language")?.split(",")[0] ?? null,
           userAgent: req.headers.get("user-agent") ?? null,
           ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
         },
