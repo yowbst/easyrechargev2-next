@@ -4,8 +4,7 @@ import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 
 /**
  * Proxy Directus asset files (images, etc.).
- * Fallback for cases where Directus assets require auth.
- * If assets are public, use direct URLs via next/image remotePatterns instead.
+ * Retries once on 500/502/503 to handle transient Directus/storage failures.
  */
 export async function GET(
   req: Request,
@@ -18,20 +17,33 @@ export async function GET(
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    // Forward query params (e.g. ?width=600&height=400 for transforms)
     const url = new URL(req.url);
     const qs = url.search || "";
-    const upstream = await fetch(`${DIRECTUS_URL}/assets/${id}${qs}`, {
-      headers,
-      redirect: "follow",
-    });
+    const assetUrl = `${DIRECTUS_URL}/assets/${id}${qs}`;
 
-    if (!upstream.ok) {
+    let upstream: Response | null = null;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      upstream = await fetch(assetUrl, {
+        headers,
+        redirect: "follow",
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (upstream.ok) break;
+      const isTransient = upstream.status >= 500;
+      if (isTransient && attempt < 2) {
+        await upstream.body?.cancel();
+        await new Promise((r) => setTimeout(r, 500));
+        continue;
+      }
+      const errorBody = await upstream.text().catch(() => "");
+      console.error(
+        `[Asset proxy] Upstream ${upstream.status} for ${id}: ${errorBody}`,
+      );
       return new NextResponse(null, { status: upstream.status });
     }
 
-    const contentType = upstream.headers.get("content-type");
-    const body = await upstream.arrayBuffer();
+    const contentType = upstream!.headers.get("content-type");
+    const body = await upstream!.arrayBuffer();
 
     return new NextResponse(body, {
       headers: {
