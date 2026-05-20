@@ -10,8 +10,8 @@ export function getOpenApiSpec() {
     info: {
       title: "easyRecharge API",
       description:
-        "Internal API for the easyRecharge Next.js application. Handles form submissions, CMS asset proxying, and locality search.",
-      version: "2.0.0",
+        "Internal API for the easyRecharge Next.js application. Handles form submissions, partner dispatch resolution, CMS asset proxying, and locality search.",
+      version: "2.1.0",
     },
     servers: [{ url: "", description: "Current server" }],
     paths: {
@@ -20,7 +20,7 @@ export function getOpenApiSpec() {
           tags: ["Forms"],
           summary: "Submit a quote request",
           description:
-            "Creates a form session, user, and submission in Directus, then fires a webhook with the full payload.",
+            "Creates a form session, user, and submission in Directus. Resolves partner dispatch (when DISPATCH_MODE is set), records ledger rows in partner_dispatches, then fires the configured Make webhook with `submission.dispatch` populated.",
           requestBody: {
             required: true,
             content: {
@@ -270,6 +270,165 @@ export function getOpenApiSpec() {
         },
       },
 
+      "/api/mini-quote": {
+        post: {
+          tags: ["Forms"],
+          summary: "Submit a mini-quote (housing + canton only)",
+          description:
+            "Lightweight intake form used by MiniQuoteCard / MiniQuoteForm islands. Persists a form_session + form_submission and returns the session token so a later full quote can be linked via `miniQuoteSessionToken`.",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/MiniQuoteRequest" },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Mini-quote stored",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      sessionToken: { type: "string", format: "uuid" },
+                    },
+                  },
+                },
+              },
+            },
+            "400": {
+              description: "Missing housingStatus or postalCode",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+          },
+        },
+      },
+
+      "/api/cms/localities/{id}/subsidies": {
+        get: {
+          tags: ["CMS"],
+          summary: "Check if a locality offers a charging subsidy",
+          description:
+            "Lightweight lookup — only fetches the subsidies JSON. Returns `hasChargingSubsidy: true` when the locality has a `charging-infrastructure` subsidy for the `personal` audience.",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+              description: "Directus locality ID",
+            },
+            {
+              name: "locale",
+              in: "query",
+              schema: { type: "string", default: "fr-FR" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Subsidy flag",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { hasChargingSubsidy: { type: "boolean" } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+
+      "/api/sitemap-index": {
+        get: {
+          tags: ["SEO"],
+          summary: "Sitemap index (XML)",
+          description:
+            "XML sitemap index pointing to the per-segment sitemaps (cms, blog, vehicles, localities) at `/sitemap/{segment}.xml`.",
+          responses: {
+            "200": {
+              description: "Sitemap index XML",
+              content: { "application/xml": { schema: { type: "string" } } },
+            },
+          },
+        },
+      },
+
+      "/api/debug/dispatches": {
+        get: {
+          tags: ["Debug"],
+          summary: "Inspect partner_dispatches ledger",
+          description:
+            "Read-only view of recent partner dispatch records. Useful for spot-checking shadow vs. live behavior without opening Directus admin. Defaults to filtering by the current Vercel environment.",
+          parameters: [
+            {
+              name: "limit",
+              in: "query",
+              schema: { type: "integer", default: 20, maximum: 200 },
+              description: "Max rows to return (default 20, max 200).",
+            },
+            {
+              name: "canton",
+              in: "query",
+              schema: { type: "string", example: "VD" },
+              description: "Filter to a single 2-letter canton code.",
+            },
+            {
+              name: "status",
+              in: "query",
+              schema: {
+                type: "string",
+                enum: ["dispatched", "skipped_quota", "skipped_test"],
+              },
+              description: "Filter by ledger status.",
+            },
+            {
+              name: "partner",
+              in: "query",
+              schema: { type: "string", example: "eme-energies" },
+              description: "Filter by partner slug.",
+            },
+            {
+              name: "env",
+              in: "query",
+              schema: {
+                type: "string",
+                enum: ["development", "staging", "production", "all"],
+              },
+              description: "Environment filter. Defaults to the current deploy environment. Pass `all` to skip filtering.",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Recent ledger rows",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      count: { type: "integer", example: 12 },
+                      environment: { type: "string", example: "staging" },
+                      rows: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/PartnerDispatch" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "500": {
+              description: "Failed to fetch from Directus",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+          },
+        },
+      },
+
       "/api/debug/urls": {
         get: {
           tags: ["Debug"],
@@ -375,31 +534,152 @@ export function getOpenApiSpec() {
             email: { type: "string", format: "email", example: "jean@example.ch" },
             phone: { type: "string", example: "+41791234567" },
             phoneCountry: { type: "string", example: "CH" },
+            lang: { type: "string", enum: ["fr", "de"], example: "fr" },
+            acceptTerms: { type: "boolean" },
+            miniQuoteSessionToken: { type: "string", format: "uuid", description: "When the user came from a MiniQuote, this links both submissions under the same session." },
+            // Housing
             housingStatus: { type: "string", enum: ["owner", "tenant"] },
             housingType: { type: "string" },
             solarEquipment: { type: "string" },
             homeBattery: { type: "string" },
+            neighborhoodEquipment: { type: "string" },
+            electricalBoardType: { type: "string" },
+            // Parking
             parkingSpotLocation: { type: "string" },
             electricalLineDistance: { type: "number" },
             electricalLineHoleCount: { type: "number" },
+            // Charger
             parkingSpotCount: { type: "number" },
+            ecpStatus: { type: "string", description: "Existing charging point status" },
+            ecpBrand: { type: "string" },
+            ecpModel: { type: "string" },
             ecpProvided: { type: "string" },
             deadline: { type: "string" },
+            // Vehicle
             vehicleStatus: { type: "string" },
             vehicleBrand: { type: "string" },
             vehicleModel: { type: "string" },
             vehicleTripDistance: { type: "number" },
             vehicleChargingHours: { type: "number" },
-            canton: { type: "string", example: "VD" },
+            // Address
+            addressMode: { type: "string", enum: ["google", "manual"] },
+            address: { type: "string", description: "Full address when addressMode=google" },
+            streetName: { type: "string", description: "When addressMode=manual" },
+            streetNb: { type: "string", description: "When addressMode=manual" },
             postalCode: { type: "string", example: "1000" },
             locality: { type: "string", example: "Lausanne" },
+            canton: {
+              type: "string",
+              example: "VD",
+              description: "Accepts both 2-letter codes (`VD`) and localized names (`Vaud`, `Waadt`, `Valais`). Normalized to a 2-letter code server-side before persistence.",
+            },
+            country: { type: "string", example: "CH" },
+            // Finalize
+            approval: { type: "string" },
             comment: { type: "string" },
-            attribution: { type: "object", description: "UTM / ad click attribution data" },
+            attribution: {
+              type: "object",
+              description: "Ad-click / UTM attribution mirrored from server-set cookies (gclid, fbclid, msclkid, utm_*).",
+              additionalProperties: { type: "string" },
+            },
             posthog: {
               type: "object",
               properties: {
                 phDistinctId: { type: "string" },
                 phSessionId: { type: "string" },
+              },
+            },
+          },
+        },
+
+        MiniQuoteRequest: {
+          type: "object",
+          required: ["housingStatus", "postalCode"],
+          properties: {
+            housingStatus: { type: "string", enum: ["owner", "tenant"] },
+            postalCode: { type: "string", example: "1000" },
+            locality: { type: "string", example: "Lausanne" },
+            canton: { type: "string", example: "VD" },
+            formType: { type: "string", example: "mini-quote-card" },
+            pageId: { type: "string", description: "CMS route_id of the page where the mini-quote was submitted." },
+            locale: { type: "string", example: "fr" },
+            posthog: {
+              type: "object",
+              properties: {
+                phDistinctId: { type: "string" },
+                phSessionId: { type: "string" },
+              },
+            },
+          },
+        },
+
+        DispatchBlock: {
+          type: "object",
+          description: "Outbound block on the Make webhook payload. Surfaces the dispatch decision so Make's Iterator can fan out partner emails and the Google Ads module can use the per-partner billable_rate.",
+          properties: {
+            mode: {
+              type: "string",
+              enum: ["off", "shadow", "live"],
+              description: "Read from DISPATCH_MODE env var. `off` and `shadow` always send empty targets so Make's legacy path fires.",
+            },
+            canton: { type: "string", example: "VD", description: "Normalized 2-letter code." },
+            isTest: {
+              type: "boolean",
+              description: "True when email matches `site_settings.global_config.dispatch.test_email_patterns` OR environment != production. Suppresses real dispatch.",
+            },
+            billableRate: {
+              type: ["number", "null"],
+              example: 0.5,
+              description: "Max of `partner.billable_rate` across targets, fed into Google Ads `conversionValue = 40 × billableRate`. Null when targets is empty.",
+            },
+            summary: {
+              type: "object",
+              properties: {
+                resolved: { type: "integer" },
+                dispatched: { type: "integer" },
+                skipped: { type: "integer" },
+                reasons: { type: "array", items: { type: "string" }, example: ["exclusive_over_quota"] },
+              },
+            },
+            targets: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  partnerSlug: { type: "string", example: "eme-energies" },
+                  displayName: { type: "string", example: "E-ME Énergies" },
+                  email: { type: "string", format: "email" },
+                  language: { type: "string", enum: ["fr", "de"] },
+                  mode: { type: "string", enum: ["exclusive", "shared"] },
+                  billableRate: { type: "number", example: 0.5 },
+                },
+              },
+            },
+          },
+        },
+
+        PartnerDispatch: {
+          type: "object",
+          description: "One row of the partner_dispatches ledger.",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            dispatched_at: { type: "string", format: "date-time" },
+            status: {
+              type: "string",
+              enum: ["dispatched", "skipped_quota", "skipped_test"],
+            },
+            canton: { type: "string", example: "VD", description: "Snapshot of the 2-letter code at dispatch time." },
+            mode_used: { type: "string", enum: ["exclusive", "shared"] },
+            month_bucket: { type: "string", example: "2026-05", description: "YYYY-MM UTC — quota counting key." },
+            environment: { type: "string", enum: ["development", "staging", "production"] },
+            submission: { type: "string", format: "uuid" },
+            partner: {
+              type: "object",
+              properties: {
+                id: { type: "string", format: "uuid" },
+                slug: { type: "string", example: "eme-energies" },
+                name: { type: "string", example: "E-ME Énergies" },
+                notification_email: { type: "string", format: "email" },
               },
             },
           },
