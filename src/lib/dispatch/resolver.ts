@@ -128,6 +128,16 @@ function toTarget(e: ResolvedArea, modeUsed: "exclusive" | "shared"): DispatchTa
     billableRate: typeof p.billable_rate === "number"
       ? p.billable_rate
       : parseFloat(String(p.billable_rate ?? "1")),
+    businessName: p.business_name ?? null,
+    legalForm: p.legal_form ?? null,
+    uid: p.uid ?? null,
+    address: {
+      streetName: p.street_name ?? null,
+      streetNumber: p.street_number ?? null,
+      postalCode: p.postal_code ?? null,
+      locality: p.locality ?? null,
+      canton: p.canton?.code ?? null,
+    },
   };
 }
 

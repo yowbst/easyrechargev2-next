@@ -24,6 +24,16 @@ const PARTNER_AREA_FIELDS = [
   "partner.language",
   "partner.billable_rate",
   "partner.environment",
+  // Business identification (sent in dispatch.targets[]).
+  "partner.business_name",
+  "partner.legal_form",
+  "partner.uid",
+  "partner.street_name",
+  "partner.street_number",
+  "partner.postal_code",
+  "partner.locality",
+  "partner.canton.id",
+  "partner.canton.code",
 ].join(",");
 
 /**

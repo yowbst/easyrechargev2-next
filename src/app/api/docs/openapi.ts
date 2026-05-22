@@ -647,11 +647,41 @@ export function getOpenApiSpec() {
                 type: "object",
                 properties: {
                   partnerSlug: { type: "string", example: "eme-energies" },
-                  displayName: { type: "string", example: "E-ME Énergies" },
+                  displayName: { type: "string", example: "E-ME Énergies", description: "Short display name (Directus `partners.name`)." },
                   email: { type: "string", format: "email" },
                   language: { type: "string", enum: ["fr", "de"] },
                   mode: { type: "string", enum: ["exclusive", "shared"] },
                   billableRate: { type: "number", example: 0.5 },
+                  businessName: {
+                    type: ["string", "null"],
+                    example: "E-ME Énergies SA",
+                    description: "Official legal name (Directus `partners.business_name`). May differ from `displayName`.",
+                  },
+                  legalForm: {
+                    type: ["string", "null"],
+                    enum: ["corporation", "llc", "gp", "sp", null],
+                    description: "`corporation` = SA / AG, `llc` = Sàrl / GmbH, `gp` = General partnership / SNC, `sp` = Sole proprietorship.",
+                  },
+                  uid: {
+                    type: ["string", "null"],
+                    example: "CHE-392.813.544",
+                    description: "Swiss business UID.",
+                  },
+                  address: {
+                    type: "object",
+                    description: "Partner HQ address. Always present; individual fields may be null when not set in Directus.",
+                    properties: {
+                      streetName: { type: ["string", "null"] },
+                      streetNumber: { type: ["string", "null"] },
+                      postalCode: { type: ["string", "null"], example: "1000" },
+                      locality: { type: ["string", "null"], example: "Lausanne" },
+                      canton: {
+                        type: ["string", "null"],
+                        example: "VD",
+                        description: "2-letter code of the partner's HQ canton (different from the top-level `dispatch.canton`, which is the submission's canton).",
+                      },
+                    },
+                  },
                 },
               },
             },

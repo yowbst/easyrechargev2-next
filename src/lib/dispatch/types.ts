@@ -11,6 +11,8 @@ export type DispatchStatus =
   | "skipped_no_partner"
   | "skipped_test";
 
+export type LegalForm = "corporation" | "llc" | "gp" | "sp";
+
 export interface Canton {
   id: string;
   code: string;
@@ -28,6 +30,23 @@ export interface Partner {
   language: Language;
   billable_rate: number;
   environment: Environment;
+  // Business identification (administrative metadata).
+  business_name?: string | null;
+  legal_form?: LegalForm | null;
+  uid?: string | null;
+  street_name?: string | null;
+  street_number?: string | null;
+  postal_code?: string | null;
+  locality?: string | null;
+  canton?: { id: string; code: string } | null;
+}
+
+export interface TargetAddress {
+  streetName: string | null;
+  streetNumber: string | null;
+  postalCode: string | null;
+  locality: string | null;
+  canton: string | null; // 2-letter code of the partner's HQ canton
 }
 
 export interface PartnerArea {
@@ -54,6 +73,13 @@ export interface DispatchTarget {
   language: Language;
   mode: AreaMode;
   billableRate: number;
+  // Business identification — surfaced so Make can render partner-facing
+  // documents (contracts, invoice references) or pass to downstream CRM
+  // without a second Directus round-trip.
+  businessName: string | null;
+  legalForm: LegalForm | null;
+  uid: string | null;
+  address: TargetAddress;
 }
 
 export interface DispatchSummary {
