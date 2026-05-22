@@ -8,9 +8,13 @@ Master record per installer partner. Multiple rows per partner are allowed, one 
 
 | Field | Type | Notes |
 |---|---|---|
+**Identity & dispatch policy**
+
+| Field | Type | Notes |
+|---|---|---|
 | `id` | uuid | PK |
 | `status` | dropdown (string) | `active` (dispatched) / `paused` (skipped). Partner-lifecycle, not the Directus `published/draft/archived` convention. |
-| `name` | string | Display name (e.g. `E-ME Énergies`). |
+| `name` | string | Display name shown in admin and in PostHog (e.g. `E-ME Énergies`). |
 | `slug` | string | Stable identifier for logs and ledger queries (e.g. `eme-energies`). |
 | `notification_email` | string | Where Make sends the lead email. |
 | `monthly_quota` | integer | Max leads per UTC calendar month across this partner's areas. `0` = unlimited. |
@@ -19,6 +23,21 @@ Master record per installer partner. Multiple rows per partner are allowed, one 
 | `billable_rate` | decimal | `0.0`–`1.0`. Per-partner fraction of leads that are billable. Feeds Google Ads `conversionValue = 40 × billable_rate`. Default `1.0`. |
 | `environment` | dropdown | `development` / `staging` / `production`. Set by ops; matches Vercel's `VERCEL_ENV` mapping in `src/lib/directus-storage.ts:getEnvironment()`. |
 | `notes` | text | Free notes. |
+
+**Business identification & address** — administrative metadata, not used by the resolver. Surfaces in CRM exports, contracts, and partner-facing communications.
+
+| Field | Type | Notes |
+|---|---|---|
+| `business_name` | string | Official legal name. May differ from the display `name` (e.g. `E-ME Énergies SA` vs. display `E-ME Énergies`). |
+| `legal_form` | dropdown | English-semantic codes: `corporation` (Société Anonyme / SA / AG), `llc` (Sàrl / GmbH), `gp` (General partnership / SNC), `sp` (Sole proprietorship / Raison individuelle). |
+| `uid` | string | Swiss business UID, format `CHE-XXX.XXX.XXX`. |
+| `street_name` | string | Street name (e.g. `Rue de la Gare`). |
+| `street_number` | string | String, not integer — supports `12A`, `bis`, etc. |
+| `postal_code` | string | 4 digits for CH; string to keep leading zeros. |
+| `locality` | string | City / town name. |
+| `canton` | M2O → `canton` | Partner's registered canton. Same `canton` collection used by `partner_areas`. **Not** required to match the partner's `partner_areas` — a partner can be HQ'd in one canton and cover several others. |
+
+Note: `language` dropdown actually offers `fr` / `de` / `en` (the resolver only consumes `fr` and `de` today via the webhook payload — `en` is reserved for future English-speaking partners).
 
 ## `partner_areas`
 
