@@ -132,22 +132,6 @@ export function LeadCard({
           </TooltipContent>
         </Tooltip>
 
-        {dispatch.billable_locked_at && !dispatch.disqualified && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <span
-                  className="inline-flex text-emerald-700"
-                  aria-label="Verrouillé pour facturation"
-                />
-              }
-            >
-              <Lock className="h-3.5 w-3.5" />
-            </TooltipTrigger>
-            <TooltipContent>Verrouillé pour facturation</TooltipContent>
-          </Tooltip>
-        )}
-
         {dispatch.disqualified && dispatch.disqualification_reason && (
           <Tooltip>
             <TooltipTrigger
@@ -250,28 +234,42 @@ export function LeadCard({
               </Tooltip>
             )}
 
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <button
-                    type="button"
-                    disabled={disqualifyDisabled}
-                    onClick={() => setOpen(true)}
-                    aria-label="Disqualifier"
-                    className="rounded p-1.5 text-muted-foreground hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-                  />
-                }
-              >
-                <Ban className="h-3.5 w-3.5" />
-              </TooltipTrigger>
-              <TooltipContent>
-                {disqualifyDisabled
-                  ? dispatch.disqualified
-                    ? "Déjà disqualifié"
-                    : "Facturation déjà verrouillée"
-                  : "Disqualifier"}
-              </TooltipContent>
-            </Tooltip>
+            {dispatch.billable_locked_at && !dispatch.disqualified ? (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <span
+                      className="inline-flex rounded p-1.5 text-emerald-700"
+                      aria-label="Verrouillé pour facturation"
+                    />
+                  }
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Verrouillé pour facturation — disqualification impossible
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      disabled={disqualifyDisabled}
+                      onClick={() => setOpen(true)}
+                      aria-label="Disqualifier"
+                      className="rounded p-1.5 text-muted-foreground hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                    />
+                  }
+                >
+                  <Ban className="h-3.5 w-3.5" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  {dispatch.disqualified ? "Déjà disqualifié" : "Disqualifier"}
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
       )}
