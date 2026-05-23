@@ -92,8 +92,20 @@ export interface Partner {
   // Dashboard auth + per-partner billing overrides.
   dashboard_token?: string | null;
   disqualification_overrides?: Record<string, number> | null;
-  // Pricing policy (M2O). Multiple partners can share one policy.
-  pricing_policy?: { id: string; name?: string } | string | null;
+  // Pricing policy (M2O). Multiple partners can share one policy. The
+  // `settings` JSON holds the price matrix (and any future per-policy knobs).
+  pricing_policy?: {
+    id: string;
+    name?: string;
+    settings?: PricingPolicySettings | null;
+  } | string | null;
+}
+
+export interface PricingPolicySettings {
+  /** Per-product price matrix: prices[product][category] = CHF. */
+  prices?: Record<string, Record<string, number>>;
+  // Reserved for future knobs (canton overrides, monthly caps, etc.).
+  [key: string]: unknown;
 }
 
 export interface TargetAddress {

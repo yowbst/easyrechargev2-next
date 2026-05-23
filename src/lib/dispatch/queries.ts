@@ -39,9 +39,11 @@ const PARTNER_AREA_FIELDS = [
   // Dashboard auth + per-partner billing overrides.
   "partner.dashboard_token",
   "partner.disqualification_overrides",
-  // Pricing policy (multiple partners can share one policy).
+  // Pricing policy (multiple partners can share one policy). The settings JSON
+  // holds the per-product, per-category price matrix.
   "partner.pricing_policy.id",
   "partner.pricing_policy.name",
+  "partner.pricing_policy.settings",
 ].join(",");
 
 /**
@@ -211,50 +213,32 @@ export async function fetchDispatchConfig(): Promise<{
 }
 
 /**
- * Fetch the price-per-category map for the given partners.
+ * Build the price-per-category map for the given partner_areas.
  *
- * Pricing is policy-based: many partners can share one `partner_pricing_policies`
- * row, and `partner_lead_prices` rows hang off that policy (one per category per
- * product). Returns Map<partnerId, Map<category, price_chf>> keyed by partner
- * for the resolver's convenience.
+ * Pricing is policy-based: many partners share one `partner_pricing_policies`
+ * row whose `settings` JSON holds the full matrix:
+ *   { prices: { "<product>": { "<category>": <CHF> } } }
  *
- * Partners without a policy assigned, or whose policy lacks a row for the
- * current product+category, get gift dispatches at the resolver layer.
+ * Pure function — no Directus round-trip; the policy's `settings` JSON is
+ * already pulled via PARTNER_AREA_FIELDS. Partners without a policy assigned,
+ * or whose policy lacks a row for the current product+category, get gift
+ * dispatches at the resolver layer.
  */
-export async function fetchPartnerLeadPrices(
-  partnerPolicyMap: Map<string, string>, // partnerId → policyId
+export function buildPartnerLeadPrices(
+  areas: PartnerArea[],
   product: string,
-): Promise<Map<string, Map<string, number>>> {
+): Map<string, Map<string, number>> {
   const out = new Map<string, Map<string, number>>();
-  if (partnerPolicyMap.size === 0) return out;
-
-  const policyIds = Array.from(new Set(partnerPolicyMap.values()));
-  if (policyIds.length === 0) return out;
-
-  const params = new URLSearchParams();
-  params.set("fields", "policy,category,price_chf");
-  params.set("filter[policy][_in]", policyIds.join(","));
-  params.set("filter[product][_eq]", product);
-  params.set("filter[status][_eq]", "published");
-  params.set("limit", "500");
-
-  type Row = { policy: string; category: string; price_chf: number };
-  const res = await directusFetch<{ data: Row[] }>(
-    `/items/partner_lead_prices?${params}`,
-    { next: { revalidate: 0 } },
-  );
-
-  // Index by policy first, then expand back to per-partner.
-  const byPolicy = new Map<string, Map<string, number>>();
-  for (const row of res?.data ?? []) {
-    if (!row.policy) continue;
-    if (!byPolicy.has(row.policy)) byPolicy.set(row.policy, new Map());
-    byPolicy.get(row.policy)!.set(row.category, row.price_chf);
-  }
-
-  for (const [partnerId, policyId] of partnerPolicyMap) {
-    const policyPrices = byPolicy.get(policyId);
-    if (policyPrices) out.set(partnerId, policyPrices);
+  for (const a of areas) {
+    const policy = a.partner.pricing_policy;
+    if (!policy || typeof policy === "string") continue;
+    const productPrices = policy.settings?.prices?.[product];
+    if (!productPrices) continue;
+    const priceMap = new Map<string, number>();
+    for (const [cat, price] of Object.entries(productPrices)) {
+      if (typeof price === "number") priceMap.set(cat, price);
+    }
+    if (priceMap.size > 0) out.set(a.partner.id, priceMap);
   }
   return out;
 }

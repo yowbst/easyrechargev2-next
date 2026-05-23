@@ -7,7 +7,7 @@ import {
   countDispatchesThisMonth,
   recordDispatch,
   fetchDispatchConfig,
-  fetchPartnerLeadPrices,
+  buildPartnerLeadPrices,
   findRecentDispatchesByEmail,
 } from "./queries";
 import { resolveDispatchTargets, targetToArea } from "./resolver";
@@ -121,24 +121,12 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
     const partnerIds = areas.map((a) => a.partner.id);
     const product = input.product ?? "ecp";
 
-    // Build the partner → policy map from the joined partner.pricing_policy.id
-    // already pulled in PARTNER_AREA_FIELDS. Partners without a policy are
-    // simply absent from this map and will be treated as gifts at the resolver.
-    const partnerPolicyMap = new Map<string, string>();
-    for (const a of areas) {
-      const policyRef = a.partner.pricing_policy;
-      const policyId =
-        typeof policyRef === "string"
-          ? policyRef
-          : policyRef && typeof policyRef === "object"
-            ? policyRef.id
-            : null;
-      if (policyId) partnerPolicyMap.set(a.partner.id, policyId);
-    }
+    // Prices live in partner.pricing_policy.settings.prices[product][category],
+    // pulled via PARTNER_AREA_FIELDS — pure function, no extra fetch.
+    const partnerPrices = buildPartnerLeadPrices(areas, product);
 
-    const [counts, partnerPrices, dedupPartnerIds] = await Promise.all([
+    const [counts, dedupPartnerIds] = await Promise.all([
       countDispatchesThisMonth(partnerIds, environment),
-      fetchPartnerLeadPrices(partnerPolicyMap, product),
       input.email
         ? findRecentDispatchesByEmail(
             input.email,
