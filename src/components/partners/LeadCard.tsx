@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type DragEvent } from "react";
 import { DISPATCH_STAGES, type DispatchStage } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { DisqualifyModal } from "./DisqualifyModal";
@@ -19,12 +19,14 @@ export function LeadCard({
   pending,
   onMove,
   onDisqualify,
+  onDragStart,
   readOnly = false,
 }: {
   dispatch: PartnerDispatchCard;
   pending: boolean;
   onMove: (stage: DispatchStage) => void;
   onDisqualify: (reason: string) => void;
+  onDragStart?: (e: DragEvent<HTMLElement>) => void;
   readOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -37,8 +39,18 @@ export function LeadCard({
     ? "bg-amber-100 text-amber-900"
     : "bg-sky-100 text-sky-900";
 
+  // Disqualified cards aren't draggable — the stage API would 409. Mobile/touch
+  // devices ignore HTML5 DnD natively, so they fall back to the dropdown.
+  const draggable = !readOnly && !pending && !dispatch.disqualified;
+
   return (
-    <article className="rounded-md border bg-background p-3 text-sm shadow-sm">
+    <article
+      draggable={draggable}
+      onDragStart={draggable ? onDragStart : undefined}
+      className={`rounded-md border bg-background p-3 text-sm shadow-sm transition-opacity ${
+        dispatch.disqualified ? "opacity-60" : ""
+      } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+    >
       <header className="mb-2 flex items-baseline justify-between gap-2">
         <h3 className="font-medium">
           {firstName} {lastInitial}

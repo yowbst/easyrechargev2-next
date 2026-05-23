@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import { DISPATCH_STAGES, type DispatchStage } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
@@ -15,6 +15,8 @@ const STAGE_LABELS: Record<DispatchStage, string> = {
   lost: "Perdu",
 };
 
+const DRAG_MIME = "application/x-partner-dispatch-id";
+
 export function Kanban({
   partnerToken,
   dispatches,
@@ -25,7 +27,11 @@ export function Kanban({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
 
+  // Group every dispatch by stage — disqualified rows stay in the column
+  // matching the stage they were disqualified at, so partners see where
+  // attrition happens in the funnel.
   const grouped: Record<DispatchStage, PartnerDispatchCard[]> = {
     new: [],
     contacted: [],
@@ -34,13 +40,17 @@ export function Kanban({
     won: [],
     lost: [],
   };
-  const disqualified: PartnerDispatchCard[] = [];
   for (const d of dispatches) {
-    if (d.disqualified) {
-      disqualified.push(d);
-    } else if ((DISPATCH_STAGES as string[]).includes(d.stage)) {
+    if ((DISPATCH_STAGES as string[]).includes(d.stage)) {
       grouped[d.stage as DispatchStage].push(d);
     }
+  }
+  // Active cards above disqualified; within each group, newest first.
+  for (const s of DISPATCH_STAGES) {
+    grouped[s].sort((a, b) => {
+      if (a.disqualified !== b.disqualified) return a.disqualified ? 1 : -1;
+      return b.dispatched_at.localeCompare(a.dispatched_at);
+    });
   }
 
   async function moveStage(id: string, stage: DispatchStage) {
@@ -87,16 +97,48 @@ export function Kanban({
     }
   }
 
+  function handleDragStart(e: DragEvent<HTMLElement>, id: string) {
+    e.dataTransfer.setData(DRAG_MIME, id);
+    e.dataTransfer.effectAllowed = "move";
+  }
+  function handleDragOver(e: DragEvent<HTMLElement>, stage: DispatchStage) {
+    if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dropTarget !== stage) setDropTarget(stage);
+  }
+  function handleDragLeave(stage: DispatchStage) {
+    setDropTarget((prev) => (prev === stage ? null : prev));
+  }
+  function handleDrop(e: DragEvent<HTMLElement>, stage: DispatchStage) {
+    e.preventDefault();
+    const id = e.dataTransfer.getData(DRAG_MIME);
+    setDropTarget(null);
+    if (!id) return;
+    const card = dispatches.find((c) => c.id === id);
+    if (!card || card.stage === stage) return;
+    moveStage(id, stage);
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-        {DISPATCH_STAGES.map((stage) => (
-          <section key={stage} className="rounded-lg border bg-card p-3">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
+      {DISPATCH_STAGES.map((stage) => {
+        const isDropTarget = dropTarget === stage;
+        return (
+          <section
+            key={stage}
+            onDragOver={(e) => handleDragOver(e, stage)}
+            onDragLeave={() => handleDragLeave(stage)}
+            onDrop={(e) => handleDrop(e, stage)}
+            className={`rounded-lg border bg-card p-3 transition-colors ${
+              isDropTarget ? "border-primary bg-primary/5 ring-2 ring-primary/40" : ""
+            }`}
+          >
             <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
               {STAGE_LABELS[stage]}{" "}
               <span className="ml-1 text-xs">({grouped[stage].length})</span>
             </h2>
-            <ul className="space-y-2">
+            <ul className="min-h-[40px] space-y-2">
               {grouped[stage].map((d) => (
                 <li key={d.id}>
                   <LeadCard
@@ -104,34 +146,14 @@ export function Kanban({
                     pending={pending === d.id}
                     onMove={(s) => moveStage(d.id, s)}
                     onDisqualify={(r) => disqualify(d.id, r)}
+                    onDragStart={(e) => handleDragStart(e, d.id)}
                   />
                 </li>
               ))}
             </ul>
           </section>
-        ))}
-      </div>
-
-      {disqualified.length > 0 && (
-        <details className="rounded-lg border bg-muted/30 p-3">
-          <summary className="cursor-pointer text-sm font-semibold">
-            Disqualifiés ({disqualified.length})
-          </summary>
-          <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
-            {disqualified.map((d) => (
-              <li key={d.id}>
-                <LeadCard
-                  dispatch={d}
-                  pending={false}
-                  onMove={() => {}}
-                  onDisqualify={() => {}}
-                  readOnly
-                />
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
+        );
+      })}
     </div>
   );
 }
