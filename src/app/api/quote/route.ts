@@ -5,6 +5,7 @@ import { directusFetch } from "@/lib/directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 import { runDispatch, normalizeCanton, type DispatchResult } from "@/lib/dispatch";
+import { deriveLeadCategory } from "@/lib/dispatch/categorize";
 
 function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
   if (!raw) return { raw: null, international: null, countryCode: null, countryCallingCode: null };
@@ -110,11 +111,14 @@ export async function POST(req: Request) {
     // Resolve partner dispatch. Gated by DISPATCH_MODE env var (off|shadow|live).
     // Returns a payload-ready object embedded in the Make webhook below.
     // runDispatch never throws — failures are logged and surface as an empty result.
+    const leadCategory = deriveLeadCategory(quoteData);
+
     const dispatchResult: DispatchResult = await runDispatch({
       submissionId: submission.id,
       rawCanton: normalizedCanton ?? (typeof quoteData.canton === "string" ? quoteData.canton : null),
       email,
       locale: (lang === "de" ? "de" : "fr"),
+      leadCategory,
     });
 
     // Identify user in PostHog server-side (client may not have loaded yet)
@@ -151,6 +155,7 @@ export async function POST(req: Request) {
           submittedAt: new Date().toISOString(),
           environment: process.env.VERCEL_ENV || "development",
           miniQuoteSessionToken: miniQuoteToken || null,
+          leadCategory,
           data: quoteData,
         },
         user: {

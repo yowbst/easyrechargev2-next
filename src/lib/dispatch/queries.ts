@@ -4,6 +4,8 @@ import type {
   PartnerArea,
   DispatchStatus,
   AreaMode,
+  DispatchStage,
+  LeadCategory,
 } from "./types";
 
 const PARTNER_AREA_FIELDS = [
@@ -34,6 +36,9 @@ const PARTNER_AREA_FIELDS = [
   "partner.locality",
   "partner.canton.id",
   "partner.canton.code",
+  // Dashboard auth + per-partner billing overrides.
+  "partner.dashboard_token",
+  "partner.disqualification_overrides",
 ].join(",");
 
 /**
@@ -100,34 +105,76 @@ export interface RecordDispatchInput {
   mode_used: AreaMode;
   status: DispatchStatus;
   environment: Environment;
+  // Lifecycle + pricing snapshot (only written when status === "dispatched").
+  stage?: DispatchStage;
+  price_chf?: number | null;
+  lead_category?: LeadCategory | null;
+  gift?: boolean;
 }
 
-/** Insert one `partner_dispatches` row. */
-export async function recordDispatch(input: RecordDispatchInput): Promise<void> {
-  await directusFetch(`/items/partner_dispatches`, {
-    method: "POST",
-    body: JSON.stringify({
-      ...input,
-      month_bucket: currentMonthBucket(),
-      dispatched_at: new Date().toISOString(),
-    }),
-    next: { revalidate: 0 },
-  });
+/** Insert one `partner_dispatches` row. Returns the created row id when available. */
+export async function recordDispatch(input: RecordDispatchInput): Promise<string | null> {
+  const now = new Date().toISOString();
+  const body: Record<string, unknown> = {
+    submission: input.submission,
+    partner: input.partner,
+    canton: input.canton,
+    mode_used: input.mode_used,
+    status: input.status,
+    environment: input.environment,
+    month_bucket: currentMonthBucket(),
+    dispatched_at: now,
+  };
+  if (input.status === "dispatched") {
+    const stage: DispatchStage = input.stage ?? "new";
+    body.stage = stage;
+    body.stage_entered_at = now;
+    body.price_chf = input.price_chf ?? null;
+    body.lead_category = input.lead_category ?? null;
+    body.gift = Boolean(input.gift);
+    body.billable = false;
+    body.stage_history = [{ stage, at: now }];
+  }
+  const res = await directusFetch<{ data?: { id?: string } }>(
+    `/items/partner_dispatches`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+      next: { revalidate: 0 },
+    },
+  );
+  return res?.data?.id ?? null;
+}
+
+export interface BillingConfig {
+  currency: string;
+  stage_windows_days: Record<string, number>;
+  dedup_window_days: number;
 }
 
 /** Fetch `site_settings.global_config.dispatch` config (singleton). */
 export async function fetchDispatchConfig(): Promise<{
   max_shared_targets: number;
   test_email_patterns: string[];
+  billing: BillingConfig;
 }> {
   type Resp = {
     data:
       | {
           global_config?: {
-            dispatch?: { max_shared_targets?: number; test_email_patterns?: string[] };
+            dispatch?: {
+              max_shared_targets?: number;
+              test_email_patterns?: string[];
+              billing?: Partial<BillingConfig>;
+            };
           };
         }
       | null;
+  };
+  const defaults: BillingConfig = {
+    currency: "CHF",
+    stage_windows_days: { new: 7, contacted: 7, appointment: 14, quote_sent: 0 },
+    dedup_window_days: 30,
   };
   try {
     const res = await directusFetch<Resp>(
@@ -138,10 +185,90 @@ export async function fetchDispatchConfig(): Promise<{
     return {
       max_shared_targets: cfg.max_shared_targets ?? 1,
       test_email_patterns: cfg.test_email_patterns ?? [],
+      billing: {
+        currency: cfg.billing?.currency ?? defaults.currency,
+        stage_windows_days: {
+          ...defaults.stage_windows_days,
+          ...(cfg.billing?.stage_windows_days ?? {}),
+        },
+        dedup_window_days: cfg.billing?.dedup_window_days ?? defaults.dedup_window_days,
+      },
     };
   } catch {
-    return { max_shared_targets: 1, test_email_patterns: [] };
+    return {
+      max_shared_targets: 1,
+      test_email_patterns: [],
+      billing: defaults,
+    };
   }
+}
+
+/**
+ * Fetch the price-per-category map for the given partners (current environment).
+ * Returns Map<partnerId, Map<category, price_chf>>. Missing entries become gift
+ * dispatches at the resolver layer.
+ */
+export async function fetchPartnerLeadPrices(
+  partnerIds: string[],
+  environment: Environment,
+): Promise<Map<string, Map<string, number>>> {
+  const out = new Map<string, Map<string, number>>();
+  if (partnerIds.length === 0) return out;
+
+  const params = new URLSearchParams();
+  params.set("fields", "partner,category,price_chf");
+  params.set("filter[partner][_in]", partnerIds.join(","));
+  params.set("filter[environment][_eq]", environment);
+  params.set("filter[status][_eq]", "published");
+  params.set("limit", "500");
+
+  type Row = { partner: string; category: string; price_chf: number };
+  const res = await directusFetch<{ data: Row[] }>(
+    `/items/partner_lead_prices?${params}`,
+    { next: { revalidate: 0 } },
+  );
+  for (const row of res?.data ?? []) {
+    if (!row.partner) continue;
+    if (!out.has(row.partner)) out.set(row.partner, new Map());
+    out.get(row.partner)!.set(row.category, row.price_chf);
+  }
+  return out;
+}
+
+/**
+ * Return the set of partner IDs that have received a dispatch (or skipped_dedup
+ * ledger row) for this email within the last `dedupWindowDays`. Used by the
+ * resolver to pre-empt reason (b) — repeat dispatches to the same partner.
+ */
+export async function findRecentDispatchesByEmail(
+  email: string,
+  candidatePartnerIds: string[],
+  environment: Environment,
+  dedupWindowDays: number,
+): Promise<Set<string>> {
+  const out = new Set<string>();
+  if (!email || candidatePartnerIds.length === 0 || dedupWindowDays <= 0) return out;
+
+  const since = new Date(Date.now() - dedupWindowDays * 86_400_000).toISOString();
+
+  const params = new URLSearchParams();
+  params.set("fields", "partner");
+  params.set("filter[partner][_in]", candidatePartnerIds.join(","));
+  params.set("filter[environment][_eq]", environment);
+  params.set("filter[dispatched_at][_gte]", since);
+  params.set("filter[submission][user][email][_eq]", email);
+  params.set("filter[status][_in]", "dispatched,skipped_dedup");
+  params.set("limit", "200");
+
+  type Row = { partner: string };
+  const res = await directusFetch<{ data: Row[] }>(
+    `/items/partner_dispatches?${params}`,
+    { next: { revalidate: 0 } },
+  );
+  for (const row of res?.data ?? []) {
+    if (row.partner) out.add(row.partner);
+  }
+  return out;
 }
 
 export function currentMonthBucket(now: Date = new Date()): string {

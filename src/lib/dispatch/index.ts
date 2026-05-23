@@ -7,6 +7,8 @@ import {
   countDispatchesThisMonth,
   recordDispatch,
   fetchDispatchConfig,
+  fetchPartnerLeadPrices,
+  findRecentDispatchesByEmail,
 } from "./queries";
 import { resolveDispatchTargets, targetToArea } from "./resolver";
 import type {
@@ -15,6 +17,7 @@ import type {
   DispatchResult,
   Environment,
   Language,
+  LeadCategory,
 } from "./types";
 
 export type { DispatchResult } from "./types";
@@ -58,6 +61,7 @@ interface RunDispatchInput {
   rawCanton: string | null | undefined;
   email: string | null | undefined;
   locale: Language;
+  leadCategory: LeadCategory;
 }
 
 /**
@@ -95,14 +99,46 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
     baseResult.isTest = isTest;
 
     const areas = await fetchPartnerAreasForCanton(canton, environment);
-
-    let counts = new Map<string, number>();
-    if (areas.length > 0) {
-      const partnerIds = areas.map((a) => a.partner.id);
-      counts = await countDispatchesThisMonth(partnerIds, environment);
+    if (areas.length === 0) {
+      baseResult.summary.reasons.push("no_partner_for_canton");
+      fireDispatchEvents(
+        {
+          submissionId: input.submissionId,
+          canton,
+          locale: input.locale,
+          environment,
+          isTest,
+        },
+        mode,
+        [],
+        baseResult.summary.reasons,
+      );
+      return baseResult;
     }
 
-    const resolved = resolveDispatchTargets(areas, counts, config.max_shared_targets);
+    const partnerIds = areas.map((a) => a.partner.id);
+
+    const [counts, partnerPrices, dedupPartnerIds] = await Promise.all([
+      countDispatchesThisMonth(partnerIds, environment),
+      fetchPartnerLeadPrices(partnerIds, environment),
+      input.email
+        ? findRecentDispatchesByEmail(
+            input.email,
+            partnerIds,
+            environment,
+            config.billing.dedup_window_days,
+          )
+        : Promise.resolve(new Set<string>()),
+    ]);
+
+    const resolved = resolveDispatchTargets({
+      areas,
+      quotaUsed: counts,
+      maxSharedTargets: config.max_shared_targets,
+      leadCategory: input.leadCategory,
+      partnerPrices,
+      dedupPartnerIds,
+    });
     baseResult.summary.resolved = resolved.targets.length;
     baseResult.summary.reasons = resolved.reasons;
 
@@ -114,9 +150,9 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
       isTest,
     };
 
-    // Record ledger rows. In shadow mode, status is still `dispatched` (we did
-    // resolve a target) so quota counting works the same in shadow and live.
-    // In test mode we record `skipped_test` instead.
+    // Record ledger rows. In shadow mode the status is still `dispatched` so
+    // quota counting works the same in shadow and live. In test mode we use
+    // `skipped_test` and Make's webhook is not given any targets.
     for (const target of resolved.targets) {
       const area = targetToArea(target, areas);
       if (!area) continue;
@@ -128,6 +164,10 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
           mode_used: target.mode,
           status: isTest ? "skipped_test" : "dispatched",
           environment,
+          stage: "new",
+          price_chf: target.priceChf,
+          lead_category: target.leadCategory,
+          gift: target.gift,
         });
         if (isTest) baseResult.summary.skipped += 1;
         else baseResult.summary.dispatched += 1;
@@ -141,23 +181,21 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
       }
     }
 
-    // One `skipped_quota` ledger row per partner who would have been picked
-    // but is over their monthly quota. Coverage gaps (no_partner_for_canton)
-    // and unknown_canton stay in PostHog only — the ledger only carries
-    // partner-attributed rows.
-    for (const sk of resolved.skippedQuota) {
+    // One `skipped_dedup` ledger row per partner who would have been picked
+    // but already received a recent dispatch for this email.
+    for (const sk of resolved.skippedDedup) {
       try {
         await recordDispatch({
           submission: ctx.submissionId,
           partner: sk.partnerId,
           canton,
           mode_used: sk.mode,
-          status: "skipped_quota",
+          status: "skipped_dedup",
           environment,
         });
         baseResult.summary.skipped += 1;
       } catch (err) {
-        console.error("[dispatch] recordDispatch (quota) failed", err);
+        console.error("[dispatch] recordDispatch (dedup) failed", err);
       }
     }
 

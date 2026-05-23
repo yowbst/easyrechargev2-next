@@ -7,11 +7,61 @@ export type Environment = "development" | "staging" | "production";
 
 export type DispatchStatus =
   | "dispatched"
-  | "skipped_quota"
+  | "skipped_quota" // retained for back-compat reads; new rows never use this
   | "skipped_no_partner"
-  | "skipped_test";
+  | "skipped_test"
+  | "skipped_dedup";
 
 export type LegalForm = "corporation" | "llc" | "gp" | "sp";
+
+export type LeadCategory =
+  | "owner_no_solar"
+  | "owner_solar"
+  | "tenant_no_solar"
+  | "tenant_solar";
+
+export type DispatchStage =
+  | "new"
+  | "contacted"
+  | "appointment"
+  | "quote_sent"
+  | "won"
+  | "lost";
+
+export type DisqualificationReason =
+  | "partner_already_has"
+  | "dedup"
+  | "unreachable"
+  | "not_engaging"
+  | "competitor"
+  | "long_timeframe"
+  | "no_authorization";
+
+export const DISPATCH_STAGES: DispatchStage[] = [
+  "new",
+  "contacted",
+  "appointment",
+  "quote_sent",
+  "won",
+  "lost",
+];
+
+export const DISQUALIFICATION_REASONS: DisqualificationReason[] = [
+  "partner_already_has",
+  "dedup",
+  "unreachable",
+  "not_engaging",
+  "competitor",
+  "long_timeframe",
+  "no_authorization",
+];
+
+export const LEAD_CATEGORIES: LeadCategory[] = [
+  "owner_no_solar",
+  "owner_solar",
+  "tenant_no_solar",
+  "tenant_solar",
+];
 
 export interface Canton {
   id: string;
@@ -39,6 +89,9 @@ export interface Partner {
   postal_code?: string | null;
   locality?: string | null;
   canton?: { id: string; code: string } | null;
+  // Dashboard auth + per-partner billing overrides.
+  dashboard_token?: string | null;
+  disqualification_overrides?: Record<string, number> | null;
 }
 
 export interface TargetAddress {
@@ -80,6 +133,10 @@ export interface DispatchTarget {
   legalForm: LegalForm | null;
   uid: string | null;
   address: TargetAddress;
+  // Lead pricing snapshot (resolved at dispatch time).
+  priceChf: number | null; // null = gift
+  leadCategory: LeadCategory;
+  gift: boolean;
 }
 
 export interface DispatchSummary {

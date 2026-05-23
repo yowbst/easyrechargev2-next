@@ -1,14 +1,14 @@
-import type { PartnerArea, DispatchTarget } from "./types";
+import type { PartnerArea, DispatchTarget, LeadCategory } from "./types";
 
 interface ResolvedArea {
   area: PartnerArea;
   effectivePriority: number;
   effectiveQuota: number;
   used: number;
-  remaining: number;
+  overQuota: boolean;
 }
 
-export interface SkippedQuotaEntry {
+export interface SkippedDedupEntry {
   partnerId: string;
   partnerSlug: string;
   mode: "exclusive" | "shared";
@@ -17,43 +17,62 @@ export interface SkippedQuotaEntry {
 export interface ResolverResult {
   targets: DispatchTarget[];
   reasons: string[];
-  skippedQuota: SkippedQuotaEntry[];
+  skippedDedup: SkippedDedupEntry[];
+}
+
+export interface ResolverInput {
+  areas: PartnerArea[];
+  quotaUsed: Map<string, number>;
+  maxSharedTargets: number;
+  leadCategory: LeadCategory;
+  partnerPrices: Map<string, Map<string, number>>;
+  /** Partner IDs to skip with status `skipped_dedup`. */
+  dedupPartnerIds: Set<string>;
 }
 
 /**
- * Pure decision function: given the candidate partner_areas for a canton and
- * a quota lookup, return the list of dispatch targets.
+ * Pure decision function: given candidate partner_areas for a canton + quota
+ * map + pricing + dedup set, return the list of dispatch targets.
  *
- * Algorithm (matches plan Phase 2):
- *   1. Filter to active partners (defensive — query already filters).
- *   2. Compute effective quota and remaining per area.
- *   3. Exclusive branch: if an exclusive area exists with remaining > 0, return it.
- *      If exhausted, fall through to shared branch.
+ * Algorithm:
+ *   1. Filter to active partners; route dedup'd partners to skippedDedup.
+ *   2. Compute used + overQuota per area.
+ *   3. Exclusive branch: pick the single exclusive partner regardless of quota
+ *      (over-quota → gift).
  *   4. Shared branch: rank by (used ASC, priority ASC, id ASC), take top N.
- *   5. Empty result is fine — the orchestrator records `skipped_no_partner`.
+ *      Over-quota partners still dispatch as gifts.
+ *   5. For each target, snapshot price_chf from partnerPrices[partnerId][leadCategory].
+ *      Missing entry or price=0 → priceChf=null, gift=true (loud log).
  */
-export function resolveDispatchTargets(
-  areas: PartnerArea[],
-  quotaUsed: Map<string, number>,
-  maxSharedTargets: number,
-): ResolverResult {
+export function resolveDispatchTargets(input: ResolverInput): ResolverResult {
+  const { areas, quotaUsed, maxSharedTargets, leadCategory, partnerPrices, dedupPartnerIds } =
+    input;
   const reasons: string[] = [];
-  const skippedQuota: SkippedQuotaEntry[] = [];
+  const skippedDedup: SkippedDedupEntry[] = [];
 
-  // 1 + 2: enrich with quota math, filter active.
-  const enriched: ResolvedArea[] = areas
-    .filter((a) => a.partner?.status === "active")
-    .map((a) => {
-      const effectivePriority =
-        a.priority_override ?? a.partner.priority ?? 100;
-      const effectiveQuota =
-        a.quota_override ?? a.partner.monthly_quota ?? 0;
-      const used = quotaUsed.get(a.partner.id) ?? 0;
-      const remaining = effectiveQuota === 0 ? Infinity : effectiveQuota - used;
-      return { area: a, effectivePriority, effectiveQuota, used, remaining };
-    });
+  const eligible: PartnerArea[] = [];
+  for (const a of areas) {
+    if (a.partner?.status !== "active") continue;
+    if (dedupPartnerIds.has(a.partner.id)) {
+      skippedDedup.push({
+        partnerId: a.partner.id,
+        partnerSlug: a.partner.slug,
+        mode: a.mode,
+      });
+      continue;
+    }
+    eligible.push(a);
+  }
 
-  // 3: exclusive branch.
+  const enriched: ResolvedArea[] = eligible.map((a) => {
+    const effectivePriority = a.priority_override ?? a.partner.priority ?? 100;
+    const effectiveQuota = a.quota_override ?? a.partner.monthly_quota ?? 0;
+    const used = quotaUsed.get(a.partner.id) ?? 0;
+    const overQuota = effectiveQuota > 0 && used >= effectiveQuota;
+    return { area: a, effectivePriority, effectiveQuota, used, overQuota };
+  });
+
+  // Exclusive branch: at most one wins. Over-quota still dispatches as gift.
   const exclusives = enriched.filter((e) => e.area.mode === "exclusive");
   if (exclusives.length > 1) {
     console.warn(
@@ -68,34 +87,16 @@ export function resolveDispatchTargets(
   const exclusive = exclusives[0];
 
   if (exclusive) {
-    if (exclusive.remaining > 0) {
-      return {
-        targets: [toTarget(exclusive, "exclusive")],
-        reasons,
-        skippedQuota,
-      };
-    }
-    reasons.push("exclusive_over_quota");
-    skippedQuota.push({
-      partnerId: exclusive.area.partner.id,
-      partnerSlug: exclusive.area.partner.slug,
-      mode: "exclusive",
-    });
+    return {
+      targets: [toTarget(exclusive, "exclusive", leadCategory, partnerPrices)],
+      reasons,
+      skippedDedup,
+    };
   }
 
-  // 4: shared branch.
-  const sharedAll = enriched.filter((e) => e.area.mode === "shared");
-  for (const e of sharedAll) {
-    if (e.remaining <= 0) {
-      skippedQuota.push({
-        partnerId: e.area.partner.id,
-        partnerSlug: e.area.partner.slug,
-        mode: "shared",
-      });
-    }
-  }
-  const sharedCandidates = sharedAll
-    .filter((e) => e.remaining > 0)
+  // Shared branch: rank, take top N. Over-quota still wins (gift).
+  const sharedAll = enriched
+    .filter((e) => e.area.mode === "shared")
     .sort(
       (a, b) =>
         a.used - b.used ||
@@ -103,31 +104,47 @@ export function resolveDispatchTargets(
         a.area.partner.id.localeCompare(b.area.partner.id),
     );
 
-  const sharedTargets = sharedCandidates
+  const sharedTargets = sharedAll
     .slice(0, Math.max(0, maxSharedTargets))
-    .map((e) => toTarget(e, "shared"));
+    .map((e) => toTarget(e, "shared", leadCategory, partnerPrices));
 
   if (sharedTargets.length === 0 && enriched.length === 0) {
     reasons.push("no_partner_for_canton");
-  } else if (sharedTargets.length === 0 && exclusive) {
-    // Exclusive was exhausted and no shared fallback available — still treat as a coverage event.
-    reasons.push("no_partner_for_canton");
   }
 
-  return { targets: sharedTargets, reasons, skippedQuota };
+  return { targets: sharedTargets, reasons, skippedDedup };
 }
 
-function toTarget(e: ResolvedArea, modeUsed: "exclusive" | "shared"): DispatchTarget {
+function toTarget(
+  e: ResolvedArea,
+  modeUsed: "exclusive" | "shared",
+  leadCategory: LeadCategory,
+  partnerPrices: Map<string, Map<string, number>>,
+): DispatchTarget {
   const p = e.area.partner;
+  const priceLookup = partnerPrices.get(p.id);
+  const rawPrice = priceLookup?.get(leadCategory);
+  // Gift if: over quota OR no price row OR price is 0.
+  const gift =
+    e.overQuota || rawPrice === undefined || rawPrice === null || rawPrice === 0;
+  const priceChf = gift ? null : (rawPrice as number);
+
+  if (rawPrice === undefined) {
+    console.warn(
+      `[dispatch] No partner_lead_prices row for partner=${p.slug} category=${leadCategory} — dispatched as gift`,
+    );
+  }
+
   return {
     partnerSlug: p.slug,
     displayName: p.name,
     email: p.notification_email,
     language: p.language,
     mode: modeUsed,
-    billableRate: typeof p.billable_rate === "number"
-      ? p.billable_rate
-      : parseFloat(String(p.billable_rate ?? "1")),
+    billableRate:
+      typeof p.billable_rate === "number"
+        ? p.billable_rate
+        : parseFloat(String(p.billable_rate ?? "1")),
     businessName: p.business_name ?? null,
     legalForm: p.legal_form ?? null,
     uid: p.uid ?? null,
@@ -138,6 +155,9 @@ function toTarget(e: ResolvedArea, modeUsed: "exclusive" | "shared"): DispatchTa
       locality: p.locality ?? null,
       canton: p.canton?.code ?? null,
     },
+    priceChf,
+    leadCategory,
+    gift,
   };
 }
 
