@@ -95,6 +95,66 @@ Build a Trends view filtered by `environment` to monitor each stage of cutover.
 
 | Reason | When emitted | Acted on |
 |---|---|---|
-| `exclusive_over_quota` | The exclusive partner is exhausted for the month | Resolver falls through to shared partners. Ledger writes `skipped_quota` for the exhausted exclusive. |
+| `exclusive_over_quota` | The exclusive partner is exhausted for the month | Lead is still dispatched (gift). Ledger row has `gift=true`, `price_chf=null`. |
 | `no_partner_for_canton` | After exclusive + shared, still no candidate | Empty `dispatch.targets`. No ledger row (coverage gaps are PostHog-only). |
 | `unknown_canton` | Submission has a canton value that can't be normalized | Resolver short-circuits; same surface as `no_partner_for_canton`. |
+
+---
+
+## Lifecycle, pricing, and dashboards (2026-05-23)
+
+### Pricing
+
+Each (`partner`, lead category, `environment`) row in the new `partner_lead_prices` collection defines the CHF price charged to that partner when a lead of that category is dispatched. Categories are derived from quote-form fields:
+
+| `housingStatus`     | `solarEquipment`             | → `lead_category`    |
+|---------------------|------------------------------|----------------------|
+| `owner` / `co-owner`| `exists` / `in-progress`     | `owner_solar`        |
+| `owner` / `co-owner`| `none` / blank               | `owner_no_solar`     |
+| `tenant`            | `exists` / `in-progress`     | `tenant_solar`       |
+| `tenant`            | `none` / blank               | `tenant_no_solar`    |
+
+Missing rows fall back to gift dispatch (`gift=true`, `price_chf=null`, loud warning log). The price is snapshotted onto `partner_dispatches.price_chf` at dispatch time and survives later price changes.
+
+Note: `partners.billable_rate` is unrelated — it is a quality-rate metric for Google Ads, not a CHF price.
+
+### Lifecycle stages
+
+Each dispatch row tracks a `stage` from `new → contacted → appointment → quote_sent → won → lost`, plus a side-state `disqualified=true` with a reason from `partner_already_has | dedup | unreachable | not_engaging | competitor | long_timeframe | no_authorization`. Partners drive transitions via the dashboard.
+
+### Billing window
+
+A dispatch becomes `billable=true` when its stage reaches `quote_sent` (or beyond), **or** when the per-stage time window elapses without movement. Windows are read from `site_settings.global_config.dispatch.billing.stage_windows_days`, with per-partner overrides on `partners.disqualification_overrides`. Gifts (`gift=true`) and disqualified rows are never billable.
+
+Window defaults: `{ new: 7, contacted: 7, appointment: 14, quote_sent: 0 }` days. Time is counted from `stage_entered_at`, so each stage starts a fresh budget.
+
+Run the reconciliation pass before generating an invoice — it flips `billable=true` on dispatches whose window has elapsed:
+
+```bash
+curl -X POST -H "x-admin-token: $DIRECTUS_STATIC_TOKEN" \
+  "https://easyrecharge.ch/api/admin/reconcile-billing"
+
+curl -H "x-admin-token: $DIRECTUS_STATIC_TOKEN" \
+  "https://easyrecharge.ch/api/admin/billing?month=2026-05"
+```
+
+### Dedup
+
+The resolver pre-empts repeat dispatches: if a partner already received a `dispatched` or `skipped_dedup` ledger row for the same email within `dedup_window_days` (default 30), it is skipped with `status='skipped_dedup'` instead of getting a real dispatch.
+
+### Partner dashboards
+
+Each partner has a private URL at `/partners/<dashboard_token>`. The token is an opaque UUID stored on the `partners` row and is the only credential. Invalid tokens 404. The page is marked `noindex, nofollow`.
+
+To rotate a leaked token, regenerate the UUID in Directus on the partner row — the old URL stops working immediately.
+
+The dashboard is a 6-column kanban (`Nouveau → Contacté → RDV pris → Devis envoyé → Gagné → Perdu`) with a collapsible `Disqualifiés` bucket. Partners see a `Standard` or `Gift` badge per card but NOT the CHF amount.
+
+### Reason codes (new)
+
+| Status | When emitted |
+|---|---|
+| `dispatched` | Always for active partners that should receive the lead. `gift=true` distinguishes over-quota / no-price-configured cases. |
+| `skipped_dedup` | Same email-to-same-partner within `dedup_window_days`. |
+| `skipped_test` | Test submission (non-production env or email matches a test pattern). |
+| `skipped_quota` | **Deprecated** — kept for back-compat reads only. New rows use `dispatched + gift=true` instead. |
