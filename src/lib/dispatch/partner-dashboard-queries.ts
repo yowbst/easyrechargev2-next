@@ -56,40 +56,6 @@ const CARD_FIELDS = [
  * environment, newest first. Returns up to 500 cards (we don't paginate the
  * dashboard for v1).
  */
-export interface PartnerDispatchDetail extends PartnerDispatchCard {
-  dispatched_at: string;
-  mode_used: string | null;
-  product: string | null;
-  price_chf: number | string | null;
-  stage_history: Array<{ stage: string; at: string }> | null;
-}
-
-const DETAIL_FIELDS = [
-  ...CARD_FIELDS.split(","),
-  "mode_used",
-  "price_chf",
-  "stage_history",
-  "partner",
-].join(",");
-
-/**
- * Fetch one dispatch with the full form-submission payload joined, scoped
- * to the requesting partner. Returns null if the dispatch belongs to a
- * different partner (defensive — prevents URL fishing).
- */
-export async function fetchPartnerDispatchDetail(
-  dispatchId: string,
-  partnerId: string,
-): Promise<PartnerDispatchDetail | null> {
-  const res = await directusFetch<{ data: (PartnerDispatchDetail & { partner: string }) | null }>(
-    `/items/partner_dispatches/${dispatchId}?fields=${DETAIL_FIELDS}`,
-    { next: { revalidate: 0 } },
-  );
-  const row = res?.data;
-  if (!row || row.partner !== partnerId) return null;
-  return row;
-}
-
 export async function fetchPartnerDispatches(
   partnerId: string,
 ): Promise<PartnerDispatchCard[]> {

@@ -69,7 +69,11 @@ export default async function PartnerDashboardPage({
           <span className="hidden sm:inline">Aide</span>
         </a>
       </header>
-      <Kanban partnerToken={uuid} dispatches={dispatches} />
+      <Kanban
+        partnerToken={uuid}
+        lang={partner.language ?? "fr"}
+        dispatches={dispatches}
+      />
     </main>
   );
 }

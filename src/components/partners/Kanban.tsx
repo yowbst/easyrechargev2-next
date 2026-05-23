@@ -46,15 +46,18 @@ const DRAG_MIME = "application/x-partner-dispatch-id";
 
 export function Kanban({
   partnerToken,
+  lang,
   dispatches,
 }: {
   partnerToken: string;
+  lang: string;
   dispatches: PartnerDispatchCard[];
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Local mirror so we can update the UI optimistically on drag-drop. Server
   // is still source of truth — re-sync whenever the prop changes (router.refresh
@@ -196,6 +199,11 @@ export function Kanban({
   function handleDragStart(e: DragEvent<HTMLElement>, id: string) {
     e.dataTransfer.setData(DRAG_MIME, id);
     e.dataTransfer.effectAllowed = "move";
+    setIsDragging(true);
+  }
+  function handleDragEnd() {
+    setIsDragging(false);
+    setDropTarget(null);
   }
   function handleDragOver(e: DragEvent<HTMLElement>, stage: DispatchStage) {
     if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
@@ -210,6 +218,7 @@ export function Kanban({
     e.preventDefault();
     const id = e.dataTransfer.getData(DRAG_MIME);
     setDropTarget(null);
+    setIsDragging(false);
     if (!id) return;
     const card = localDispatches.find((c) => c.id === id);
     if (!card || card.stage === stage) return;
@@ -229,11 +238,20 @@ export function Kanban({
   const conversionPct =
     closedCount > 0 ? Math.round((wonCount / closedCount) * 100) : null;
 
+  // 5-column grid: 4 active funnel columns + 1 outcomes column (Won/Lost stacked).
+  // The outcomes column is narrow by default and widens while any card is being
+  // dragged so the partner has an obvious target to drop onto.
+  const gridColsClass = isDragging
+    ? "lg:[grid-template-columns:1fr_1fr_1fr_1fr_1.4fr]"
+    : "lg:[grid-template-columns:1fr_1fr_1fr_1fr_minmax(150px,_0.55fr)]";
+
   return (
     <TooltipProvider delay={250}>
       <div className="space-y-6">
-        {/* Active pipeline: 4 columns */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Active pipeline + outcomes column */}
+        <div
+          className={`grid grid-cols-1 gap-4 transition-[grid-template-columns] duration-200 md:grid-cols-2 ${gridColsClass}`}
+        >
           {MAIN_STAGES.map((stage) => {
             const isDropTarget = dropTarget === stage;
             return (
@@ -257,11 +275,12 @@ export function Kanban({
                     <li key={d.id}>
                       <LeadCard
                         dispatch={d}
-                        partnerToken={partnerToken}
+                        lang={lang}
                         pending={pending === d.id}
                         onMove={(s) => moveStage(d.id, s)}
                         onDisqualify={(r) => disqualify(d.id, r)}
                         onDragStart={(e) => handleDragStart(e, d.id)}
+                        onDragEnd={handleDragEnd}
                       />
                     </li>
                   ))}
@@ -269,15 +288,68 @@ export function Kanban({
               </section>
             );
           })}
+
+          {/* Outcomes column: stacked Won + Lost. Each accordion is its own
+              drop target; the parent grid cell widens while dragging. */}
+          <div className="flex flex-col gap-3">
+            {OUTCOME_STAGES.map((stage) => {
+              const tone = OUTCOME_STYLES[stage as "won" | "lost"];
+              const isDropTarget = dropTarget === stage;
+              const cards = activeGrouped[stage];
+              return (
+                <details
+                  key={stage}
+                  onDragOver={(e) => handleDragOver(e, stage)}
+                  onDragLeave={() => handleDragLeave(stage)}
+                  onDrop={(e) => handleDrop(e, stage)}
+                  className={`rounded-lg border ${tone.border} ${tone.bg} p-3 transition-shadow ${
+                    isDropTarget ? `ring-2 ${tone.ring}` : ""
+                  }`}
+                >
+                  <summary
+                    className={`flex cursor-pointer items-baseline justify-between gap-2 text-sm font-semibold ${tone.text}`}
+                  >
+                    <span>
+                      {STAGE_LABELS[stage]}{" "}
+                      <span className="ml-1 text-xs opacity-80">({cards.length})</span>
+                    </span>
+                    {stage === "won" && conversionPct !== null && (
+                      <span className="whitespace-nowrap text-xs font-medium opacity-80">
+                        {conversionPct}% · {wonCount}/{closedCount}
+                      </span>
+                    )}
+                  </summary>
+                  <ul className="mt-3 space-y-2">
+                    {cards.map((d) => (
+                      <li key={d.id}>
+                        <LeadCard
+                          dispatch={d}
+                          lang={lang}
+                          pending={pending === d.id}
+                          onMove={(s) => moveStage(d.id, s)}
+                          onDisqualify={(r) => disqualify(d.id, r)}
+                          onDragStart={(e) => handleDragStart(e, d.id)}
+                          onDragEnd={handleDragEnd}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Disqualified: same 4 columns, aligned under the main funnel */}
+        {/* Disqualified: same 5-column template, last cell empty, so each
+            disqualified column aligns vertically with its active counterpart. */}
         {mainDisqCount > 0 && (
           <details className="space-y-3" open>
             <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">
               Disqualifiés ({mainDisqCount})
             </summary>
-            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div
+              className={`mt-3 grid grid-cols-1 gap-4 transition-[grid-template-columns] duration-200 md:grid-cols-2 ${gridColsClass}`}
+            >
               {MAIN_STAGES.map((stage) => (
                 <section
                   key={stage}
@@ -292,7 +364,7 @@ export function Kanban({
                       <li key={d.id}>
                         <LeadCard
                           dispatch={d}
-                          partnerToken={partnerToken}
+                          lang={lang}
                           pending={pending === d.id}
                           onMove={() => {}}
                           onDisqualify={() => {}}
@@ -303,59 +375,11 @@ export function Kanban({
                   </ul>
                 </section>
               ))}
+              {/* placeholder cell aligning with the outcomes column */}
+              <div aria-hidden className="hidden lg:block" />
             </div>
           </details>
         )}
-
-        {/* Outcomes — Won/Lost in compact color-tinted accordions, optional
-            for the partner. Drag/drop still works while collapsed: the
-            details element keeps the dragOver/drop handlers. */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {OUTCOME_STAGES.map((stage) => {
-            const tone = OUTCOME_STYLES[stage as "won" | "lost"];
-            const isDropTarget = dropTarget === stage;
-            const cards = activeGrouped[stage];
-            return (
-              <details
-                key={stage}
-                onDragOver={(e) => handleDragOver(e, stage)}
-                onDragLeave={() => handleDragLeave(stage)}
-                onDrop={(e) => handleDrop(e, stage)}
-                className={`rounded-lg border ${tone.border} ${tone.bg} p-3 transition-shadow ${
-                  isDropTarget ? `ring-2 ${tone.ring}` : ""
-                }`}
-              >
-                <summary
-                  className={`flex cursor-pointer items-baseline justify-between text-sm font-semibold ${tone.text}`}
-                >
-                  <span>
-                    {STAGE_LABELS[stage]}{" "}
-                    <span className="ml-1 text-xs opacity-80">({cards.length})</span>
-                  </span>
-                  {stage === "won" && conversionPct !== null && (
-                    <span className="text-xs font-medium opacity-80">
-                      {conversionPct}% conversion · {wonCount}/{closedCount}
-                    </span>
-                  )}
-                </summary>
-                <ul className="mt-3 space-y-2">
-                  {cards.map((d) => (
-                    <li key={d.id}>
-                      <LeadCard
-                        dispatch={d}
-                        partnerToken={partnerToken}
-                        pending={pending === d.id}
-                        onMove={(s) => moveStage(d.id, s)}
-                        onDisqualify={(r) => disqualify(d.id, r)}
-                        onDragStart={(e) => handleDragStart(e, d.id)}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            );
-          })}
-        </div>
       </div>
     </TooltipProvider>
   );

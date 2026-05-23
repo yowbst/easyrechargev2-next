@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, type DragEvent } from "react";
-import Link from "next/link";
 import {
   Mail,
   Phone,
+  MapPin,
   Gift,
   Coins,
   Lock,
@@ -51,24 +51,40 @@ const REASON_LABELS: Record<string, string> = {
 
 export function LeadCard({
   dispatch,
-  partnerToken,
+  lang,
   pending,
   onMove,
   onDisqualify,
   onDragStart,
+  onDragEnd,
   readOnly = false,
 }: {
   dispatch: PartnerDispatchCard;
-  partnerToken: string;
+  lang: string;
   pending: boolean;
   onMove: (stage: DispatchStage) => void;
   onDisqualify: (reason: string) => void;
   onDragStart?: (e: DragEvent<HTMLElement>) => void;
+  onDragEnd?: () => void;
   readOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const user = dispatch.submission?.user ?? null;
   const lastInitial = user?.last_name ? `${user.last_name[0]}.` : "";
+
+  const submissionData = (dispatch.submission?.data ?? null) as
+    | Record<string, unknown>
+    | null;
+  const zip =
+    typeof submissionData?.postalCode === "string"
+      ? submissionData.postalCode
+      : null;
+  const locality =
+    typeof submissionData?.locality === "string" ? submissionData.locality : null;
+
+  const quoteHref = dispatch.submission?.id
+    ? `/${lang}/demande-devis/${dispatch.submission.id}?view=partner`
+    : null;
 
   // Disqualified cards aren't draggable — the stage API would 409. Mobile/touch
   // devices ignore HTML5 DnD natively, so they fall back to the dropdown.
@@ -80,30 +96,25 @@ export function LeadCard({
     <article
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
+      onDragEnd={draggable ? onDragEnd : undefined}
       className={`group rounded-md border bg-background p-3 text-sm shadow-sm transition-opacity ${
         dispatch.disqualified ? "opacity-60" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
-      {/* Header: name + drag handle hint + canton */}
-      <header className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1 font-medium">
+      {/* Header: name (left) + all status icons (right) */}
+      <header className="mb-2 flex items-start justify-between gap-2">
+        <h3 className="flex min-w-0 items-center gap-1 font-medium">
           {draggable && (
             <GripVertical
-              className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-muted-foreground"
+              className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 group-hover:text-muted-foreground"
               aria-hidden
             />
           )}
-          <span>
+          <span className="truncate">
             {user?.first_name ?? "—"} {lastInitial}
           </span>
         </h3>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          {dispatch.canton}
-        </span>
-      </header>
-
-      {/* Badges row: icon-only billing + category key + lifecycle flags */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
         <Tooltip>
           <TooltipTrigger
             render={
@@ -176,12 +187,13 @@ export function LeadCard({
             </TooltipContent>
           </Tooltip>
         )}
-      </div>
+        </div>
+      </header>
 
       {/* Lead info — grouped block */}
-      {user && (user.email || user.phone) && (
+      {(user?.email || user?.phone || zip || locality) && (
         <div className="mb-3 space-y-1 rounded bg-muted/40 p-2">
-          {user.email && (
+          {user?.email && (
             <div className="flex items-center gap-1.5 text-xs">
               <Mail
                 className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
@@ -195,7 +207,7 @@ export function LeadCard({
               </a>
             </div>
           )}
-          {user.phone && (
+          {user?.phone && (
             <div className="flex items-center gap-1.5 text-xs">
               <Phone
                 className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
@@ -204,6 +216,22 @@ export function LeadCard({
               <a href={`tel:${user.phone}`} className="hover:underline">
                 {user.phone}
               </a>
+            </div>
+          )}
+          {(zip || locality) && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <MapPin
+                className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                aria-hidden
+              />
+              <span className="truncate">
+                {[zip, locality].filter(Boolean).join(" ")}
+                {dispatch.canton && (
+                  <span className="ml-1 text-muted-foreground">
+                    · {dispatch.canton}
+                  </span>
+                )}
+              </span>
             </div>
           )}
         </div>
@@ -227,20 +255,24 @@ export function LeadCard({
           </select>
 
           <div className="ml-auto flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Link
-                    href={`/partners/${partnerToken}/lead/${dispatch.id}`}
-                    className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    aria-label="Voir la demande"
-                  />
-                }
-              >
-                <FileSearch className="h-3.5 w-3.5" />
-              </TooltipTrigger>
-              <TooltipContent>Voir la demande</TooltipContent>
-            </Tooltip>
+            {quoteHref && (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <a
+                      href={quoteHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      aria-label="Voir la demande de devis"
+                    />
+                  }
+                >
+                  <FileSearch className="h-3.5 w-3.5" />
+                </TooltipTrigger>
+                <TooltipContent>Voir la demande de devis</TooltipContent>
+              </Tooltip>
+            )}
 
             <Tooltip>
               <TooltipTrigger
