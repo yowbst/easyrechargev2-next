@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type DragEvent } from "react";
+import { useEffect, useState, useTransition, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import { DISPATCH_STAGES, type DispatchStage } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
@@ -29,6 +29,15 @@ export function Kanban({
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
 
+  // Local mirror so we can update the UI optimistically on drag-drop. Server
+  // is still source of truth — re-sync whenever the prop changes (router.refresh
+  // or revalidation).
+  const [localDispatches, setLocalDispatches] =
+    useState<PartnerDispatchCard[]>(dispatches);
+  useEffect(() => {
+    setLocalDispatches(dispatches);
+  }, [dispatches]);
+
   // Group every dispatch by stage — disqualified rows stay in the column
   // matching the stage they were disqualified at, so partners see where
   // attrition happens in the funnel.
@@ -40,7 +49,7 @@ export function Kanban({
     won: [],
     lost: [],
   };
-  for (const d of dispatches) {
+  for (const d of localDispatches) {
     if ((DISPATCH_STAGES as string[]).includes(d.stage)) {
       grouped[d.stage as DispatchStage].push(d);
     }
@@ -54,6 +63,14 @@ export function Kanban({
   }
 
   async function moveStage(id: string, stage: DispatchStage) {
+    const previous = localDispatches;
+    const now = new Date().toISOString();
+    // Optimistic: move the card immediately.
+    setLocalDispatches((prev) =>
+      prev.map((d) =>
+        d.id === id ? { ...d, stage, stage_entered_at: now } : d,
+      ),
+    );
     setPending(id);
     try {
       const res = await fetch(
@@ -65,17 +82,53 @@ export function Kanban({
         },
       );
       if (!res.ok) {
+        setLocalDispatches(previous);
         const err = await res.json().catch(() => ({}));
         alert(`Échec: ${err.error ?? res.status}`);
-      } else {
-        startTransition(() => router.refresh());
+        return;
       }
+      // Sync server-decided fields (billable lock) without waiting for refresh.
+      const data: { billable?: boolean } = await res.json().catch(() => ({}));
+      if (typeof data.billable === "boolean") {
+        setLocalDispatches((prev) =>
+          prev.map((d) =>
+            d.id === id
+              ? {
+                  ...d,
+                  billable: data.billable!,
+                  billable_locked_at:
+                    data.billable && !d.billable_locked_at
+                      ? now
+                      : d.billable_locked_at,
+                }
+              : d,
+          ),
+        );
+      }
+      // Background re-sync; won't flicker since local state already matches.
+      startTransition(() => router.refresh());
     } finally {
       setPending(null);
     }
   }
 
   async function disqualify(id: string, reason: string) {
+    const previous = localDispatches;
+    const now = new Date().toISOString();
+    // Optimistic: mark disqualified + lock billing immediately.
+    setLocalDispatches((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              disqualified: true,
+              disqualification_reason: reason,
+              billable: false,
+              billable_locked_at: now,
+            }
+          : d,
+      ),
+    );
     setPending(id);
     try {
       const res = await fetch(
@@ -86,11 +139,17 @@ export function Kanban({
           body: JSON.stringify({ reason }),
         },
       );
-      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        // Window expired or billing already locked — revert and let the
+        // background refresh tell us the true state (the server may have
+        // flipped billable=true in the window_expired case).
+        setLocalDispatches(previous);
+        const data = await res.json().catch(() => ({}));
         alert(`Échec: ${data.error ?? res.status}`);
+        startTransition(() => router.refresh());
+        return;
       }
-      // Refresh either way — even on "window_expired" the server flipped billable.
+      // Background re-sync.
       startTransition(() => router.refresh());
     } finally {
       setPending(null);
@@ -115,7 +174,7 @@ export function Kanban({
     const id = e.dataTransfer.getData(DRAG_MIME);
     setDropTarget(null);
     if (!id) return;
-    const card = dispatches.find((c) => c.id === id);
+    const card = localDispatches.find((c) => c.id === id);
     if (!card || card.stage === stage) return;
     moveStage(id, stage);
   }
