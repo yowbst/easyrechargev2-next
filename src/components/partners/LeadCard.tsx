@@ -30,15 +30,6 @@ const STAGE_LABELS: Record<DispatchStage, string> = {
   lost: "Perdu",
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  owner_no_solar: "Propriétaire, sans installation solaire",
-  owner_solar: "Propriétaire, avec installation solaire",
-  co_owner_no_solar: "Copropriétaire, sans installation solaire",
-  co_owner_solar: "Copropriétaire, avec installation solaire",
-  tenant_no_solar: "Locataire, sans installation solaire",
-  tenant_solar: "Locataire, avec installation solaire",
-};
-
 const REASON_LABELS: Record<string, string> = {
   partner_already_has: "Lead déjà reçu directement",
   dedup: "Lead déjà transmis récemment",
@@ -140,21 +131,6 @@ export function LeadCard({
               : "Standard — lead facturable dans le cycle en cours"}
           </TooltipContent>
         </Tooltip>
-
-        {dispatch.lead_category && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground" />
-              }
-            >
-              {dispatch.lead_category}
-            </TooltipTrigger>
-            <TooltipContent>
-              {CATEGORY_LABELS[dispatch.lead_category] ?? dispatch.lead_category}
-            </TooltipContent>
-          </Tooltip>
-        )}
 
         {dispatch.billable_locked_at && !dispatch.disqualified && (
           <Tooltip>
