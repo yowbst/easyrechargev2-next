@@ -146,7 +146,9 @@ The resolver pre-empts repeat dispatches: if a partner already received a `dispa
 
 ### Partner dashboards
 
-Each partner has a private URL at `/partners/<dashboard_token>`. The token is an opaque UUID stored on the `partners` row and is the only credential. Invalid tokens 404. The page is marked `noindex, nofollow`.
+Each partner has a private URL at `/partners/<dashboard_token>`. The token is an **opaque random UUID** stored on the `partners` row and is the only credential. Invalid tokens 404. The page is marked `noindex, nofollow`.
+
+**Do not set `dashboard_token` to the partner's `id`** — partner IDs leak in webhook payloads, ledger queries, and Directus admin URLs, so re-using them as the dashboard credential lets anyone with the id access the dashboard. Always generate a fresh UUID. The Directus field default `Generate UUID` handles this automatically for new rows; for backfills, use `uuidgen` or Python's `uuid.uuid4()`.
 
 To rotate a leaked token, regenerate the UUID in Directus on the partner row — the old URL stops working immediately.
 
