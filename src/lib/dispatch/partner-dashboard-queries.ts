@@ -12,6 +12,7 @@ export interface PartnerDispatchCard {
   billable: boolean;
   billable_locked_at: string | null;
   canton: string;
+  product: string | null;
   lead_category: string | null;
   submission: {
     id: string;
@@ -37,6 +38,7 @@ const CARD_FIELDS = [
   "billable",
   "billable_locked_at",
   "canton",
+  "product",
   "lead_category",
   "submission.id",
   "submission.data",

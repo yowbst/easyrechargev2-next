@@ -119,6 +119,7 @@ export async function POST(req: Request) {
       email,
       locale: (lang === "de" ? "de" : "fr"),
       leadCategory,
+      product: "ecp",
     });
 
     // Identify user in PostHog server-side (client may not have loaded yet)
@@ -155,6 +156,7 @@ export async function POST(req: Request) {
           submittedAt: new Date().toISOString(),
           environment: process.env.VERCEL_ENV || "development",
           miniQuoteSessionToken: miniQuoteToken || null,
+          product: "ecp",
           leadCategory,
           data: quoteData,
         },

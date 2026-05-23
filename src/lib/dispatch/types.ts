@@ -92,6 +92,8 @@ export interface Partner {
   // Dashboard auth + per-partner billing overrides.
   dashboard_token?: string | null;
   disqualification_overrides?: Record<string, number> | null;
+  // Pricing policy (M2O). Multiple partners can share one policy.
+  pricing_policy?: { id: string; name?: string } | string | null;
 }
 
 export interface TargetAddress {

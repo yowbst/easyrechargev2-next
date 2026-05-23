@@ -62,6 +62,8 @@ interface RunDispatchInput {
   email: string | null | undefined;
   locale: Language;
   leadCategory: LeadCategory;
+  /** Product key for pricing + future quote funnels. Defaults to "ecp". */
+  product?: string;
 }
 
 /**
@@ -117,10 +119,26 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
     }
 
     const partnerIds = areas.map((a) => a.partner.id);
+    const product = input.product ?? "ecp";
+
+    // Build the partner → policy map from the joined partner.pricing_policy.id
+    // already pulled in PARTNER_AREA_FIELDS. Partners without a policy are
+    // simply absent from this map and will be treated as gifts at the resolver.
+    const partnerPolicyMap = new Map<string, string>();
+    for (const a of areas) {
+      const policyRef = a.partner.pricing_policy;
+      const policyId =
+        typeof policyRef === "string"
+          ? policyRef
+          : policyRef && typeof policyRef === "object"
+            ? policyRef.id
+            : null;
+      if (policyId) partnerPolicyMap.set(a.partner.id, policyId);
+    }
 
     const [counts, partnerPrices, dedupPartnerIds] = await Promise.all([
       countDispatchesThisMonth(partnerIds, environment),
-      fetchPartnerLeadPrices(partnerIds, environment),
+      fetchPartnerLeadPrices(partnerPolicyMap, product),
       input.email
         ? findRecentDispatchesByEmail(
             input.email,
@@ -164,6 +182,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
           mode_used: target.mode,
           status: isTest ? "skipped_test" : "dispatched",
           environment,
+          product,
           stage: "new",
           price_chf: target.priceChf,
           lead_category: target.leadCategory,
@@ -192,6 +211,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
           mode_used: sk.mode,
           status: "skipped_dedup",
           environment,
+          product,
         });
         baseResult.summary.skipped += 1;
       } catch (err) {
