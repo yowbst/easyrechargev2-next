@@ -1,7 +1,15 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Tag } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Tag,
+  LifeBuoy,
+} from "lucide-react";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import { fetchPartnerDispatchDetail } from "@/lib/dispatch/partner-dashboard-queries";
 
@@ -9,6 +17,34 @@ export const metadata: Metadata = {
   title: "Demande de devis",
   robots: { index: false, follow: false },
 };
+
+const SUPPORT_EMAIL = "yoan@easyrecharge.ch";
+
+function buildSupportMailto(opts: {
+  partnerName: string;
+  partnerSlug: string;
+  dashboardToken: string;
+  dispatchId: string;
+  leadName: string;
+}): string {
+  const subject = `[Tableau partenaire] ${opts.partnerName} — lead ${opts.leadName}`;
+  const dashboardUrl = `https://easyrecharge.ch/partners/${opts.dashboardToken}`;
+  const leadUrl = `${dashboardUrl}/lead/${opts.dispatchId}`;
+  const body = [
+    "Bonjour Yoan,",
+    "",
+    "[Décris ici ta question ou ton problème.]",
+    "",
+    "---",
+    `Partenaire : ${opts.partnerName} (${opts.partnerSlug})`,
+    `Lead : ${opts.leadName}`,
+    `Tableau : ${dashboardUrl}`,
+    `Lead URL : ${leadUrl}`,
+    "",
+  ].join("\n");
+  const params = new URLSearchParams({ subject, body });
+  return `mailto:${SUPPORT_EMAIL}?${params.toString()}`;
+}
 
 const STAGE_LABELS: Record<string, string> = {
   new: "Nouveau",
@@ -71,6 +107,14 @@ export default async function LeadDetailPage({
     formFields.push([k, typeof v === "object" ? JSON.stringify(v) : String(v)]);
   }
 
+  const supportHref = buildSupportMailto({
+    partnerName: partner.name,
+    partnerSlug: partner.slug,
+    dashboardToken: uuid,
+    dispatchId,
+    leadName: fullName || "—",
+  });
+
   return (
     <main className="mx-auto min-h-screen max-w-3xl bg-background p-6">
       <Link
@@ -81,11 +125,22 @@ export default async function LeadDetailPage({
         Retour au tableau
       </Link>
 
-      <header className="mt-4 mb-6">
-        <h1 className="text-2xl font-semibold">{fullName}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Demande reçue le {fmtDate(detail.dispatched_at)}
-        </p>
+      <header className="mt-4 mb-6 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">{fullName}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Demande reçue le {fmtDate(detail.dispatched_at)}
+          </p>
+        </div>
+        <a
+          href={supportHref}
+          className="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Demander de l'aide"
+          title="Demander de l'aide"
+        >
+          <LifeBuoy className="h-4 w-4" />
+          <span className="hidden sm:inline">Aide</span>
+        </a>
       </header>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

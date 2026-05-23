@@ -16,6 +16,32 @@ const STAGE_LABELS: Record<DispatchStage, string> = {
   lost: "Perdu",
 };
 
+// Main funnel: active pipeline columns. Outcomes (Won/Lost) live in a
+// separate compact section below — they're informational for conversion-rate
+// / CAC tracking, not part of the day-to-day workflow.
+const MAIN_STAGES: DispatchStage[] = [
+  "new",
+  "contacted",
+  "appointment",
+  "quote_sent",
+];
+const OUTCOME_STAGES: DispatchStage[] = ["won", "lost"];
+
+const OUTCOME_STYLES: Record<"won" | "lost", { border: string; bg: string; text: string; ring: string }> = {
+  won: {
+    border: "border-emerald-300",
+    bg: "bg-emerald-50/40",
+    text: "text-emerald-900",
+    ring: "ring-emerald-400/50",
+  },
+  lost: {
+    border: "border-rose-300",
+    bg: "bg-rose-50/40",
+    text: "text-rose-900",
+    ring: "ring-rose-400/50",
+  },
+};
+
 const DRAG_MIME = "application/x-partner-dispatch-id";
 
 export function Kanban({
@@ -190,11 +216,25 @@ export function Kanban({
     moveStage(id, stage);
   }
 
+  // Restrict disqualified grid to main funnel stages — Won/Lost are terminal
+  // outcomes that can't be disqualified (billing is already locked there).
+  const mainDisqCount = MAIN_STAGES.reduce(
+    (sum, s) => sum + disqGrouped[s].length,
+    0,
+  );
+
+  const wonCount = activeGrouped.won.length;
+  const lostCount = activeGrouped.lost.length;
+  const closedCount = wonCount + lostCount;
+  const conversionPct =
+    closedCount > 0 ? Math.round((wonCount / closedCount) * 100) : null;
+
   return (
     <TooltipProvider delay={250}>
       <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-          {DISPATCH_STAGES.map((stage) => {
+        {/* Active pipeline: 4 columns */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {MAIN_STAGES.map((stage) => {
             const isDropTarget = dropTarget === stage;
             return (
               <section
@@ -231,13 +271,14 @@ export function Kanban({
           })}
         </div>
 
-        {disqCount > 0 && (
+        {/* Disqualified: same 4 columns, aligned under the main funnel */}
+        {mainDisqCount > 0 && (
           <details className="space-y-3" open>
             <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">
-              Disqualifiés ({disqCount})
+              Disqualifiés ({mainDisqCount})
             </summary>
-            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-              {DISPATCH_STAGES.map((stage) => (
+            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {MAIN_STAGES.map((stage) => (
                 <section
                   key={stage}
                   className="rounded-lg border border-dashed bg-muted/20 p-3"
@@ -265,6 +306,56 @@ export function Kanban({
             </div>
           </details>
         )}
+
+        {/* Outcomes — Won/Lost in compact color-tinted accordions, optional
+            for the partner. Drag/drop still works while collapsed: the
+            details element keeps the dragOver/drop handlers. */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {OUTCOME_STAGES.map((stage) => {
+            const tone = OUTCOME_STYLES[stage as "won" | "lost"];
+            const isDropTarget = dropTarget === stage;
+            const cards = activeGrouped[stage];
+            return (
+              <details
+                key={stage}
+                onDragOver={(e) => handleDragOver(e, stage)}
+                onDragLeave={() => handleDragLeave(stage)}
+                onDrop={(e) => handleDrop(e, stage)}
+                className={`rounded-lg border ${tone.border} ${tone.bg} p-3 transition-shadow ${
+                  isDropTarget ? `ring-2 ${tone.ring}` : ""
+                }`}
+              >
+                <summary
+                  className={`flex cursor-pointer items-baseline justify-between text-sm font-semibold ${tone.text}`}
+                >
+                  <span>
+                    {STAGE_LABELS[stage]}{" "}
+                    <span className="ml-1 text-xs opacity-80">({cards.length})</span>
+                  </span>
+                  {stage === "won" && conversionPct !== null && (
+                    <span className="text-xs font-medium opacity-80">
+                      {conversionPct}% conversion · {wonCount}/{closedCount}
+                    </span>
+                  )}
+                </summary>
+                <ul className="mt-3 space-y-2">
+                  {cards.map((d) => (
+                    <li key={d.id}>
+                      <LeadCard
+                        dispatch={d}
+                        partnerToken={partnerToken}
+                        pending={pending === d.id}
+                        onMove={(s) => moveStage(d.id, s)}
+                        onDisqualify={(r) => disqualify(d.id, r)}
+                        onDragStart={(e) => handleDragStart(e, d.id)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            );
+          })}
+        </div>
       </div>
     </TooltipProvider>
   );
