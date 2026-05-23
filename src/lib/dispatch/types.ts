@@ -17,6 +17,8 @@ export type LegalForm = "corporation" | "llc" | "gp" | "sp";
 export type LeadCategory =
   | "owner_no_solar"
   | "owner_solar"
+  | "co_owner_no_solar"
+  | "co_owner_solar"
   | "tenant_no_solar"
   | "tenant_solar";
 
@@ -59,6 +61,8 @@ export const DISQUALIFICATION_REASONS: DisqualificationReason[] = [
 export const LEAD_CATEGORIES: LeadCategory[] = [
   "owner_no_solar",
   "owner_solar",
+  "co_owner_no_solar",
+  "co_owner_solar",
   "tenant_no_solar",
   "tenant_solar",
 ];

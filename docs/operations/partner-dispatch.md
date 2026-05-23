@@ -107,12 +107,14 @@ Build a Trends view filtered by `environment` to monitor each stage of cutover.
 
 Each (`partner`, lead category, `environment`) row in the new `partner_lead_prices` collection defines the CHF price charged to that partner when a lead of that category is dispatched. Categories are derived from quote-form fields:
 
-| `housingStatus`     | `solarEquipment`             | → `lead_category`    |
-|---------------------|------------------------------|----------------------|
-| `owner` / `co-owner`| `exists` / `in-progress`     | `owner_solar`        |
-| `owner` / `co-owner`| `none` / blank               | `owner_no_solar`     |
-| `tenant`            | `exists` / `in-progress`     | `tenant_solar`       |
-| `tenant`            | `none` / blank               | `tenant_no_solar`    |
+| `housingStatus` | `solarEquipment`          | → `lead_category`    |
+|-----------------|---------------------------|----------------------|
+| `owner`         | `exists` / `in-progress`  | `owner_solar`        |
+| `owner`         | `none` / blank            | `owner_no_solar`     |
+| `co-owner`      | `exists` / `in-progress`  | `co_owner_solar`     |
+| `co-owner`      | `none` / blank            | `co_owner_no_solar`  |
+| `tenant`        | `exists` / `in-progress`  | `tenant_solar`       |
+| `tenant`        | `none` / blank            | `tenant_no_solar`    |
 
 Missing rows fall back to gift dispatch (`gift=true`, `price_chf=null`, loud warning log). The price is snapshotted onto `partner_dispatches.price_chf` at dispatch time and survives later price changes.
 

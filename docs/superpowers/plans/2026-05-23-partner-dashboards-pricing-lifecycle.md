@@ -30,7 +30,7 @@ No new runtime dependencies. Reuses `directusFetch`, `getEnvironment`, the exist
 | Disqualification window | Per stage in `site_settings.global_config.dispatch.billing.stage_windows_days`, per-partner override on `partners.disqualification_overrides` |
 | Quota exhaustion | Dispatch as **gift** (no billing). Replaces today's `skipped_quota` skip. |
 | Pricing source | New `partner_lead_prices` collection (partner × category × env) |
-| Price categories | `owner_no_solar`, `owner_solar`, `tenant_no_solar`, `tenant_solar` |
+| Price categories | `owner_no_solar`, `owner_solar`, `co_owner_no_solar`, `co_owner_solar`, `tenant_no_solar`, `tenant_solar` |
 | Price snapshot | Copied onto `partner_dispatches.price_chf` at dispatch time |
 | Price visibility | Hidden from partners — dashboard shows `Standard` or `Gift` badge only |
 
@@ -110,14 +110,15 @@ Extend the existing `status` enum to include `skipped_dedup`. The old `skipped_q
 
 Derive from the existing quote form (`src/components/quote/QuoteForm.tsx`). Lives in a new `src/lib/dispatch/categorize.ts`:
 
-- `housingStatus`: `"owner" | "co-owner" | "tenant"` — co-owner counts as owner (same purchasing pattern).
+- `housingStatus`: `"owner" | "co-owner" | "tenant"` — co-owner is its own bucket (syndicate approval + shared decisions change the economics).
 - `solarEquipment`: `"exists" | "in-progress" | "none" | ""` — both `exists` and `in-progress` count as "has solar".
 
 ```ts
 export function deriveLeadCategory(data: Record<string, unknown>): LeadCategory {
-  const isOwner = data.housingStatus === "owner" || data.housingStatus === "co-owner";
+  const housingStatus = String(data.housingStatus ?? "").toLowerCase();
   const hasSolar = data.solarEquipment === "exists" || data.solarEquipment === "in-progress";
-  if (isOwner) return hasSolar ? "owner_solar" : "owner_no_solar";
+  if (housingStatus === "co-owner") return hasSolar ? "co_owner_solar" : "co_owner_no_solar";
+  if (housingStatus === "owner") return hasSolar ? "owner_solar" : "owner_no_solar";
   return hasSolar ? "tenant_solar" : "tenant_no_solar";
 }
 ```
