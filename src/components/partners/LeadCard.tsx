@@ -132,7 +132,7 @@ export function LeadCard({
           </TooltipContent>
         </Tooltip>
 
-        {dispatch.disqualified && dispatch.disqualification_reason && (
+        {!readOnly && dispatch.disqualified && dispatch.disqualification_reason && (
           <Tooltip>
             <TooltipTrigger
               render={
