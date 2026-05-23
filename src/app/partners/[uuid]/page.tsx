@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LifeBuoy } from "lucide-react";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import { fetchPartnerDispatches } from "@/lib/dispatch/partner-dashboard-queries";
+import { fetchDispatchConfig } from "@/lib/dispatch/queries";
 import { Kanban } from "@/components/partners/Kanban";
 
 export const metadata: Metadata = {
@@ -42,7 +43,10 @@ export default async function PartnerDashboardPage({
   const partner = await findPartnerByToken(uuid);
   if (!partner) notFound();
 
-  const dispatches = await fetchPartnerDispatches(partner.id);
+  const [dispatches, config] = await Promise.all([
+    fetchPartnerDispatches(partner.id),
+    fetchDispatchConfig(),
+  ]);
 
   const supportHref = buildSupportMailto({
     partnerName: partner.name,
@@ -73,6 +77,8 @@ export default async function PartnerDashboardPage({
         partnerToken={uuid}
         lang={partner.language ?? "fr"}
         dispatches={dispatches}
+        rottingDaysByStage={config.billing.rotting_days_by_stage}
+        reasonsByStage={config.disqualification.reasons_by_stage}
       />
     </main>
   );

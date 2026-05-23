@@ -52,10 +52,14 @@ export function Kanban({
   partnerToken,
   lang,
   dispatches,
+  rottingDaysByStage,
+  reasonsByStage,
 }: {
   partnerToken: string;
   lang: string;
   dispatches: PartnerDispatchCard[];
+  rottingDaysByStage: Record<string, number>;
+  reasonsByStage: Record<string, string[]>;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -157,7 +161,7 @@ export function Kanban({
     }
   }
 
-  async function disqualify(id: string, reason: string) {
+  async function disqualify(id: string, reason: string, note?: string) {
     const previous = localDispatches;
     const now = new Date().toISOString();
     // Optimistic: mark disqualified + lock billing immediately.
@@ -181,7 +185,7 @@ export function Kanban({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reason }),
+          body: JSON.stringify(note ? { reason, note } : { reason }),
         },
       );
       if (!res.ok) {
@@ -288,10 +292,12 @@ export function Kanban({
                     <li key={d.id}>
                       <LeadCard
                         dispatch={d}
+                        rottingDaysByStage={rottingDaysByStage}
+                        reasonsByStage={reasonsByStage}
                         lang={lang}
                         pending={pending === d.id}
                         onMove={(s) => moveStage(d.id, s)}
-                        onDisqualify={(r) => disqualify(d.id, r)}
+                        onDisqualify={(r, n) => disqualify(d.id, r, n)}
                         onDragStart={(e) => handleDragStart(e, d.id)}
                         onDragEnd={handleDragEnd}
                       />
@@ -337,10 +343,12 @@ export function Kanban({
                       <li key={d.id}>
                         <LeadCard
                           dispatch={d}
+                        rottingDaysByStage={rottingDaysByStage}
+                        reasonsByStage={reasonsByStage}
                           lang={lang}
                           pending={pending === d.id}
                           onMove={(s) => moveStage(d.id, s)}
-                          onDisqualify={(r) => disqualify(d.id, r)}
+                          onDisqualify={(r, n) => disqualify(d.id, r, n)}
                           onDragStart={(e) => handleDragStart(e, d.id)}
                           onDragEnd={handleDragEnd}
                         />
@@ -377,6 +385,8 @@ export function Kanban({
                       <li key={d.id}>
                         <LeadCard
                           dispatch={d}
+                        rottingDaysByStage={rottingDaysByStage}
+                        reasonsByStage={reasonsByStage}
                           lang={lang}
                           pending={pending === d.id}
                           onMove={() => {}}

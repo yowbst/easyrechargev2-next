@@ -26,6 +26,19 @@ import {
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { DisqualifyModal } from "./DisqualifyModal";
 
+function isRottenClient(
+  stage: string,
+  stageEnteredAt: string | null | undefined,
+  rottingDaysByStage: Record<string, number>,
+): boolean {
+  if (!stageEnteredAt) return false;
+  const days = rottingDaysByStage[stage];
+  if (typeof days !== "number" || days <= 0) return false;
+  const elapsed =
+    (Date.now() - new Date(stageEnteredAt).getTime()) / 86_400_000;
+  return elapsed >= days;
+}
+
 const STAGE_LABELS: Record<DispatchStage, string> = {
   new: "Nouveau",
   contacted: "Contacté",
@@ -70,15 +83,19 @@ export function LeadCard({
   onDisqualify,
   onDragStart,
   onDragEnd,
+  rottingDaysByStage,
+  reasonsByStage,
   readOnly = false,
 }: {
   dispatch: PartnerDispatchCard;
   lang: string;
   pending: boolean;
   onMove: (stage: DispatchStage) => void;
-  onDisqualify: (reason: string) => void;
+  onDisqualify: (reason: string, note?: string) => void;
   onDragStart?: (e: DragEvent<HTMLElement>) => void;
   onDragEnd?: () => void;
+  rottingDaysByStage: Record<string, number>;
+  reasonsByStage: Record<string, string[]>;
   readOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -104,6 +121,11 @@ export function LeadCard({
   const draggable = !readOnly && !pending && !dispatch.disqualified;
   const disqualifyDisabled =
     pending || dispatch.disqualified || !!dispatch.billable_locked_at;
+  const isRotten =
+    !readOnly &&
+    !dispatch.disqualified &&
+    isRottenClient(dispatch.stage, dispatch.stage_entered_at, rottingDaysByStage);
+  const stageReasons = reasonsByStage[dispatch.stage] ?? null;
 
   return (
     <article
@@ -112,6 +134,8 @@ export function LeadCard({
       onDragEnd={draggable ? onDragEnd : undefined}
       className={`group rounded-md border bg-background p-3 text-sm shadow-sm transition-opacity ${
         dispatch.disqualified ? "opacity-60" : ""
+      } ${
+        isRotten ? "border-rose-300 bg-rose-50/30" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
       {/* Header: name (left) + all status icons (right) */}
@@ -320,9 +344,10 @@ export function LeadCard({
       <DisqualifyModal
         open={open}
         onClose={() => setOpen(false)}
-        onConfirm={(reason) => {
+        allowedReasons={stageReasons}
+        onConfirm={(reason, note) => {
           setOpen(false);
-          onDisqualify(reason);
+          onDisqualify(reason, note);
         }}
       />
     </article>
