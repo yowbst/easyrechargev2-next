@@ -3,7 +3,11 @@ import { directusFetch } from "@/lib/directus";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import { fetchDispatchConfig } from "@/lib/dispatch/queries";
 import { shouldLockBilling } from "@/lib/dispatch/billing";
-import { DISPATCH_STAGES, type DispatchStage } from "@/lib/dispatch/types";
+import {
+  DISPATCH_STAGES,
+  canMoveStage,
+  type DispatchStage,
+} from "@/lib/dispatch/types";
 
 interface Body {
   stage?: string;
@@ -48,6 +52,9 @@ export async function POST(
   }
   if (row.disqualified) {
     return NextResponse.json({ error: "already_disqualified" }, { status: 409 });
+  }
+  if (!canMoveStage(row.stage, newStage)) {
+    return NextResponse.json({ error: "backward_stage" }, { status: 409 });
   }
 
   const config = await fetchDispatchConfig();

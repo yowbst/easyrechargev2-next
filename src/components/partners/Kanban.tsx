@@ -2,7 +2,11 @@
 
 import { useEffect, useState, useTransition, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
-import { DISPATCH_STAGES, type DispatchStage } from "@/lib/dispatch/types";
+import {
+  DISPATCH_STAGES,
+  STAGE_RANK,
+  type DispatchStage,
+} from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LeadCard } from "./LeadCard";
@@ -58,6 +62,7 @@ export function Kanban({
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [draggingStage, setDraggingStage] = useState<DispatchStage | null>(null);
 
   // Local mirror so we can update the UI optimistically on drag-drop. Server
   // is still source of truth — re-sync whenever the prop changes (router.refresh
@@ -200,13 +205,19 @@ export function Kanban({
     e.dataTransfer.setData(DRAG_MIME, id);
     e.dataTransfer.effectAllowed = "move";
     setIsDragging(true);
+    const card = localDispatches.find((c) => c.id === id);
+    if (card) setDraggingStage(card.stage as DispatchStage);
   }
   function handleDragEnd() {
     setIsDragging(false);
     setDropTarget(null);
+    setDraggingStage(null);
   }
   function handleDragOver(e: DragEvent<HTMLElement>, stage: DispatchStage) {
     if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+    // Block backward drops by skipping preventDefault — the browser then
+    // refuses the drop entirely, no visual highlight on this column.
+    if (draggingStage && STAGE_RANK[stage] < STAGE_RANK[draggingStage]) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     if (dropTarget !== stage) setDropTarget(stage);
@@ -219,9 +230,11 @@ export function Kanban({
     const id = e.dataTransfer.getData(DRAG_MIME);
     setDropTarget(null);
     setIsDragging(false);
+    setDraggingStage(null);
     if (!id) return;
     const card = localDispatches.find((c) => c.id === id);
     if (!card || card.stage === stage) return;
+    if (STAGE_RANK[stage] < STAGE_RANK[card.stage as DispatchStage]) return;
     moveStage(id, stage);
   }
 

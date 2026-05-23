@@ -11,13 +11,18 @@ import {
   Ban,
   FileSearch,
   GripVertical,
+  Calendar,
 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DISPATCH_STAGES, type DispatchStage } from "@/lib/dispatch/types";
+import {
+  DISPATCH_STAGES,
+  STAGE_RANK,
+  type DispatchStage,
+} from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { DisqualifyModal } from "./DisqualifyModal";
 
@@ -29,6 +34,23 @@ const STAGE_LABELS: Record<DispatchStage, string> = {
   won: "Gagné",
   lost: "Perdu",
 };
+
+function formatRelativeDate(iso: string): { short: string; full: string } {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffDays = Math.floor(
+    (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  let short: string;
+  if (diffDays <= 0) short = "Aujourd'hui";
+  else if (diffDays === 1) short = "Hier";
+  else short = `Il y a ${diffDays} j`;
+  const full = d.toLocaleString("fr-CH", {
+    dateStyle: "long",
+    timeStyle: "short",
+  });
+  return { short, full };
+}
 
 const REASON_LABELS: Record<string, string> = {
   partner_already_has: "Lead déjà reçu directement",
@@ -151,9 +173,27 @@ export function LeadCard({
       </header>
 
       {/* Lead info — grouped block */}
-      {(user?.email || user?.phone || zip || locality) && (
-        <div className="mb-3 space-y-1 rounded bg-muted/40 p-2">
-          {user?.email && (
+      <div className="mb-3 space-y-1 rounded bg-muted/40 p-2">
+        {(() => {
+          const { short, full } = formatRelativeDate(dispatch.dispatched_at);
+          return (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground" />
+                }
+              >
+                <Calendar
+                  className="h-3.5 w-3.5 shrink-0"
+                  aria-hidden
+                />
+                <span>{short}</span>
+              </TooltipTrigger>
+              <TooltipContent>Reçu le {full}</TooltipContent>
+            </Tooltip>
+          );
+        })()}
+        {user?.email && (
             <div className="flex items-center gap-1.5 text-xs">
               <Mail
                 className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
@@ -178,24 +218,23 @@ export function LeadCard({
               </a>
             </div>
           )}
-          {(zip || locality) && (
-            <div className="flex items-center gap-1.5 text-xs">
-              <MapPin
-                className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                aria-hidden
-              />
-              <span className="truncate">
-                {[zip, locality].filter(Boolean).join(" ")}
-                {dispatch.canton && (
-                  <span className="ml-1 text-muted-foreground">
-                    · {dispatch.canton}
-                  </span>
-                )}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+        {(zip || locality) && (
+          <div className="flex items-center gap-1.5 text-xs">
+            <MapPin
+              className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
+            <span className="truncate">
+              {[zip, locality].filter(Boolean).join(" ")}
+              {dispatch.canton && (
+                <span className="ml-1 text-muted-foreground">
+                  · {dispatch.canton}
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Actions: stage dropdown (mobile/tablet only) + icon button group */}
       {!readOnly && (
@@ -207,11 +246,15 @@ export function LeadCard({
             className="flex-1 rounded border bg-background px-2 py-1 text-xs lg:hidden"
             aria-label="Changer de stage"
           >
-            {DISPATCH_STAGES.map((s) => (
-              <option key={s} value={s}>
-                {STAGE_LABELS[s]}
-              </option>
-            ))}
+            {DISPATCH_STAGES.map((s) => {
+              const isBackward =
+                STAGE_RANK[s] < STAGE_RANK[dispatch.stage as DispatchStage];
+              return (
+                <option key={s} value={s} disabled={isBackward}>
+                  {STAGE_LABELS[s]}
+                </option>
+              );
+            })}
           </select>
 
           <div className="ml-auto flex items-center gap-1">
