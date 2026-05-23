@@ -38,29 +38,39 @@ export function Kanban({
     setLocalDispatches(dispatches);
   }, [dispatches]);
 
-  // Group every dispatch by stage — disqualified rows stay in the column
-  // matching the stage they were disqualified at, so partners see where
-  // attrition happens in the funnel.
-  const grouped: Record<DispatchStage, PartnerDispatchCard[]> = {
+  // Two stacked 6-column grids sharing the same breakpoints. Active cards
+  // up top, disqualified cards below — each card stays in the column
+  // matching the stage it was at, so disqualifications align vertically
+  // under the stage where the lead was lost.
+  const emptyGroups = (): Record<DispatchStage, PartnerDispatchCard[]> => ({
     new: [],
     contacted: [],
     appointment: [],
     quote_sent: [],
     won: [],
     lost: [],
-  };
+  });
+  const activeGrouped = emptyGroups();
+  const disqGrouped = emptyGroups();
   for (const d of localDispatches) {
-    if ((DISPATCH_STAGES as string[]).includes(d.stage)) {
-      grouped[d.stage as DispatchStage].push(d);
-    }
+    if (!(DISPATCH_STAGES as string[]).includes(d.stage)) continue;
+    const bucket = d.disqualified ? disqGrouped : activeGrouped;
+    bucket[d.stage as DispatchStage].push(d);
   }
-  // Active cards above disqualified; within each group, newest first.
   for (const s of DISPATCH_STAGES) {
-    grouped[s].sort((a, b) => {
-      if (a.disqualified !== b.disqualified) return a.disqualified ? 1 : -1;
-      return b.dispatched_at.localeCompare(a.dispatched_at);
-    });
+    activeGrouped[s].sort((a, b) =>
+      b.dispatched_at.localeCompare(a.dispatched_at),
+    );
+    disqGrouped[s].sort((a, b) =>
+      (b.disqualified_at ?? b.dispatched_at).localeCompare(
+        a.disqualified_at ?? a.dispatched_at,
+      ),
+    );
   }
+  const disqCount = DISPATCH_STAGES.reduce(
+    (sum, s) => sum + disqGrouped[s].length,
+    0,
+  );
 
   async function moveStage(id: string, stage: DispatchStage) {
     const previous = localDispatches;
@@ -180,39 +190,77 @@ export function Kanban({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-      {DISPATCH_STAGES.map((stage) => {
-        const isDropTarget = dropTarget === stage;
-        return (
-          <section
-            key={stage}
-            onDragOver={(e) => handleDragOver(e, stage)}
-            onDragLeave={() => handleDragLeave(stage)}
-            onDrop={(e) => handleDrop(e, stage)}
-            className={`rounded-lg border bg-card p-3 transition-colors ${
-              isDropTarget ? "border-primary bg-primary/5 ring-2 ring-primary/40" : ""
-            }`}
-          >
-            <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-              {STAGE_LABELS[stage]}{" "}
-              <span className="ml-1 text-xs">({grouped[stage].length})</span>
-            </h2>
-            <ul className="min-h-[40px] space-y-2">
-              {grouped[stage].map((d) => (
-                <li key={d.id}>
-                  <LeadCard
-                    dispatch={d}
-                    pending={pending === d.id}
-                    onMove={(s) => moveStage(d.id, s)}
-                    onDisqualify={(r) => disqualify(d.id, r)}
-                    onDragStart={(e) => handleDragStart(e, d.id)}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        );
-      })}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
+        {DISPATCH_STAGES.map((stage) => {
+          const isDropTarget = dropTarget === stage;
+          return (
+            <section
+              key={stage}
+              onDragOver={(e) => handleDragOver(e, stage)}
+              onDragLeave={() => handleDragLeave(stage)}
+              onDrop={(e) => handleDrop(e, stage)}
+              className={`rounded-lg border bg-card p-3 transition-colors ${
+                isDropTarget
+                  ? "border-primary bg-primary/5 ring-2 ring-primary/40"
+                  : ""
+              }`}
+            >
+              <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+                {STAGE_LABELS[stage]}{" "}
+                <span className="ml-1 text-xs">({activeGrouped[stage].length})</span>
+              </h2>
+              <ul className="min-h-[40px] space-y-2">
+                {activeGrouped[stage].map((d) => (
+                  <li key={d.id}>
+                    <LeadCard
+                      dispatch={d}
+                      pending={pending === d.id}
+                      onMove={(s) => moveStage(d.id, s)}
+                      onDisqualify={(r) => disqualify(d.id, r)}
+                      onDragStart={(e) => handleDragStart(e, d.id)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
+
+      {disqCount > 0 && (
+        <details className="space-y-3" open>
+          <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">
+            Disqualifiés ({disqCount})
+          </summary>
+          <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
+            {DISPATCH_STAGES.map((stage) => (
+              <section
+                key={stage}
+                className="rounded-lg border border-dashed bg-muted/20 p-3"
+              >
+                <h2 className="mb-2 text-xs text-muted-foreground">
+                  {STAGE_LABELS[stage]}{" "}
+                  <span className="ml-1">({disqGrouped[stage].length})</span>
+                </h2>
+                <ul className="space-y-2">
+                  {disqGrouped[stage].map((d) => (
+                    <li key={d.id}>
+                      <LeadCard
+                        dispatch={d}
+                        pending={pending === d.id}
+                        onMove={() => {}}
+                        onDisqualify={() => {}}
+                        readOnly
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

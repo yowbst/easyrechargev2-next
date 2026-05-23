@@ -8,6 +8,7 @@ export interface PartnerDispatchCard {
   stage_entered_at: string;
   disqualified: boolean;
   disqualification_reason: string | null;
+  disqualified_at: string | null;
   gift: boolean;
   billable: boolean;
   billable_locked_at: string | null;
@@ -34,6 +35,7 @@ const CARD_FIELDS = [
   "stage_entered_at",
   "disqualified",
   "disqualification_reason",
+  "disqualified_at",
   "gift",
   "billable",
   "billable_locked_at",
