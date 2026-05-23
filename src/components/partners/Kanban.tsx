@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import { DISPATCH_STAGES, type DispatchStage } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { LeadCard } from "./LeadCard";
 
 const STAGE_LABELS: Record<DispatchStage, string> = {
@@ -190,77 +191,81 @@ export function Kanban({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-        {DISPATCH_STAGES.map((stage) => {
-          const isDropTarget = dropTarget === stage;
-          return (
-            <section
-              key={stage}
-              onDragOver={(e) => handleDragOver(e, stage)}
-              onDragLeave={() => handleDragLeave(stage)}
-              onDrop={(e) => handleDrop(e, stage)}
-              className={`rounded-lg border bg-card p-3 transition-colors ${
-                isDropTarget
-                  ? "border-primary bg-primary/5 ring-2 ring-primary/40"
-                  : ""
-              }`}
-            >
-              <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-                {STAGE_LABELS[stage]}{" "}
-                <span className="ml-1 text-xs">({activeGrouped[stage].length})</span>
-              </h2>
-              <ul className="min-h-[40px] space-y-2">
-                {activeGrouped[stage].map((d) => (
-                  <li key={d.id}>
-                    <LeadCard
-                      dispatch={d}
-                      pending={pending === d.id}
-                      onMove={(s) => moveStage(d.id, s)}
-                      onDisqualify={(r) => disqualify(d.id, r)}
-                      onDragStart={(e) => handleDragStart(e, d.id)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          );
-        })}
-      </div>
-
-      {disqCount > 0 && (
-        <details className="space-y-3" open>
-          <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">
-            Disqualifiés ({disqCount})
-          </summary>
-          <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-            {DISPATCH_STAGES.map((stage) => (
+    <TooltipProvider delay={250}>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
+          {DISPATCH_STAGES.map((stage) => {
+            const isDropTarget = dropTarget === stage;
+            return (
               <section
                 key={stage}
-                className="rounded-lg border border-dashed bg-muted/20 p-3"
+                onDragOver={(e) => handleDragOver(e, stage)}
+                onDragLeave={() => handleDragLeave(stage)}
+                onDrop={(e) => handleDrop(e, stage)}
+                className={`rounded-lg border bg-card p-3 transition-colors ${
+                  isDropTarget
+                    ? "border-primary bg-primary/5 ring-2 ring-primary/40"
+                    : ""
+                }`}
               >
-                <h2 className="mb-2 text-xs text-muted-foreground">
+                <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
                   {STAGE_LABELS[stage]}{" "}
-                  <span className="ml-1">({disqGrouped[stage].length})</span>
+                  <span className="ml-1 text-xs">({activeGrouped[stage].length})</span>
                 </h2>
-                <ul className="space-y-2">
-                  {disqGrouped[stage].map((d) => (
+                <ul className="min-h-[40px] space-y-2">
+                  {activeGrouped[stage].map((d) => (
                     <li key={d.id}>
                       <LeadCard
                         dispatch={d}
+                        partnerToken={partnerToken}
                         pending={pending === d.id}
-                        onMove={() => {}}
-                        onDisqualify={() => {}}
-                        readOnly
+                        onMove={(s) => moveStage(d.id, s)}
+                        onDisqualify={(r) => disqualify(d.id, r)}
+                        onDragStart={(e) => handleDragStart(e, d.id)}
                       />
                     </li>
                   ))}
                 </ul>
               </section>
-            ))}
-          </div>
-        </details>
-      )}
-    </div>
+            );
+          })}
+        </div>
+
+        {disqCount > 0 && (
+          <details className="space-y-3" open>
+            <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">
+              Disqualifiés ({disqCount})
+            </summary>
+            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
+              {DISPATCH_STAGES.map((stage) => (
+                <section
+                  key={stage}
+                  className="rounded-lg border border-dashed bg-muted/20 p-3"
+                >
+                  <h2 className="mb-2 text-xs text-muted-foreground">
+                    {STAGE_LABELS[stage]}{" "}
+                    <span className="ml-1">({disqGrouped[stage].length})</span>
+                  </h2>
+                  <ul className="space-y-2">
+                    {disqGrouped[stage].map((d) => (
+                      <li key={d.id}>
+                        <LeadCard
+                          dispatch={d}
+                          partnerToken={partnerToken}
+                          pending={pending === d.id}
+                          onMove={() => {}}
+                          onDisqualify={() => {}}
+                          readOnly
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          </details>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
