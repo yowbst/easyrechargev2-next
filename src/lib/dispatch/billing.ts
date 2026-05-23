@@ -1,28 +1,44 @@
 import type { DispatchStage } from "./types";
 import type { BillingConfig } from "./queries";
 
-/** Days the partner has in the given stage before billing locks. */
-export function windowDaysFor(
-  stage: DispatchStage,
-  billing: BillingConfig,
-  partnerOverrides?: Record<string, number> | null,
-): number {
-  const override = partnerOverrides?.[stage];
-  if (typeof override === "number") return override;
-  return billing.stage_windows_days[stage] ?? 0;
-}
-
-/** True if the disqualification window for `stage` has elapsed since `enteredAt`. */
-export function isWindowExpired(
-  stage: DispatchStage,
-  enteredAt: string | Date,
+/**
+ * Acceptance period — counted from dispatched_at, single global threshold.
+ * After this window, the partner is considered to have accepted the lead and
+ * billing locks. Disqualifying past this point is refused (and the row is
+ * locked on the way out).
+ */
+export function isAcceptanceExpired(
+  dispatchedAt: string | Date,
   billing: BillingConfig,
   partnerOverrides?: Record<string, number> | null,
   now: Date = new Date(),
 ): boolean {
-  const days = windowDaysFor(stage, billing, partnerOverrides);
-  if (days <= 0) return true; // 0-day window locks immediately (used for quote_sent)
-  const entered = enteredAt instanceof Date ? enteredAt : new Date(enteredAt);
+  const overrideDays = partnerOverrides?.acceptance;
+  const days =
+    typeof overrideDays === "number"
+      ? overrideDays
+      : billing.acceptance_window_days;
+  if (days <= 0) return true;
+  const dispatched =
+    dispatchedAt instanceof Date ? dispatchedAt : new Date(dispatchedAt);
+  const elapsedDays = (now.getTime() - dispatched.getTime()) / 86_400_000;
+  return elapsedDays >= days;
+}
+
+/**
+ * Rotting — pure visual nudge, never affects billing. True when the lead has
+ * sat in its current stage past the configured rotting threshold.
+ */
+export function isRotten(
+  stage: DispatchStage,
+  stageEnteredAt: string | Date,
+  billing: BillingConfig,
+  now: Date = new Date(),
+): boolean {
+  const days = billing.rotting_days_by_stage[stage];
+  if (typeof days !== "number" || days <= 0) return false;
+  const entered =
+    stageEnteredAt instanceof Date ? stageEnteredAt : new Date(stageEnteredAt);
   const elapsedDays = (now.getTime() - entered.getTime()) / 86_400_000;
   return elapsedDays >= days;
 }
@@ -35,12 +51,11 @@ export function isWindowExpired(
  *   - Disqualified → never billable.
  *   - Already billable → stays billable.
  *   - Reaching quote_sent / won / lost → billable.
- *   - Window expired at the previous stage → billable on transition.
+ *   - Acceptance window from dispatched_at has elapsed → billable.
  */
 export function shouldLockBilling(args: {
   newStage: DispatchStage;
-  previousStage: DispatchStage;
-  previousStageEnteredAt: string;
+  dispatchedAt: string;
   alreadyBillable: boolean;
   disqualified: boolean;
   gift: boolean;
@@ -49,12 +64,15 @@ export function shouldLockBilling(args: {
 }): boolean {
   if (args.disqualified || args.gift) return false;
   if (args.alreadyBillable) return true;
-  if (args.newStage === "quote_sent" || args.newStage === "won" || args.newStage === "lost") {
+  if (
+    args.newStage === "quote_sent" ||
+    args.newStage === "won" ||
+    args.newStage === "lost"
+  ) {
     return true;
   }
-  return isWindowExpired(
-    args.previousStage,
-    args.previousStageEnteredAt,
+  return isAcceptanceExpired(
+    args.dispatchedAt,
     args.billing,
     args.partnerOverrides,
   );

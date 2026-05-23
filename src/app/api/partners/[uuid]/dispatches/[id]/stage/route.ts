@@ -19,6 +19,7 @@ interface DispatchRow {
   stage: DispatchStage;
   stage_entered_at: string;
   stage_history: Array<{ stage: string; at: string }> | null;
+  dispatched_at: string;
   disqualified: boolean;
   gift: boolean;
   billable: boolean;
@@ -41,7 +42,7 @@ export async function POST(
   }
 
   const fields =
-    "id,partner,stage,stage_entered_at,stage_history,disqualified,gift,billable,billable_locked_at";
+    "id,partner,stage,stage_entered_at,stage_history,dispatched_at,disqualified,gift,billable,billable_locked_at";
   const fetched = await directusFetch<{ data: DispatchRow | null }>(
     `/items/partner_dispatches/${id}?fields=${fields}`,
     { next: { revalidate: 0 } },
@@ -63,8 +64,7 @@ export async function POST(
 
   const lockBilling = shouldLockBilling({
     newStage,
-    previousStage: row.stage,
-    previousStageEnteredAt: row.stage_entered_at,
+    dispatchedAt: row.dispatched_at,
     alreadyBillable: row.billable,
     disqualified: row.disqualified,
     gift: row.gift,

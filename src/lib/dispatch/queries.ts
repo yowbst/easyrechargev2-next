@@ -157,8 +157,16 @@ export async function recordDispatch(input: RecordDispatchInput): Promise<string
 
 export interface BillingConfig {
   currency: string;
-  stage_windows_days: Record<string, number>;
+  /** Days the partner has after dispatched_at to disqualify; otherwise billing locks. */
+  acceptance_window_days: number;
+  /** Per-stage rotting threshold — purely visual nudge, no billing impact. */
+  rotting_days_by_stage: Record<string, number>;
   dedup_window_days: number;
+}
+
+export interface DisqualificationConfig {
+  /** Per-stage allowed reasons. Missing key for a stage = all reasons allowed. */
+  reasons_by_stage: Record<string, string[]>;
 }
 
 /** Fetch `site_settings.global_config.dispatch` config (singleton). */
@@ -166,6 +174,7 @@ export async function fetchDispatchConfig(): Promise<{
   max_shared_targets: number;
   test_email_patterns: string[];
   billing: BillingConfig;
+  disqualification: DisqualificationConfig;
 }> {
   type Resp = {
     data:
@@ -175,15 +184,25 @@ export async function fetchDispatchConfig(): Promise<{
               max_shared_targets?: number;
               test_email_patterns?: string[];
               billing?: Partial<BillingConfig>;
+              disqualification?: Partial<DisqualificationConfig>;
             };
           };
         }
       | null;
   };
-  const defaults: BillingConfig = {
+  const billingDefaults: BillingConfig = {
     currency: "CHF",
-    stage_windows_days: { new: 7, contacted: 7, appointment: 14, quote_sent: 0 },
+    acceptance_window_days: 30,
+    rotting_days_by_stage: {
+      new: 5,
+      contacted: 7,
+      appointment: 14,
+      quote_sent: 21,
+    },
     dedup_window_days: 30,
+  };
+  const disqualificationDefaults: DisqualificationConfig = {
+    reasons_by_stage: {},
   };
   try {
     const res = await directusFetch<Resp>(
@@ -195,19 +214,29 @@ export async function fetchDispatchConfig(): Promise<{
       max_shared_targets: cfg.max_shared_targets ?? 1,
       test_email_patterns: cfg.test_email_patterns ?? [],
       billing: {
-        currency: cfg.billing?.currency ?? defaults.currency,
-        stage_windows_days: {
-          ...defaults.stage_windows_days,
-          ...(cfg.billing?.stage_windows_days ?? {}),
+        currency: cfg.billing?.currency ?? billingDefaults.currency,
+        acceptance_window_days:
+          cfg.billing?.acceptance_window_days ??
+          billingDefaults.acceptance_window_days,
+        rotting_days_by_stage: {
+          ...billingDefaults.rotting_days_by_stage,
+          ...(cfg.billing?.rotting_days_by_stage ?? {}),
         },
-        dedup_window_days: cfg.billing?.dedup_window_days ?? defaults.dedup_window_days,
+        dedup_window_days:
+          cfg.billing?.dedup_window_days ?? billingDefaults.dedup_window_days,
+      },
+      disqualification: {
+        reasons_by_stage:
+          cfg.disqualification?.reasons_by_stage ??
+          disqualificationDefaults.reasons_by_stage,
       },
     };
   } catch {
     return {
       max_shared_targets: 1,
       test_email_patterns: [],
-      billing: defaults,
+      billing: billingDefaults,
+      disqualification: disqualificationDefaults,
     };
   }
 }

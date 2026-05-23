@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { directusFetch } from "@/lib/directus";
 import { fetchDispatchConfig } from "@/lib/dispatch/queries";
-import { isWindowExpired } from "@/lib/dispatch/billing";
-import type { DispatchStage } from "@/lib/dispatch/types";
+import { isAcceptanceExpired } from "@/lib/dispatch/billing";
 
 interface Row {
   id: string;
-  stage: DispatchStage;
-  stage_entered_at: string;
+  dispatched_at: string;
   disqualified: boolean;
   gift: boolean;
   billable: boolean;
@@ -34,7 +32,7 @@ export async function POST(req: Request) {
   const params = new URLSearchParams();
   params.set(
     "fields",
-    "id,stage,stage_entered_at,disqualified,gift,billable,partner.disqualification_overrides",
+    "id,dispatched_at,disqualified,gift,billable,partner.disqualification_overrides",
   );
   params.set("filter[status][_eq]", "dispatched");
   params.set("filter[billable][_eq]", "false");
@@ -51,9 +49,8 @@ export async function POST(req: Request) {
   const toLock: string[] = [];
   for (const r of res?.data ?? []) {
     if (
-      isWindowExpired(
-        r.stage,
-        r.stage_entered_at,
+      isAcceptanceExpired(
+        r.dispatched_at,
         config.billing,
         r.partner?.disqualification_overrides ?? null,
         now,
