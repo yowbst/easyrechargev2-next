@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { LayoutDashboard, LifeBuoy } from "lucide-react";
 import {
   Sidebar,
@@ -15,15 +16,21 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+export type PartnerNav = "crm";
+
 export function PartnerSidebar({
   partnerName,
+  partnerToken,
   leadCount,
   supportHref,
+  activeNav,
   children,
 }: {
   partnerName: string;
+  partnerToken: string;
   leadCount: number;
   supportHref: string;
+  activeNav: PartnerNav;
   children: React.ReactNode;
 }) {
   return (
@@ -48,12 +55,13 @@ export function PartnerSidebar({
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  isActive
-                  tooltip="Tableau des leads"
+                  isActive={activeNav === "crm"}
+                  tooltip="CRM"
                   className="font-medium"
+                  render={<Link href={`/partners/${partnerToken}/crm`} />}
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  <span>Leads</span>
+                  <span>CRM</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
