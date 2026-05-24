@@ -146,6 +146,9 @@ export async function POST(req: Request) {
       const phDistinctId = phIds.phDistinctId ?? null;
       const posthogDashboard = "https://eu.posthog.com/project/103083";
 
+      const isRepeat =
+        (dispatchResult.dedup?.skippedPartnerSlugs?.length ?? 0) > 0;
+
       const webhookPayload = {
         submission: {
           id: submission.id,
@@ -158,6 +161,7 @@ export async function POST(req: Request) {
           miniQuoteSessionToken: miniQuoteToken || null,
           product: "ecp",
           leadCategory,
+          isRepeat,
           data: quoteData,
         },
         user: {

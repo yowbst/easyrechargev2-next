@@ -81,7 +81,14 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
     canton,
     isTest: environment !== "production",
     billableRate: null,
-    summary: { resolved: 0, dispatched: 0, skipped: 0, reasons: [] },
+    summary: {
+      resolved: 0,
+      dispatched: 0,
+      skipped: 0,
+      skippedDedup: 0,
+      reasons: [],
+    },
+    dedup: { skippedPartnerSlugs: [], windowDays: 0 },
     targets: [],
   };
 
@@ -189,8 +196,12 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
     }
 
     // One `skipped_dedup` ledger row per partner who would have been picked
-    // but already received a recent dispatch for this email.
+    // but already received a recent dispatch for this email. Surface the
+    // affected partner slugs + the configured window on the result so the
+    // webhook downstream can flag the submission as a duplicate.
+    baseResult.dedup.windowDays = config.billing.dedup_window_days;
     for (const sk of resolved.skippedDedup) {
+      baseResult.dedup.skippedPartnerSlugs.push(sk.partnerSlug);
       try {
         await recordDispatch({
           submission: ctx.submissionId,
@@ -202,6 +213,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
           product,
         });
         baseResult.summary.skipped += 1;
+        baseResult.summary.skippedDedup += 1;
       } catch (err) {
         console.error("[dispatch] recordDispatch (dedup) failed", err);
       }

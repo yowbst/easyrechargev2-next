@@ -20,6 +20,18 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  async rewrites() {
+    return [
+      // Partner CRM lives outside the [lang] layout (no public Header/Footer)
+      // but exposes a language-prefixed URL. The actual page is at
+      // src/app/partners/[uuid]/crm/page.tsx; we just pass lang as a query.
+      {
+        source: "/:lang(fr|de)/partners/:path*",
+        destination: "/partners/:path*?lang=:lang",
+      },
+    ];
+  },
+
   async redirects() {
     return [
       // Root → /fr

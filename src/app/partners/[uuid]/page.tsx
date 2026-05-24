@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
 /**
- * Default partner-space landing — redirects to the CRM (the kanban view).
- * Token validation happens at the destination.
+ * Back-compat redirect — old, lang-less partner URLs land on the French CRM.
+ * The canonical home is /[lang]/partners/[uuid]/crm.
  */
 export default async function PartnerIndexPage({
   params,
@@ -10,5 +10,5 @@ export default async function PartnerIndexPage({
   params: Promise<{ uuid: string }>;
 }) {
   const { uuid } = await params;
-  redirect(`/partners/${uuid}/crm`);
+  redirect(`/fr/partners/${uuid}/crm`);
 }

@@ -11,15 +11,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+const SUPPORTED_LANGS = ["fr", "de"] as const;
+type Lang = (typeof SUPPORTED_LANGS)[number];
+
 const SUPPORT_EMAIL = "yoan@easyrecharge.ch";
 
 function buildSupportMailto(opts: {
   partnerName: string;
   partnerSlug: string;
   dashboardToken: string;
+  lang: string;
 }): string {
   const subject = `[CRM partenaire] ${opts.partnerName} — `;
-  const crmUrl = `https://easyrecharge.ch/partners/${opts.dashboardToken}/crm`;
+  const crmUrl = `https://easyrecharge.ch/${opts.lang}/partners/${opts.dashboardToken}/crm`;
   const body = [
     "Bonjour Yoan,",
     "",
@@ -36,10 +40,18 @@ function buildSupportMailto(opts: {
 
 export default async function PartnerCRMPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ uuid: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const { uuid } = await params;
+  const { lang: langParam } = await searchParams;
+  const lang: Lang =
+    langParam && (SUPPORTED_LANGS as readonly string[]).includes(langParam)
+      ? (langParam as Lang)
+      : "fr";
+
   const partner = await findPartnerByToken(uuid);
   if (!partner) notFound();
 
@@ -52,6 +64,7 @@ export default async function PartnerCRMPage({
     partnerName: partner.name,
     partnerSlug: partner.slug,
     dashboardToken: uuid,
+    lang,
   });
 
   return (
@@ -61,10 +74,11 @@ export default async function PartnerCRMPage({
       leadCount={dispatches.length}
       supportHref={supportHref}
       activeNav="crm"
+      lang={lang}
     >
       <Kanban
         partnerToken={uuid}
-        lang={partner.language ?? "fr"}
+        lang={lang}
         dispatches={dispatches}
         rottingDaysByStage={config.billing.rotting_days_by_stage}
         reasonsByStage={config.disqualification.reasons_by_stage}

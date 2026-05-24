@@ -11,8 +11,15 @@ import {
   Ban,
   FileSearch,
   GripVertical,
-  Calendar,
   Hourglass,
+  Home,
+  Building2,
+  Key,
+  CalendarClock,
+  CircleCheck,
+  CircleDashed,
+  CircleX,
+  type LucideIcon,
 } from "lucide-react";
 import {
   Tooltip,
@@ -73,14 +80,40 @@ function formatRelativeDate(iso: string): { short: string; full: string } {
   return { short, full };
 }
 
+const HOUSING_STATUS: Record<string, { label: string; Icon: LucideIcon }> = {
+  owner: { label: "Propriétaire", Icon: Home },
+  "co-owner": { label: "Copropriétaire", Icon: Building2 },
+  tenant: { label: "Locataire", Icon: Key },
+};
+
+const APPROVAL: Record<string, { label: string; Icon: LucideIcon; tone: string }> = {
+  yes: { label: "Autorisation OK", Icon: CircleCheck, tone: "text-emerald-600 dark:text-emerald-400" },
+  "in-progress": {
+    label: "Autorisation en cours",
+    Icon: CircleDashed,
+    tone: "text-muted-foreground",
+  },
+  no: { label: "Sans autorisation", Icon: CircleX, tone: "text-rose-600 dark:text-rose-400" },
+};
+
+const DEADLINE_LABELS: Record<string, string> = {
+  asap: "Dès que possible",
+  "2-3mo": "Dans 2 à 3 mois",
+  "3-6mo": "Dans 3 à 6 mois",
+  "6+mo": "Dans 6 mois ou plus",
+};
+
+// Near-term deadlines highlight green — these are the warm/buyable leads.
+const DEADLINE_HOT_KEYS = new Set(["asap", "2-3mo"]);
+
 const REASON_LABELS: Record<string, string> = {
   partner_already_has: "Lead déjà reçu directement",
-  dedup: "Lead déjà transmis récemment",
   unreachable: "Lead injoignable",
   not_engaging: "Lead ne souhaite pas s'engager",
   competitor: "Lead a choisi un concurrent",
   long_timeframe: "Projet au-delà de 12 mois",
   no_authorization: "Lead n'a pas l'autorisation",
+  out_of_area: "Hors zone d'intervention",
 };
 
 export function LeadCard({
@@ -119,6 +152,44 @@ export function LeadCard({
       : null;
   const locality =
     typeof submissionData?.locality === "string" ? submissionData.locality : null;
+  const streetName =
+    typeof submissionData?.streetName === "string"
+      ? submissionData.streetName
+      : null;
+  const streetNb =
+    typeof submissionData?.streetNb === "string" ? submissionData.streetNb : null;
+  const addressLine = [
+    streetName && streetNb ? `${streetName} ${streetNb}` : streetName,
+    [zip, locality].filter(Boolean).join(" "),
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const mapsHref = addressLine
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        `${addressLine}${dispatch.canton ? `, ${dispatch.canton}` : ""}, Suisse`,
+      )}`
+    : null;
+  const housingStatusKey =
+    typeof submissionData?.housingStatus === "string"
+      ? submissionData.housingStatus.toLowerCase()
+      : null;
+  const housing =
+    housingStatusKey && housingStatusKey in HOUSING_STATUS
+      ? HOUSING_STATUS[housingStatusKey]
+      : null;
+  const deadlineKey =
+    typeof submissionData?.deadline === "string"
+      ? submissionData.deadline
+      : null;
+  const deadlineLabel = deadlineKey
+    ? (DEADLINE_LABELS[deadlineKey] ?? deadlineKey)
+    : null;
+  const approvalKey =
+    typeof submissionData?.approval === "string"
+      ? submissionData.approval.toLowerCase()
+      : null;
+  const approval =
+    approvalKey && approvalKey in APPROVAL ? APPROVAL[approvalKey] : null;
 
   const quoteHref = dispatch.submission?.id
     ? `/${lang}/demande-devis/${dispatch.submission.id}?view=partner`
@@ -140,101 +211,55 @@ export function LeadCard({
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
-      className={`group relative overflow-hidden rounded-md border bg-background p-3 text-sm shadow-sm transition-opacity ${
+      className={`group relative overflow-hidden rounded-md border bg-background p-2.5 text-sm shadow-sm transition-opacity ${
         dispatch.disqualified ? "opacity-60" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
       {isRotten && (
         <span
           aria-hidden
-          className="absolute inset-y-0 left-0 w-1 bg-amber-400"
+          className="absolute inset-y-0 left-0 w-1 bg-amber-500"
         />
       )}
-      {/* Header: name (left) + all status icons (right) */}
-      <header className="mb-2 flex items-start justify-between gap-2">
-        <h3 className="flex min-w-0 items-center gap-1 font-medium">
-          {draggable && (
-            <GripVertical
-              className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 group-hover:text-muted-foreground"
-              aria-hidden
-            />
-          )}
-          <span className="truncate">
-            {user?.first_name ?? "—"} {lastInitial}
-          </span>
-        </h3>
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <span
-                className={`inline-flex h-5 w-5 items-center justify-center rounded ${
-                  dispatch.gift
-                    ? "bg-amber-100 text-amber-900"
-                    : "bg-sky-100 text-sky-900"
-                }`}
-                aria-label={dispatch.gift ? "Gift" : "Standard"}
-              />
-            }
-          >
-            {dispatch.gift ? (
-              <Gift className="h-3 w-3" />
-            ) : (
-              <Coins className="h-3 w-3" />
-            )}
-          </TooltipTrigger>
-          <TooltipContent>
-            {dispatch.gift
-              ? "Gift — ce lead ne sera pas facturé"
-              : "Standard — lead facturable dans le cycle en cours"}
-          </TooltipContent>
-        </Tooltip>
-
-        {!readOnly && dispatch.disqualified && dispatch.disqualification_reason && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-900" />
-              }
-            >
-              Disqualifié
-            </TooltipTrigger>
-            <TooltipContent>
-              {REASON_LABELS[dispatch.disqualification_reason] ??
-                dispatch.disqualification_reason}
-            </TooltipContent>
-          </Tooltip>
-        )}
-        </div>
-      </header>
-
-      {/* Lead info — grouped block */}
-      <div className="mb-3 space-y-1 rounded bg-muted/40 p-2">
-        {(() => {
-          const { short, full } = formatRelativeDate(dispatch.dispatched_at);
-          const days = daysAtStage(dispatch.stage_entered_at);
-          return (
-            <div className="flex items-center gap-1.5 text-xs">
+      {/* Header: name + relative date inline (left) + status icons (right) */}
+      {(() => {
+        const { short, full } = formatRelativeDate(dispatch.dispatched_at);
+        const days = daysAtStage(dispatch.stage_entered_at);
+        return (
+          <header className="mb-1.5 flex items-center justify-between gap-2">
+            <h3 className="flex min-w-0 items-baseline gap-1.5 font-medium">
+              {draggable && (
+                <GripVertical
+                  className="h-3.5 w-3.5 shrink-0 self-center text-muted-foreground/40 group-hover:text-muted-foreground"
+                  aria-hidden
+                />
+              )}
+              <span className="truncate">
+                {user?.first_name ?? "—"} {lastInitial}
+              </span>
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <div
-                      className={`flex items-center gap-1.5 ${
-                        isRotten ? "text-amber-700" : "text-muted-foreground"
+                    <span
+                      className={`shrink-0 text-xs font-normal ${
+                        isRotten
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-muted-foreground"
                       }`}
                     />
                   }
                 >
-                  <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  <span>{short}</span>
+                  · {short}
                 </TooltipTrigger>
                 <TooltipContent>Reçu le {full}</TooltipContent>
               </Tooltip>
+            </h3>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
               {isRotten && (
                 <Tooltip>
                   <TooltipTrigger
                     render={
-                      <span className="ml-auto inline-flex items-center gap-1 text-amber-700" />
+                      <span className="inline-flex text-amber-600 dark:text-amber-400" />
                     }
                   >
                     <Hourglass className="h-3.5 w-3.5" aria-hidden />
@@ -244,9 +269,98 @@ export function LeadCard({
                   </TooltipContent>
                 </Tooltip>
               )}
-            </div>
-          );
-        })()}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <span
+                className="inline-flex text-muted-foreground"
+                aria-label={dispatch.gift ? "Gift" : "Standard"}
+              />
+            }
+          >
+            {dispatch.gift ? (
+              <Gift className="h-3.5 w-3.5" />
+            ) : (
+              <Coins className="h-3.5 w-3.5" />
+            )}
+          </TooltipTrigger>
+          <TooltipContent>
+            {dispatch.gift
+              ? "Gift — ce lead ne sera pas facturé"
+              : "Standard — lead facturable dans le cycle en cours"}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Separator between status icons and action buttons */}
+        {!readOnly && (
+          <span aria-hidden className="mx-0.5 h-4 w-px bg-border" />
+        )}
+
+        {/* Action buttons (desktop + mobile) */}
+        {!readOnly && quoteHref && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <a
+                  href={quoteHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Voir la demande de devis"
+                />
+              }
+            >
+              <FileSearch className="h-3.5 w-3.5" />
+            </TooltipTrigger>
+            <TooltipContent>Voir la demande de devis</TooltipContent>
+          </Tooltip>
+        )}
+
+        {!readOnly && dispatch.billable_locked_at && !dispatch.disqualified && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span
+                  className="inline-flex rounded p-1 text-muted-foreground"
+                  aria-label="Verrouillé pour facturation"
+                />
+              }
+            >
+              <Lock className="h-3.5 w-3.5" />
+            </TooltipTrigger>
+            <TooltipContent>
+              Verrouillé pour facturation — disqualification impossible
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {!readOnly && !(dispatch.billable_locked_at && !dispatch.disqualified) && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  disabled={disqualifyDisabled}
+                  onClick={() => setOpen(true)}
+                  aria-label="Disqualifier"
+                  className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950 dark:hover:text-rose-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                />
+              }
+            >
+              <Ban className="h-3.5 w-3.5" />
+            </TooltipTrigger>
+            <TooltipContent>
+              {dispatch.disqualified ? "Déjà disqualifié" : "Disqualifier"}
+            </TooltipContent>
+          </Tooltip>
+        )}
+        </div>
+          </header>
+        );
+      })()}
+
+      {/* Lead info — grouped block */}
+      <div className="mb-2 space-y-1 rounded bg-muted/40 p-1.5">
         {user?.email && (
             <div className="flex items-center gap-1.5 text-xs">
               <Mail
@@ -272,109 +386,115 @@ export function LeadCard({
               </a>
             </div>
           )}
-        {(zip || locality) && (
-          <div className="flex items-center gap-1.5 text-xs">
-            <MapPin
-              className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-              aria-hidden
-            />
-            <span className="truncate">
-              {[zip, locality].filter(Boolean).join(" ")}
-              {dispatch.canton && (
-                <span className="ml-1 text-muted-foreground">
-                  · {dispatch.canton}
+          {(zip || locality) && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <MapPin
+                className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                aria-hidden
+              />
+              {mapsHref ? (
+                <a
+                  href={mapsHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate hover:underline"
+                >
+                  {[zip, locality].filter(Boolean).join(" ")}
+                  {dispatch.canton && <span className="ml-1">· {dispatch.canton}</span>}
+                </a>
+              ) : (
+                <span className="truncate">
+                  {[zip, locality].filter(Boolean).join(" ")}
+                  {dispatch.canton && <span className="ml-1">· {dispatch.canton}</span>}
                 </span>
               )}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Actions: stage dropdown (mobile/tablet only) + icon button group */}
-      {!readOnly && (
-        <div className="flex items-center justify-between gap-2">
-          <select
-            disabled={pending || dispatch.disqualified}
-            value={dispatch.stage}
-            onChange={(e) => onMove(e.target.value as DispatchStage)}
-            className="flex-1 rounded border bg-background px-2 py-1 text-xs lg:hidden"
-            aria-label="Changer de stage"
-          >
-            {DISPATCH_STAGES.map((s) => {
-              const isBackward =
-                STAGE_RANK[s] < STAGE_RANK[dispatch.stage as DispatchStage];
-              return (
-                <option key={s} value={s} disabled={isBackward}>
-                  {STAGE_LABELS[s]}
-                </option>
-              );
-            })}
-          </select>
-
-          <div className="ml-auto flex items-center gap-1">
-            {quoteHref && (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <a
-                      href={quoteHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      aria-label="Voir la demande de devis"
-                    />
-                  }
-                >
-                  <FileSearch className="h-3.5 w-3.5" />
-                </TooltipTrigger>
-                <TooltipContent>Voir la demande de devis</TooltipContent>
-              </Tooltip>
-            )}
-
-            {dispatch.billable_locked_at && !dispatch.disqualified ? (
+            </div>
+          )}
+          {housing && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <span
-                      className="inline-flex rounded p-1.5 text-emerald-700"
-                      aria-label="Verrouillé pour facturation"
+                      className={`flex items-center gap-1.5 ${
+                        housingStatusKey === "owner"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : ""
+                      }`}
                     />
                   }
                 >
-                  <Lock className="h-3.5 w-3.5" />
+                  <housing.Icon
+                    className={`h-3.5 w-3.5 shrink-0 ${
+                      housingStatusKey === "owner" ? "" : "text-muted-foreground"
+                    }`}
+                    aria-hidden
+                  />
+                  <span>{housing.label}</span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Verrouillé pour facturation — disqualification impossible
+                  {housingStatusKey === "owner"
+                    ? "Propriétaire — aucune autorisation requise"
+                    : housing.label}
                 </TooltipContent>
               </Tooltip>
-            ) : (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <button
-                      type="button"
-                      disabled={disqualifyDisabled}
-                      onClick={() => setOpen(true)}
-                      aria-label="Disqualifier"
-                      className="rounded p-1.5 text-muted-foreground hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-                    />
-                  }
+              {approval && (
+                <span
+                  className={`flex items-center gap-1 ${approval.tone}`}
                 >
-                  <Ban className="h-3.5 w-3.5" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {dispatch.disqualified ? "Déjà disqualifié" : "Disqualifier"}
-                </TooltipContent>
-              </Tooltip>
-            )}
+                  <approval.Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span>{approval.label}</span>
+                </span>
+              )}
+            </div>
+          )}
+        {deadlineLabel && (
+          <div
+            className={`flex items-center gap-1.5 text-xs ${
+              deadlineKey && DEADLINE_HOT_KEYS.has(deadlineKey)
+                ? "text-emerald-600 dark:text-emerald-400"
+                : ""
+            }`}
+          >
+            <CalendarClock
+              className={`h-3.5 w-3.5 shrink-0 ${
+                deadlineKey && DEADLINE_HOT_KEYS.has(deadlineKey)
+                  ? ""
+                  : "text-muted-foreground"
+              }`}
+              aria-hidden
+            />
+            <span>{deadlineLabel}</span>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Mobile-only stage dropdown (desktop uses drag-and-drop). */}
+      {!readOnly && (
+        <select
+          disabled={pending || dispatch.disqualified}
+          value={dispatch.stage}
+          onChange={(e) => onMove(e.target.value as DispatchStage)}
+          className="mt-1 w-full rounded border bg-background px-2 py-1 text-xs lg:hidden"
+          aria-label="Changer de stage"
+        >
+          {DISPATCH_STAGES.map((s) => {
+            const isBackward =
+              STAGE_RANK[s] < STAGE_RANK[dispatch.stage as DispatchStage];
+            return (
+              <option key={s} value={s} disabled={isBackward}>
+                {STAGE_LABELS[s]}
+              </option>
+            );
+          })}
+        </select>
       )}
 
       <DisqualifyModal
         open={open}
         onClose={() => setOpen(false)}
         allowedReasons={stageReasons}
+        dispatch={dispatch}
         onConfirm={(reason, note) => {
           setOpen(false);
           onDisqualify(reason, note);

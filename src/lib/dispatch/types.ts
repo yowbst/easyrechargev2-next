@@ -32,12 +32,12 @@ export type DispatchStage =
 
 export type DisqualificationReason =
   | "partner_already_has"
-  | "dedup"
   | "unreachable"
   | "not_engaging"
   | "competitor"
   | "long_timeframe"
-  | "no_authorization";
+  | "no_authorization"
+  | "out_of_area";
 
 export const DISPATCH_STAGES: DispatchStage[] = [
   "new",
@@ -71,12 +71,12 @@ export function canMoveStage(
 
 export const DISQUALIFICATION_REASONS: DisqualificationReason[] = [
   "partner_already_has",
-  "dedup",
   "unreachable",
   "not_engaging",
   "competitor",
   "long_timeframe",
   "no_authorization",
+  "out_of_area",
 ];
 
 export const LEAD_CATEGORIES: LeadCategory[] = [
@@ -182,7 +182,14 @@ export interface DispatchSummary {
   resolved: number;
   dispatched: number;
   skipped: number;
+  /** Subset of `skipped` attributable to dedup (same email + same partner recently). */
+  skippedDedup: number;
   reasons: string[];
+}
+
+export interface DispatchDedupInfo {
+  skippedPartnerSlugs: string[];
+  windowDays: number;
 }
 
 export interface DispatchResult {
@@ -192,4 +199,5 @@ export interface DispatchResult {
   billableRate: number | null;
   summary: DispatchSummary;
   targets: DispatchTarget[];
+  dedup: DispatchDedupInfo;
 }

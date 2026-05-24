@@ -1,7 +1,21 @@
 "use client";
 
-import { useEffect, useState, useTransition, type DragEvent } from "react";
+import {
+  useEffect,
+  useState,
+  useTransition,
+  type ComponentType,
+  type DragEvent,
+} from "react";
 import { useRouter } from "next/navigation";
+import {
+  Inbox,
+  PhoneCall,
+  CalendarCheck,
+  FileText,
+  Trophy,
+  XCircle,
+} from "lucide-react";
 import {
   DISPATCH_STAGES,
   STAGE_RANK,
@@ -9,7 +23,17 @@ import {
 } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useSidebar } from "@/components/ui/sidebar";
 import { LeadCard } from "./LeadCard";
+
+const STAGE_ICONS: Record<DispatchStage, ComponentType<{ className?: string }>> = {
+  new: Inbox,
+  contacted: PhoneCall,
+  appointment: CalendarCheck,
+  quote_sent: FileText,
+  won: Trophy,
+  lost: XCircle,
+};
 
 const STAGE_LABELS: Record<DispatchStage, string> = {
   new: "Nouveau",
@@ -34,12 +58,12 @@ const OUTCOME_STAGES: DispatchStage[] = ["won", "lost"];
 const OUTCOME_STYLES: Record<"won" | "lost", { bar: string; text: string; ring: string }> = {
   won: {
     bar: "bg-emerald-400",
-    text: "text-emerald-700",
+    text: "text-emerald-700 dark:text-emerald-400",
     ring: "ring-emerald-400/50",
   },
   lost: {
     bar: "bg-rose-400",
-    text: "text-rose-700",
+    text: "text-rose-700 dark:text-rose-400",
     ring: "ring-rose-400/50",
   },
 };
@@ -60,6 +84,7 @@ export function Kanban({
   reasonsByStage: Record<string, string[]>;
 }) {
   const router = useRouter();
+  const sidebar = useSidebar();
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
@@ -251,26 +276,52 @@ export function Kanban({
 
   return (
     <TooltipProvider delay={250}>
-      <div className="space-y-6">
-        {/* Active pipeline: 4 funnel columns. Outcomes live at the bottom. */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="flex min-h-[calc(100dvh-9rem)] scroll-smooth flex-col gap-6">
+        {/* Mobile-only sticky stage nav: scroll-jump to each section. */}
+        <nav
+          className="sticky top-0 z-20 -mx-4 -mt-4 flex gap-1.5 overflow-x-auto border-b bg-background/95 px-4 py-2 backdrop-blur-sm md:hidden"
+          aria-label="Navigation par étape"
+        >
+          {[...MAIN_STAGES, ...OUTCOME_STAGES].map((stage) => {
+            const Icon = STAGE_ICONS[stage];
+            const count = activeGrouped[stage].length;
+            return (
+              <a
+                key={stage}
+                href={`#stage-${stage}`}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs text-foreground hover:bg-muted"
+              >
+                <Icon className="h-3 w-3 shrink-0" />
+                <span>{STAGE_LABELS[stage]}</span>
+                <span className="text-muted-foreground">({count})</span>
+              </a>
+            );
+          })}
+        </nav>
+
+        {/* Active pipeline. Mobile: horizontal scroll-snap so the partner
+            can swipe between stage columns. Desktop: 4-column grid. */}
+        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 lg:grid-cols-4">
           {MAIN_STAGES.map((stage) => {
             const isDropTarget = dropTarget === stage;
+            const Icon = STAGE_ICONS[stage];
             return (
               <section
                 key={stage}
+                id={`stage-${stage}`}
                 onDragOver={(e) => handleDragOver(e, stage)}
                 onDragLeave={() => handleDragLeave(stage)}
                 onDrop={(e) => handleDrop(e, stage)}
-                className={`rounded-lg border bg-card p-3 transition-colors ${
+                className={`w-[85vw] shrink-0 snap-start scroll-mt-16 rounded-lg border bg-card p-3 transition-colors md:w-auto md:shrink ${
                   isDropTarget
                     ? "border-primary bg-primary/5 ring-2 ring-primary/40"
                     : ""
                 }`}
               >
-                <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-                  {STAGE_LABELS[stage]}{" "}
-                  <span className="ml-1 text-xs">({activeGrouped[stage].length})</span>
+                <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span>{STAGE_LABELS[stage]}</span>
+                  <span className="text-xs">({activeGrouped[stage].length})</span>
                 </h2>
                 <ul className="min-h-[40px] space-y-2">
                   {activeGrouped[stage].map((d) => (
@@ -295,6 +346,10 @@ export function Kanban({
 
         </div>
 
+        {/* Bottom block: disqualified + outcomes. mt-auto pushes the whole
+            block to the page footer, regardless of how empty the funnel is. */}
+        <div className="mt-auto space-y-6">
+
         {/* Disqualified: same 4-column layout, aligned with active funnel. */}
         {mainDisqCount > 0 && (
           <details className="space-y-3" open>
@@ -302,14 +357,19 @@ export function Kanban({
               Disqualifiés ({mainDisqCount})
             </summary>
             <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {MAIN_STAGES.map((stage) => (
+              {MAIN_STAGES.map((stage) => {
+                const Icon = STAGE_ICONS[stage];
+                return (
                 <section
                   key={stage}
                   className="rounded-lg border border-dashed bg-muted/20 p-3"
                 >
-                  <h2 className="mb-2 text-xs text-muted-foreground">
-                    {STAGE_LABELS[stage]}{" "}
-                    <span className="ml-1">({disqGrouped[stage].length})</span>
+                  <h2 className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Icon
+                      className="h-3.5 w-3.5 shrink-0"
+                      aria-label={STAGE_LABELS[stage]}
+                    />
+                    <span>({disqGrouped[stage].length})</span>
                   </h2>
                   <ul className="space-y-2">
                     {disqGrouped[stage].map((d) => (
@@ -328,26 +388,47 @@ export function Kanban({
                     ))}
                   </ul>
                 </section>
-              ))}
+                );
+              })}
             </div>
           </details>
         )}
 
         {/* Outcomes at the bottom: Won / Lost side-by-side, color-tinted,
             collapsible. Drop targets stay active while collapsed (details
-            keep their dragOver/drop handlers). */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            keep their dragOver/drop handlers). While a card is being dragged,
+            this row floats fixed to the viewport bottom — offset on the left
+            by the sidebar width so it doesn't overlap the nav. */}
+        <div
+          style={
+            draggingStage !== null && !sidebar.isMobile
+              ? {
+                  left:
+                    sidebar.state === "expanded"
+                      ? "var(--sidebar-width)"
+                      : "var(--sidebar-width-icon)",
+                }
+              : undefined
+          }
+          className={`grid grid-cols-1 gap-3 transition-all md:grid-cols-2 ${
+            draggingStage !== null
+              ? "fixed right-0 bottom-0 left-0 z-30 border-t bg-background/95 px-4 py-3 shadow-lg backdrop-blur-sm md:px-6"
+              : ""
+          }`}
+        >
           {OUTCOME_STAGES.map((stage) => {
             const tone = OUTCOME_STYLES[stage as "won" | "lost"];
             const isDropTarget = dropTarget === stage;
             const cards = activeGrouped[stage];
+            const Icon = STAGE_ICONS[stage];
             return (
               <details
                 key={stage}
+                id={`stage-${stage}`}
                 onDragOver={(e) => handleDragOver(e, stage)}
                 onDragLeave={() => handleDragLeave(stage)}
                 onDrop={(e) => handleDrop(e, stage)}
-                className={`relative overflow-hidden rounded-lg border bg-card p-3 pl-4 transition-shadow ${
+                className={`relative scroll-mt-16 overflow-hidden rounded-lg border bg-card p-3 pl-4 transition-shadow ${
                   isDropTarget ? `ring-2 ${tone.ring}` : ""
                 }`}
               >
@@ -358,9 +439,10 @@ export function Kanban({
                 <summary
                   className={`flex cursor-pointer items-baseline justify-between gap-2 text-sm font-semibold ${tone.text}`}
                 >
-                  <span>
-                    {STAGE_LABELS[stage]}{" "}
-                    <span className="ml-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span>{STAGE_LABELS[stage]}</span>
+                    <span className="text-xs text-muted-foreground">
                       ({cards.length})
                     </span>
                   </span>
@@ -390,6 +472,7 @@ export function Kanban({
               </details>
             );
           })}
+        </div>
         </div>
       </div>
     </TooltipProvider>
