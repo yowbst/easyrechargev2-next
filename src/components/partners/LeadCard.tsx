@@ -12,6 +12,7 @@ import {
   FileSearch,
   GripVertical,
   Calendar,
+  Hourglass,
 } from "lucide-react";
 import {
   Tooltip,
@@ -37,6 +38,13 @@ function isRottenClient(
   const elapsed =
     (Date.now() - new Date(stageEnteredAt).getTime()) / 86_400_000;
   return elapsed >= days;
+}
+
+function daysAtStage(stageEnteredAt: string | null | undefined): number {
+  if (!stageEnteredAt) return 0;
+  return Math.floor(
+    (Date.now() - new Date(stageEnteredAt).getTime()) / 86_400_000,
+  );
 }
 
 const STAGE_LABELS: Record<DispatchStage, string> = {
@@ -132,12 +140,16 @@ export function LeadCard({
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
-      className={`group rounded-md border bg-background p-3 text-sm shadow-sm transition-opacity ${
+      className={`group relative overflow-hidden rounded-md border bg-background p-3 text-sm shadow-sm transition-opacity ${
         dispatch.disqualified ? "opacity-60" : ""
-      } ${
-        isRotten ? "border-rose-300 bg-rose-50/30" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
+      {isRotten && (
+        <span
+          aria-hidden
+          className="absolute inset-y-0 left-0 w-1 bg-amber-400"
+        />
+      )}
       {/* Header: name (left) + all status icons (right) */}
       <header className="mb-2 flex items-start justify-between gap-2">
         <h3 className="flex min-w-0 items-center gap-1 font-medium">
@@ -200,21 +212,39 @@ export function LeadCard({
       <div className="mb-3 space-y-1 rounded bg-muted/40 p-2">
         {(() => {
           const { short, full } = formatRelativeDate(dispatch.dispatched_at);
+          const days = daysAtStage(dispatch.stage_entered_at);
           return (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground" />
-                }
-              >
-                <Calendar
-                  className="h-3.5 w-3.5 shrink-0"
-                  aria-hidden
-                />
-                <span>{short}</span>
-              </TooltipTrigger>
-              <TooltipContent>Reçu le {full}</TooltipContent>
-            </Tooltip>
+            <div className="flex items-center gap-1.5 text-xs">
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <div
+                      className={`flex items-center gap-1.5 ${
+                        isRotten ? "text-amber-700" : "text-muted-foreground"
+                      }`}
+                    />
+                  }
+                >
+                  <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span>{short}</span>
+                </TooltipTrigger>
+                <TooltipContent>Reçu le {full}</TooltipContent>
+              </Tooltip>
+              {isRotten && (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <span className="ml-auto inline-flex items-center gap-1 text-amber-700" />
+                    }
+                  >
+                    <Hourglass className="h-3.5 w-3.5" aria-hidden />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Stagne depuis {days} {days === 1 ? "jour" : "jours"} à cette étape
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           );
         })()}
         {user?.email && (
