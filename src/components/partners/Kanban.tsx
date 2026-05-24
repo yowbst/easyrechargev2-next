@@ -31,17 +31,15 @@ const MAIN_STAGES: DispatchStage[] = [
 ];
 const OUTCOME_STAGES: DispatchStage[] = ["won", "lost"];
 
-const OUTCOME_STYLES: Record<"won" | "lost", { border: string; bg: string; text: string; ring: string }> = {
+const OUTCOME_STYLES: Record<"won" | "lost", { bar: string; text: string; ring: string }> = {
   won: {
-    border: "border-emerald-300",
-    bg: "bg-emerald-50/40",
-    text: "text-emerald-900",
+    bar: "bg-emerald-400",
+    text: "text-emerald-700",
     ring: "ring-emerald-400/50",
   },
   lost: {
-    border: "border-rose-300",
-    bg: "bg-rose-50/40",
-    text: "text-rose-900",
+    bar: "bg-rose-400",
+    text: "text-rose-700",
     ring: "ring-rose-400/50",
   },
 };
@@ -349,19 +347,25 @@ export function Kanban({
                 onDragOver={(e) => handleDragOver(e, stage)}
                 onDragLeave={() => handleDragLeave(stage)}
                 onDrop={(e) => handleDrop(e, stage)}
-                className={`rounded-lg border ${tone.border} ${tone.bg} p-3 transition-shadow ${
+                className={`relative overflow-hidden rounded-lg border bg-card p-3 pl-4 transition-shadow ${
                   isDropTarget ? `ring-2 ${tone.ring}` : ""
                 }`}
               >
+                <span
+                  aria-hidden
+                  className={`absolute inset-y-0 left-0 w-1 ${tone.bar}`}
+                />
                 <summary
                   className={`flex cursor-pointer items-baseline justify-between gap-2 text-sm font-semibold ${tone.text}`}
                 >
                   <span>
                     {STAGE_LABELS[stage]}{" "}
-                    <span className="ml-1 text-xs opacity-80">({cards.length})</span>
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      ({cards.length})
+                    </span>
                   </span>
                   {stage === "won" && conversionPct !== null && (
-                    <span className="whitespace-nowrap text-xs font-medium opacity-80">
+                    <span className="whitespace-nowrap text-xs font-medium text-muted-foreground">
                       {conversionPct}% · {wonCount}/{closedCount}
                     </span>
                   )}
