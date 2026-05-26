@@ -16,6 +16,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { PartnerLanguageSwitcher } from "./PartnerLanguageSwitcher";
 
 export type PartnerNav = "crm";
@@ -28,6 +29,7 @@ export function PartnerSidebar({
   supportHref,
   activeNav,
   lang,
+  dictionary,
   children,
 }: {
   partnerName: string;
@@ -36,8 +38,10 @@ export function PartnerSidebar({
   supportHref: string;
   activeNav: PartnerNav;
   lang: Lang;
+  dictionary: PartnerDict;
   children: React.ReactNode;
 }) {
+  const t = makePartnerT(dictionary);
   return (
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon">
@@ -50,7 +54,9 @@ export function PartnerSidebar({
             </div>
             <div className="min-w-0 group-data-[collapsible=icon]:hidden">
               <p className="truncate text-sm font-semibold">{partnerName}</p>
-              <p className="text-xs text-muted-foreground">Espace partenaire</p>
+              <p className="text-xs text-muted-foreground">
+                {t("sidebar.space")}
+              </p>
             </div>
           </div>
         </SidebarHeader>
@@ -61,12 +67,12 @@ export function PartnerSidebar({
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={activeNav === "crm"}
-                  tooltip="CRM"
+                  tooltip={t("sidebar.crm")}
                   className="font-medium"
                   render={<Link href={`/${lang}/partners/${partnerToken}/crm`} prefetch={false} />}
                 >
                   <Users className="h-4 w-4" />
-                  <span>CRM</span>
+                  <span>{t("sidebar.crm")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -77,11 +83,11 @@ export function PartnerSidebar({
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                tooltip="Demander de l'aide"
+                tooltip={t("sidebar.help")}
                 render={<a href={supportHref} />}
               >
                 <LifeBuoy className="h-4 w-4" />
-                <span>Aide</span>
+                <span>{t("sidebar.help")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -94,7 +100,7 @@ export function PartnerSidebar({
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-base font-semibold">{partnerName}</h1>
             <p className="text-xs text-muted-foreground">
-              {leadCount} {leadCount === 1 ? "lead" : "leads"}
+              {leadCount} {t(leadCount === 1 ? "header.lead" : "header.leads")}
             </p>
           </div>
           <div className="flex items-center gap-1">

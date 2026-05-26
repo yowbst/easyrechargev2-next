@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import { fetchPartnerDispatches } from "@/lib/dispatch/partner-dashboard-queries";
 import { fetchDispatchConfig } from "@/lib/dispatch/queries";
+import { fetchPage } from "@/lib/directus-queries";
+import { extractPageDictionary } from "@/lib/i18n/dictionaries";
+import { slugToDirectusLocale } from "@/lib/i18n/config";
 import { Kanban } from "@/components/partners/Kanban";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 
@@ -55,10 +58,15 @@ export default async function PartnerCRMPage({
   const partner = await findPartnerByToken(uuid);
   if (!partner) notFound();
 
-  const [dispatches, config] = await Promise.all([
+  const locale = slugToDirectusLocale(lang);
+  const [dispatches, config, crmPage] = await Promise.all([
     fetchPartnerDispatches(partner.id),
     fetchDispatchConfig(),
+    fetchPage("partner-crm", locale),
   ]);
+  const dictionary = crmPage
+    ? extractPageDictionary("partner-crm", crmPage, locale)
+    : {};
 
   const supportHref = buildSupportMailto({
     partnerName: partner.name,
@@ -75,6 +83,7 @@ export default async function PartnerCRMPage({
       supportHref={supportHref}
       activeNav="crm"
       lang={lang}
+      dictionary={dictionary}
     >
       <Kanban
         partnerToken={uuid}
@@ -82,6 +91,7 @@ export default async function PartnerCRMPage({
         dispatches={dispatches}
         rottingDaysByStage={config.billing.rotting_days_by_stage}
         reasonsByStage={config.disqualification.reasons_by_stage}
+        dictionary={dictionary}
       />
     </PartnerSidebar>
   );

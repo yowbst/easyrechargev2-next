@@ -32,6 +32,7 @@ import {
   type DispatchStage,
 } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
+import { makePartnerT, type PartnerDict, type PartnerT } from "@/lib/partner-i18n";
 import { DisqualifyModal } from "./DisqualifyModal";
 
 function isRottenClient(
@@ -54,25 +55,18 @@ function daysAtStage(stageEnteredAt: string | null | undefined): number {
   );
 }
 
-const STAGE_LABELS: Record<DispatchStage, string> = {
-  new: "Nouveau",
-  contacted: "Contacté",
-  appointment: "RDV pris",
-  quote_sent: "Devis envoyé",
-  won: "Gagné",
-  lost: "Perdu",
-};
-
-function formatRelativeDate(iso: string): { short: string; full: string } {
+function formatRelativeDate(
+  iso: string,
+  t: PartnerT,
+): { short: string; full: string } {
   const d = new Date(iso);
-  const now = new Date();
   const diffDays = Math.floor(
-    (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24),
+    (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24),
   );
   let short: string;
-  if (diffDays <= 0) short = "Aujourd'hui";
-  else if (diffDays === 1) short = "Hier";
-  else short = `Il y a ${diffDays} j`;
+  if (diffDays <= 0) short = t("card.date.today");
+  else if (diffDays === 1) short = t("card.date.yesterday");
+  else short = t("card.date.days_ago", { n: diffDays });
   const full = d.toLocaleString("fr-CH", {
     dateStyle: "long",
     timeStyle: "short",
@@ -80,49 +74,21 @@ function formatRelativeDate(iso: string): { short: string; full: string } {
   return { short, full };
 }
 
-const HOUSING_STATUS: Record<string, { label: string; Icon: LucideIcon }> = {
-  owner: { label: "Propriétaire", Icon: Home },
-  "co-owner": { label: "Copropriétaire", Icon: Building2 },
-  tenant: { label: "Locataire", Icon: Key },
+// Icon-only maps — labels come from the dictionary via t().
+const HOUSING_ICONS: Record<string, LucideIcon> = {
+  owner: Home,
+  "co-owner": Building2,
+  tenant: Key,
 };
 
-const APPROVAL: Record<string, { label: string; Icon: LucideIcon; tone: string }> = {
-  yes: { label: "Autorisation OK", Icon: CircleCheck, tone: "text-emerald-600 dark:text-emerald-400" },
-  "in-progress": {
-    label: "Autorisation en cours",
-    Icon: CircleDashed,
-    tone: "text-muted-foreground",
-  },
-  no: { label: "Sans autorisation", Icon: CircleX, tone: "text-rose-600 dark:text-rose-400" },
-};
-
-const DEADLINE_LABELS: Record<string, string> = {
-  asap: "Dès que possible",
-  "2-3mo": "Dans 2 à 3 mois",
-  "3-6mo": "Dans 3 à 6 mois",
-  "6+mo": "Dans 6 mois ou plus",
+const APPROVAL_META: Record<string, { Icon: LucideIcon; tone: string }> = {
+  yes: { Icon: CircleCheck, tone: "text-emerald-600 dark:text-emerald-400" },
+  "in-progress": { Icon: CircleDashed, tone: "text-muted-foreground" },
+  no: { Icon: CircleX, tone: "text-rose-600 dark:text-rose-400" },
 };
 
 // Near-term deadlines highlight green — these are the warm/buyable leads.
 const DEADLINE_HOT_KEYS = new Set(["asap", "2-3mo"]);
-
-const REASON_LABELS: Record<string, string> = {
-  already_known: "Lead déjà connu (CRM ou canal direct)",
-  wrong_contact_info: "Coordonnées erronées",
-  unreachable: "Lead injoignable",
-  not_interested: "Pas intéressé",
-  ghosted: "Ne répond plus après contact",
-  out_of_area: "Hors zone d'intervention",
-  project_cancelled: "Projet annulé par le lead",
-  competitor: "Lead a choisi un concurrent",
-  long_timeframe: "Projet au-delà de 12 mois",
-  no_authorization: "Lead n'a pas l'autorisation",
-  other: "Autre raison",
-  // Legacy keys retained so old partner_dispatches rows still render with
-  // their original wording on the card.
-  partner_already_has: "Lead déjà reçu directement",
-  not_engaging: "Lead ne souhaite pas s'engager",
-};
 
 export function LeadCard({
   dispatch,
@@ -134,6 +100,7 @@ export function LeadCard({
   onDragEnd,
   rottingDaysByStage,
   reasonsByStage,
+  dictionary,
   readOnly = false,
 }: {
   dispatch: PartnerDispatchCard;
@@ -145,8 +112,10 @@ export function LeadCard({
   onDragEnd?: () => void;
   rottingDaysByStage: Record<string, number>;
   reasonsByStage: Record<string, string[]>;
+  dictionary: PartnerDict;
   readOnly?: boolean;
 }) {
+  const t = makePartnerT(dictionary);
   const [open, setOpen] = useState(false);
   const user = dispatch.submission?.user ?? null;
   const lastInitial = user?.last_name ? `${user.last_name[0]}.` : "";
@@ -181,23 +150,27 @@ export function LeadCard({
     typeof submissionData?.housingStatus === "string"
       ? submissionData.housingStatus.toLowerCase()
       : null;
-  const housing =
-    housingStatusKey && housingStatusKey in HOUSING_STATUS
-      ? HOUSING_STATUS[housingStatusKey]
+  const HousingIcon =
+    housingStatusKey && housingStatusKey in HOUSING_ICONS
+      ? HOUSING_ICONS[housingStatusKey]
       : null;
+  const housingLabel = housingStatusKey
+    ? t(`card.housing.${housingStatusKey}`)
+    : null;
   const deadlineKey =
     typeof submissionData?.deadline === "string"
       ? submissionData.deadline
       : null;
-  const deadlineLabel = deadlineKey
-    ? (DEADLINE_LABELS[deadlineKey] ?? deadlineKey)
-    : null;
+  const deadlineLabel = deadlineKey ? t(`card.deadline.${deadlineKey}`) : null;
   const approvalKey =
     typeof submissionData?.approval === "string"
       ? submissionData.approval.toLowerCase()
       : null;
-  const approval =
-    approvalKey && approvalKey in APPROVAL ? APPROVAL[approvalKey] : null;
+  const approvalMeta =
+    approvalKey && approvalKey in APPROVAL_META
+      ? APPROVAL_META[approvalKey]
+      : null;
+  const approvalLabel = approvalKey ? t(`card.approval.${approvalKey}`) : null;
 
   const quoteHref = dispatch.submission?.id
     ? `/${lang}/demande-devis/${dispatch.submission.id}?view=partner`
@@ -231,7 +204,7 @@ export function LeadCard({
       )}
       {/* Header: name + relative date inline (left) + status icons (right) */}
       {(() => {
-        const { short, full } = formatRelativeDate(dispatch.dispatched_at);
+        const { short, full } = formatRelativeDate(dispatch.dispatched_at, t);
         const days = daysAtStage(dispatch.stage_entered_at);
         return (
           <header className="mb-1.5 flex items-center justify-between gap-2">
@@ -259,7 +232,7 @@ export function LeadCard({
                 >
                   · {short}
                 </TooltipTrigger>
-                <TooltipContent>Reçu le {full}</TooltipContent>
+                <TooltipContent>{t("card.received", { date: full })}</TooltipContent>
               </Tooltip>
             </h3>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
@@ -273,7 +246,7 @@ export function LeadCard({
                     <Hourglass className="h-3.5 w-3.5" aria-hidden />
                   </TooltipTrigger>
                   <TooltipContent>
-                    Stagne depuis {days} {days === 1 ? "jour" : "jours"} à cette étape
+                    {t("card.rotting", { n: days })}
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -282,7 +255,7 @@ export function LeadCard({
             render={
               <span
                 className="inline-flex text-muted-foreground"
-                aria-label={dispatch.gift ? "Gift" : "Standard"}
+                aria-label={t(dispatch.gift ? "card.billing.gift" : "card.billing.standard")}
               />
             }
           >
@@ -293,9 +266,7 @@ export function LeadCard({
             )}
           </TooltipTrigger>
           <TooltipContent>
-            {dispatch.gift
-              ? "Gift — ce lead ne sera pas facturé"
-              : "Standard — lead facturable dans le cycle en cours"}
+            {t(dispatch.gift ? "card.billing.gift_tip" : "card.billing.standard_tip")}
           </TooltipContent>
         </Tooltip>
 
@@ -314,13 +285,13 @@ export function LeadCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  aria-label="Voir la demande de devis"
+                  aria-label={t("card.actions.view")}
                 />
               }
             >
               <FileSearch className="h-3.5 w-3.5" />
             </TooltipTrigger>
-            <TooltipContent>Voir la demande de devis</TooltipContent>
+            <TooltipContent>{t("card.actions.view")}</TooltipContent>
           </Tooltip>
         )}
 
@@ -330,15 +301,13 @@ export function LeadCard({
               render={
                 <span
                   className="inline-flex rounded p-1 text-muted-foreground"
-                  aria-label="Verrouillé pour facturation"
+                  aria-label={t("card.actions.locked")}
                 />
               }
             >
               <Lock className="h-3.5 w-3.5" />
             </TooltipTrigger>
-            <TooltipContent>
-              Verrouillé pour facturation — disqualification impossible
-            </TooltipContent>
+            <TooltipContent>{t("card.actions.locked_tip")}</TooltipContent>
           </Tooltip>
         )}
 
@@ -350,7 +319,7 @@ export function LeadCard({
                   type="button"
                   disabled={disqualifyDisabled}
                   onClick={() => setOpen(true)}
-                  aria-label="Disqualifier"
+                  aria-label={t("card.actions.disqualify")}
                   className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950 dark:hover:text-rose-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
                 />
               }
@@ -358,7 +327,7 @@ export function LeadCard({
               <Ban className="h-3.5 w-3.5" />
             </TooltipTrigger>
             <TooltipContent>
-              {dispatch.disqualified ? "Déjà disqualifié" : "Disqualifier"}
+              {t(dispatch.disqualified ? "card.actions.already_disqualified" : "card.actions.disqualify")}
             </TooltipContent>
           </Tooltip>
         )}
@@ -418,7 +387,7 @@ export function LeadCard({
               )}
             </div>
           )}
-          {housing && (
+          {HousingIcon && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
               <Tooltip>
                 <TooltipTrigger
@@ -432,26 +401,27 @@ export function LeadCard({
                     />
                   }
                 >
-                  <housing.Icon
+                  <HousingIcon
                     className={`h-3.5 w-3.5 shrink-0 ${
                       housingStatusKey === "owner" ? "" : "text-muted-foreground"
                     }`}
                     aria-hidden
                   />
-                  <span>{housing.label}</span>
+                  <span>{housingLabel}</span>
                 </TooltipTrigger>
                 <TooltipContent>
                   {housingStatusKey === "owner"
-                    ? "Propriétaire — aucune autorisation requise"
-                    : housing.label}
+                    ? t("card.housing.owner_tip")
+                    : housingLabel}
                 </TooltipContent>
               </Tooltip>
-              {approval && (
-                <span
-                  className={`flex items-center gap-1 ${approval.tone}`}
-                >
-                  <approval.Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  <span>{approval.label}</span>
+              {approvalMeta && (
+                <span className={`flex items-center gap-1 ${approvalMeta.tone}`}>
+                  <approvalMeta.Icon
+                    className="h-3.5 w-3.5 shrink-0"
+                    aria-hidden
+                  />
+                  <span>{approvalLabel}</span>
                 </span>
               )}
             </div>
@@ -484,14 +454,14 @@ export function LeadCard({
           value={dispatch.stage}
           onChange={(e) => onMove(e.target.value as DispatchStage)}
           className="mt-1 w-full rounded border bg-background px-2 py-1 text-xs lg:hidden"
-          aria-label="Changer de stage"
+          aria-label={t("card.actions.change_stage")}
         >
           {DISPATCH_STAGES.map((s) => {
             const isBackward =
               STAGE_RANK[s] < STAGE_RANK[dispatch.stage as DispatchStage];
             return (
               <option key={s} value={s} disabled={isBackward}>
-                {STAGE_LABELS[s]}
+                {t(`stages.${s}`)}
               </option>
             );
           })}
@@ -503,6 +473,7 @@ export function LeadCard({
         onClose={() => setOpen(false)}
         allowedReasons={stageReasons}
         dispatch={dispatch}
+        dictionary={dictionary}
         onConfirm={(reason, note) => {
           setOpen(false);
           onDisqualify(reason, note);

@@ -24,6 +24,7 @@ import {
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSidebar } from "@/components/ui/sidebar";
+import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { LeadCard } from "./LeadCard";
 
 const STAGE_ICONS: Record<DispatchStage, ComponentType<{ className?: string }>> = {
@@ -33,15 +34,6 @@ const STAGE_ICONS: Record<DispatchStage, ComponentType<{ className?: string }>> 
   quote_sent: FileText,
   won: Trophy,
   lost: XCircle,
-};
-
-const STAGE_LABELS: Record<DispatchStage, string> = {
-  new: "Nouveau",
-  contacted: "Contacté",
-  appointment: "RDV pris",
-  quote_sent: "Devis envoyé",
-  won: "Gagné",
-  lost: "Perdu",
 };
 
 // Main funnel: active pipeline columns. Outcomes (Won/Lost) live in a
@@ -76,15 +68,18 @@ export function Kanban({
   dispatches,
   rottingDaysByStage,
   reasonsByStage,
+  dictionary,
 }: {
   partnerToken: string;
   lang: string;
   dispatches: PartnerDispatchCard[];
   rottingDaysByStage: Record<string, number>;
   reasonsByStage: Record<string, string[]>;
+  dictionary: PartnerDict;
 }) {
   const router = useRouter();
   const sidebar = useSidebar();
+  const t = makePartnerT(dictionary);
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
@@ -128,11 +123,6 @@ export function Kanban({
       ),
     );
   }
-  const disqCount = DISPATCH_STAGES.reduce(
-    (sum, s) => sum + disqGrouped[s].length,
-    0,
-  );
-
   async function moveStage(id: string, stage: DispatchStage) {
     const previous = localDispatches;
     const now = new Date().toISOString();
@@ -292,7 +282,7 @@ export function Kanban({
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs text-foreground hover:bg-muted"
               >
                 <Icon className="h-3 w-3 shrink-0" />
-                <span>{STAGE_LABELS[stage]}</span>
+                <span>{t(`stages.${stage}`)}</span>
                 <span className="text-muted-foreground">({count})</span>
               </a>
             );
@@ -320,7 +310,7 @@ export function Kanban({
               >
                 <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
                   <Icon className="h-3.5 w-3.5 shrink-0" />
-                  <span>{STAGE_LABELS[stage]}</span>
+                  <span>{t(`stages.${stage}`)}</span>
                   <span className="text-xs">({activeGrouped[stage].length})</span>
                 </h2>
                 <ul className="min-h-[40px] space-y-2">
@@ -330,6 +320,7 @@ export function Kanban({
                         dispatch={d}
                         rottingDaysByStage={rottingDaysByStage}
                         reasonsByStage={reasonsByStage}
+                        dictionary={dictionary}
                         lang={lang}
                         pending={pending === d.id}
                         onMove={(s) => moveStage(d.id, s)}
@@ -354,7 +345,7 @@ export function Kanban({
         {mainDisqCount > 0 && (
           <details className="space-y-3" open>
             <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">
-              Disqualifiés ({mainDisqCount})
+              {t("groups.disqualified")} ({mainDisqCount})
             </summary>
             <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {MAIN_STAGES.map((stage) => {
@@ -367,7 +358,7 @@ export function Kanban({
                   <h2 className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Icon
                       className="h-3.5 w-3.5 shrink-0"
-                      aria-label={STAGE_LABELS[stage]}
+                      aria-label={t(`stages.${stage}`)}
                     />
                     <span>({disqGrouped[stage].length})</span>
                   </h2>
@@ -378,6 +369,7 @@ export function Kanban({
                           dispatch={d}
                           rottingDaysByStage={rottingDaysByStage}
                           reasonsByStage={reasonsByStage}
+                        dictionary={dictionary}
                           lang={lang}
                           pending={pending === d.id}
                           onMove={() => {}}
@@ -441,7 +433,7 @@ export function Kanban({
                 >
                   <span className="flex items-center gap-1.5">
                     <Icon className="h-3.5 w-3.5 shrink-0" />
-                    <span>{STAGE_LABELS[stage]}</span>
+                    <span>{t(`stages.${stage}`)}</span>
                     <span className="text-xs text-muted-foreground">
                       ({cards.length})
                     </span>
@@ -459,6 +451,7 @@ export function Kanban({
                         dispatch={d}
                         rottingDaysByStage={rottingDaysByStage}
                         reasonsByStage={reasonsByStage}
+                        dictionary={dictionary}
                         lang={lang}
                         pending={pending === d.id}
                         onMove={(s) => moveStage(d.id, s)}

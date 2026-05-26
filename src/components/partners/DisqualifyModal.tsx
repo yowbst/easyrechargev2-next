@@ -10,6 +10,7 @@ import {
   Building2,
   Key,
   CalendarClock,
+  type LucideIcon,
 } from "lucide-react";
 import { DISQUALIFICATION_REASONS } from "@/lib/dispatch/types";
 import {
@@ -18,97 +19,43 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
+import {
+  makePartnerT,
+  type PartnerDict,
+  type PartnerT,
+} from "@/lib/partner-i18n";
 
-const REASON_LABELS: Record<string, string> = {
-  already_known: "Lead déjà connu (CRM ou canal direct)",
-  wrong_contact_info: "Coordonnées erronées",
-  unreachable: "Lead injoignable",
-  not_interested: "Pas intéressé",
-  ghosted: "Ne répond plus après contact",
-  out_of_area: "Hors zone d'intervention",
-  project_cancelled: "Projet annulé par le lead",
-  competitor: "Lead a choisi un concurrent",
-  long_timeframe: "Projet au-delà de 12 mois",
-  no_authorization: "Lead n'a pas l'autorisation",
-  other: "Autre raison",
-  // Legacy keys retained for display back-compat:
-  partner_already_has: "Lead déjà reçu directement",
-  not_engaging: "Lead ne souhaite pas s'engager",
+function relativeShortLabel(iso: string, t: PartnerT): string {
+  const days = Math.floor(
+    (Date.now() - new Date(iso).getTime()) / 86_400_000,
+  );
+  if (days <= 0) return t("card.date.today");
+  if (days === 1) return t("card.date.yesterday");
+  return t("card.date.days_ago", { n: days });
+}
+
+// Icon-only maps — labels come from the dictionary via t().
+const HOUSING_ICONS: Record<string, LucideIcon> = {
+  owner: Home,
+  "co-owner": Building2,
+  tenant: Key,
 };
 
-const REASON_DESCRIPTIONS: Record<string, string> = {
-  already_known:
-    "Le lead existait déjà dans votre CRM, ou vous l'aviez capté via vos propres canaux (campagnes, référencement, contact direct).",
-  wrong_contact_info:
-    "Les coordonnées (téléphone, email) sont incorrectes, inexistantes, ou ne correspondent pas au demandeur.",
-  unreachable:
-    "Plusieurs tentatives de contact (téléphone, email) sans réponse — le lead n'a jamais été joint.",
-  not_interested:
-    "Le lead a explicitement refusé de continuer (ne veut pas de devis, refuse l'engagement).",
-  ghosted:
-    "Le lead a répondu au premier contact puis a cessé de répondre malgré les relances.",
-  out_of_area:
-    "L'adresse du lead est en dehors de votre zone d'intervention raisonnable, malgré la couverture du canton.",
-  project_cancelled:
-    "Le lead a annoncé qu'il n'a plus l'intention de réaliser le projet.",
-  competitor:
-    "Le lead a confirmé qu'il a choisi un autre installateur — l'opportunité est perdue.",
-  long_timeframe:
-    "Le projet est planifié au-delà de 12 mois — pas exploitable dans le cycle actuel.",
-  no_authorization:
-    "Le lead n'a pas l'autorisation nécessaire (propriétaire, syndic, bailleur) pour réaliser le projet.",
-  other:
-    "Aucun des motifs ci-dessus ne s'applique — précisez le motif dans la note.",
-};
-
-const REASON_GROUPS: Array<{ label: string; reasons: string[] }> = [
-  { label: "Déjà géré", reasons: ["already_known"] },
+// Reason → category. Labels (group + reason + description) all come from the
+// dictionary via t(). The arrays only define grouping + order.
+const REASON_GROUPS: Array<{ labelKey: string; reasons: string[] }> = [
+  { labelKey: "already_managed", reasons: ["already_known"] },
   {
-    label: "Contact difficile",
+    labelKey: "contact",
     reasons: ["wrong_contact_info", "unreachable", "not_interested", "ghosted"],
   },
-  { label: "Géographique", reasons: ["out_of_area"] },
+  { labelKey: "geo", reasons: ["out_of_area"] },
   {
-    label: "Projet incompatible",
+    labelKey: "project",
     reasons: ["project_cancelled", "competitor", "long_timeframe", "no_authorization"],
   },
-  { label: "Autre", reasons: ["other"] },
+  { labelKey: "other", reasons: ["other"] },
 ];
-
-const STAGE_LABELS: Record<string, string> = {
-  new: "Nouveau",
-  contacted: "Contacté",
-  appointment: "RDV pris",
-  quote_sent: "Devis envoyé",
-  won: "Gagné",
-  lost: "Perdu",
-};
-
-const HOUSING_INFO: Record<
-  string,
-  { label: string; Icon: typeof Home }
-> = {
-  owner: { label: "Propriétaire", Icon: Home },
-  "co-owner": { label: "Copropriétaire", Icon: Building2 },
-  tenant: { label: "Locataire", Icon: Key },
-};
-
-const DEADLINE_LABELS: Record<string, string> = {
-  asap: "Dès que possible",
-  "2-3mo": "Dans 2 à 3 mois",
-  "3-6mo": "Dans 3 à 6 mois",
-  "6+mo": "Dans 6 mois ou plus",
-};
-
-function relativeShort(iso: string): string {
-  const d = new Date(iso);
-  const days = Math.floor(
-    (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24),
-  );
-  if (days <= 0) return "Aujourd'hui";
-  if (days === 1) return "Hier";
-  return `Il y a ${days} j`;
-}
 
 export function DisqualifyModal({
   open,
@@ -116,13 +63,16 @@ export function DisqualifyModal({
   onConfirm,
   allowedReasons,
   dispatch,
+  dictionary,
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: (reason: string, note?: string) => void;
   allowedReasons?: string[] | null;
   dispatch: PartnerDispatchCard;
+  dictionary: PartnerDict;
 }) {
+  const t = makePartnerT(dictionary);
   const allowedSet = useMemo(() => {
     if (!Array.isArray(allowedReasons) || allowedReasons.length === 0) {
       return new Set<string>(DISQUALIFICATION_REASONS);
@@ -206,14 +156,17 @@ export function DisqualifyModal({
     typeof submissionData?.housingStatus === "string"
       ? submissionData.housingStatus.toLowerCase()
       : null;
-  const housing = housingKey && HOUSING_INFO[housingKey];
+  const HousingIcon =
+    housingKey && housingKey in HOUSING_ICONS ? HOUSING_ICONS[housingKey] : null;
+  const housingLabel = housingKey ? t(`card.housing.${housingKey}`) : null;
   const deadlineKey =
     typeof submissionData?.deadline === "string"
       ? submissionData.deadline
       : null;
-  const deadlineLabel = deadlineKey
-    ? (DEADLINE_LABELS[deadlineKey] ?? deadlineKey)
-    : null;
+  const deadlineLabel = deadlineKey ? t(`card.deadline.${deadlineKey}`) : null;
+
+  // Relative dispatch date for the lead-context header.
+  const relativeShort = relativeShortLabel(dispatch.dispatched_at, t);
 
   const isOtherReason = reason === "other";
   const trimmedNote = note.trim();
@@ -229,10 +182,9 @@ export function DisqualifyModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-background p-6 shadow-lg">
-        <h2 className="mb-1 text-lg font-semibold">Disqualifier ce lead</h2>
+        <h2 className="mb-1 text-lg font-semibold">{t("modal.title")}</h2>
         <p className="mb-5 text-xs text-muted-foreground">
-          Choisissez un motif. Certains motifs ne sont pas disponibles à cette
-          étape.
+          {t("modal.subtitle")}
         </p>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
@@ -243,9 +195,9 @@ export function DisqualifyModal({
                 {firstName} {lastInitial}
               </p>
               <p className="text-xs text-muted-foreground">
-                {STAGE_LABELS[dispatch.stage] ?? dispatch.stage}
+                {t(`stages.${dispatch.stage}`)}
                 {" · "}
-                {relativeShort(dispatch.dispatched_at)}
+                {relativeShort}
                 {dispatch.canton && ` · ${dispatch.canton}`}
               </p>
             </div>
@@ -298,13 +250,13 @@ export function DisqualifyModal({
                   )}
                 </div>
               )}
-              {housing && (
+              {HousingIcon && (
                 <div className="flex items-center gap-1.5">
-                  <housing.Icon
+                  <HousingIcon
                     className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                     aria-hidden
                   />
-                  <span>{housing.label}</span>
+                  <span>{housingLabel}</span>
                 </div>
               )}
               {deadlineLabel && (
@@ -319,17 +271,16 @@ export function DisqualifyModal({
             </dl>
 
             <p className="mt-4 border-t pt-3 text-[11px] text-muted-foreground">
-              Le lead sera marqué disqualifié et ne sera pas facturé pour ce
-              cycle.
+              {t("modal.billing_notice")}
             </p>
           </aside>
 
           {/* Reasons (right) */}
           <div role="radiogroup" className="divide-y">
             {REASON_GROUPS.map((g) => (
-              <div key={g.label} className="py-5 first:pt-0 last:pb-0">
+              <div key={g.labelKey} className="py-5 first:pt-0 last:pb-0">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {g.label}
+                  {t(`reason_groups.${g.labelKey}`)}
                 </p>
                 <div className="space-y-2">
                   {g.reasons.map((r) => {
@@ -353,7 +304,7 @@ export function DisqualifyModal({
                           className="shrink-0"
                         />
                         <span className="flex-1">
-                          {REASON_LABELS[r] ?? r}
+                          {t(`reasons.${r}.label`)}
                         </span>
                         <Tooltip>
                           <TooltipTrigger
@@ -364,10 +315,10 @@ export function DisqualifyModal({
                             <HelpCircle className="h-3.5 w-3.5" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
-                            {REASON_DESCRIPTIONS[r] ?? REASON_LABELS[r]}
+                            {t(`reasons.${r}.description`)}
                             {!allowed && (
                               <span className="mt-1 block italic opacity-80">
-                                (Non disponible à cette étape)
+                                {t("modal.reason_unavailable")}
                               </span>
                             )}
                           </TooltipContent>
@@ -383,13 +334,12 @@ export function DisqualifyModal({
 
         <label className="mt-5 block">
           <span className="text-xs text-muted-foreground">
-            Note{" "}
             {noteRequired ? (
               <span className="text-rose-600 dark:text-rose-400">
-                (obligatoire) *
+                {t("modal.note_required")} *
               </span>
             ) : (
-              "(optionnelle)"
+              t("modal.note_optional")
             )}
           </span>
           <textarea
@@ -400,8 +350,8 @@ export function DisqualifyModal({
             required={noteRequired}
             placeholder={
               noteRequired
-                ? "Précisez le motif…"
-                : `Détails utiles pour le contexte (${fullName})…`
+                ? t("modal.note_placeholder_required")
+                : t("modal.note_placeholder", { name: fullName })
             }
             className={`mt-1 w-full rounded border bg-background px-2 py-1 text-sm ${
               noteRequired && trimmedNote.length === 0
@@ -417,7 +367,7 @@ export function DisqualifyModal({
             onClick={onClose}
             className="rounded border px-3 py-1.5 text-sm"
           >
-            Annuler
+            {t("modal.cancel")}
           </button>
           <button
             type="button"
@@ -425,7 +375,7 @@ export function DisqualifyModal({
             disabled={!canSubmit}
             className="rounded bg-rose-600 px-3 py-1.5 text-sm text-white hover:bg-rose-700 disabled:opacity-50"
           >
-            Confirmer la disqualification
+            {t("modal.confirm")}
           </button>
         </div>
       </div>
