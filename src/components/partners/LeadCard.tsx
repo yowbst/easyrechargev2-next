@@ -107,13 +107,21 @@ const DEADLINE_LABELS: Record<string, string> = {
 const DEADLINE_HOT_KEYS = new Set(["asap", "2-3mo"]);
 
 const REASON_LABELS: Record<string, string> = {
-  partner_already_has: "Lead déjà reçu directement",
+  already_known: "Lead déjà connu (CRM ou canal direct)",
+  wrong_contact_info: "Coordonnées erronées",
   unreachable: "Lead injoignable",
-  not_engaging: "Lead ne souhaite pas s'engager",
+  not_interested: "Pas intéressé",
+  ghosted: "Ne répond plus après contact",
+  out_of_area: "Hors zone d'intervention",
+  project_cancelled: "Projet annulé par le lead",
   competitor: "Lead a choisi un concurrent",
   long_timeframe: "Projet au-delà de 12 mois",
   no_authorization: "Lead n'a pas l'autorisation",
-  out_of_area: "Hors zone d'intervention",
+  other: "Autre raison",
+  // Legacy keys retained so old partner_dispatches rows still render with
+  // their original wording on the card.
+  partner_already_has: "Lead déjà reçu directement",
+  not_engaging: "Lead ne souhaite pas s'engager",
 };
 
 export function LeadCard({

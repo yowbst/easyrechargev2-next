@@ -20,39 +20,59 @@ import {
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 
 const REASON_LABELS: Record<string, string> = {
-  partner_already_has: "Lead déjà reçu directement",
+  already_known: "Lead déjà connu (CRM ou canal direct)",
+  wrong_contact_info: "Coordonnées erronées",
   unreachable: "Lead injoignable",
-  not_engaging: "Lead ne souhaite pas s'engager",
+  not_interested: "Pas intéressé",
+  ghosted: "Ne répond plus après contact",
+  out_of_area: "Hors zone d'intervention",
+  project_cancelled: "Projet annulé par le lead",
   competitor: "Lead a choisi un concurrent",
   long_timeframe: "Projet au-delà de 12 mois",
   no_authorization: "Lead n'a pas l'autorisation",
-  out_of_area: "Hors zone d'intervention",
+  other: "Autre raison",
+  // Legacy keys retained for display back-compat:
+  partner_already_has: "Lead déjà reçu directement",
+  not_engaging: "Lead ne souhaite pas s'engager",
 };
 
 const REASON_DESCRIPTIONS: Record<string, string> = {
-  partner_already_has:
-    "Vous aviez déjà ce lead par un autre canal (référence directe, contact existant, autre formulaire).",
+  already_known:
+    "Le lead existait déjà dans votre CRM, ou vous l'aviez capté via vos propres canaux (campagnes, référencement, contact direct).",
+  wrong_contact_info:
+    "Les coordonnées (téléphone, email) sont incorrectes, inexistantes, ou ne correspondent pas au demandeur.",
   unreachable:
-    "Plusieurs tentatives de contact (téléphone, email) sans réponse — le lead n'est pas joignable.",
-  not_engaging:
-    "Le lead refuse d'engager la conversation ou ne souhaite plus recevoir de devis / rendez-vous.",
+    "Plusieurs tentatives de contact (téléphone, email) sans réponse — le lead n'a jamais été joint.",
+  not_interested:
+    "Le lead a explicitement refusé de continuer (ne veut pas de devis, refuse l'engagement).",
+  ghosted:
+    "Le lead a répondu au premier contact puis a cessé de répondre malgré les relances.",
+  out_of_area:
+    "L'adresse du lead est en dehors de votre zone d'intervention raisonnable, malgré la couverture du canton.",
+  project_cancelled:
+    "Le lead a annoncé qu'il n'a plus l'intention de réaliser le projet.",
   competitor:
     "Le lead a confirmé qu'il a choisi un autre installateur — l'opportunité est perdue.",
   long_timeframe:
     "Le projet est planifié au-delà de 12 mois — pas exploitable dans le cycle actuel.",
   no_authorization:
     "Le lead n'a pas l'autorisation nécessaire (propriétaire, syndic, bailleur) pour réaliser le projet.",
-  out_of_area:
-    "L'adresse du lead est en dehors de votre zone d'intervention raisonnable, malgré la couverture du canton.",
+  other:
+    "Aucun des motifs ci-dessus ne s'applique — précisez le motif dans la note.",
 };
 
 const REASON_GROUPS: Array<{ label: string; reasons: string[] }> = [
-  { label: "Déjà géré", reasons: ["partner_already_has"] },
-  { label: "Contact difficile", reasons: ["unreachable", "not_engaging"] },
+  { label: "Déjà géré", reasons: ["already_known"] },
+  {
+    label: "Contact difficile",
+    reasons: ["wrong_contact_info", "unreachable", "not_interested", "ghosted"],
+  },
+  { label: "Géographique", reasons: ["out_of_area"] },
   {
     label: "Projet incompatible",
-    reasons: ["out_of_area", "competitor", "long_timeframe", "no_authorization"],
+    reasons: ["project_cancelled", "competitor", "long_timeframe", "no_authorization"],
   },
+  { label: "Autre", reasons: ["other"] },
 ];
 
 const STAGE_LABELS: Record<string, string> = {
@@ -195,10 +215,15 @@ export function DisqualifyModal({
     ? (DEADLINE_LABELS[deadlineKey] ?? deadlineKey)
     : null;
 
+  const isOtherReason = reason === "other";
+  const trimmedNote = note.trim();
+  const noteRequired = isOtherReason;
+  const canSubmit =
+    !!reason && allowedSet.has(reason) && (!noteRequired || trimmedNote.length > 0);
+
   const submit = () => {
-    if (!reason || !allowedSet.has(reason)) return;
-    const trimmed = note.trim();
-    onConfirm(reason, trimmed.length > 0 ? trimmed : undefined);
+    if (!canSubmit) return;
+    onConfirm(reason, trimmedNote.length > 0 ? trimmedNote : undefined);
   };
 
   return (
@@ -358,15 +383,31 @@ export function DisqualifyModal({
 
         <label className="mt-5 block">
           <span className="text-xs text-muted-foreground">
-            Note (optionnelle)
+            Note{" "}
+            {noteRequired ? (
+              <span className="text-rose-600 dark:text-rose-400">
+                (obligatoire) *
+              </span>
+            ) : (
+              "(optionnelle)"
+            )}
           </span>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
             maxLength={2000}
-            placeholder={`Détails utiles pour le contexte (${fullName})…`}
-            className="mt-1 w-full rounded border bg-background px-2 py-1 text-sm"
+            required={noteRequired}
+            placeholder={
+              noteRequired
+                ? "Précisez le motif…"
+                : `Détails utiles pour le contexte (${fullName})…`
+            }
+            className={`mt-1 w-full rounded border bg-background px-2 py-1 text-sm ${
+              noteRequired && trimmedNote.length === 0
+                ? "border-rose-300 dark:border-rose-700"
+                : ""
+            }`}
           />
         </label>
 
@@ -381,7 +422,7 @@ export function DisqualifyModal({
           <button
             type="button"
             onClick={submit}
-            disabled={!reason || !allowedSet.has(reason)}
+            disabled={!canSubmit}
             className="rounded bg-rose-600 px-3 py-1.5 text-sm text-white hover:bg-rose-700 disabled:opacity-50"
           >
             Confirmer la disqualification

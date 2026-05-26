@@ -31,13 +31,17 @@ export type DispatchStage =
   | "lost";
 
 export type DisqualificationReason =
-  | "partner_already_has"
+  | "already_known"
+  | "wrong_contact_info"
   | "unreachable"
-  | "not_engaging"
+  | "not_interested"
+  | "ghosted"
+  | "out_of_area"
+  | "project_cancelled"
   | "competitor"
   | "long_timeframe"
   | "no_authorization"
-  | "out_of_area";
+  | "other";
 
 export const DISPATCH_STAGES: DispatchStage[] = [
   "new",
@@ -70,13 +74,17 @@ export function canMoveStage(
 }
 
 export const DISQUALIFICATION_REASONS: DisqualificationReason[] = [
-  "partner_already_has",
+  "already_known",
+  "wrong_contact_info",
   "unreachable",
-  "not_engaging",
+  "not_interested",
+  "ghosted",
+  "out_of_area",
+  "project_cancelled",
   "competitor",
   "long_timeframe",
   "no_authorization",
-  "out_of_area",
+  "other",
 ];
 
 export const LEAD_CATEGORIES: LeadCategory[] = [

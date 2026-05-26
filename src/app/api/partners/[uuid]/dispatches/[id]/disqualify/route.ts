@@ -45,6 +45,14 @@ export async function POST(
     typeof body.note === "string" && body.note.trim().length > 0
       ? body.note.trim().slice(0, MAX_NOTE_LENGTH)
       : null;
+  // `other` is the universal escape hatch: it's allowed at every stage but
+  // the partner must explain why in the note.
+  if (reason === "other" && !note) {
+    return NextResponse.json(
+      { error: "note_required_for_other" },
+      { status: 400 },
+    );
+  }
 
   const fields =
     "id,partner,stage,dispatched_at,disqualified,gift,billable,billable_locked_at";
