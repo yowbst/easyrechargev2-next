@@ -112,7 +112,7 @@ export function LostModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg bg-background shadow-lg">
+      <div className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-lg bg-background shadow-lg">
         <div className="shrink-0 border-b px-6 py-4">
           <h2 className="text-lg font-semibold">{t("lost.title")}</h2>
           <p className="text-xs text-muted-foreground">{t("lost.subtitle")}</p>
