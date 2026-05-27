@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Users, LifeBuoy } from "lucide-react";
+import { Users, LifeBuoy, CircleDashed, Ban, Archive } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,8 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { PartnerLanguageSwitcher } from "./PartnerLanguageSwitcher";
+import { PartnerFilterProvider } from "./PartnerFilterContext";
+import { PartnerDateFilter } from "./PartnerDateFilter";
 
 export type PartnerNav = "crm";
 type Lang = "fr" | "de";
@@ -46,6 +48,7 @@ export function PartnerSidebar({
 }) {
   const t = makePartnerT(dictionary);
   return (
+    <PartnerFilterProvider>
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon">
         <SidebarHeader>
@@ -80,16 +83,19 @@ export function PartnerSidebar({
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton render={<a href="#crm-open" />}>
+                      <CircleDashed className="h-3.5 w-3.5 shrink-0" />
                       <span>{t("sidebar.nav.open")}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton render={<a href="#crm-disqualified" />}>
+                      <Ban className="h-3.5 w-3.5 shrink-0" />
                       <span>{t("sidebar.nav.disqualified")}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton render={<a href="#crm-closed" />}>
+                      <Archive className="h-3.5 w-3.5 shrink-0" />
                       <span>{t("sidebar.nav.closed")}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -124,6 +130,7 @@ export function PartnerSidebar({
             </p>
           </div>
           <div className="flex items-center gap-1">
+            <PartnerDateFilter dictionary={dictionary} />
             <PartnerLanguageSwitcher lang={lang} />
             <ThemeToggle />
           </div>
@@ -131,5 +138,6 @@ export function PartnerSidebar({
         <div className="p-4 md:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
+    </PartnerFilterProvider>
   );
 }

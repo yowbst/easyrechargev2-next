@@ -15,12 +15,16 @@ import {
   FileText,
   Trophy,
   XCircle,
+  ChevronRight,
+  Ban,
+  Archive,
 } from "lucide-react";
 import { STAGE_RANK, type DispatchStage } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { LeadCard } from "./LeadCard";
+import { usePartnerFilter } from "./PartnerFilterContext";
 
 const STAGE_ICONS: Record<DispatchStage, ComponentType<{ className?: string }>> = {
   new: Inbox,
@@ -60,6 +64,7 @@ export function Kanban({
 }) {
   const router = useRouter();
   const t = makePartnerT(dictionary);
+  const { inRange } = usePartnerFilter();
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
@@ -101,7 +106,13 @@ export function Kanban({
     return "quote_sent";
   };
 
-  for (const d of localDispatches) {
+  // Header date filter applies across every section — narrow by lead
+  // creation (dispatched_at) before grouping.
+  const visibleDispatches = localDispatches.filter((d) =>
+    inRange(d.dispatched_at),
+  );
+
+  for (const d of visibleDispatches) {
     if (d.disqualified) {
       if ((MAIN_STAGES as string[]).includes(d.stage)) disqGrouped[d.stage].push(d);
       continue;
@@ -265,8 +276,6 @@ export function Kanban({
   );
 
   const closedCount = wonCount + lostCount;
-  const conversionPct =
-    closedCount > 0 ? Math.round((wonCount / closedCount) * 100) : null;
 
   return (
     <TooltipProvider delay={250}>
@@ -350,9 +359,13 @@ export function Kanban({
 
         {/* Disqualified: same 4-column layout, aligned with active funnel. */}
         {mainDisqCount > 0 && (
-          <details id="crm-disqualified" className="scroll-mt-16 space-y-3" open>
-            <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">
-              {t("groups.disqualified")} ({mainDisqCount})
+          <details id="crm-disqualified" className="group scroll-mt-16 space-y-3" open>
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
+              <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
+              <Ban className="h-4 w-4 shrink-0" />
+              <span>
+                {t("groups.disqualified")} ({mainDisqCount})
+              </span>
             </summary>
             <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {MAIN_STAGES.map((stage) => {
@@ -398,16 +411,13 @@ export function Kanban({
             each card (rendered by LeadCard from its won/lost stage) marks the
             outcome. Read-only review — closing happens via the card buttons. */}
         {closedCount > 0 && (
-          <details id="crm-closed" className="scroll-mt-16 space-y-3" open>
-            <summary className="flex cursor-pointer items-baseline justify-between gap-2 text-sm font-semibold text-muted-foreground">
+          <details id="crm-closed" className="group scroll-mt-16 space-y-3" open>
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
+              <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
+              <Archive className="h-4 w-4 shrink-0" />
               <span>
                 {t("groups.closed")} ({closedCount})
               </span>
-              {conversionPct !== null && (
-                <span className="whitespace-nowrap text-xs font-medium">
-                  {conversionPct}% · {wonCount}/{closedCount}
-                </span>
-              )}
             </summary>
             <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {MAIN_STAGES.map((stage) => {

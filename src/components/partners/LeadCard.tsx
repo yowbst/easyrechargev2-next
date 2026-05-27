@@ -186,6 +186,14 @@ export function LeadCard({
     isRottenClient(dispatch.stage, dispatch.stage_entered_at, rottingDaysByStage);
   const stageReasons = reasonsByStage[dispatch.stage] ?? null;
 
+  const isClosed = dispatch.stage === "won" || dispatch.stage === "lost";
+  // Won/Lost only make sense once the partner has engaged the lead — earlier
+  // drop-offs are disqualifications, not outcomes.
+  const canClose =
+    !readOnly &&
+    !dispatch.disqualified &&
+    (dispatch.stage === "appointment" || dispatch.stage === "quote_sent");
+
   // Left accent bar: green (won) / red (lost) outcome takes precedence over the
   // amber rotting nudge. Won/Lost can't rot, so these never collide in practice.
   const accentBar =
@@ -203,7 +211,7 @@ export function LeadCard({
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
       className={`group relative overflow-hidden rounded-md border bg-background p-2.5 text-sm shadow-sm transition-opacity ${
-        dispatch.disqualified ? "opacity-60" : ""
+        dispatch.disqualified || isClosed ? "opacity-60" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
       {accentBar && (
@@ -281,28 +289,8 @@ export function LeadCard({
           <span aria-hidden className="mx-0.5 h-4 w-px bg-border" />
         )}
 
-        {/* Action buttons (desktop + mobile) */}
-        {!readOnly && quoteHref && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <a
-                  href={quoteHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  aria-label={t("card.actions.view")}
-                />
-              }
-            >
-              <FileSearch className="h-3.5 w-3.5" />
-            </TooltipTrigger>
-            <TooltipContent>{t("card.actions.view")}</TooltipContent>
-          </Tooltip>
-        )}
-
-        {/* Close actions — mark the lead won or lost. */}
-        {!readOnly && !dispatch.disqualified && (
+        {/* Close actions — mark the lead won or lost (engaged stages only). */}
+        {canClose && (
           <>
             <Tooltip>
               <TooltipTrigger
@@ -380,8 +368,47 @@ export function LeadCard({
         );
       })()}
 
-      {/* Lead info — grouped block */}
+      {/* Details box — contact (active), reason (disqualified), outcome (closed) */}
       <div className="mb-2 space-y-1 rounded bg-muted/40 p-1.5">
+        {dispatch.disqualified ? (
+          <div className="flex items-start gap-1.5 text-xs">
+            <Ban
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400"
+              aria-hidden
+            />
+            <div className="min-w-0">
+              {dispatch.disqualification_reason && (
+                <p className="font-medium">
+                  {t(`reasons.${dispatch.disqualification_reason}.label`)}
+                </p>
+              )}
+              {dispatch.disqualification_note && (
+                <p className="text-muted-foreground">
+                  {dispatch.disqualification_note}
+                </p>
+              )}
+            </div>
+          </div>
+        ) : isClosed ? (
+          (() => {
+            const won = dispatch.stage === "won";
+            const Icon = won ? CircleCheck : CircleX;
+            const tone = won
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-rose-600 dark:text-rose-400";
+            const { short } = formatRelativeDate(dispatch.stage_entered_at, t);
+            return (
+              <div className="flex items-center gap-1.5 text-xs">
+                <Icon className={`h-3.5 w-3.5 shrink-0 ${tone}`} aria-hidden />
+                <span className={`font-medium ${tone}`}>
+                  {t(`stages.${dispatch.stage}`)}
+                </span>
+                <span className="text-muted-foreground">· {short}</span>
+              </div>
+            );
+          })()
+        ) : (
+          <>
         {user?.email && (
             <div className="flex items-center gap-1.5 text-xs">
               <Mail
@@ -489,6 +516,23 @@ export function LeadCard({
             <span>{deadlineLabel}</span>
           </div>
         )}
+          </>
+        )}
+
+        {/* View the full quote request — bottom-right of the details box. */}
+        {quoteHref && (
+          <div className="flex justify-end pt-1">
+            <a
+              href={quoteHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:underline"
+            >
+              <FileSearch className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span>{t("card.actions.view")}</span>
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Mobile-only stage dropdown (desktop uses drag-and-drop). */}
@@ -503,8 +547,13 @@ export function LeadCard({
           {DISPATCH_STAGES.map((s) => {
             const isBackward =
               STAGE_RANK[s] < STAGE_RANK[dispatch.stage as DispatchStage];
+            // Won/Lost only from engaged stages (appointment onwards).
+            const isEarlyClose =
+              (s === "won" || s === "lost") &&
+              STAGE_RANK[dispatch.stage as DispatchStage] <
+                STAGE_RANK.appointment;
             return (
-              <option key={s} value={s} disabled={isBackward}>
+              <option key={s} value={s} disabled={isBackward || isEarlyClose}>
                 {t(`stages.${s}`)}
               </option>
             );
