@@ -306,26 +306,26 @@ export function DisqualifyModal({
                           disabled={!allowed}
                           className="shrink-0"
                         />
-                        <span className="flex-1">
-                          {t(`reasons.${r}.label`)}
+                        <span className="flex flex-1 items-center gap-1.5">
+                          <span>{t(`reasons.${r}.label`)}</span>
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <span className="inline-flex shrink-0 text-muted-foreground/60" />
+                              }
+                            >
+                              <HelpCircle className="h-3.5 w-3.5" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              {t(`reasons.${r}.description`)}
+                              {!allowed && (
+                                <span className="mt-1 block italic opacity-80">
+                                  {t("modal.reason_unavailable")}
+                                </span>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
                         </span>
-                        <Tooltip>
-                          <TooltipTrigger
-                            render={
-                              <span className="inline-flex shrink-0 text-muted-foreground/60" />
-                            }
-                          >
-                            <HelpCircle className="h-3.5 w-3.5" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            {t(`reasons.${r}.description`)}
-                            {!allowed && (
-                              <span className="mt-1 block italic opacity-80">
-                                {t("modal.reason_unavailable")}
-                              </span>
-                            )}
-                          </TooltipContent>
-                        </Tooltip>
                       </label>
                     );
                   })}

@@ -207,19 +207,21 @@ export function LostModal({
                   onChange={() => setReason(r)}
                   className="shrink-0"
                 />
-                <span className="flex-1">{t(`lost_reasons.${r}.label`)}</span>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <span className="inline-flex shrink-0 text-muted-foreground/60" />
-                    }
-                  >
-                    <HelpCircle className="h-3.5 w-3.5" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    {t(`lost_reasons.${r}.description`)}
-                  </TooltipContent>
-                </Tooltip>
+                <span className="flex flex-1 items-center gap-1.5">
+                  <span>{t(`lost_reasons.${r}.label`)}</span>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <span className="inline-flex shrink-0 text-muted-foreground/60" />
+                      }
+                    >
+                      <HelpCircle className="h-3.5 w-3.5" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      {t(`lost_reasons.${r}.description`)}
+                    </TooltipContent>
+                  </Tooltip>
+                </span>
               </label>
             ))}
           </div>
