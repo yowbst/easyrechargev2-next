@@ -163,6 +163,9 @@ export function LeadCard({
   const housingLabel = housingStatusKey
     ? t(`card.housing.${housingStatusKey}`)
     : null;
+  // Owner + co-owner can authorise the works themselves → highlighted green.
+  const housingGreen =
+    housingStatusKey === "owner" || housingStatusKey === "co-owner";
   const deadlineKey =
     typeof submissionData?.deadline === "string"
       ? submissionData.deadline
@@ -526,7 +529,7 @@ export function LeadCard({
                   render={
                     <span
                       className={`flex items-center gap-1.5 ${
-                        housingStatusKey === "owner"
+                        housingGreen
                           ? "text-emerald-600 dark:text-emerald-400"
                           : ""
                       }`}
@@ -535,7 +538,7 @@ export function LeadCard({
                 >
                   <HousingIcon
                     className={`h-3.5 w-3.5 shrink-0 ${
-                      housingStatusKey === "owner" ? "" : "text-muted-foreground"
+                      housingGreen ? "" : "text-muted-foreground"
                     }`}
                     aria-hidden
                   />

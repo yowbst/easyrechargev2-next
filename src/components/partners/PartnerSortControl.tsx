@@ -27,7 +27,11 @@ export function PartnerSortControl({ dictionary }: { dictionary: PartnerDict }) 
           <button
             type="button"
             aria-label={t("sort.label")}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+            className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-muted ${
+              sort !== "recent"
+                ? "border-primary text-primary"
+                : "text-muted-foreground"
+            }`}
           />
         }
       >

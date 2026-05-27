@@ -24,6 +24,7 @@ const SUPPORT_EMAIL = "yoan@easyrecharge.ch";
 
 const HOUSING_ORDER = ["owner", "co-owner", "tenant"];
 const APPROVAL_ORDER = ["yes", "in-progress", "no"];
+const DEADLINE_ORDER = ["asap", "2-3mo", "3-6mo", "6+mo"];
 
 /**
  * Distinct lead-attribute values present across the partner's leads, used to
@@ -57,7 +58,7 @@ function collectFacetOptions(dispatches: PartnerDispatchCard[]): {
     });
   return {
     housing: order(housing, HOUSING_ORDER),
-    deadline: [...deadline],
+    deadline: order(deadline, DEADLINE_ORDER),
     approval: order(approval, APPROVAL_ORDER),
   };
 }

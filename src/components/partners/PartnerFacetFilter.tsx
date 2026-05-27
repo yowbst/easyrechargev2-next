@@ -1,6 +1,16 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
+import {
+  SlidersHorizontal,
+  Home,
+  Building2,
+  Key,
+  CalendarClock,
+  CircleCheck,
+  CircleDashed,
+  CircleX,
+  type LucideIcon,
+} from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -19,6 +29,41 @@ const GROUPS: { group: FacetGroup; titleKey: string; labelNs: string }[] = [
   { group: "deadline", titleKey: "facets.deadline", labelNs: "card.deadline" },
   { group: "approval", titleKey: "facets.approval", labelNs: "card.approval" },
 ];
+
+const MUTED = "text-muted-foreground";
+const EMERALD = "text-emerald-600 dark:text-emerald-400";
+const ROSE = "text-rose-600 dark:text-rose-400";
+
+const HOUSING_ICONS: Record<string, LucideIcon> = {
+  owner: Home,
+  "co-owner": Building2,
+  tenant: Key,
+};
+const APPROVAL_ICONS: Record<string, { Icon: LucideIcon; tone: string }> = {
+  yes: { Icon: CircleCheck, tone: EMERALD },
+  "in-progress": { Icon: CircleDashed, tone: MUTED },
+  no: { Icon: CircleX, tone: ROSE },
+};
+const DEADLINE_HOT = new Set(["asap", "2-3mo"]);
+
+// Match the icon + tone used on the lead card so the filter reads the same.
+function iconFor(
+  group: FacetGroup,
+  value: string,
+): { Icon: LucideIcon; tone: string } | null {
+  if (group === "housing") {
+    if (!(value in HOUSING_ICONS)) return null;
+    // Owner + co-owner can authorise the works → highlight; tenant can't.
+    return { Icon: HOUSING_ICONS[value], tone: value === "tenant" ? MUTED : EMERALD };
+  }
+  if (group === "deadline") {
+    return {
+      Icon: CalendarClock,
+      tone: DEADLINE_HOT.has(value) ? EMERALD : MUTED,
+    };
+  }
+  return value in APPROVAL_ICONS ? APPROVAL_ICONS[value] : null;
+}
 
 export function PartnerFacetFilter({
   options,
@@ -63,6 +108,7 @@ export function PartnerFacetFilter({
               </p>
               {options[group].map((value) => {
                 const checked = facets[group].includes(value);
+                const meta = iconFor(group, value);
                 return (
                   <label
                     key={value}
@@ -74,7 +120,15 @@ export function PartnerFacetFilter({
                       onChange={() => toggleFacet(group, value)}
                       className="shrink-0"
                     />
-                    <span className="capitalize">{t(`${labelNs}.${value}`)}</span>
+                    {meta && (
+                      <meta.Icon
+                        className={`h-3.5 w-3.5 shrink-0 ${meta.tone}`}
+                        aria-hidden
+                      />
+                    )}
+                    <span className={meta && meta.tone !== MUTED ? meta.tone : ""}>
+                      {t(`${labelNs}.${value}`)}
+                    </span>
                   </label>
                 );
               })}
