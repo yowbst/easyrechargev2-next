@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useState,
@@ -11,6 +12,17 @@ import {
 export type DatePreset = "all" | "7d" | "30d" | "90d" | "month" | "custom";
 
 export type SortKey = "recent" | "oldest" | "name" | "stage_age";
+
+/** Multi-select facet filters on lead attributes. Empty array = no filter. */
+export interface Facets {
+  housing: string[];
+  deadline: string[];
+  approval: string[];
+}
+
+export type FacetGroup = keyof Facets;
+
+const EMPTY_FACETS: Facets = { housing: [], deadline: [], approval: [] };
 
 export interface DateFilter {
   preset: DatePreset;
@@ -37,6 +49,11 @@ interface FilterContextValue {
   inRange: (iso: string) => boolean;
   sort: SortKey;
   setSort: (s: SortKey) => void;
+  facets: Facets;
+  toggleFacet: (group: FacetGroup, value: string) => void;
+  clearFacets: () => void;
+  /** Total number of selected facet values across all groups. */
+  facetCount: number;
 }
 
 // Module-scoped so the Date.now() call stays out of the render path (the
@@ -81,11 +98,36 @@ const PartnerFilterContext = createContext<FilterContextValue | null>(null);
 export function PartnerFilterProvider({ children }: { children: ReactNode }) {
   const [filter, setFilter] = useState<DateFilter>(DEFAULT_FILTER);
   const [sort, setSort] = useState<SortKey>("recent");
+  const [facets, setFacets] = useState<Facets>(EMPTY_FACETS);
+
+  const toggleFacet = useCallback((group: FacetGroup, value: string) => {
+    setFacets((prev) => {
+      const current = prev[group];
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [group]: next };
+    });
+  }, []);
+  const clearFacets = useCallback(() => setFacets(EMPTY_FACETS), []);
 
   const value = useMemo<FilterContextValue>(() => {
     const { active, inRange } = buildBounds(filter);
-    return { filter, setFilter, active, inRange, sort, setSort };
-  }, [filter, sort]);
+    const facetCount =
+      facets.housing.length + facets.deadline.length + facets.approval.length;
+    return {
+      filter,
+      setFilter,
+      active,
+      inRange,
+      sort,
+      setSort,
+      facets,
+      toggleFacet,
+      clearFacets,
+      facetCount,
+    };
+  }, [filter, sort, facets, toggleFacet, clearFacets]);
 
   return (
     <PartnerFilterContext.Provider value={value}>

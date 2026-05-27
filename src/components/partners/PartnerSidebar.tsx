@@ -21,9 +21,10 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { PartnerLanguageSwitcher } from "./PartnerLanguageSwitcher";
-import { PartnerFilterProvider } from "./PartnerFilterContext";
+import { PartnerFilterProvider, type Facets } from "./PartnerFilterContext";
 import { PartnerDateFilter } from "./PartnerDateFilter";
 import { PartnerSortControl } from "./PartnerSortControl";
+import { PartnerFacetFilter } from "./PartnerFacetFilter";
 
 export type PartnerNav = "crm";
 type Lang = "fr" | "de";
@@ -36,6 +37,7 @@ export function PartnerSidebar({
   activeNav,
   lang,
   dictionary,
+  facetOptions,
   children,
 }: {
   partnerName: string;
@@ -45,6 +47,7 @@ export function PartnerSidebar({
   activeNav: PartnerNav;
   lang: Lang;
   dictionary: PartnerDict;
+  facetOptions: Facets;
   children: React.ReactNode;
 }) {
   const t = makePartnerT(dictionary);
@@ -131,6 +134,7 @@ export function PartnerSidebar({
             </p>
           </div>
           <div className="flex items-center gap-1">
+            <PartnerFacetFilter options={facetOptions} dictionary={dictionary} />
             <PartnerSortControl dictionary={dictionary} />
             <PartnerDateFilter dictionary={dictionary} />
             <PartnerLanguageSwitcher lang={lang} />

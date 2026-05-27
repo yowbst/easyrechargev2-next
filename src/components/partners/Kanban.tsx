@@ -92,7 +92,7 @@ export function Kanban({
 }) {
   const router = useRouter();
   const t = makePartnerT(dictionary);
-  const { inRange, sort } = usePartnerFilter();
+  const { inRange, sort, facets } = usePartnerFilter();
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
@@ -134,10 +134,30 @@ export function Kanban({
     return "quote_sent";
   };
 
-  // Header date filter applies across every section — narrow by lead
-  // creation (dispatched_at) before grouping.
-  const visibleDispatches = localDispatches.filter((d) =>
-    inRange(d.dispatched_at),
+  // Header filters (date window + attribute facets) apply across every
+  // section. A facet group with no selection doesn't constrain.
+  const matchesFacets = (d: PartnerDispatchCard): boolean => {
+    const data = (d.submission?.data ?? {}) as Record<string, unknown>;
+    if (facets.housing.length > 0) {
+      const v =
+        typeof data.housingStatus === "string"
+          ? data.housingStatus.toLowerCase()
+          : null;
+      if (!v || !facets.housing.includes(v)) return false;
+    }
+    if (facets.deadline.length > 0) {
+      const v = typeof data.deadline === "string" ? data.deadline : null;
+      if (!v || !facets.deadline.includes(v)) return false;
+    }
+    if (facets.approval.length > 0) {
+      const v =
+        typeof data.approval === "string" ? data.approval.toLowerCase() : null;
+      if (!v || !facets.approval.includes(v)) return false;
+    }
+    return true;
+  };
+  const visibleDispatches = localDispatches.filter(
+    (d) => inRange(d.dispatched_at) && matchesFacets(d),
   );
 
   for (const d of visibleDispatches) {

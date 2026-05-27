@@ -4,6 +4,7 @@ import { findPartnerByToken } from "@/lib/partner-auth";
 import {
   fetchPartnerDispatches,
   fetchPartnerCrmConfig,
+  type PartnerDispatchCard,
 } from "@/lib/dispatch/partner-dashboard-queries";
 import { fetchPage } from "@/lib/directus-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
@@ -20,6 +21,46 @@ const SUPPORTED_LANGS = ["fr", "de"] as const;
 type Lang = (typeof SUPPORTED_LANGS)[number];
 
 const SUPPORT_EMAIL = "yoan@easyrecharge.ch";
+
+const HOUSING_ORDER = ["owner", "co-owner", "tenant"];
+const APPROVAL_ORDER = ["yes", "in-progress", "no"];
+
+/**
+ * Distinct lead-attribute values present across the partner's leads, used to
+ * populate the facet filter. Derived from the data so we never offer a filter
+ * value the partner has no leads for. Housing/approval are lowercased to match
+ * how LeadCard renders them; deadline keys are used verbatim.
+ */
+function collectFacetOptions(dispatches: PartnerDispatchCard[]): {
+  housing: string[];
+  deadline: string[];
+  approval: string[];
+} {
+  const housing = new Set<string>();
+  const deadline = new Set<string>();
+  const approval = new Set<string>();
+  for (const d of dispatches) {
+    const data = (d.submission?.data ?? {}) as Record<string, unknown>;
+    if (typeof data.housingStatus === "string")
+      housing.add(data.housingStatus.toLowerCase());
+    if (typeof data.deadline === "string") deadline.add(data.deadline);
+    if (typeof data.approval === "string")
+      approval.add(data.approval.toLowerCase());
+  }
+  const order = (set: Set<string>, pref: string[]) =>
+    [...set].sort((a, b) => {
+      const ia = pref.indexOf(a);
+      const ib = pref.indexOf(b);
+      if (ia !== -1 || ib !== -1)
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      return a.localeCompare(b);
+    });
+  return {
+    housing: order(housing, HOUSING_ORDER),
+    deadline: [...deadline],
+    approval: order(approval, APPROVAL_ORDER),
+  };
+}
 
 function buildSupportMailto(opts: {
   partnerName: string;
@@ -77,6 +118,8 @@ export default async function PartnerCRMPage({
     lang,
   });
 
+  const facetOptions = collectFacetOptions(dispatches);
+
   return (
     <PartnerSidebar
       partnerToken={uuid}
@@ -86,6 +129,7 @@ export default async function PartnerCRMPage({
       activeNav="crm"
       lang={lang}
       dictionary={dictionary}
+      facetOptions={facetOptions}
     >
       <Kanban
         partnerToken={uuid}
