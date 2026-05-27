@@ -147,6 +147,9 @@ export interface Partner {
   // Dashboard auth + per-partner billing overrides.
   dashboard_token?: string | null;
   disqualification_overrides?: Record<string, number> | null;
+  // Per-partner lead-scoring weight overrides (factor key → weight). Merged
+  // over DEFAULT_SCORING_WEIGHTS; absent ⇒ defaults.
+  lead_scoring_weights?: Record<string, number> | null;
   // Pricing policy (M2O). Multiple partners can share one policy. The
   // `settings` JSON holds the price matrix (and any future per-policy knobs).
   pricing_policy?: {

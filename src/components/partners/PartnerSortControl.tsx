@@ -10,6 +10,7 @@ import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { usePartnerFilter, type SortKey } from "./PartnerFilterContext";
 
 const OPTIONS: { key: SortKey; labelKey: string }[] = [
+  { key: "score", labelKey: "sort.score" },
   { key: "recent", labelKey: "sort.recent" },
   { key: "oldest", labelKey: "sort.oldest" },
   { key: "name", labelKey: "sort.name" },

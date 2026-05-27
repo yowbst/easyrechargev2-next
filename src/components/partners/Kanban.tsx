@@ -25,6 +25,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { LeadCard } from "./LeadCard";
 import { usePartnerFilter, type SortKey } from "./PartnerFilterContext";
+import {
+  scoreLead,
+  type ScoringFactorKey,
+} from "@/lib/dispatch/scoring";
+
+type ScoringWeights = Record<ScoringFactorKey, number>;
 
 function leadName(d: PartnerDispatchCard): string {
   const u = d.submission?.user;
@@ -35,6 +41,7 @@ function compareCards(
   a: PartnerDispatchCard,
   b: PartnerDispatchCard,
   sort: SortKey,
+  weights: ScoringWeights,
 ): number {
   switch (sort) {
     case "oldest":
@@ -47,6 +54,13 @@ function compareCards(
       // Longest time in current stage first (oldest stage_entered_at).
       return (a.stage_entered_at ?? a.dispatched_at).localeCompare(
         b.stage_entered_at ?? b.dispatched_at,
+      );
+    case "score":
+      // Highest score first; ties fall back to most recent.
+      return (
+        scoreLead(b.submission?.data, weights).score -
+          scoreLead(a.submission?.data, weights).score ||
+        b.dispatched_at.localeCompare(a.dispatched_at)
       );
     case "recent":
     default:
@@ -81,6 +95,7 @@ export function Kanban({
   dispatches,
   rottingDaysByStage,
   reasonsByStage,
+  scoringWeights,
   dictionary,
 }: {
   partnerToken: string;
@@ -88,6 +103,7 @@ export function Kanban({
   dispatches: PartnerDispatchCard[];
   rottingDaysByStage: Record<string, number>;
   reasonsByStage: Record<string, string[]>;
+  scoringWeights: ScoringWeights;
   dictionary: PartnerDict;
 }) {
   const router = useRouter();
@@ -174,9 +190,9 @@ export function Kanban({
     if ((MAIN_STAGES as string[]).includes(d.stage)) activeGrouped[d.stage].push(d);
   }
   for (const s of MAIN_STAGES) {
-    activeGrouped[s].sort((a, b) => compareCards(a, b, sort));
-    disqGrouped[s].sort((a, b) => compareCards(a, b, sort));
-    closedGrouped[s].sort((a, b) => compareCards(a, b, sort));
+    activeGrouped[s].sort((a, b) => compareCards(a, b, sort, scoringWeights));
+    disqGrouped[s].sort((a, b) => compareCards(a, b, sort, scoringWeights));
+    closedGrouped[s].sort((a, b) => compareCards(a, b, sort, scoringWeights));
   }
   async function moveStage(id: string, stage: DispatchStage) {
     const previous = localDispatches;
@@ -458,6 +474,7 @@ export function Kanban({
                         dispatch={d}
                         rottingDaysByStage={rottingDaysByStage}
                         reasonsByStage={reasonsByStage}
+                        scoringWeights={scoringWeights}
                         dictionary={dictionary}
                         lang={lang}
                         pending={pending === d.id}

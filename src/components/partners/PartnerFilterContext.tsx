@@ -11,7 +11,7 @@ import {
 
 export type DatePreset = "all" | "7d" | "30d" | "90d" | "month" | "custom";
 
-export type SortKey = "recent" | "oldest" | "name" | "stage_age";
+export type SortKey = "recent" | "oldest" | "name" | "stage_age" | "score";
 
 /** Multi-select facet filters on lead attributes. Empty array = no filter. */
 export interface Facets {

@@ -32,6 +32,11 @@ import {
   type DispatchStage,
 } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
+import {
+  scoreLead,
+  type ScoreBand,
+  type ScoringFactorKey,
+} from "@/lib/dispatch/scoring";
 import { makePartnerT, type PartnerDict, type PartnerT } from "@/lib/partner-i18n";
 import { DisqualifyModal } from "./DisqualifyModal";
 import { LostModal } from "./LostModal";
@@ -91,6 +96,12 @@ const APPROVAL_META: Record<string, { Icon: LucideIcon; tone: string }> = {
 // Near-term deadlines highlight green — these are the warm/buyable leads.
 const DEADLINE_HOT_KEYS = new Set(["asap", "2-3mo"]);
 
+const SCORE_BAND_CLASS: Record<ScoreBand, string> = {
+  hot: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  warm: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+  cold: "bg-muted text-muted-foreground",
+};
+
 export function LeadCard({
   dispatch,
   lang,
@@ -103,6 +114,7 @@ export function LeadCard({
   onDragEnd,
   rottingDaysByStage,
   reasonsByStage,
+  scoringWeights,
   dictionary,
   readOnly = false,
 }: {
@@ -117,6 +129,7 @@ export function LeadCard({
   onDragEnd?: () => void;
   rottingDaysByStage: Record<string, number>;
   reasonsByStage: Record<string, string[]>;
+  scoringWeights?: Record<ScoringFactorKey, number>;
   dictionary: PartnerDict;
   readOnly?: boolean;
 }) {
@@ -204,6 +217,13 @@ export function LeadCard({
     !dispatch.disqualified &&
     (dispatch.stage === "appointment" || dispatch.stage === "quote_sent");
 
+  // Quality score — shown only on the active pipeline (where prioritisation
+  // matters); disqualified/closed cards omit it to cut noise.
+  const leadScore =
+    !readOnly && !dispatch.disqualified && !isClosed && scoringWeights
+      ? scoreLead(submissionData, scoringWeights)
+      : null;
+
   // Left accent bar: green (won) / red (lost) outcome takes precedence over the
   // amber rotting nudge. Won/Lost can't rot, so these never collide in practice.
   const accentBar =
@@ -242,6 +262,35 @@ export function LeadCard({
                   className="h-3.5 w-3.5 shrink-0 self-center text-muted-foreground/40 group-hover:text-muted-foreground"
                   aria-hidden
                 />
+              )}
+              {leadScore && (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <span
+                        className={`shrink-0 self-center rounded px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${SCORE_BAND_CLASS[leadScore.band]}`}
+                        aria-label={t("score.label")}
+                      />
+                    }
+                  >
+                    {leadScore.score}
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="mb-1 font-medium">
+                      {t(`score.band.${leadScore.band}`)} · {leadScore.score}/100
+                    </p>
+                    <ul className="space-y-0.5">
+                      {leadScore.breakdown.map((b) => (
+                        <li key={b.key} className="flex justify-between gap-3">
+                          <span>{t(`score.factors.${b.key}`)}</span>
+                          <span className="tabular-nums opacity-80">
+                            {Math.round(b.subScore * 100)}%
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </TooltipContent>
+                </Tooltip>
               )}
               <span className="truncate">
                 {user?.first_name ?? "—"} {lastInitial}

@@ -6,6 +6,7 @@ import {
   fetchPartnerCrmConfig,
   type PartnerDispatchCard,
 } from "@/lib/dispatch/partner-dashboard-queries";
+import { resolveWeights } from "@/lib/dispatch/scoring";
 import { fetchPage } from "@/lib/directus-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
@@ -120,6 +121,7 @@ export default async function PartnerCRMPage({
   });
 
   const facetOptions = collectFacetOptions(dispatches);
+  const scoringWeights = resolveWeights(partner.lead_scoring_weights);
 
   return (
     <PartnerSidebar
@@ -138,6 +140,7 @@ export default async function PartnerCRMPage({
         dispatches={dispatches}
         rottingDaysByStage={crmConfig.rotting_days_by_stage}
         reasonsByStage={crmConfig.reasons_by_stage}
+        scoringWeights={scoringWeights}
         dictionary={dictionary}
       />
     </PartnerSidebar>

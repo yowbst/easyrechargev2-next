@@ -15,6 +15,7 @@ const PARTNER_FIELDS = [
   "environment",
   "dashboard_token",
   "disqualification_overrides",
+  "lead_scoring_weights",
 ].join(",");
 
 /**
