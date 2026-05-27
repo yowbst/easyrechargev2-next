@@ -5,12 +5,16 @@ import { fetchDispatchConfig } from "@/lib/dispatch/queries";
 import { shouldLockBilling } from "@/lib/dispatch/billing";
 import {
   DISPATCH_STAGES,
+  LOST_REASONS,
   canMoveStage,
   type DispatchStage,
+  type LostReason,
 } from "@/lib/dispatch/types";
 
 interface Body {
   stage?: string;
+  lost_reason?: string;
+  lost_note?: string;
 }
 
 interface DispatchRow {
@@ -58,6 +62,26 @@ export async function POST(
     return NextResponse.json({ error: "backward_stage" }, { status: 409 });
   }
 
+  // Marking a lead Lost requires a reason (sales outcome — kept distinct from
+  // a disqualification). 'other' must carry an explanatory note.
+  let lostReason: LostReason | null = null;
+  let lostNote: string | null = null;
+  if (newStage === "lost") {
+    const reason = body.lost_reason;
+    if (!reason || !LOST_REASONS.includes(reason as LostReason)) {
+      return NextResponse.json({ error: "lost_reason_required" }, { status: 400 });
+    }
+    const note = body.lost_note?.trim() ?? "";
+    if (reason === "other" && note.length === 0) {
+      return NextResponse.json(
+        { error: "lost_note_required_for_other" },
+        { status: 400 },
+      );
+    }
+    lostReason = reason as LostReason;
+    lostNote = note.length > 0 ? note : null;
+  }
+
   const config = await fetchDispatchConfig();
   const now = new Date().toISOString();
   const history = Array.isArray(row.stage_history) ? row.stage_history : [];
@@ -81,6 +105,9 @@ export async function POST(
       billable: lockBilling,
       billable_locked_at:
         lockBilling && !row.billable_locked_at ? now : row.billable_locked_at,
+      ...(newStage === "lost"
+        ? { lost_reason: lostReason, lost_note: lostNote }
+        : {}),
     }),
     next: { revalidate: 0 },
   });

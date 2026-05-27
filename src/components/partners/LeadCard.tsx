@@ -33,6 +33,7 @@ import {
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { makePartnerT, type PartnerDict, type PartnerT } from "@/lib/partner-i18n";
 import { DisqualifyModal } from "./DisqualifyModal";
+import { LostModal } from "./LostModal";
 
 function isRottenClient(
   stage: string,
@@ -95,6 +96,7 @@ export function LeadCard({
   pending,
   onMove,
   onDisqualify,
+  onLose,
   onDragStart,
   onDragEnd,
   rottingDaysByStage,
@@ -107,6 +109,7 @@ export function LeadCard({
   pending: boolean;
   onMove: (stage: DispatchStage) => void;
   onDisqualify: (reason: string, note?: string) => void;
+  onLose?: (reason: string, note?: string) => void;
   onDragStart?: (e: DragEvent<HTMLElement>) => void;
   onDragEnd?: () => void;
   rottingDaysByStage: Record<string, number>;
@@ -116,6 +119,7 @@ export function LeadCard({
 }) {
   const t = makePartnerT(dictionary);
   const [open, setOpen] = useState(false);
+  const [lostOpen, setLostOpen] = useState(false);
   const user = dispatch.submission?.user ?? null;
   const lastInitial = user?.last_name ? `${user.last_name[0]}.` : "";
 
@@ -334,7 +338,7 @@ export function LeadCard({
                   <button
                     type="button"
                     disabled={pending}
-                    onClick={() => onMove("lost")}
+                    onClick={() => setLostOpen(true)}
                     aria-label={t("card.actions.lost")}
                     className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950 dark:hover:text-rose-400 disabled:opacity-40"
                   />
@@ -418,12 +422,26 @@ export function LeadCard({
               : "text-rose-600 dark:text-rose-400";
             const { short } = formatRelativeDate(dispatch.stage_entered_at, t);
             return (
-              <div className="flex items-center gap-1.5 text-xs">
-                <Icon className={`h-3.5 w-3.5 shrink-0 ${tone}`} aria-hidden />
-                <span className={`font-medium ${tone}`}>
-                  {t(`stages.${dispatch.stage}`)}
-                </span>
-                <span className="text-muted-foreground">· {short}</span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Icon className={`h-3.5 w-3.5 shrink-0 ${tone}`} aria-hidden />
+                  <span className={`font-medium ${tone}`}>
+                    {t(`stages.${dispatch.stage}`)}
+                  </span>
+                  <span className="text-muted-foreground">· {short}</span>
+                </div>
+                {!won && dispatch.lost_reason && (
+                  <div className="pl-5 text-xs">
+                    <p className="text-muted-foreground">
+                      {t(`lost_reasons.${dispatch.lost_reason}.label`)}
+                    </p>
+                    {dispatch.lost_note && (
+                      <p className="text-muted-foreground/80">
+                        {dispatch.lost_note}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })()
@@ -545,7 +563,11 @@ export function LeadCard({
         <select
           disabled={pending || dispatch.disqualified}
           value={dispatch.stage}
-          onChange={(e) => onMove(e.target.value as DispatchStage)}
+          onChange={(e) => {
+            const s = e.target.value as DispatchStage;
+            if (s === "lost") setLostOpen(true);
+            else onMove(s);
+          }}
           className="mt-1 w-full rounded border bg-background px-2 py-1 text-xs lg:hidden"
           aria-label={t("card.actions.change_stage")}
         >
@@ -575,6 +597,17 @@ export function LeadCard({
         onConfirm={(reason, note) => {
           setOpen(false);
           onDisqualify(reason, note);
+        }}
+      />
+
+      <LostModal
+        open={lostOpen}
+        onClose={() => setLostOpen(false)}
+        dispatch={dispatch}
+        dictionary={dictionary}
+        onConfirm={(reason, note) => {
+          setLostOpen(false);
+          onLose?.(reason, note);
         }}
       />
     </article>

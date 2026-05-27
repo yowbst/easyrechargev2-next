@@ -190,6 +190,51 @@ export function Kanban({
     }
   }
 
+  async function lose(id: string, reason: string, note?: string) {
+    const previous = localDispatches;
+    const now = new Date().toISOString();
+    // Optimistic: close as Lost with its reason; Lost locks billing.
+    setLocalDispatches((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              stage: "lost",
+              stage_entered_at: now,
+              lost_reason: reason,
+              lost_note: note ?? null,
+              billable: true,
+              billable_locked_at: d.billable_locked_at ?? now,
+            }
+          : d,
+      ),
+    );
+    setPending(id);
+    try {
+      const res = await fetch(
+        `/api/partners/${partnerToken}/dispatches/${id}/stage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stage: "lost",
+            lost_reason: reason,
+            ...(note ? { lost_note: note } : {}),
+          }),
+        },
+      );
+      if (!res.ok) {
+        setLocalDispatches(previous);
+        const err = await res.json().catch(() => ({}));
+        alert(`Échec: ${err.error ?? res.status}`);
+        return;
+      }
+      startTransition(() => router.refresh());
+    } finally {
+      setPending(null);
+    }
+  }
+
   async function disqualify(id: string, reason: string, note?: string) {
     const previous = localDispatches;
     const now = new Date().toISOString();
@@ -341,6 +386,7 @@ export function Kanban({
                         pending={pending === d.id}
                         onMove={(s) => moveStage(d.id, s)}
                         onDisqualify={(r, n) => disqualify(d.id, r, n)}
+                        onLose={(r, n) => lose(d.id, r, n)}
                         onDragStart={(e) => handleDragStart(e, d.id)}
                         onDragEnd={handleDragEnd}
                       />

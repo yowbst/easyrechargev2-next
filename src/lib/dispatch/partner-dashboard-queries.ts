@@ -11,6 +11,8 @@ export interface PartnerDispatchCard {
   disqualification_reason: string | null;
   disqualification_note: string | null;
   disqualified_at: string | null;
+  lost_reason: string | null;
+  lost_note: string | null;
   gift: boolean;
   billable: boolean;
   billable_locked_at: string | null;
@@ -40,6 +42,8 @@ const CARD_FIELDS = [
   "disqualification_reason",
   "disqualification_note",
   "disqualified_at",
+  "lost_reason",
+  "lost_note",
   "gift",
   "billable",
   "billable_locked_at",

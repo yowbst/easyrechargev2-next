@@ -43,6 +43,28 @@ export type DisqualificationReason =
   | "no_authorization"
   | "other";
 
+/**
+ * Why a partner lost a lead they engaged. Distinct from a disqualification:
+ * a Lost lead was real and worked, so it stays billable (partner's commercial
+ * risk). Captured when marking a lead "Perdu" from an engaged stage.
+ */
+export type LostReason =
+  | "competitor"
+  | "not_interested"
+  | "ghosted"
+  | "price"
+  | "postponed"
+  | "other";
+
+export const LOST_REASONS: LostReason[] = [
+  "competitor",
+  "not_interested",
+  "ghosted",
+  "price",
+  "postponed",
+  "other",
+];
+
 export const DISPATCH_STAGES: DispatchStage[] = [
   "new",
   "contacted",
