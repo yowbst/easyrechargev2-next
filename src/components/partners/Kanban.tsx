@@ -24,7 +24,35 @@ import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queri
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { LeadCard } from "./LeadCard";
-import { usePartnerFilter } from "./PartnerFilterContext";
+import { usePartnerFilter, type SortKey } from "./PartnerFilterContext";
+
+function leadName(d: PartnerDispatchCard): string {
+  const u = d.submission?.user;
+  return `${u?.first_name ?? ""} ${u?.last_name ?? ""}`.trim().toLowerCase();
+}
+
+function compareCards(
+  a: PartnerDispatchCard,
+  b: PartnerDispatchCard,
+  sort: SortKey,
+): number {
+  switch (sort) {
+    case "oldest":
+      return a.dispatched_at.localeCompare(b.dispatched_at);
+    case "name":
+      return leadName(a).localeCompare(leadName(b), "fr", {
+        sensitivity: "base",
+      });
+    case "stage_age":
+      // Longest time in current stage first (oldest stage_entered_at).
+      return (a.stage_entered_at ?? a.dispatched_at).localeCompare(
+        b.stage_entered_at ?? b.dispatched_at,
+      );
+    case "recent":
+    default:
+      return b.dispatched_at.localeCompare(a.dispatched_at);
+  }
+}
 
 const STAGE_ICONS: Record<DispatchStage, ComponentType<{ className?: string }>> = {
   new: Inbox,
@@ -64,7 +92,7 @@ export function Kanban({
 }) {
   const router = useRouter();
   const t = makePartnerT(dictionary);
-  const { inRange } = usePartnerFilter();
+  const { inRange, sort } = usePartnerFilter();
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
@@ -126,19 +154,9 @@ export function Kanban({
     if ((MAIN_STAGES as string[]).includes(d.stage)) activeGrouped[d.stage].push(d);
   }
   for (const s of MAIN_STAGES) {
-    activeGrouped[s].sort((a, b) =>
-      b.dispatched_at.localeCompare(a.dispatched_at),
-    );
-    disqGrouped[s].sort((a, b) =>
-      (b.disqualified_at ?? b.dispatched_at).localeCompare(
-        a.disqualified_at ?? a.dispatched_at,
-      ),
-    );
-    closedGrouped[s].sort((a, b) =>
-      (b.stage_entered_at ?? b.dispatched_at).localeCompare(
-        a.stage_entered_at ?? a.dispatched_at,
-      ),
-    );
+    activeGrouped[s].sort((a, b) => compareCards(a, b, sort));
+    disqGrouped[s].sort((a, b) => compareCards(a, b, sort));
+    closedGrouped[s].sort((a, b) => compareCards(a, b, sort));
   }
   async function moveStage(id: string, stage: DispatchStage) {
     const previous = localDispatches;

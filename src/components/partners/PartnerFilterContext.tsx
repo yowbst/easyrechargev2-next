@@ -10,6 +10,8 @@ import {
 
 export type DatePreset = "all" | "7d" | "30d" | "90d" | "month" | "custom";
 
+export type SortKey = "recent" | "oldest" | "name" | "stage_age";
+
 export interface DateFilter {
   preset: DatePreset;
   /** yyyy-mm-dd, only used when preset === "custom". */
@@ -33,6 +35,8 @@ interface FilterContextValue {
   active: boolean;
   /** Whether a lead's creation timestamp falls inside the active window. */
   inRange: (iso: string) => boolean;
+  sort: SortKey;
+  setSort: (s: SortKey) => void;
 }
 
 // Module-scoped so the Date.now() call stays out of the render path (the
@@ -76,11 +80,12 @@ const PartnerFilterContext = createContext<FilterContextValue | null>(null);
 
 export function PartnerFilterProvider({ children }: { children: ReactNode }) {
   const [filter, setFilter] = useState<DateFilter>(DEFAULT_FILTER);
+  const [sort, setSort] = useState<SortKey>("recent");
 
   const value = useMemo<FilterContextValue>(() => {
     const { active, inRange } = buildBounds(filter);
-    return { filter, setFilter, active, inRange };
-  }, [filter]);
+    return { filter, setFilter, active, inRange, sort, setSort };
+  }, [filter, sort]);
 
   return (
     <PartnerFilterContext.Provider value={value}>

@@ -23,6 +23,7 @@ import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { PartnerLanguageSwitcher } from "./PartnerLanguageSwitcher";
 import { PartnerFilterProvider } from "./PartnerFilterContext";
 import { PartnerDateFilter } from "./PartnerDateFilter";
+import { PartnerSortControl } from "./PartnerSortControl";
 
 export type PartnerNav = "crm";
 type Lang = "fr" | "de";
@@ -130,6 +131,7 @@ export function PartnerSidebar({
             </p>
           </div>
           <div className="flex items-center gap-1">
+            <PartnerSortControl dictionary={dictionary} />
             <PartnerDateFilter dictionary={dictionary} />
             <PartnerLanguageSwitcher lang={lang} />
             <ThemeToggle />
