@@ -159,22 +159,19 @@ export interface BillingConfig {
   currency: string;
   /** Days the partner has after dispatched_at to disqualify; otherwise billing locks. */
   acceptance_window_days: number;
-  /** Per-stage rotting threshold — purely visual nudge, no billing impact. */
-  rotting_days_by_stage: Record<string, number>;
   dedup_window_days: number;
 }
 
-export interface DisqualificationConfig {
-  /** Per-stage allowed reasons. Missing key for a stage = all reasons allowed. */
-  reasons_by_stage: Record<string, string[]>;
-}
-
-/** Fetch `site_settings.global_config.dispatch` config (singleton). */
+/**
+ * Fetch `site_settings.global_config.dispatch` config (singleton). This holds
+ * the dispatch/billing engine config only. CRM-display config (rotting
+ * thresholds, per-stage disqualification reasons) lives on the partner-crm
+ * page — see fetchPartnerCrmConfig().
+ */
 export async function fetchDispatchConfig(): Promise<{
   max_shared_targets: number;
   test_email_patterns: string[];
   billing: BillingConfig;
-  disqualification: DisqualificationConfig;
 }> {
   type Resp = {
     data:
@@ -184,7 +181,6 @@ export async function fetchDispatchConfig(): Promise<{
               max_shared_targets?: number;
               test_email_patterns?: string[];
               billing?: Partial<BillingConfig>;
-              disqualification?: Partial<DisqualificationConfig>;
             };
           };
         }
@@ -193,16 +189,7 @@ export async function fetchDispatchConfig(): Promise<{
   const billingDefaults: BillingConfig = {
     currency: "CHF",
     acceptance_window_days: 30,
-    rotting_days_by_stage: {
-      new: 5,
-      contacted: 7,
-      appointment: 14,
-      quote_sent: 21,
-    },
     dedup_window_days: 30,
-  };
-  const disqualificationDefaults: DisqualificationConfig = {
-    reasons_by_stage: {},
   };
   try {
     const res = await directusFetch<Resp>(
@@ -218,17 +205,8 @@ export async function fetchDispatchConfig(): Promise<{
         acceptance_window_days:
           cfg.billing?.acceptance_window_days ??
           billingDefaults.acceptance_window_days,
-        rotting_days_by_stage: {
-          ...billingDefaults.rotting_days_by_stage,
-          ...(cfg.billing?.rotting_days_by_stage ?? {}),
-        },
         dedup_window_days:
           cfg.billing?.dedup_window_days ?? billingDefaults.dedup_window_days,
-      },
-      disqualification: {
-        reasons_by_stage:
-          cfg.disqualification?.reasons_by_stage ??
-          disqualificationDefaults.reasons_by_stage,
       },
     };
   } catch {
@@ -236,7 +214,6 @@ export async function fetchDispatchConfig(): Promise<{
       max_shared_targets: 1,
       test_email_patterns: [],
       billing: billingDefaults,
-      disqualification: disqualificationDefaults,
     };
   }
 }

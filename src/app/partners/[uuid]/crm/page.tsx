@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
-import { fetchPartnerDispatches } from "@/lib/dispatch/partner-dashboard-queries";
-import { fetchDispatchConfig } from "@/lib/dispatch/queries";
+import {
+  fetchPartnerDispatches,
+  fetchPartnerCrmConfig,
+} from "@/lib/dispatch/partner-dashboard-queries";
 import { fetchPage } from "@/lib/directus-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
@@ -59,9 +61,9 @@ export default async function PartnerCRMPage({
   if (!partner) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [dispatches, config, crmPage] = await Promise.all([
+  const [dispatches, crmConfig, crmPage] = await Promise.all([
     fetchPartnerDispatches(partner.id),
-    fetchDispatchConfig(),
+    fetchPartnerCrmConfig(),
     fetchPage("partner-crm", locale),
   ]);
   const dictionary = crmPage
@@ -89,8 +91,8 @@ export default async function PartnerCRMPage({
         partnerToken={uuid}
         lang={lang}
         dispatches={dispatches}
-        rottingDaysByStage={config.billing.rotting_days_by_stage}
-        reasonsByStage={config.disqualification.reasons_by_stage}
+        rottingDaysByStage={crmConfig.rotting_days_by_stage}
+        reasonsByStage={crmConfig.reasons_by_stage}
         dictionary={dictionary}
       />
     </PartnerSidebar>

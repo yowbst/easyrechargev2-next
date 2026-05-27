@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { directusFetch } from "@/lib/directus";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import { fetchDispatchConfig } from "@/lib/dispatch/queries";
+import { fetchPartnerCrmConfig } from "@/lib/dispatch/partner-dashboard-queries";
 import { isAcceptanceExpired } from "@/lib/dispatch/billing";
 import {
   DISQUALIFICATION_REASONS,
@@ -71,10 +72,13 @@ export async function POST(
     return NextResponse.json({ error: "billing_locked" }, { status: 409 });
   }
 
-  const config = await fetchDispatchConfig();
+  const [config, crmConfig] = await Promise.all([
+    fetchDispatchConfig(),
+    fetchPartnerCrmConfig(),
+  ]);
 
   // Stage-specific reason validation. Missing key in config = all reasons allowed.
-  const stageReasons = config.disqualification.reasons_by_stage[row.stage];
+  const stageReasons = crmConfig.reasons_by_stage[row.stage];
   if (Array.isArray(stageReasons) && stageReasons.length > 0 && !stageReasons.includes(reason)) {
     return NextResponse.json({ error: "reason_not_allowed_for_stage" }, { status: 400 });
   }

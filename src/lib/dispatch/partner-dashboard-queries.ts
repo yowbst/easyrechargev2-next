@@ -58,6 +58,44 @@ const CARD_FIELDS = [
  * environment, newest first. Returns up to 500 cards (we don't paginate the
  * dashboard for v1).
  */
+export interface PartnerCrmConfig {
+  /** Per-stage rotting threshold (visual nudge on the card). */
+  rotting_days_by_stage: Record<string, number>;
+  /** Per-stage allowed disqualification reasons. Empty = all reasons allowed. */
+  reasons_by_stage: Record<string, string[]>;
+}
+
+const PARTNER_CRM_DEFAULTS: PartnerCrmConfig = {
+  rotting_days_by_stage: { new: 5, contacted: 7, appointment: 14, quote_sent: 21 },
+  reasons_by_stage: {},
+};
+
+/**
+ * CRM-specific config stored on the Directus `partner-crm` page `config` field
+ * (kept separate from site_settings.dispatch which drives the dispatch/billing
+ * engine). Falls back to sensible defaults if the page or keys are absent.
+ */
+export async function fetchPartnerCrmConfig(): Promise<PartnerCrmConfig> {
+  try {
+    const res = await directusFetch<{
+      data: { config?: Partial<PartnerCrmConfig> | null }[];
+    }>(
+      `/items/pages?filter[route_id][_eq]=partner-crm&fields=config&limit=1`,
+      { next: { revalidate: 60 } },
+    );
+    const cfg = res?.data?.[0]?.config ?? {};
+    return {
+      rotting_days_by_stage: {
+        ...PARTNER_CRM_DEFAULTS.rotting_days_by_stage,
+        ...(cfg.rotting_days_by_stage ?? {}),
+      },
+      reasons_by_stage: cfg.reasons_by_stage ?? {},
+    };
+  } catch {
+    return PARTNER_CRM_DEFAULTS;
+  }
+}
+
 export async function fetchPartnerDispatches(
   partnerId: string,
 ): Promise<PartnerDispatchCard[]> {

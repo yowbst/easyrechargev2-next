@@ -26,24 +26,6 @@ export function isAcceptanceExpired(
 }
 
 /**
- * Rotting — pure visual nudge, never affects billing. True when the lead has
- * sat in its current stage past the configured rotting threshold.
- */
-export function isRotten(
-  stage: DispatchStage,
-  stageEnteredAt: string | Date,
-  billing: BillingConfig,
-  now: Date = new Date(),
-): boolean {
-  const days = billing.rotting_days_by_stage[stage];
-  if (typeof days !== "number" || days <= 0) return false;
-  const entered =
-    stageEnteredAt instanceof Date ? stageEnteredAt : new Date(stageEnteredAt);
-  const elapsedDays = (now.getTime() - entered.getTime()) / 86_400_000;
-  return elapsedDays >= days;
-}
-
-/**
  * Decide whether `billable` should flip true on a stage transition.
  *
  * Rules:
