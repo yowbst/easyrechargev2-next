@@ -289,6 +289,26 @@ export function LeadCard({
           <span aria-hidden className="mx-0.5 h-4 w-px bg-border" />
         )}
 
+        {/* View the full quote request. */}
+        {!readOnly && quoteHref && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <a
+                  href={quoteHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={t("card.actions.view")}
+                />
+              }
+            >
+              <FileSearch className="h-3.5 w-3.5" />
+            </TooltipTrigger>
+            <TooltipContent>{t("card.actions.view")}</TooltipContent>
+          </Tooltip>
+        )}
+
         {/* Close actions — mark the lead won or lost (engaged stages only). */}
         {canClose && (
           <>
@@ -517,21 +537,6 @@ export function LeadCard({
           </div>
         )}
           </>
-        )}
-
-        {/* View the full quote request — bottom-right of the details box. */}
-        {quoteHref && (
-          <div className="flex justify-end pt-1">
-            <a
-              href={quoteHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:underline"
-            >
-              <FileSearch className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              <span>{t("card.actions.view")}</span>
-            </a>
-          </div>
         )}
       </div>
 
