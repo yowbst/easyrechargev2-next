@@ -39,10 +39,11 @@ function recentMonths(count: number): { value: string; label: string }[] {
 
 function monthLabel(value: string): string {
   const [y, m] = value.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("fr-CH", {
+  const label = new Date(y, m - 1, 1).toLocaleDateString("fr-CH", {
     month: "long",
     year: "numeric",
   });
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 export function PartnerDateFilter({ dictionary }: { dictionary: PartnerDict }) {
