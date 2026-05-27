@@ -112,11 +112,14 @@ export function LostModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-background p-6 shadow-lg">
-        <h2 className="mb-1 text-lg font-semibold">{t("lost.title")}</h2>
-        <p className="mb-5 text-xs text-muted-foreground">{t("lost.subtitle")}</p>
+      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-lg bg-background shadow-lg">
+        <div className="shrink-0 border-b px-6 py-4">
+          <h2 className="text-lg font-semibold">{t("lost.title")}</h2>
+          <p className="text-xs text-muted-foreground">{t("lost.subtitle")}</p>
+        </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           {/* Lead context (left) */}
           <aside className="rounded-md border bg-muted/30 p-4 text-sm">
             <div className="mb-3">
@@ -217,9 +220,11 @@ export function LostModal({
               </label>
             ))}
           </div>
+          </div>
         </div>
 
-        <label className="mt-5 block">
+        <div className="shrink-0 space-y-3 border-t px-6 py-4">
+        <label className="block">
           <span className="text-xs text-muted-foreground">
             {isOtherReason ? (
               <span className="text-rose-600 dark:text-rose-400">
@@ -248,7 +253,7 @@ export function LostModal({
           />
         </label>
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
@@ -264,6 +269,7 @@ export function LostModal({
           >
             {t("lost.confirm")}
           </button>
+        </div>
         </div>
       </div>
     </div>
