@@ -181,7 +181,7 @@ export function DisqualifyModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-lg bg-background shadow-lg">
+      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg bg-background shadow-lg">
         <div className="shrink-0 border-b px-6 py-4">
           <h2 className="text-lg font-semibold">{t("modal.title")}</h2>
           <p className="text-xs text-muted-foreground">{t("modal.subtitle")}</p>
@@ -283,7 +283,7 @@ export function DisqualifyModal({
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t(`reason_groups.${g.labelKey}`)}
                 </p>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
                   {g.reasons.map((r) => {
                     const allowed = allowedSet.has(r);
                     return (

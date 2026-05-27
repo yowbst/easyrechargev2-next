@@ -112,7 +112,7 @@ export function LostModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-lg bg-background shadow-lg">
+      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg bg-background shadow-lg">
         <div className="shrink-0 border-b px-6 py-4">
           <h2 className="text-lg font-semibold">{t("lost.title")}</h2>
           <p className="text-xs text-muted-foreground">{t("lost.subtitle")}</p>
@@ -190,7 +190,10 @@ export function LostModal({
           </aside>
 
           {/* Reasons (right) */}
-          <div role="radiogroup" className="space-y-2">
+          <div
+            role="radiogroup"
+            className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2"
+          >
             {LOST_REASONS.map((r) => (
               <label
                 key={r}
