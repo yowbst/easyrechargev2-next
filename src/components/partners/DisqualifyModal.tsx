@@ -290,6 +290,8 @@ export function DisqualifyModal({
                       <label
                         key={r}
                         className={`flex items-center gap-2 rounded px-1 py-1 text-sm ${
+                          g.reasons.length === 1 ? "sm:col-span-2" : ""
+                        } ${
                           allowed
                             ? "cursor-pointer hover:bg-muted/50"
                             : "cursor-not-allowed opacity-50"
