@@ -6,6 +6,7 @@ import { shouldLockBilling } from "@/lib/dispatch/billing";
 import {
   DISPATCH_STAGES,
   LOST_REASONS,
+  STAGE_RANK,
   canMoveStage,
   type DispatchStage,
   type LostReason,
@@ -58,7 +59,13 @@ export async function POST(
   if (row.disqualified) {
     return NextResponse.json({ error: "already_disqualified" }, { status: 409 });
   }
-  if (!canMoveStage(row.stage, newStage)) {
+  // Reopening: a closed lead (won/lost) can be moved back into the active
+  // pipeline. This is the one sanctioned backward transition — billing stays
+  // locked (the lead was already worked) and the lost reason is cleared.
+  const isReopen =
+    (row.stage === "won" || row.stage === "lost") &&
+    STAGE_RANK[newStage] < STAGE_RANK.won;
+  if (!isReopen && !canMoveStage(row.stage, newStage)) {
     return NextResponse.json({ error: "backward_stage" }, { status: 409 });
   }
 
@@ -86,15 +93,18 @@ export async function POST(
   const now = new Date().toISOString();
   const history = Array.isArray(row.stage_history) ? row.stage_history : [];
 
-  const lockBilling = shouldLockBilling({
-    newStage,
-    dispatchedAt: row.dispatched_at,
-    alreadyBillable: row.billable,
-    disqualified: row.disqualified,
-    gift: row.gift,
-    billing: config.billing,
-    partnerOverrides: partner.disqualification_overrides ?? null,
-  });
+  // Reopening never un-bills a lead that was already worked.
+  const lockBilling = isReopen
+    ? row.billable
+    : shouldLockBilling({
+        newStage,
+        dispatchedAt: row.dispatched_at,
+        alreadyBillable: row.billable,
+        disqualified: row.disqualified,
+        gift: row.gift,
+        billing: config.billing,
+        partnerOverrides: partner.disqualification_overrides ?? null,
+      });
 
   await directusFetch(`/items/partner_dispatches/${id}`, {
     method: "PATCH",
@@ -107,7 +117,9 @@ export async function POST(
         lockBilling && !row.billable_locked_at ? now : row.billable_locked_at,
       ...(newStage === "lost"
         ? { lost_reason: lostReason, lost_note: lostNote }
-        : {}),
+        : isReopen
+          ? { lost_reason: null, lost_note: null }
+          : {}),
     }),
     next: { revalidate: 0 },
   });

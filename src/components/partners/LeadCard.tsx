@@ -18,6 +18,7 @@ import {
   CircleCheck,
   CircleDashed,
   CircleX,
+  RotateCcw,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -97,6 +98,7 @@ export function LeadCard({
   onMove,
   onDisqualify,
   onLose,
+  onReopen,
   onDragStart,
   onDragEnd,
   rottingDaysByStage,
@@ -110,6 +112,7 @@ export function LeadCard({
   onMove: (stage: DispatchStage) => void;
   onDisqualify: (reason: string, note?: string) => void;
   onLose?: (reason: string, note?: string) => void;
+  onReopen?: () => void;
   onDragStart?: (e: DragEvent<HTMLElement>) => void;
   onDragEnd?: () => void;
   rottingDaysByStage: Record<string, number>;
@@ -285,6 +288,26 @@ export function LeadCard({
               <Gift className="h-3.5 w-3.5" />
             </TooltipTrigger>
             <TooltipContent>{t("card.billing.gift_tip")}</TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Reopen a closed (won/lost) lead back into the active pipeline. */}
+        {readOnly && isClosed && onReopen && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={onReopen}
+                  aria-label={t("card.actions.reopen")}
+                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
+                />
+              }
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </TooltipTrigger>
+            <TooltipContent>{t("card.actions.reopen")}</TooltipContent>
           </Tooltip>
         )}
 

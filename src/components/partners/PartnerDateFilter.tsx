@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { CalendarRange, Check } from "lucide-react";
 import {
   Popover,
@@ -19,16 +20,44 @@ const PRESETS: { key: DatePreset; labelKey: string }[] = [
   { key: "90d", labelKey: "filter.90d" },
 ];
 
+// Module-scoped so the new Date() stays out of the render path.
+function recentMonths(count: number): { value: string; label: string }[] {
+  const out: { value: string; label: string }[] = [];
+  const d = new Date();
+  d.setDate(1);
+  for (let i = 0; i < count; i++) {
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString("fr-CH", {
+      month: "long",
+      year: "numeric",
+    });
+    out.push({ value, label });
+    d.setMonth(d.getMonth() - 1);
+  }
+  return out;
+}
+
+function monthLabel(value: string): string {
+  const [y, m] = value.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString("fr-CH", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export function PartnerDateFilter({ dictionary }: { dictionary: PartnerDict }) {
   const t = makePartnerT(dictionary);
   const { filter, setFilter, active } = usePartnerFilter();
+  const months = useMemo(() => recentMonths(12), []);
 
   const triggerLabel =
     filter.preset === "all"
       ? t("filter.label")
       : filter.preset === "custom"
         ? t("filter.custom")
-        : t(`filter.${filter.preset}`);
+        : filter.preset === "month" && filter.month
+          ? monthLabel(filter.month)
+          : t(`filter.${filter.preset}`);
 
   return (
     <Popover>
@@ -55,7 +84,7 @@ export function PartnerDateFilter({ dictionary }: { dictionary: PartnerDict }) {
                 key={key}
                 type="button"
                 onClick={() =>
-                  setFilter({ preset: key, from: null, to: null })
+                  setFilter({ preset: key, from: null, to: null, month: null })
                 }
                 className={`flex items-center justify-between rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted ${
                   selected ? "font-medium text-foreground" : "text-muted-foreground"
@@ -66,6 +95,31 @@ export function PartnerDateFilter({ dictionary }: { dictionary: PartnerDict }) {
               </button>
             );
           })}
+        </div>
+
+        <div className="border-t pt-2.5">
+          <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+            {t("filter.billing_cycle")}
+          </p>
+          <select
+            value={filter.preset === "month" ? (filter.month ?? "") : ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              setFilter(
+                v
+                  ? { preset: "month", month: v, from: null, to: null }
+                  : { preset: "all", from: null, to: null, month: null },
+              );
+            }}
+            className="w-full rounded border bg-background px-2 py-1 text-sm capitalize"
+          >
+            <option value="">{t("filter.select_month")}</option>
+            {months.map((m) => (
+              <option key={m.value} value={m.value} className="capitalize">
+                {m.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="border-t pt-2.5">
@@ -84,6 +138,7 @@ export function PartnerDateFilter({ dictionary }: { dictionary: PartnerDict }) {
                     preset: "custom",
                     from: e.target.value || null,
                     to: filter.preset === "custom" ? filter.to : null,
+                    month: null,
                   })
                 }
                 className="rounded border bg-background px-2 py-1"
@@ -100,6 +155,7 @@ export function PartnerDateFilter({ dictionary }: { dictionary: PartnerDict }) {
                     preset: "custom",
                     from: filter.preset === "custom" ? filter.from : null,
                     to: e.target.value || null,
+                    month: null,
                   })
                 }
                 className="rounded border bg-background px-2 py-1"

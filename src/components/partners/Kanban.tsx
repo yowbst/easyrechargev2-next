@@ -235,6 +235,45 @@ export function Kanban({
     }
   }
 
+  async function reopen(id: string, stage: DispatchStage) {
+    const previous = localDispatches;
+    const now = new Date().toISOString();
+    // Optimistic: move back into the active pipeline, clear the lost reason.
+    setLocalDispatches((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              stage,
+              stage_entered_at: now,
+              lost_reason: null,
+              lost_note: null,
+            }
+          : d,
+      ),
+    );
+    setPending(id);
+    try {
+      const res = await fetch(
+        `/api/partners/${partnerToken}/dispatches/${id}/stage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stage }),
+        },
+      );
+      if (!res.ok) {
+        setLocalDispatches(previous);
+        const err = await res.json().catch(() => ({}));
+        alert(`Échec: ${err.error ?? res.status}`);
+        return;
+      }
+      startTransition(() => router.refresh());
+    } finally {
+      setPending(null);
+    }
+  }
+
   async function disqualify(id: string, reason: string, note?: string) {
     const previous = localDispatches;
     const now = new Date().toISOString();
@@ -493,6 +532,7 @@ export function Kanban({
                             pending={pending === d.id}
                             onMove={() => {}}
                             onDisqualify={() => {}}
+                            onReopen={() => reopen(d.id, closedFromStage(d) as DispatchStage)}
                             readOnly
                           />
                         </li>
