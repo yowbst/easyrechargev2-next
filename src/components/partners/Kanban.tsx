@@ -23,7 +23,6 @@ import {
 } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useSidebar } from "@/components/ui/sidebar";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { LeadCard } from "./LeadCard";
 
@@ -78,7 +77,6 @@ export function Kanban({
   dictionary: PartnerDict;
 }) {
   const router = useRouter();
-  const sidebar = useSidebar();
   const t = makePartnerT(dictionary);
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
@@ -291,7 +289,10 @@ export function Kanban({
 
         {/* Active pipeline. Mobile: horizontal scroll-snap so the partner
             can swipe between stage columns. Desktop: 4-column grid. */}
-        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 lg:grid-cols-4">
+        <div
+          id="crm-open"
+          className="-mx-4 flex snap-x snap-mandatory scroll-mt-16 gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 lg:grid-cols-4"
+        >
           {MAIN_STAGES.map((stage) => {
             const isDropTarget = dropTarget === stage;
             const Icon = STAGE_ICONS[stage];
@@ -337,13 +338,13 @@ export function Kanban({
 
         </div>
 
-        {/* Bottom block: disqualified + outcomes. mt-auto pushes the whole
+        {/* Bottom block: disqualified + closed. mt-auto pushes the whole
             block to the page footer, regardless of how empty the funnel is. */}
         <div className="mt-auto space-y-6">
 
         {/* Disqualified: same 4-column layout, aligned with active funnel. */}
         {mainDisqCount > 0 && (
-          <details className="space-y-3" open>
+          <details id="crm-disqualified" className="scroll-mt-16 space-y-3" open>
             <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">
               {t("groups.disqualified")} ({mainDisqCount})
             </summary>
@@ -369,7 +370,7 @@ export function Kanban({
                           dispatch={d}
                           rottingDaysByStage={rottingDaysByStage}
                           reasonsByStage={reasonsByStage}
-                        dictionary={dictionary}
+                          dictionary={dictionary}
                           lang={lang}
                           pending={pending === d.id}
                           onMove={() => {}}
@@ -386,86 +387,69 @@ export function Kanban({
           </details>
         )}
 
-        {/* Outcomes at the bottom: Won / Lost side-by-side, color-tinted,
-            collapsible. Drop targets stay active while collapsed (details
-            keep their dragOver/drop handlers). While a card is being dragged,
-            this row floats fixed to the viewport bottom — offset on the left
-            by the sidebar width so it doesn't overlap the nav. */}
-        <div
-          style={
-            draggingStage !== null && !sidebar.isMobile
-              ? {
-                  left:
-                    sidebar.state === "expanded"
-                      ? "var(--sidebar-width)"
-                      : "var(--sidebar-width-icon)",
-                }
-              : undefined
-          }
-          className={`grid grid-cols-1 gap-3 transition-all md:grid-cols-2 ${
-            draggingStage !== null
-              ? "fixed right-0 bottom-0 left-0 z-30 border-t bg-background/95 px-4 py-3 shadow-lg backdrop-blur-sm md:px-6"
-              : ""
-          }`}
-        >
-          {OUTCOME_STAGES.map((stage) => {
-            const tone = OUTCOME_STYLES[stage as "won" | "lost"];
-            const isDropTarget = dropTarget === stage;
-            const cards = activeGrouped[stage];
-            const Icon = STAGE_ICONS[stage];
-            return (
-              <details
-                key={stage}
-                id={`stage-${stage}`}
-                onDragOver={(e) => handleDragOver(e, stage)}
-                onDragLeave={() => handleDragLeave(stage)}
-                onDrop={(e) => handleDrop(e, stage)}
-                className={`relative scroll-mt-16 overflow-hidden rounded-lg border bg-card p-3 pl-4 transition-shadow ${
-                  isDropTarget ? `ring-2 ${tone.ring}` : ""
-                }`}
-              >
-                <span
-                  aria-hidden
-                  className={`absolute inset-y-0 left-0 w-1 ${tone.bar}`}
-                />
-                <summary
-                  className={`flex cursor-pointer items-baseline justify-between gap-2 text-sm font-semibold ${tone.text}`}
+        {/* Closed: Gagnés / Perdus, column by column like Disqualifiés.
+            Each column is a drop target so a lead can be closed by dragging
+            it here. Cards carry a green/red left bar (rendered by LeadCard). */}
+        <details id="crm-closed" className="scroll-mt-16 space-y-3" open>
+          <summary className="flex cursor-pointer items-baseline justify-between gap-2 text-sm font-semibold text-muted-foreground">
+            <span>
+              {t("groups.closed")} ({closedCount})
+            </span>
+            {conversionPct !== null && (
+              <span className="whitespace-nowrap text-xs font-medium">
+                {conversionPct}% · {wonCount}/{closedCount}
+              </span>
+            )}
+          </summary>
+          <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {OUTCOME_STAGES.map((stage) => {
+              const tone = OUTCOME_STYLES[stage as "won" | "lost"];
+              const isDropTarget = dropTarget === stage;
+              const cards = activeGrouped[stage];
+              const Icon = STAGE_ICONS[stage];
+              return (
+                <section
+                  key={stage}
+                  id={`stage-${stage}`}
+                  onDragOver={(e) => handleDragOver(e, stage)}
+                  onDragLeave={() => handleDragLeave(stage)}
+                  onDrop={(e) => handleDrop(e, stage)}
+                  className={`scroll-mt-16 rounded-lg border bg-card p-3 transition-colors ${
+                    isDropTarget ? `ring-2 ${tone.ring}` : ""
+                  }`}
                 >
-                  <span className="flex items-center gap-1.5">
+                  <h2
+                    className={`mb-2 flex items-center gap-1.5 text-sm font-semibold ${tone.text}`}
+                  >
                     <Icon className="h-3.5 w-3.5 shrink-0" />
                     <span>{t(`stages.${stage}`)}</span>
                     <span className="text-xs text-muted-foreground">
                       ({cards.length})
                     </span>
-                  </span>
-                  {stage === "won" && conversionPct !== null && (
-                    <span className="whitespace-nowrap text-xs font-medium text-muted-foreground">
-                      {conversionPct}% · {wonCount}/{closedCount}
-                    </span>
-                  )}
-                </summary>
-                <ul className="mt-3 space-y-2">
-                  {cards.map((d) => (
-                    <li key={d.id}>
-                      <LeadCard
-                        dispatch={d}
-                        rottingDaysByStage={rottingDaysByStage}
-                        reasonsByStage={reasonsByStage}
-                        dictionary={dictionary}
-                        lang={lang}
-                        pending={pending === d.id}
-                        onMove={(s) => moveStage(d.id, s)}
-                        onDisqualify={(r, n) => disqualify(d.id, r, n)}
-                        onDragStart={(e) => handleDragStart(e, d.id)}
-                        onDragEnd={handleDragEnd}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            );
-          })}
-        </div>
+                  </h2>
+                  <ul className="min-h-[40px] space-y-2">
+                    {cards.map((d) => (
+                      <li key={d.id}>
+                        <LeadCard
+                          dispatch={d}
+                          rottingDaysByStage={rottingDaysByStage}
+                          reasonsByStage={reasonsByStage}
+                          dictionary={dictionary}
+                          lang={lang}
+                          pending={pending === d.id}
+                          onMove={(s) => moveStage(d.id, s)}
+                          onDisqualify={(r, n) => disqualify(d.id, r, n)}
+                          onDragStart={(e) => handleDragStart(e, d.id)}
+                          onDragEnd={handleDragEnd}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
+        </details>
         </div>
       </div>
     </TooltipProvider>

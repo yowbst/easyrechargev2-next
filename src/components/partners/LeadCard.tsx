@@ -6,7 +6,6 @@ import {
   Phone,
   MapPin,
   Gift,
-  Coins,
   Lock,
   Ban,
   FileSearch,
@@ -187,6 +186,17 @@ export function LeadCard({
     isRottenClient(dispatch.stage, dispatch.stage_entered_at, rottingDaysByStage);
   const stageReasons = reasonsByStage[dispatch.stage] ?? null;
 
+  // Left accent bar: green (won) / red (lost) outcome takes precedence over the
+  // amber rotting nudge. Won/Lost can't rot, so these never collide in practice.
+  const accentBar =
+    dispatch.stage === "won"
+      ? "bg-emerald-500"
+      : dispatch.stage === "lost"
+        ? "bg-rose-500"
+        : isRotten
+          ? "bg-amber-500"
+          : null;
+
   return (
     <article
       draggable={draggable}
@@ -196,10 +206,10 @@ export function LeadCard({
         dispatch.disqualified ? "opacity-60" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
-      {isRotten && (
+      {accentBar && (
         <span
           aria-hidden
-          className="absolute inset-y-0 left-0 w-1 bg-amber-500"
+          className={`absolute inset-y-0 left-0 w-1 ${accentBar}`}
         />
       )}
       {/* Header: name + relative date inline (left) + status icons (right) */}
@@ -250,28 +260,24 @@ export function LeadCard({
                   </TooltipContent>
                 </Tooltip>
               )}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <span
-                className="inline-flex text-muted-foreground"
-                aria-label={t(dispatch.gift ? "card.billing.gift" : "card.billing.standard")}
-              />
-            }
-          >
-            {dispatch.gift ? (
+        {dispatch.gift && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span
+                  className="inline-flex text-muted-foreground"
+                  aria-label={t("card.billing.gift")}
+                />
+              }
+            >
               <Gift className="h-3.5 w-3.5" />
-            ) : (
-              <Coins className="h-3.5 w-3.5" />
-            )}
-          </TooltipTrigger>
-          <TooltipContent>
-            {t(dispatch.gift ? "card.billing.gift_tip" : "card.billing.standard_tip")}
-          </TooltipContent>
-        </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent>{t("card.billing.gift_tip")}</TooltipContent>
+          </Tooltip>
+        )}
 
-        {/* Separator between status icons and action buttons */}
-        {!readOnly && (
+        {/* Separator — only when a status icon precedes the action buttons. */}
+        {!readOnly && (dispatch.gift || isRotten) && (
           <span aria-hidden className="mx-0.5 h-4 w-px bg-border" />
         )}
 
