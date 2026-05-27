@@ -6,6 +6,7 @@ export interface PartnerDispatchCard {
   dispatched_at: string;
   stage: string;
   stage_entered_at: string;
+  stage_history: Array<{ stage: string; at: string }> | null;
   disqualified: boolean;
   disqualification_reason: string | null;
   disqualification_note: string | null;
@@ -34,6 +35,7 @@ const CARD_FIELDS = [
   "dispatched_at",
   "stage",
   "stage_entered_at",
+  "stage_history",
   "disqualified",
   "disqualification_reason",
   "disqualification_note",

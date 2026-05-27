@@ -301,6 +301,44 @@ export function LeadCard({
           </Tooltip>
         )}
 
+        {/* Close actions — mark the lead won or lost. */}
+        {!readOnly && !dispatch.disqualified && (
+          <>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => onMove("won")}
+                    aria-label={t("card.actions.won")}
+                    className="rounded p-1 text-muted-foreground hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950 dark:hover:text-emerald-400 disabled:opacity-40"
+                  />
+                }
+              >
+                <CircleCheck className="h-3.5 w-3.5" />
+              </TooltipTrigger>
+              <TooltipContent>{t("card.actions.won")}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => onMove("lost")}
+                    aria-label={t("card.actions.lost")}
+                    className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950 dark:hover:text-rose-400 disabled:opacity-40"
+                  />
+                }
+              >
+                <CircleX className="h-3.5 w-3.5" />
+              </TooltipTrigger>
+              <TooltipContent>{t("card.actions.lost")}</TooltipContent>
+            </Tooltip>
+          </>
+        )}
+
         {!readOnly && dispatch.billable_locked_at && !dispatch.disqualified && (
           <Tooltip>
             <TooltipTrigger

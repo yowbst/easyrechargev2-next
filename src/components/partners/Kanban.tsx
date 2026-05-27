@@ -16,11 +16,7 @@ import {
   Trophy,
   XCircle,
 } from "lucide-react";
-import {
-  DISPATCH_STAGES,
-  STAGE_RANK,
-  type DispatchStage,
-} from "@/lib/dispatch/types";
+import { STAGE_RANK, type DispatchStage } from "@/lib/dispatch/types";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
@@ -44,20 +40,6 @@ const MAIN_STAGES: DispatchStage[] = [
   "appointment",
   "quote_sent",
 ];
-const OUTCOME_STAGES: DispatchStage[] = ["won", "lost"];
-
-const OUTCOME_STYLES: Record<"won" | "lost", { bar: string; text: string; ring: string }> = {
-  won: {
-    bar: "bg-emerald-400",
-    text: "text-emerald-700 dark:text-emerald-400",
-    ring: "ring-emerald-400/50",
-  },
-  lost: {
-    bar: "bg-rose-400",
-    text: "text-rose-700 dark:text-rose-400",
-    ring: "ring-rose-400/50",
-  },
-};
 
 const DRAG_MIME = "application/x-partner-dispatch-id";
 
@@ -92,32 +74,58 @@ export function Kanban({
     setLocalDispatches(dispatches);
   }, [dispatches]);
 
-  // Two stacked 6-column grids sharing the same breakpoints. Active cards
-  // up top, disqualified cards below — each card stays in the column
-  // matching the stage it was at, so disqualifications align vertically
-  // under the stage where the lead was lost.
-  const emptyGroups = (): Record<DispatchStage, PartnerDispatchCard[]> => ({
+  // Three stacked grids keyed on the four funnel stages:
+  //  - active: open leads in their current stage
+  //  - disqualified: lost-to-attrition leads, in the stage they were dropped
+  //  - closed: won/lost leads, in the funnel stage they were *closed from*
+  //    (derived from stage_history). The card's green/red bar marks the outcome.
+  const emptyMainGroups = (): Record<string, PartnerDispatchCard[]> => ({
     new: [],
     contacted: [],
     appointment: [],
     quote_sent: [],
-    won: [],
-    lost: [],
   });
-  const activeGrouped = emptyGroups();
-  const disqGrouped = emptyGroups();
+  const activeGrouped = emptyMainGroups();
+  const disqGrouped = emptyMainGroups();
+  const closedGrouped = emptyMainGroups();
+  let wonCount = 0;
+  let lostCount = 0;
+
+  const closedFromStage = (d: PartnerDispatchCard): string => {
+    const h = d.stage_history;
+    if (Array.isArray(h)) {
+      for (let i = h.length - 1; i >= 0; i--) {
+        if ((MAIN_STAGES as string[]).includes(h[i].stage)) return h[i].stage;
+      }
+    }
+    return "quote_sent";
+  };
+
   for (const d of localDispatches) {
-    if (!(DISPATCH_STAGES as string[]).includes(d.stage)) continue;
-    const bucket = d.disqualified ? disqGrouped : activeGrouped;
-    bucket[d.stage as DispatchStage].push(d);
+    if (d.disqualified) {
+      if ((MAIN_STAGES as string[]).includes(d.stage)) disqGrouped[d.stage].push(d);
+      continue;
+    }
+    if (d.stage === "won" || d.stage === "lost") {
+      if (d.stage === "won") wonCount += 1;
+      else lostCount += 1;
+      closedGrouped[closedFromStage(d)].push(d);
+      continue;
+    }
+    if ((MAIN_STAGES as string[]).includes(d.stage)) activeGrouped[d.stage].push(d);
   }
-  for (const s of DISPATCH_STAGES) {
+  for (const s of MAIN_STAGES) {
     activeGrouped[s].sort((a, b) =>
       b.dispatched_at.localeCompare(a.dispatched_at),
     );
     disqGrouped[s].sort((a, b) =>
       (b.disqualified_at ?? b.dispatched_at).localeCompare(
         a.disqualified_at ?? a.dispatched_at,
+      ),
+    );
+    closedGrouped[s].sort((a, b) =>
+      (b.stage_entered_at ?? b.dispatched_at).localeCompare(
+        a.stage_entered_at ?? a.dispatched_at,
       ),
     );
   }
@@ -256,8 +264,6 @@ export function Kanban({
     0,
   );
 
-  const wonCount = activeGrouped.won.length;
-  const lostCount = activeGrouped.lost.length;
   const closedCount = wonCount + lostCount;
   const conversionPct =
     closedCount > 0 ? Math.round((wonCount / closedCount) * 100) : null;
@@ -270,7 +276,7 @@ export function Kanban({
           className="sticky top-0 z-20 -mx-4 -mt-4 flex gap-1.5 overflow-x-auto border-b bg-background/95 px-4 py-2 backdrop-blur-sm md:hidden"
           aria-label="Navigation par étape"
         >
-          {[...MAIN_STAGES, ...OUTCOME_STAGES].map((stage) => {
+          {MAIN_STAGES.map((stage) => {
             const Icon = STAGE_ICONS[stage];
             const count = activeGrouped[stage].length;
             return (
@@ -387,69 +393,61 @@ export function Kanban({
           </details>
         )}
 
-        {/* Closed: Gagnés / Perdus, column by column like Disqualifiés.
-            Each column is a drop target so a lead can be closed by dragging
-            it here. Cards carry a green/red left bar (rendered by LeadCard). */}
-        <details id="crm-closed" className="scroll-mt-16 space-y-3" open>
-          <summary className="flex cursor-pointer items-baseline justify-between gap-2 text-sm font-semibold text-muted-foreground">
-            <span>
-              {t("groups.closed")} ({closedCount})
-            </span>
-            {conversionPct !== null && (
-              <span className="whitespace-nowrap text-xs font-medium">
-                {conversionPct}% · {wonCount}/{closedCount}
+        {/* Closed: won/lost leads, column by column like Disqualifiés, placed
+            in the funnel stage they were closed from. The green/red left bar on
+            each card (rendered by LeadCard from its won/lost stage) marks the
+            outcome. Read-only review — closing happens via the card buttons. */}
+        {closedCount > 0 && (
+          <details id="crm-closed" className="scroll-mt-16 space-y-3" open>
+            <summary className="flex cursor-pointer items-baseline justify-between gap-2 text-sm font-semibold text-muted-foreground">
+              <span>
+                {t("groups.closed")} ({closedCount})
               </span>
-            )}
-          </summary>
-          <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
-            {OUTCOME_STAGES.map((stage) => {
-              const tone = OUTCOME_STYLES[stage as "won" | "lost"];
-              const isDropTarget = dropTarget === stage;
-              const cards = activeGrouped[stage];
-              const Icon = STAGE_ICONS[stage];
-              return (
-                <section
-                  key={stage}
-                  id={`stage-${stage}`}
-                  onDragOver={(e) => handleDragOver(e, stage)}
-                  onDragLeave={() => handleDragLeave(stage)}
-                  onDrop={(e) => handleDrop(e, stage)}
-                  className={`scroll-mt-16 rounded-lg border bg-card p-3 transition-colors ${
-                    isDropTarget ? `ring-2 ${tone.ring}` : ""
-                  }`}
-                >
-                  <h2
-                    className={`mb-2 flex items-center gap-1.5 text-sm font-semibold ${tone.text}`}
+              {conversionPct !== null && (
+                <span className="whitespace-nowrap text-xs font-medium">
+                  {conversionPct}% · {wonCount}/{closedCount}
+                </span>
+              )}
+            </summary>
+            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {MAIN_STAGES.map((stage) => {
+                const Icon = STAGE_ICONS[stage];
+                const cards = closedGrouped[stage];
+                return (
+                  <section
+                    key={stage}
+                    className="rounded-lg border border-dashed bg-muted/20 p-3"
                   >
-                    <Icon className="h-3.5 w-3.5 shrink-0" />
-                    <span>{t(`stages.${stage}`)}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({cards.length})
-                    </span>
-                  </h2>
-                  <ul className="min-h-[40px] space-y-2">
-                    {cards.map((d) => (
-                      <li key={d.id}>
-                        <LeadCard
-                          dispatch={d}
-                          rottingDaysByStage={rottingDaysByStage}
-                          reasonsByStage={reasonsByStage}
-                          dictionary={dictionary}
-                          lang={lang}
-                          pending={pending === d.id}
-                          onMove={(s) => moveStage(d.id, s)}
-                          onDisqualify={(r, n) => disqualify(d.id, r, n)}
-                          onDragStart={(e) => handleDragStart(e, d.id)}
-                          onDragEnd={handleDragEnd}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              );
-            })}
-          </div>
-        </details>
+                    <h2 className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Icon
+                        className="h-3.5 w-3.5 shrink-0"
+                        aria-label={t(`stages.${stage}`)}
+                      />
+                      <span>({cards.length})</span>
+                    </h2>
+                    <ul className="space-y-2">
+                      {cards.map((d) => (
+                        <li key={d.id}>
+                          <LeadCard
+                            dispatch={d}
+                            rottingDaysByStage={rottingDaysByStage}
+                            reasonsByStage={reasonsByStage}
+                            dictionary={dictionary}
+                            lang={lang}
+                            pending={pending === d.id}
+                            onMove={() => {}}
+                            onDisqualify={() => {}}
+                            readOnly
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
+            </div>
+          </details>
+        )}
         </div>
       </div>
     </TooltipProvider>
