@@ -80,7 +80,7 @@ export function PartnerSidebar({
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1">
+          <div className="flex items-center gap-2 px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200">
               <span className="text-sm font-semibold">
                 {partnerName.slice(0, 1)}

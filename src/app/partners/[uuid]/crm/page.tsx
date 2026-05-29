@@ -18,7 +18,7 @@ import { Kanban } from "@/components/partners/Kanban";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 
 export const metadata: Metadata = {
-  title: "CRM — Espace partenaire",
+  title: "Leads — Espace partenaire",
   robots: { index: false, follow: false },
 };
 
