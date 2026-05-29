@@ -19,7 +19,8 @@ import { PipelineFunnelCard } from "./stats/PipelineFunnelCard";
 import { MonthlyVolumeCard } from "./stats/MonthlyVolumeCard";
 import { ReasonsBreakdownCard } from "./stats/ReasonsBreakdownCard";
 
-const MAIN_STAGES = ["new", "contacted", "appointment", "quote_sent"];
+// Funnel stages, in order, ending at the success terminal "won".
+const MAIN_STAGES = ["new", "contacted", "appointment", "quote_sent", "won"];
 
 // Build a predicate that matches the window immediately preceding the active
 // filter, with the same length. For "all" we still need something — use a

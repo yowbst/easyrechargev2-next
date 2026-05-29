@@ -142,13 +142,20 @@ export function pipelineStats(
 ): FunnelRow[] {
   return stages.map((stageName) => {
     const stageRank = STAGE_RANK[stageName as DispatchStage];
+    // Won and lost share rank 4, but a lost lead never reached "won" — so the
+    // final "won" funnel step is counted exactly (not by rank).
+    const isWonStep = stageName === "won";
     let count = 0;
     let oldestDays: number | null = null;
     for (const c of cards) {
       if (!inRange(c.dispatched_at)) continue;
       const cardRank = STAGE_RANK[c.stage as DispatchStage];
       if (typeof cardRank !== "number") continue;
-      if (cardRank < stageRank) continue;
+      if (isWonStep) {
+        if (c.stage !== "won") continue;
+      } else {
+        if (cardRank < stageRank) continue;
+      }
       count += 1;
       if (!c.disqualified && c.stage === stageName) {
         const enteredAt = c.stage_entered_at ?? c.dispatched_at;
