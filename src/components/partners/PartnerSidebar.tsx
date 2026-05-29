@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Users, LifeBuoy, CircleDashed, Ban, Archive } from "lucide-react";
+import { Users, LifeBuoy, CircleDashed, Ban, Archive, BarChart3 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -26,7 +26,7 @@ import { PartnerDateFilter } from "./PartnerDateFilter";
 import { PartnerSortControl } from "./PartnerSortControl";
 import { PartnerFacetFilter } from "./PartnerFacetFilter";
 
-export type PartnerNav = "crm";
+export type PartnerNav = "crm" | "stats";
 type Lang = "fr" | "de";
 
 export function PartnerSidebar({
@@ -84,26 +84,39 @@ export function PartnerSidebar({
                   <Users className="h-4 w-4" />
                   <span>{t("sidebar.crm")}</span>
                 </SidebarMenuButton>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton render={<a href="#crm-open" />}>
-                      <CircleDashed className="h-3.5 w-3.5 shrink-0" />
-                      <span>{t("sidebar.nav.open")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton render={<a href="#crm-disqualified" />}>
-                      <Ban className="h-3.5 w-3.5 shrink-0" />
-                      <span>{t("sidebar.nav.disqualified")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton render={<a href="#crm-closed" />}>
-                      <Archive className="h-3.5 w-3.5 shrink-0" />
-                      <span>{t("sidebar.nav.closed")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
+                {activeNav === "crm" && (
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton render={<a href="#crm-open" />}>
+                        <CircleDashed className="h-3.5 w-3.5 shrink-0" />
+                        <span>{t("sidebar.nav.open")}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton render={<a href="#crm-disqualified" />}>
+                        <Ban className="h-3.5 w-3.5 shrink-0" />
+                        <span>{t("sidebar.nav.disqualified")}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton render={<a href="#crm-closed" />}>
+                        <Archive className="h-3.5 w-3.5 shrink-0" />
+                        <span>{t("sidebar.nav.closed")}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeNav === "stats"}
+                  tooltip={t("sidebar.nav.stats")}
+                  className="font-medium"
+                  render={<Link href={`/${lang}/partners/${partnerToken}/stats`} prefetch={false} />}
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  <span>{t("sidebar.nav.stats")}</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
