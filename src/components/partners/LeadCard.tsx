@@ -233,8 +233,8 @@ export function LeadCard({
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
-      className={`group relative overflow-hidden rounded-md border p-2.5 text-sm shadow-sm transition-opacity ${
-        isRotten ? "bg-amber-500/10" : "bg-background"
+      className={`group relative overflow-hidden rounded-md border bg-background p-2.5 text-sm shadow-sm transition-opacity ${
+        isRotten ? "border-amber-500/40" : ""
       } ${dispatch.disqualified || isClosed ? "opacity-60" : ""} ${
         draggable ? "cursor-grab active:cursor-grabbing" : ""
       }`}
