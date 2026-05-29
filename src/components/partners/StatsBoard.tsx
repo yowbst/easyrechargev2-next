@@ -138,20 +138,20 @@ export function StatsBoard({
 
       <div className="grid gap-4 md:grid-cols-2">
         <ReasonsBreakdownCard
-          Icon={CircleX}
-          title={t("stats.reasons.lost")}
-          rows={data.lost}
-          labelNs="lost_reasons"
-          dictionary={dictionary}
-          fill="rgb(225 29 72)"
-        />
-        <ReasonsBreakdownCard
           Icon={Ban}
           title={t("stats.reasons.disq")}
           rows={data.disq}
           labelNs="reasons"
           dictionary={dictionary}
           fill="rgb(217 119 6)"
+        />
+        <ReasonsBreakdownCard
+          Icon={CircleX}
+          title={t("stats.reasons.lost")}
+          rows={data.lost}
+          labelNs="lost_reasons"
+          dictionary={dictionary}
+          fill="rgb(225 29 72)"
         />
       </div>
     </div>
