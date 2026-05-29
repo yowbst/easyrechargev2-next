@@ -103,6 +103,9 @@ export default async function PartnerStatsPage({
       lang={lang}
       dictionary={dictionary}
       facetOptions={facetOptions}
+      statsTabs={tabs}
+      activeStatsTab={tab}
+      defaultStatsTab={DEFAULT_TAB}
     >
       <div className="space-y-4">
         <StatsTabs active={tab} defaultKey={DEFAULT_TAB} tabs={tabs} />

@@ -29,6 +29,11 @@ import { PartnerFacetFilter } from "./PartnerFacetFilter";
 export type PartnerNav = "crm" | "stats";
 type Lang = "fr" | "de";
 
+export interface StatsTabAnchor {
+  key: string;
+  label: string;
+}
+
 export function PartnerSidebar({
   partnerName,
   partnerToken,
@@ -38,6 +43,9 @@ export function PartnerSidebar({
   lang,
   dictionary,
   facetOptions,
+  statsTabs,
+  activeStatsTab,
+  defaultStatsTab,
   children,
 }: {
   partnerName: string;
@@ -48,6 +56,12 @@ export function PartnerSidebar({
   lang: Lang;
   dictionary: PartnerDict;
   facetOptions: Facets;
+  /** Stats tab anchors to surface in the sidebar when the stats page is
+   *  active. Sub-items link to `?tab=…` (the default tab key skips the
+   *  query string to keep URLs clean). */
+  statsTabs?: StatsTabAnchor[];
+  activeStatsTab?: string;
+  defaultStatsTab?: string;
   children: React.ReactNode;
 }) {
   const t = makePartnerT(dictionary);
@@ -117,6 +131,26 @@ export function PartnerSidebar({
                   <BarChart3 className="h-4 w-4" />
                   <span>{t("sidebar.nav.stats")}</span>
                 </SidebarMenuButton>
+                {activeNav === "stats" && statsTabs && statsTabs.length > 0 && (
+                  <SidebarMenuSub>
+                    {statsTabs.map((tab) => {
+                      const isDefault = tab.key === defaultStatsTab;
+                      const href = `/${lang}/partners/${partnerToken}/stats${
+                        isDefault ? "" : `?tab=${tab.key}`
+                      }`;
+                      return (
+                        <SidebarMenuSubItem key={tab.key}>
+                          <SidebarMenuSubButton
+                            isActive={activeStatsTab === tab.key}
+                            render={<Link href={href} prefetch={false} />}
+                          >
+                            <span>{tab.label}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
+                  </SidebarMenuSub>
+                )}
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
