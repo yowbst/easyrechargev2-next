@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { ReasonRow } from "@/lib/dispatch/stats";
@@ -27,9 +28,13 @@ export function ReasonsBreakdownCard({
 }) {
   const t = makePartnerT(dictionary);
   const max = rows.reduce((m, r) => (r.count > m ? r.count : m), 0);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
       <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
         {Icon && <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}
         <span>{title}</span>
@@ -60,8 +65,11 @@ export function ReasonsBreakdownCard({
                   aria-valuemax={max}
                 >
                   <div
-                    className="h-full rounded-full"
-                    style={{ width: `${pct}%`, backgroundColor: fill }}
+                    className="h-full rounded-full transition-[width] duration-700 ease-out"
+                    style={{
+                      width: mounted ? `${pct}%` : "0%",
+                      backgroundColor: fill,
+                    }}
                   />
                 </div>
                 <span className="w-6 text-right tabular-nums text-muted-foreground">

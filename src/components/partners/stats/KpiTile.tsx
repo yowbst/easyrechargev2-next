@@ -36,7 +36,7 @@ export function KpiTile({
       : "text-muted-foreground";
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
       <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
         <span>{label}</span>

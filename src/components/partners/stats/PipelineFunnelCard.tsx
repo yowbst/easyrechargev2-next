@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ListChecks } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { FunnelRow } from "@/lib/dispatch/stats";
@@ -18,9 +19,13 @@ export function PipelineFunnelCard({
   const t = makePartnerT(dictionary);
   const max = rows.reduce((m, r) => (r.count > m ? r.count : m), 0);
   const empty = max === 0;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
       <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
         <ListChecks className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <span>{t("stats.funnel.title")}</span>
@@ -48,9 +53,9 @@ export function PipelineFunnelCard({
                 </span>
                 <div className="relative h-5">
                   <div
-                    className="absolute inset-y-0 left-1/2 -translate-x-1/2 rounded-sm"
+                    className="absolute inset-y-0 left-1/2 -translate-x-1/2 rounded-sm transition-[width] duration-700 ease-out"
                     style={{
-                      width: `${width}%`,
+                      width: mounted ? `${width}%` : "0%",
                       backgroundColor: "var(--primary)",
                       opacity: STAGE_OPACITY[i] ?? 1,
                     }}

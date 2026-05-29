@@ -23,7 +23,7 @@ export function MonthlyVolumeCard({
 }) {
   const t = makePartnerT(dictionary);
   return (
-    <Card className="p-4">
+    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
       <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
         <BarChart3 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <span>{t("stats.monthly.title")}</span>
