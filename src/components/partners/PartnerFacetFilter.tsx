@@ -37,46 +37,46 @@ const GROUPS: { group: FacetGroup; titleKey: string; labelNs: string }[] = [
 const MUTED = "text-muted-foreground";
 const EMERALD = "text-emerald-600 dark:text-emerald-400";
 const AMBER = "text-amber-600 dark:text-amber-400";
-const ROSE = "text-rose-600 dark:text-rose-400";
+const BLUE = "text-blue-600 dark:text-blue-400";
 
 const HOUSING_ICONS: Record<string, LucideIcon> = {
   owner: Home,
   "co-owner": Building2,
   tenant: Key,
 };
-const APPROVAL_ICONS: Record<string, { Icon: LucideIcon; tone: string }> = {
-  yes: { Icon: CircleCheck, tone: EMERALD },
-  "in-progress": { Icon: CircleDashed, tone: MUTED },
-  no: { Icon: CircleX, tone: ROSE },
+const APPROVAL_ICONS: Record<string, LucideIcon> = {
+  yes: CircleCheck,
+  "in-progress": CircleDashed,
+  no: CircleX,
 };
-const DEADLINE_HOT = new Set(["asap", "2-3mo"]);
 
 const SCORE_ICONS: Record<string, { Icon: LucideIcon; tone: string }> = {
   hot: { Icon: Flame, tone: EMERALD },
   warm: { Icon: Thermometer, tone: AMBER },
-  cold: { Icon: Snowflake, tone: MUTED },
+  cold: { Icon: Snowflake, tone: BLUE },
 };
 
-// Match the icon + tone used on the lead card so the filter reads the same.
+// Icons mirror the lead card; only the score band carries a colour now —
+// other attributes (ownership, deadline, authorization) stay neutral so the
+// score is the single visual signal of lead quality.
 function iconFor(
   group: FacetGroup,
   value: string,
 ): { Icon: LucideIcon; tone: string } | null {
   if (group === "housing") {
     if (!(value in HOUSING_ICONS)) return null;
-    // Owner + co-owner can authorise the works → highlight; tenant can't.
-    return { Icon: HOUSING_ICONS[value], tone: value === "tenant" ? MUTED : EMERALD };
+    return { Icon: HOUSING_ICONS[value], tone: MUTED };
   }
   if (group === "deadline") {
-    return {
-      Icon: CalendarClock,
-      tone: DEADLINE_HOT.has(value) ? EMERALD : MUTED,
-    };
+    return { Icon: CalendarClock, tone: MUTED };
   }
   if (group === "score") {
     return value in SCORE_ICONS ? SCORE_ICONS[value] : null;
   }
-  return value in APPROVAL_ICONS ? APPROVAL_ICONS[value] : null;
+  if (value in APPROVAL_ICONS) {
+    return { Icon: APPROVAL_ICONS[value], tone: MUTED };
+  }
+  return null;
 }
 
 export function PartnerFacetFilter({

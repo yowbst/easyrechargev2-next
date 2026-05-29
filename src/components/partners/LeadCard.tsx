@@ -87,19 +87,17 @@ const HOUSING_ICONS: Record<string, LucideIcon> = {
   tenant: Key,
 };
 
-const APPROVAL_META: Record<string, { Icon: LucideIcon; tone: string }> = {
-  yes: { Icon: CircleCheck, tone: "text-emerald-600 dark:text-emerald-400" },
-  "in-progress": { Icon: CircleDashed, tone: "text-muted-foreground" },
-  no: { Icon: CircleX, tone: "text-rose-600 dark:text-rose-400" },
+// Icon-only — value semantics now come from the score, not per-field colour.
+const APPROVAL_ICONS: Record<string, LucideIcon> = {
+  yes: CircleCheck,
+  "in-progress": CircleDashed,
+  no: CircleX,
 };
-
-// Near-term deadlines highlight green — these are the warm/buyable leads.
-const DEADLINE_HOT_KEYS = new Set(["asap", "2-3mo"]);
 
 const SCORE_BAND_CLASS: Record<ScoreBand, string> = {
   hot: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
   warm: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-  cold: "bg-muted text-muted-foreground",
+  cold: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
 };
 
 export function LeadCard({
@@ -176,9 +174,6 @@ export function LeadCard({
   const housingLabel = housingStatusKey
     ? t(`card.housing.${housingStatusKey}`)
     : null;
-  // Owner + co-owner can authorise the works themselves → highlighted green.
-  const housingGreen =
-    housingStatusKey === "owner" || housingStatusKey === "co-owner";
   const deadlineKey =
     typeof submissionData?.deadline === "string"
       ? submissionData.deadline
@@ -188,9 +183,9 @@ export function LeadCard({
     typeof submissionData?.approval === "string"
       ? submissionData.approval.toLowerCase()
       : null;
-  const approvalMeta =
-    approvalKey && approvalKey in APPROVAL_META
-      ? APPROVAL_META[approvalKey]
+  const ApprovalIcon =
+    approvalKey && approvalKey in APPROVAL_ICONS
+      ? APPROVAL_ICONS[approvalKey]
       : null;
   const approvalLabel = approvalKey ? t(`card.approval.${approvalKey}`) : null;
 
@@ -575,20 +570,10 @@ export function LeadCard({
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
               <Tooltip>
                 <TooltipTrigger
-                  render={
-                    <span
-                      className={`flex items-center gap-1.5 ${
-                        housingGreen
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : ""
-                      }`}
-                    />
-                  }
+                  render={<span className="flex items-center gap-1.5" />}
                 >
                   <HousingIcon
-                    className={`h-3.5 w-3.5 shrink-0 ${
-                      housingGreen ? "" : "text-muted-foreground"
-                    }`}
+                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                     aria-hidden
                   />
                   <span>{housingLabel}</span>
@@ -599,10 +584,10 @@ export function LeadCard({
                     : housingLabel}
                 </TooltipContent>
               </Tooltip>
-              {approvalMeta && (
-                <span className={`flex items-center gap-1 ${approvalMeta.tone}`}>
-                  <approvalMeta.Icon
-                    className="h-3.5 w-3.5 shrink-0"
+              {ApprovalIcon && (
+                <span className="flex items-center gap-1">
+                  <ApprovalIcon
+                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                     aria-hidden
                   />
                   <span>{approvalLabel}</span>
@@ -611,19 +596,9 @@ export function LeadCard({
             </div>
           )}
         {deadlineLabel && (
-          <div
-            className={`flex items-center gap-1.5 text-xs ${
-              deadlineKey && DEADLINE_HOT_KEYS.has(deadlineKey)
-                ? "text-emerald-600 dark:text-emerald-400"
-                : ""
-            }`}
-          >
+          <div className="flex items-center gap-1.5 text-xs">
             <CalendarClock
-              className={`h-3.5 w-3.5 shrink-0 ${
-                deadlineKey && DEADLINE_HOT_KEYS.has(deadlineKey)
-                  ? ""
-                  : "text-muted-foreground"
-              }`}
+              className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
               aria-hidden
             />
             <span>{deadlineLabel}</span>
