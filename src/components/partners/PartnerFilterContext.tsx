@@ -18,11 +18,18 @@ export interface Facets {
   housing: string[];
   deadline: string[];
   approval: string[];
+  /** Score band values: "hot" | "warm" | "cold". */
+  score: string[];
 }
 
 export type FacetGroup = keyof Facets;
 
-const EMPTY_FACETS: Facets = { housing: [], deadline: [], approval: [] };
+const EMPTY_FACETS: Facets = {
+  housing: [],
+  deadline: [],
+  approval: [],
+  score: [],
+};
 
 export interface DateFilter {
   preset: DatePreset;
@@ -114,7 +121,10 @@ export function PartnerFilterProvider({ children }: { children: ReactNode }) {
   const value = useMemo<FilterContextValue>(() => {
     const { active, inRange } = buildBounds(filter);
     const facetCount =
-      facets.housing.length + facets.deadline.length + facets.approval.length;
+      facets.housing.length +
+      facets.deadline.length +
+      facets.approval.length +
+      facets.score.length;
     return {
       filter,
       setFilter,

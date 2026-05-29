@@ -9,6 +9,9 @@ import {
   CircleCheck,
   CircleDashed,
   CircleX,
+  Flame,
+  Thermometer,
+  Snowflake,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -25,6 +28,7 @@ import {
 
 // Which dictionary namespace holds the value labels for each facet group.
 const GROUPS: { group: FacetGroup; titleKey: string; labelNs: string }[] = [
+  { group: "score", titleKey: "facets.score", labelNs: "score.band" },
   { group: "housing", titleKey: "facets.housing", labelNs: "card.housing" },
   { group: "deadline", titleKey: "facets.deadline", labelNs: "card.deadline" },
   { group: "approval", titleKey: "facets.approval", labelNs: "card.approval" },
@@ -32,6 +36,7 @@ const GROUPS: { group: FacetGroup; titleKey: string; labelNs: string }[] = [
 
 const MUTED = "text-muted-foreground";
 const EMERALD = "text-emerald-600 dark:text-emerald-400";
+const AMBER = "text-amber-600 dark:text-amber-400";
 const ROSE = "text-rose-600 dark:text-rose-400";
 
 const HOUSING_ICONS: Record<string, LucideIcon> = {
@@ -45,6 +50,12 @@ const APPROVAL_ICONS: Record<string, { Icon: LucideIcon; tone: string }> = {
   no: { Icon: CircleX, tone: ROSE },
 };
 const DEADLINE_HOT = new Set(["asap", "2-3mo"]);
+
+const SCORE_ICONS: Record<string, { Icon: LucideIcon; tone: string }> = {
+  hot: { Icon: Flame, tone: EMERALD },
+  warm: { Icon: Thermometer, tone: AMBER },
+  cold: { Icon: Snowflake, tone: MUTED },
+};
 
 // Match the icon + tone used on the lead card so the filter reads the same.
 function iconFor(
@@ -61,6 +72,9 @@ function iconFor(
       Icon: CalendarClock,
       tone: DEADLINE_HOT.has(value) ? EMERALD : MUTED,
     };
+  }
+  if (group === "score") {
+    return value in SCORE_ICONS ? SCORE_ICONS[value] : null;
   }
   return value in APPROVAL_ICONS ? APPROVAL_ICONS[value] : null;
 }

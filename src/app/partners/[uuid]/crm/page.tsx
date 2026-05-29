@@ -6,7 +6,11 @@ import {
   fetchPartnerCrmConfig,
   type PartnerDispatchCard,
 } from "@/lib/dispatch/partner-dashboard-queries";
-import { resolveWeights } from "@/lib/dispatch/scoring";
+import {
+  resolveWeights,
+  scoreLead,
+  type ScoringFactorKey,
+} from "@/lib/dispatch/scoring";
 import { fetchPage } from "@/lib/directus-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
@@ -26,6 +30,7 @@ const SUPPORT_EMAIL = "yoan@easyrecharge.ch";
 const HOUSING_ORDER = ["owner", "co-owner", "tenant"];
 const APPROVAL_ORDER = ["yes", "in-progress", "no"];
 const DEADLINE_ORDER = ["asap", "2-3mo", "3-6mo", "6+mo"];
+const SCORE_ORDER = ["hot", "warm", "cold"];
 
 /**
  * Distinct lead-attribute values present across the partner's leads, used to
@@ -33,14 +38,19 @@ const DEADLINE_ORDER = ["asap", "2-3mo", "3-6mo", "6+mo"];
  * value the partner has no leads for. Housing/approval are lowercased to match
  * how LeadCard renders them; deadline keys are used verbatim.
  */
-function collectFacetOptions(dispatches: PartnerDispatchCard[]): {
+function collectFacetOptions(
+  dispatches: PartnerDispatchCard[],
+  scoringWeights: Record<ScoringFactorKey, number>,
+): {
   housing: string[];
   deadline: string[];
   approval: string[];
+  score: string[];
 } {
   const housing = new Set<string>();
   const deadline = new Set<string>();
   const approval = new Set<string>();
+  const score = new Set<string>();
   for (const d of dispatches) {
     const data = (d.submission?.data ?? {}) as Record<string, unknown>;
     if (typeof data.housingStatus === "string")
@@ -48,6 +58,7 @@ function collectFacetOptions(dispatches: PartnerDispatchCard[]): {
     if (typeof data.deadline === "string") deadline.add(data.deadline);
     if (typeof data.approval === "string")
       approval.add(data.approval.toLowerCase());
+    score.add(scoreLead(data, scoringWeights).band);
   }
   const order = (set: Set<string>, pref: string[]) =>
     [...set].sort((a, b) => {
@@ -61,6 +72,7 @@ function collectFacetOptions(dispatches: PartnerDispatchCard[]): {
     housing: order(housing, HOUSING_ORDER),
     deadline: order(deadline, DEADLINE_ORDER),
     approval: order(approval, APPROVAL_ORDER),
+    score: order(score, SCORE_ORDER),
   };
 }
 
@@ -120,8 +132,8 @@ export default async function PartnerCRMPage({
     lang,
   });
 
-  const facetOptions = collectFacetOptions(dispatches);
   const scoringWeights = resolveWeights(partner.lead_scoring_weights);
+  const facetOptions = collectFacetOptions(dispatches, scoringWeights);
 
   return (
     <PartnerSidebar

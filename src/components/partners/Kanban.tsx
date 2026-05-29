@@ -170,6 +170,10 @@ export function Kanban({
         typeof data.approval === "string" ? data.approval.toLowerCase() : null;
       if (!v || !facets.approval.includes(v)) return false;
     }
+    if (facets.score.length > 0) {
+      const band = scoreLead(data, scoringWeights).band;
+      if (!facets.score.includes(band)) return false;
+    }
     return true;
   };
   const visibleDispatches = localDispatches.filter(
