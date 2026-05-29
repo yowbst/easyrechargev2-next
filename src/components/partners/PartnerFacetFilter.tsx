@@ -9,7 +9,6 @@ import {
   CircleCheck,
   CircleDashed,
   CircleX,
-  Star,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -48,19 +47,20 @@ const APPROVAL_ICONS: Record<string, LucideIcon> = {
   no: CircleX,
 };
 
-const SCORE_ICONS: Record<string, { Icon: LucideIcon; tone: string }> = {
-  hot: { Icon: Star, tone: EMERALD },
-  warm: { Icon: Star, tone: AMBER },
-  cold: { Icon: Star, tone: BLUE },
+const SCORE_TONES: Record<string, string> = {
+  hot: EMERALD,
+  warm: AMBER,
+  cold: BLUE,
 };
 
 // Icons mirror the lead card; only the score band carries a colour now —
 // other attributes (ownership, deadline, authorization) stay neutral so the
-// score is the single visual signal of lead quality.
+// score is the single visual signal of lead quality. The score group skips
+// the leading icon because the value itself is already star glyphs.
 function iconFor(
   group: FacetGroup,
   value: string,
-): { Icon: LucideIcon; tone: string } | null {
+): { Icon?: LucideIcon; tone: string } | null {
   if (group === "housing") {
     if (!(value in HOUSING_ICONS)) return null;
     return { Icon: HOUSING_ICONS[value], tone: MUTED };
@@ -69,7 +69,7 @@ function iconFor(
     return { Icon: CalendarClock, tone: MUTED };
   }
   if (group === "score") {
-    return value in SCORE_ICONS ? SCORE_ICONS[value] : null;
+    return value in SCORE_TONES ? { tone: SCORE_TONES[value] } : null;
   }
   if (value in APPROVAL_ICONS) {
     return { Icon: APPROVAL_ICONS[value], tone: MUTED };
@@ -132,10 +132,9 @@ export function PartnerFacetFilter({
                       onChange={() => toggleFacet(group, value)}
                       className="shrink-0"
                     />
-                    {meta && (
+                    {meta?.Icon && (
                       <meta.Icon
                         className={`h-3.5 w-3.5 shrink-0 ${meta.tone}`}
-                        fill={group === "score" ? "currentColor" : "none"}
                         aria-hidden
                       />
                     )}
