@@ -219,16 +219,14 @@ export function LeadCard({
       ? scoreLead(submissionData, scoringWeights)
       : null;
 
-  // Left accent bar: green (won) / red (lost) outcome takes precedence over the
-  // amber rotting nudge. Won/Lost can't rot, so these never collide in practice.
+  // Left accent bar marks terminal outcomes only. Rotting is a soft nudge —
+  // signalled by the small hourglass icon in the header, nothing more.
   const accentBar =
     dispatch.stage === "won"
       ? "bg-emerald-500"
       : dispatch.stage === "lost"
         ? "bg-rose-500"
-        : isRotten
-          ? "bg-amber-500"
-          : null;
+        : null;
 
   return (
     <article
@@ -293,13 +291,7 @@ export function LeadCard({
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <span
-                      className={`shrink-0 text-xs font-normal ${
-                        isRotten
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-muted-foreground"
-                      }`}
-                    />
+                    <span className="shrink-0 text-xs font-normal text-muted-foreground" />
                   }
                 >
                   · {short}
