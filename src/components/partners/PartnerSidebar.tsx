@@ -9,6 +9,8 @@ import {
   Archive,
   BarChart3,
   LayoutDashboard,
+  Receipt,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -19,6 +21,7 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -164,6 +167,33 @@ export function PartnerSidebar({
                     })}
                   </SidebarMenuSub>
                 )}
+              </SidebarMenuItem>
+
+              {/* Coming soon — billing + settings, disabled with a "Bientôt" badge. */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  disabled
+                  aria-disabled
+                  tooltip={t("sidebar.nav.billing")}
+                  className="font-medium"
+                >
+                  <Receipt className="h-4 w-4" />
+                  <span>{t("sidebar.nav.billing")}</span>
+                </SidebarMenuButton>
+                <SidebarMenuBadge>{t("sidebar.nav.soon")}</SidebarMenuBadge>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  disabled
+                  aria-disabled
+                  tooltip={t("sidebar.nav.settings")}
+                  className="font-medium"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>{t("sidebar.nav.settings")}</span>
+                </SidebarMenuButton>
+                <SidebarMenuBadge>{t("sidebar.nav.soon")}</SidebarMenuBadge>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
