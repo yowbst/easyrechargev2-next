@@ -148,7 +148,7 @@ export function PartnerSidebar({
           </div>
           <div className="flex items-center gap-1">
             <PartnerFacetFilter options={facetOptions} dictionary={dictionary} />
-            <PartnerSortControl dictionary={dictionary} />
+            {activeNav === "crm" && <PartnerSortControl dictionary={dictionary} />}
             <PartnerDateFilter dictionary={dictionary} />
             <PartnerLanguageSwitcher lang={lang} />
             <ThemeToggle />

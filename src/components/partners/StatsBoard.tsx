@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Line, LineChart, ResponsiveContainer } from "recharts";
+import { Inbox, TrendingUp, Star, CircleX, Ban } from "lucide-react";
 import {
   monthlyVolume,
   avgScoreByMonth,
@@ -91,12 +92,14 @@ export function StatsBoard({
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <KpiTile
+          Icon={Inbox}
           label={t("stats.kpi.leads")}
           value={String(data.kpis.leads)}
           delta={data.kpis.leadsDelta}
           deltaLabel={t("stats.kpi.delta")}
         />
         <KpiTile
+          Icon={TrendingUp}
           label={t("stats.kpi.conversion")}
           value={
             data.kpis.conversionPct === null ? "—" : `${data.kpis.conversionPct}%`
@@ -106,6 +109,7 @@ export function StatsBoard({
           }
         />
         <KpiTile
+          Icon={Star}
           label={t("stats.kpi.avg_quality")}
           value={data.kpis.avgScore === null ? "—" : String(data.kpis.avgScore)}
           sparkline={
@@ -118,7 +122,7 @@ export function StatsBoard({
                 <Line
                   type="monotone"
                   dataKey="v"
-                  stroke="hsl(var(--primary))"
+                  stroke="var(--primary)"
                   strokeWidth={1.5}
                   dot={false}
                 />
@@ -134,16 +138,20 @@ export function StatsBoard({
 
       <div className="grid gap-4 md:grid-cols-2">
         <ReasonsBreakdownCard
+          Icon={CircleX}
           title={t("stats.reasons.lost")}
           rows={data.lost}
           labelNs="lost_reasons"
           dictionary={dictionary}
+          fill="rgb(225 29 72)"
         />
         <ReasonsBreakdownCard
+          Icon={Ban}
           title={t("stats.reasons.disq")}
           rows={data.disq}
           labelNs="reasons"
           dictionary={dictionary}
+          fill="rgb(217 119 6)"
         />
       </div>
     </div>

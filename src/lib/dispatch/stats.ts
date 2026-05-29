@@ -3,6 +3,7 @@ import {
   scoreLead,
   type ScoringFactorKey,
 } from "@/lib/dispatch/scoring";
+import { STAGE_RANK, type DispatchStage } from "@/lib/dispatch/types";
 
 export type ScoringWeights = Record<ScoringFactorKey, number>;
 
@@ -123,27 +124,41 @@ export interface FunnelRow {
   oldestDays: number | null;
 }
 
+/**
+ * Cumulative funnel: a lead counts at every stage it has reached. A lead
+ * currently at "appointment" contributed to "new" and "contacted" as well.
+ * Disqualified leads count up to the stage they were disqualified at. Won/
+ * lost leads (rank 4) count for every funnel stage since they passed through.
+ *
+ * `oldestDays` keeps its operational meaning — the oldest lead *currently
+ * sitting at exactly that stage* (open only) — so partners can still spot
+ * which stage is stalling.
+ */
 export function pipelineStats(
   cards: PartnerDispatchCard[],
   inRange: (iso: string) => boolean,
   stages: string[],
   now: Date = new Date(),
 ): FunnelRow[] {
-  return stages.map((s) => {
+  return stages.map((stageName) => {
+    const stageRank = STAGE_RANK[stageName as DispatchStage];
     let count = 0;
     let oldestDays: number | null = null;
     for (const c of cards) {
-      if (c.disqualified) continue;
-      if (c.stage !== s) continue;
       if (!inRange(c.dispatched_at)) continue;
+      const cardRank = STAGE_RANK[c.stage as DispatchStage];
+      if (typeof cardRank !== "number") continue;
+      if (cardRank < stageRank) continue;
       count += 1;
-      const enteredAt = c.stage_entered_at ?? c.dispatched_at;
-      const days = Math.floor(
-        (now.getTime() - new Date(enteredAt).getTime()) / 86_400_000,
-      );
-      if (oldestDays === null || days > oldestDays) oldestDays = days;
+      if (!c.disqualified && c.stage === stageName) {
+        const enteredAt = c.stage_entered_at ?? c.dispatched_at;
+        const days = Math.floor(
+          (now.getTime() - new Date(enteredAt).getTime()) / 86_400_000,
+        );
+        if (oldestDays === null || days > oldestDays) oldestDays = days;
+      }
     }
-    return { stage: s, count, oldestDays };
+    return { stage: stageName, count, oldestDays };
   });
 }
 

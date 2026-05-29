@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Minus } from "lucide-react";
+import { ArrowDown, ArrowUp, Minus, type LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export function KpiTile({
@@ -10,6 +10,7 @@ export function KpiTile({
   deltaLabel,
   fraction,
   sparkline,
+  Icon,
 }: {
   label: string;
   value: string;
@@ -17,6 +18,7 @@ export function KpiTile({
   deltaLabel?: string;
   fraction?: string;
   sparkline?: React.ReactNode;
+  Icon?: LucideIcon;
 }) {
   const arrow =
     typeof delta === "number"
@@ -35,7 +37,10 @@ export function KpiTile({
 
   return (
     <Card className="p-4">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+        <span>{label}</span>
+      </p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
       {(arrow || fraction) && (
         <div className="mt-1 flex items-center gap-2 text-xs">
