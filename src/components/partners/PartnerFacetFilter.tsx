@@ -9,9 +9,7 @@ import {
   CircleCheck,
   CircleDashed,
   CircleX,
-  Flame,
-  Thermometer,
-  Snowflake,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -51,9 +49,9 @@ const APPROVAL_ICONS: Record<string, LucideIcon> = {
 };
 
 const SCORE_ICONS: Record<string, { Icon: LucideIcon; tone: string }> = {
-  hot: { Icon: Flame, tone: EMERALD },
-  warm: { Icon: Thermometer, tone: AMBER },
-  cold: { Icon: Snowflake, tone: BLUE },
+  hot: { Icon: Star, tone: EMERALD },
+  warm: { Icon: Star, tone: AMBER },
+  cold: { Icon: Star, tone: BLUE },
 };
 
 // Icons mirror the lead card; only the score band carries a colour now —
@@ -137,6 +135,7 @@ export function PartnerFacetFilter({
                     {meta && (
                       <meta.Icon
                         className={`h-3.5 w-3.5 shrink-0 ${meta.tone}`}
+                        fill={group === "score" ? "currentColor" : "none"}
                         aria-hidden
                       />
                     )}

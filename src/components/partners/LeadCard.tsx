@@ -263,12 +263,12 @@ export function LeadCard({
                   <TooltipTrigger
                     render={
                       <span
-                        className={`shrink-0 self-center rounded px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${SCORE_BAND_CLASS[leadScore.band]}`}
+                        className={`shrink-0 self-center rounded px-1.5 py-0.5 text-xs leading-none ${SCORE_BAND_CLASS[leadScore.band]}`}
                         aria-label={t("score.label")}
                       />
                     }
                   >
-                    {leadScore.score}
+                    {t(`score.band.${leadScore.band}`)}
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="mb-1 font-medium">
