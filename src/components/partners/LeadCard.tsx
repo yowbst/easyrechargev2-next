@@ -233,9 +233,11 @@ export function LeadCard({
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
-      className={`group relative overflow-hidden rounded-md border bg-background p-2.5 text-sm shadow-sm transition-opacity ${
-        dispatch.disqualified || isClosed ? "opacity-60" : ""
-      } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`group relative overflow-hidden rounded-md border p-2.5 text-sm shadow-sm transition-opacity ${
+        isRotten ? "bg-amber-50 dark:bg-amber-950/30" : "bg-background"
+      } ${dispatch.disqualified || isClosed ? "opacity-60" : ""} ${
+        draggable ? "cursor-grab active:cursor-grabbing" : ""
+      }`}
     >
       {accentBar && (
         <span
