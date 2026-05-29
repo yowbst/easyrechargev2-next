@@ -10,10 +10,14 @@ import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 import { StatsBoard } from "@/components/partners/StatsBoard";
 import { StatsTabs } from "@/components/partners/stats/StatsTabs";
 import { makePartnerT } from "@/lib/partner-i18n";
+import { LayoutDashboard, type LucideIcon } from "lucide-react";
 
 const STATS_TABS = ["general"] as const;
 type StatsTabKey = (typeof STATS_TABS)[number];
 const DEFAULT_TAB: StatsTabKey = "general";
+const TAB_ICONS: Record<StatsTabKey, LucideIcon> = {
+  general: LayoutDashboard,
+};
 
 export const metadata: Metadata = {
   title: "Statistiques — Espace partenaire",
@@ -91,6 +95,7 @@ export default async function PartnerStatsPage({
   const tabs = STATS_TABS.map((key) => ({
     key,
     label: t(`stats.tabs.${key}`),
+    Icon: TAB_ICONS[key],
   }));
 
   return (

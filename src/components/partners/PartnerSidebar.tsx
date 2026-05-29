@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Users, LifeBuoy, CircleDashed, Ban, Archive, BarChart3 } from "lucide-react";
+import {
+  Users,
+  LifeBuoy,
+  CircleDashed,
+  Ban,
+  Archive,
+  BarChart3,
+  LayoutDashboard,
+  type LucideIcon,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +41,7 @@ type Lang = "fr" | "de";
 export interface StatsTabAnchor {
   key: string;
   label: string;
+  Icon?: LucideIcon;
 }
 
 export function PartnerSidebar({
@@ -144,6 +154,9 @@ export function PartnerSidebar({
                             isActive={activeStatsTab === tab.key}
                             render={<Link href={href} prefetch={false} />}
                           >
+                            {tab.Icon && (
+                              <tab.Icon className="h-3.5 w-3.5 shrink-0" />
+                            )}
                             <span>{tab.label}</span>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
