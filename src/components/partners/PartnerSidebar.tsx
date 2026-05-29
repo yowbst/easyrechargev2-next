@@ -44,8 +44,14 @@ type Lang = "fr" | "de";
 export interface StatsTabAnchor {
   key: string;
   label: string;
-  Icon?: LucideIcon;
 }
+
+// Tab key → icon is resolved client-side; we can't pass LucideIcon refs as
+// props from the server page (Next.js rejects non-plain objects across the
+// server/client boundary).
+const STATS_TAB_ICONS: Record<string, LucideIcon> = {
+  general: LayoutDashboard,
+};
 
 export function PartnerSidebar({
   partnerName,
@@ -157,9 +163,12 @@ export function PartnerSidebar({
                             isActive={activeStatsTab === tab.key}
                             render={<Link href={href} prefetch={false} />}
                           >
-                            {tab.Icon && (
-                              <tab.Icon className="h-3.5 w-3.5 shrink-0" />
-                            )}
+                            {(() => {
+                              const TabIcon = STATS_TAB_ICONS[tab.key];
+                              return TabIcon ? (
+                                <TabIcon className="h-3.5 w-3.5 shrink-0" />
+                              ) : null;
+                            })()}
                             <span>{tab.label}</span>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
