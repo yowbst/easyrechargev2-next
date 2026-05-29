@@ -8,6 +8,12 @@ import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 import { StatsBoard } from "@/components/partners/StatsBoard";
+import { StatsTabs } from "@/components/partners/stats/StatsTabs";
+import { makePartnerT } from "@/lib/partner-i18n";
+
+const STATS_TABS = ["general"] as const;
+type StatsTabKey = (typeof STATS_TABS)[number];
+const DEFAULT_TAB: StatsTabKey = "general";
 
 export const metadata: Metadata = {
   title: "Statistiques — Espace partenaire",
@@ -46,14 +52,18 @@ export default async function PartnerStatsPage({
   searchParams,
 }: {
   params: Promise<{ uuid: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; tab?: string }>;
 }) {
   const { uuid } = await params;
-  const { lang: langParam } = await searchParams;
+  const { lang: langParam, tab: tabParam } = await searchParams;
   const lang: Lang =
     langParam && (SUPPORTED_LANGS as readonly string[]).includes(langParam)
       ? (langParam as Lang)
       : "fr";
+  const tab: StatsTabKey =
+    tabParam && (STATS_TABS as readonly string[]).includes(tabParam)
+      ? (tabParam as StatsTabKey)
+      : DEFAULT_TAB;
 
   const partner = await findPartnerByToken(uuid);
   if (!partner) notFound();
@@ -77,6 +87,12 @@ export default async function PartnerStatsPage({
   // but the sidebar prop is required → pass empty arrays.
   const facetOptions = { housing: [], deadline: [], approval: [], score: [] };
 
+  const t = makePartnerT(dictionary);
+  const tabs = STATS_TABS.map((key) => ({
+    key,
+    label: t(`stats.tabs.${key}`),
+  }));
+
   return (
     <PartnerSidebar
       partnerToken={uuid}
@@ -88,11 +104,16 @@ export default async function PartnerStatsPage({
       dictionary={dictionary}
       facetOptions={facetOptions}
     >
-      <StatsBoard
-        dispatches={dispatches}
-        scoringWeights={scoringWeights}
-        dictionary={dictionary}
-      />
+      <div className="space-y-4">
+        <StatsTabs active={tab} defaultKey={DEFAULT_TAB} tabs={tabs} />
+        {tab === "general" && (
+          <StatsBoard
+            dispatches={dispatches}
+            scoringWeights={scoringWeights}
+            dictionary={dictionary}
+          />
+        )}
+      </div>
     </PartnerSidebar>
   );
 }
