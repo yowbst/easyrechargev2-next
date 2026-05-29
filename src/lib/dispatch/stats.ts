@@ -65,14 +65,22 @@ export interface MonthlyBucket {
   current: boolean;
 }
 
+/**
+ * Build the monthly volume series. The window scales to the partner's
+ * actual history: leading empty months are trimmed off, but at least
+ * `minVisible` (default 3) trailing months are always shown so the chart
+ * doesn't degenerate to a single bar for a brand-new partner.
+ */
 export function monthlyVolume(
   cards: PartnerDispatchCard[],
   now: Date = new Date(),
+  monthsBack = 12,
+  minVisible = 3,
 ): MonthlyBucket[] {
   const series: MonthlyBucket[] = [];
   const counts: Record<string, number> = {};
   const nowKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  for (let i = 11; i >= 0; i--) {
+  for (let i = monthsBack - 1; i >= 0; i--) {
     const dd = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${dd.getFullYear()}-${String(dd.getMonth() + 1).padStart(2, "0")}`;
     const label = dd.toLocaleDateString("fr-CH", { month: "short" });
@@ -85,7 +93,11 @@ export function monthlyVolume(
     if (key in counts) counts[key] += 1;
   }
   for (const s of series) s.count = counts[s.key];
-  return series;
+  // Trim leading zero months, keeping at least `minVisible` trailing.
+  let firstNonEmpty = series.findIndex((b) => b.count > 0);
+  if (firstNonEmpty === -1) firstNonEmpty = monthsBack;
+  const start = Math.max(0, Math.min(firstNonEmpty, monthsBack - minVisible));
+  return series.slice(start);
 }
 
 export function avgScoreByMonth(
