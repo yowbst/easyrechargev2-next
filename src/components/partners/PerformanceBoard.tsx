@@ -91,7 +91,7 @@ export function PerformanceBoard({
     const overall = overallConversionRate(
       dispatches,
       inRange,
-      lookbackDaysByStage?.won ?? 45,
+      lookbackDaysByStage?.won ?? 30,
     );
     const stageCosts = costPerStage(funnel, investment);
     const cacRows = CAC_STAGES.map((s) => pickStageCost(stageCosts, s)).filter(

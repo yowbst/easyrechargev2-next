@@ -119,7 +119,7 @@ const PARTNER_STATS_DEFAULTS: PartnerStatsConfig = {
     contacted: 3,
     appointment: 10,
     quote_sent: 21,
-    won: 45,
+    won: 30,
   },
 };
 
