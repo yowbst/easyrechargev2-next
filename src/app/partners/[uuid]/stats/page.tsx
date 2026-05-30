@@ -130,6 +130,7 @@ export default async function PartnerStatsPage({
             dispatches={dispatches}
             scoringWeights={scoringWeights}
             dictionary={dictionary}
+            lookbackDaysByStage={statsConfig.lookback_days_by_stage}
           />
         )}
         {tab === "performance" && (

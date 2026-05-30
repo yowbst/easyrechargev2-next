@@ -6,6 +6,7 @@ import { Inbox, TrendingUp, Star, CircleX, Ban } from "lucide-react";
 import {
   monthlyVolume,
   avgScoreByMonth,
+  overallConversionRate,
   pipelineStats,
   summarize,
   topReasons,
@@ -62,10 +63,12 @@ export function StatsBoard({
   dispatches,
   scoringWeights,
   dictionary,
+  lookbackDaysByStage,
 }: {
   dispatches: PartnerDispatchCard[];
   scoringWeights: ScoringWeights;
   dictionary: PartnerDict;
+  lookbackDaysByStage?: Record<string, number>;
 }) {
   const t = makePartnerT(dictionary);
   const { filter, inRange } = usePartnerFilter();
@@ -76,6 +79,13 @@ export function StatsBoard({
     const funnel = pipelineStats(dispatches, inRange, MAIN_STAGES);
     const monthly = monthlyVolume(dispatches);
     const sparkline = avgScoreByMonth(dispatches, scoringWeights, 6);
+    // Conversion = end-to-end (new → won), maturity-gated by the "won"
+    // lookback. Same metric as the Performance tab so the two views agree.
+    const overall = overallConversionRate(
+      dispatches,
+      inRange,
+      lookbackDaysByStage?.won ?? 30,
+    );
     const lost = topReasons(
       dispatches,
       "lost_reason",
@@ -86,8 +96,8 @@ export function StatsBoard({
       "disqualification_reason",
       (c) => c.disqualified && !!c.disqualification_reason,
     );
-    return { kpis, funnel, monthly, sparkline, lost, disq };
-  }, [dispatches, scoringWeights, inRange, filter]);
+    return { kpis, funnel, monthly, sparkline, overall, lost, disq };
+  }, [dispatches, scoringWeights, inRange, filter, lookbackDaysByStage]);
 
   return (
     <div className="space-y-4">
@@ -102,11 +112,11 @@ export function StatsBoard({
         <KpiTile
           Icon={TrendingUp}
           label={t("stats.kpi.conversion")}
-          value={
-            data.kpis.conversionPct === null ? "—" : `${data.kpis.conversionPct}%`
-          }
+          value={data.overall.rate === null ? "—" : `${data.overall.rate}%`}
           fraction={
-            data.kpis.closed > 0 ? `${data.kpis.won} / ${data.kpis.closed}` : undefined
+            data.overall.total > 0
+              ? `${data.overall.won} / ${data.overall.total}`
+              : undefined
           }
         />
         <KpiTile
