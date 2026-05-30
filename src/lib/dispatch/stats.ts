@@ -265,16 +265,20 @@ export function transitionRates(
   cards: PartnerDispatchCard[],
   inRange: (iso: string) => boolean,
   stages: string[],
-  lookbackDaysByStage: Record<string, number>,
+  lookbackDaysByStage: Record<string, number> | undefined,
   now: Date = new Date(),
 ): TransitionRow[] {
+  // Defensive default: callers may not have loaded the config yet (or the
+  // catch-path in fetchPartnerStatsConfig produced an empty record). An
+  // undefined record means "no maturity gating".
+  const lookbacks = lookbackDaysByStage ?? {};
   const out: TransitionRow[] = [];
   for (let i = 1; i < stages.length; i++) {
     const fromStage = stages[i - 1];
     const toStage = stages[i];
     const fromRank = STAGE_RANK[fromStage as DispatchStage];
     const toRank = STAGE_RANK[toStage as DispatchStage];
-    const lookbackDays = lookbackDaysByStage[toStage] ?? 0;
+    const lookbackDays = lookbacks[toStage] ?? 0;
     const cutoffMs = lookbackDays * 86_400_000;
     const isWonStep = toStage === "won";
     let denom = 0;
