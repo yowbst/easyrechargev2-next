@@ -248,6 +248,14 @@ export function PartnerSidebar({
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+          {/* Mobile-only: language switcher + theme toggle live in the
+              sidebar drawer to free the top bar for filters. Desktop keeps
+              them in the header (see SidebarInset below). Also hidden when
+              the desktop sidebar is icon-collapsed. */}
+          <div className="flex items-center gap-2 px-2 pb-1 md:hidden group-data-[collapsible=icon]:hidden">
+            <PartnerLanguageSwitcher lang={lang} />
+            <ThemeToggle />
+          </div>
         </SidebarFooter>
       </Sidebar>
 
@@ -260,12 +268,16 @@ export function PartnerSidebar({
               {leadCount} {t(leadCount === 1 ? "header.lead" : "header.leads")}
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1">
             <PartnerFacetFilter options={facetOptions} dictionary={dictionary} />
             {activeNav === "leads" && <PartnerSortControl dictionary={dictionary} />}
             <PartnerDateFilter dictionary={dictionary} />
-            <PartnerLanguageSwitcher lang={lang} />
-            <ThemeToggle />
+            {/* Lang + theme are mobile-only in the sidebar drawer; show
+                here only from md upwards. */}
+            <div className="hidden items-center gap-1 md:flex">
+              <PartnerLanguageSwitcher lang={lang} />
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <div className="p-4 md:p-6">{children}</div>
