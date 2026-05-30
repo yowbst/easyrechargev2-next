@@ -4,6 +4,7 @@ import { findPartnerByToken } from "@/lib/partner-auth";
 import {
   fetchPartnerDispatches,
   fetchPartnerStatsConfig,
+  fetchPartnerStatsPage,
 } from "@/lib/dispatch/partner-dashboard-queries";
 import { resolveWeights } from "@/lib/dispatch/scoring";
 import { fetchPage } from "@/lib/directus-queries";
@@ -76,7 +77,10 @@ export default async function PartnerStatsPage({
   const [dispatches, crmPage, statsPage, statsConfig] = await Promise.all([
     fetchPartnerDispatches(partner.id),
     fetchPage("partner-crm", locale),
-    fetchPage("partner-stats", locale),
+    // Dedicated fetcher (60s ISR) so stats translations propagate fast — the
+    // default fetchPage caches public pages for 3600s, which can serve a
+    // pre-population empty payload for up to an hour after we seed content.
+    fetchPartnerStatsPage(locale),
     fetchPartnerStatsConfig(),
   ]);
   // Partner-section i18n is split across two Directus pages: partner-crm owns

@@ -127,6 +127,30 @@ const PARTNER_STATS_DEFAULTS: PartnerStatsConfig = {
  * defaults-merge pattern as the CRM config — falls back to sensible defaults
  * if the page or keys are absent.
  */
+/**
+ * Fetch the partner-stats page (translations only — no blocks). Uses a
+ * 60-second ISR window so dictionary edits on the Directus side propagate
+ * within a minute, sidestepping the heavier 3600s cache that `fetchPage`
+ * applies to public CMS pages.
+ */
+export async function fetchPartnerStatsPage(locale: string) {
+  try {
+    const params = new URLSearchParams();
+    params.set("fields", "*,translations.*");
+    params.set("filter[route_id][_eq]", "partner-stats");
+    params.set("deep[translations][_filter][languages_code][_eq]", locale);
+    params.set("limit", "1");
+    const res = await directusFetch<{
+      data: Array<Record<string, unknown>> | null;
+    }>(`/items/pages?${params}`, {
+      next: { revalidate: 60, tags: ["page-partner-stats"] },
+    });
+    return res?.data?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPartnerStatsConfig(): Promise<PartnerStatsConfig> {
   try {
     const res = await directusFetch<{
