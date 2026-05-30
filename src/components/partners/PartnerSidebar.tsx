@@ -9,6 +9,7 @@ import {
   Archive,
   BarChart3,
   LayoutDashboard,
+  Activity,
   Receipt,
   Settings,
   type LucideIcon,
@@ -51,6 +52,7 @@ export interface StatsTabAnchor {
 // server/client boundary).
 const STATS_TAB_ICONS: Record<string, LucideIcon> = {
   general: LayoutDashboard,
+  performance: Activity,
 };
 
 export function PartnerSidebar({

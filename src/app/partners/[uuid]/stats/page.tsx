@@ -8,10 +8,11 @@ import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 import { StatsBoard } from "@/components/partners/StatsBoard";
+import { PerformanceBoard } from "@/components/partners/PerformanceBoard";
 import { StatsTabs } from "@/components/partners/stats/StatsTabs";
 import { makePartnerT } from "@/lib/partner-i18n";
 
-const STATS_TABS = ["general"] as const;
+const STATS_TABS = ["general", "performance"] as const;
 type StatsTabKey = (typeof STATS_TABS)[number];
 const DEFAULT_TAB: StatsTabKey = "general";
 
@@ -111,6 +112,13 @@ export default async function PartnerStatsPage({
         <StatsTabs active={tab} defaultKey={DEFAULT_TAB} tabs={tabs} />
         {tab === "general" && (
           <StatsBoard
+            dispatches={dispatches}
+            scoringWeights={scoringWeights}
+            dictionary={dictionary}
+          />
+        )}
+        {tab === "performance" && (
+          <PerformanceBoard
             dispatches={dispatches}
             scoringWeights={scoringWeights}
             dictionary={dictionary}

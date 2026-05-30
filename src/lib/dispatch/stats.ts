@@ -212,3 +212,74 @@ export function topReasons(
     .sort((a, b) => b.count - a.count)
     .slice(0, n);
 }
+
+/**
+ * Total CHF spent on dispatched leads in the window. Gifts and missing
+ * price_chf rows are skipped (no money in those).
+ */
+export function investmentSum(
+  cards: PartnerDispatchCard[],
+  inRange: (iso: string) => boolean,
+): number {
+  let total = 0;
+  for (const c of cards) {
+    if (!inRange(c.dispatched_at)) continue;
+    if (c.gift) continue;
+    if (typeof c.price_chf !== "number") continue;
+    total += c.price_chf;
+  }
+  return total;
+}
+
+export interface TransitionRow {
+  from: string;
+  to: string;
+  fromCount: number;
+  toCount: number;
+  /** toCount / fromCount, percent (0..100). null when fromCount === 0. */
+  rate: number | null;
+}
+
+/**
+ * Stage-to-stage transition rates derived from the cumulative funnel rows.
+ * Each row is the share of the previous stage that progressed to the next.
+ */
+export function transitionRates(funnel: FunnelRow[]): TransitionRow[] {
+  const out: TransitionRow[] = [];
+  for (let i = 1; i < funnel.length; i++) {
+    const from = funnel[i - 1];
+    const to = funnel[i];
+    const rate =
+      from.count > 0 ? Math.round((100 * to.count) / from.count) : null;
+    out.push({
+      from: from.stage,
+      to: to.stage,
+      fromCount: from.count,
+      toCount: to.count,
+      rate,
+    });
+  }
+  return out;
+}
+
+export interface StageCostRow {
+  stage: string;
+  count: number;
+  /** investment / count. null when count === 0. */
+  costPer: number | null;
+}
+
+/**
+ * Cost-per-reaching for each funnel stage. Stages with zero leads return
+ * null so the UI can show "—" without dividing by zero.
+ */
+export function costPerStage(
+  funnel: FunnelRow[],
+  investment: number,
+): StageCostRow[] {
+  return funnel.map((row) => ({
+    stage: row.stage,
+    count: row.count,
+    costPer: row.count > 0 ? Math.round(investment / row.count) : null,
+  }));
+}

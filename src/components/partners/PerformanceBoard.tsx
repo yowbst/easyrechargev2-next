@@ -1,0 +1,256 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRight,
+  Banknote,
+  CalendarCheck,
+  FileText,
+  Trophy,
+  Wallet,
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import {
+  costPerStage,
+  investmentSum,
+  pipelineStats,
+  transitionRates,
+  type ScoringWeights,
+  type StageCostRow,
+  type TransitionRow,
+} from "@/lib/dispatch/stats";
+import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
+import { usePartnerFilter } from "./PartnerFilterContext";
+import { makePartnerT, type PartnerDict, type PartnerT } from "@/lib/partner-i18n";
+import { KpiTile } from "./stats/KpiTile";
+
+const MAIN_STAGES = ["new", "contacted", "appointment", "quote_sent", "won"];
+
+const CHF = new Intl.NumberFormat("fr-CH", {
+  style: "currency",
+  currency: "CHF",
+  maximumFractionDigits: 0,
+});
+
+function fmtChf(n: number | null): string {
+  return n === null ? "—" : CHF.format(n);
+}
+
+function pct(n: number | null): string {
+  return n === null ? "—" : `${n}%`;
+}
+
+/**
+ * Subset of stage cost rows we surface on this page — the stages where the
+ * cost-per-prospect signal is most actionable for the partner.
+ */
+function pickStageCost(rows: StageCostRow[], stage: string): StageCostRow | null {
+  return rows.find((r) => r.stage === stage) ?? null;
+}
+
+const CAC_STAGES = ["appointment", "quote_sent", "won"];
+
+const STAGE_ICON: Record<string, typeof CalendarCheck> = {
+  appointment: CalendarCheck,
+  quote_sent: FileText,
+  won: Trophy,
+};
+
+export function PerformanceBoard({
+  dispatches,
+  scoringWeights: _scoringWeights, // kept in the signature for symmetry with StatsBoard
+  dictionary,
+}: {
+  dispatches: PartnerDispatchCard[];
+  scoringWeights: ScoringWeights;
+  dictionary: PartnerDict;
+}) {
+  // Underscore satisfies the unused-param lint while keeping the prop name
+  // identical to StatsBoard so a future scoring-aware metric stays simple.
+  void _scoringWeights;
+  const t = makePartnerT(dictionary);
+  const { inRange } = usePartnerFilter();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const data = useMemo(() => {
+    const investment = investmentSum(dispatches, inRange);
+    const funnel = pipelineStats(dispatches, inRange, MAIN_STAGES);
+    const transitions = transitionRates(funnel);
+    const stageCosts = costPerStage(funnel, investment);
+    const cacRows = CAC_STAGES.map((s) => pickStageCost(stageCosts, s)).filter(
+      (r): r is StageCostRow => r !== null,
+    );
+    const won = funnel.find((f) => f.stage === "won")?.count ?? 0;
+    const appt = funnel.find((f) => f.stage === "appointment")?.count ?? 0;
+    const quote = funnel.find((f) => f.stage === "quote_sent")?.count ?? 0;
+    return {
+      investment,
+      cac: won > 0 ? Math.round(investment / won) : null,
+      costPerAppt: appt > 0 ? Math.round(investment / appt) : null,
+      costPerQuote: quote > 0 ? Math.round(investment / quote) : null,
+      transitions,
+      cacRows,
+    };
+  }, [dispatches, inRange]);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiTile
+          Icon={Wallet}
+          label={t("stats.performance.investment")}
+          value={fmtChf(data.investment)}
+        />
+        <KpiTile
+          Icon={Trophy}
+          label={t("stats.performance.cac")}
+          value={fmtChf(data.cac)}
+        />
+        <KpiTile
+          Icon={CalendarCheck}
+          label={t("stats.performance.cost_per_appt")}
+          value={fmtChf(data.costPerAppt)}
+        />
+        <KpiTile
+          Icon={FileText}
+          label={t("stats.performance.cost_per_quote")}
+          value={fmtChf(data.costPerQuote)}
+        />
+      </div>
+
+      <ConversionCascade
+        transitions={data.transitions}
+        mounted={mounted}
+        t={t}
+      />
+
+      <CacPerStage rows={data.cacRows} mounted={mounted} t={t} />
+    </div>
+  );
+}
+
+function ConversionCascade({
+  transitions,
+  mounted,
+  t,
+}: {
+  transitions: TransitionRow[];
+  mounted: boolean;
+  t: PartnerT;
+}) {
+  const empty = transitions.every((r) => r.fromCount === 0);
+  return (
+    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
+      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
+        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        <span>{t("stats.performance.cascade")}</span>
+      </h3>
+      {empty ? (
+        <p className="py-6 text-center text-xs text-muted-foreground">
+          {t("stats.empty")}
+        </p>
+      ) : (
+        <ul className="divide-y divide-dotted divide-border">
+          {transitions.map((r) => {
+            const width = r.rate ?? 0;
+            return (
+              <li
+                key={`${r.from}-${r.to}`}
+                className="grid grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
+              >
+                <div className="flex min-w-0 items-center gap-1.5 text-xs">
+                  <span className="truncate font-medium text-foreground">
+                    {t(`stages.${r.from}`)}
+                  </span>
+                  <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  <span className="truncate font-medium text-foreground">
+                    {t(`stages.${r.to}`)}
+                  </span>
+                </div>
+                <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+                    style={{ width: mounted ? `${width}%` : "0%" }}
+                  />
+                </div>
+                <span className="w-20 text-right text-xs font-semibold tabular-nums">
+                  {pct(r.rate)}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    ({r.toCount}/{r.fromCount})
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+function CacPerStage({
+  rows,
+  mounted,
+  t,
+}: {
+  rows: StageCostRow[];
+  mounted: boolean;
+  t: PartnerT;
+}) {
+  const max = rows.reduce(
+    (m, r) => (r.costPer !== null && r.costPer > m ? r.costPer : m),
+    0,
+  );
+  const empty = max === 0;
+  return (
+    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
+      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
+        <Banknote className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        <span>{t("stats.performance.cac_per_stage")}</span>
+      </h3>
+      {empty ? (
+        <p className="py-6 text-center text-xs text-muted-foreground">
+          {t("stats.empty")}
+        </p>
+      ) : (
+        <ul className="space-y-2.5">
+          {rows.map((r) => {
+            const Icon = STAGE_ICON[r.stage];
+            const width =
+              r.costPer !== null && max > 0 ? (r.costPer / max) * 100 : 0;
+            return (
+              <li
+                key={r.stage}
+                className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)_auto] items-center gap-3 text-xs"
+              >
+                <span className="flex min-w-0 items-center gap-1.5">
+                  {Icon && (
+                    <Icon
+                      className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
+                  )}
+                  <span className="truncate font-medium">
+                    {t(`stages.${r.stage}`)}
+                  </span>
+                </span>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+                    style={{ width: mounted ? `${width}%` : "0%" }}
+                  />
+                </div>
+                <span className="w-24 text-right font-semibold tabular-nums">
+                  {fmtChf(r.costPer)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
+  );
+}

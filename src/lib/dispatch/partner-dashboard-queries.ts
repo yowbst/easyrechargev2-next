@@ -16,6 +16,8 @@ export interface PartnerDispatchCard {
   gift: boolean;
   billable: boolean;
   billable_locked_at: string | null;
+  /** CHF price snapshotted at dispatch time. null for gifts. */
+  price_chf: number | null;
   canton: string;
   product: string | null;
   lead_category: string | null;
@@ -47,6 +49,7 @@ const CARD_FIELDS = [
   "gift",
   "billable",
   "billable_locked_at",
+  "price_chf",
   "canton",
   "product",
   "lead_category",
