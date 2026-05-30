@@ -1,17 +1,12 @@
 "use client";
 
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { PostHogProvider } from "./PostHogProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider>
       <PostHogProvider>{children}</PostHogProvider>
-    </NextThemesProvider>
+    </ThemeProvider>
   );
 }
