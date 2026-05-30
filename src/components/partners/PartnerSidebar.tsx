@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -86,6 +87,22 @@ export function PartnerSidebar({
   children: React.ReactNode;
 }) {
   const t = makePartnerT(dictionary);
+
+  // Track the URL hash so the Leads sub-anchors can light up the right item.
+  // The leading "#" is normalised away. SSR starts empty → "En cours" reads
+  // as active by default (matches "Général" under Stats).
+  const [hash, setHash] = useState<string>("");
+  useEffect(() => {
+    const read = () => {
+      const h = window.location.hash;
+      setHash(h.startsWith("#") ? h.slice(1) : h);
+    };
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, []);
+  const leadsAnchor =
+    hash === "leads-disqualified" || hash === "leads-closed" ? hash : "open";
   return (
     <PartnerFilterProvider>
     <SidebarProvider defaultOpen>
@@ -122,19 +139,28 @@ export function PartnerSidebar({
                 {activeNav === "leads" && (
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton render={<a href="#leads-open" />}>
+                      <SidebarMenuSubButton
+                        isActive={leadsAnchor === "open"}
+                        render={<a href="#" />}
+                      >
                         <CircleDashed className="h-3.5 w-3.5 shrink-0" />
                         <span>{t("sidebar.nav.open")}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton render={<a href="#leads-disqualified" />}>
+                      <SidebarMenuSubButton
+                        isActive={leadsAnchor === "leads-disqualified"}
+                        render={<a href="#leads-disqualified" />}
+                      >
                         <Ban className="h-3.5 w-3.5 shrink-0" />
                         <span>{t("sidebar.nav.disqualified")}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton render={<a href="#leads-closed" />}>
+                      <SidebarMenuSubButton
+                        isActive={leadsAnchor === "leads-closed"}
+                        render={<a href="#leads-closed" />}
+                      >
                         <Archive className="h-3.5 w-3.5 shrink-0" />
                         <span>{t("sidebar.nav.closed")}</span>
                       </SidebarMenuSubButton>

@@ -447,7 +447,7 @@ export function Kanban({
         {/* Active pipeline. Mobile: horizontal scroll-snap so the partner
             can swipe between stage columns. Desktop: 4-column grid. */}
         <div
-          id="leads-open"
+          // No id — "En cours" in the sidebar links to the top of the page.
           className="-mx-4 flex snap-x snap-mandatory scroll-mt-16 gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 lg:grid-cols-4"
         >
           {MAIN_STAGES.map((stage) => {
