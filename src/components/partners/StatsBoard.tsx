@@ -13,6 +13,7 @@ import {
   type ScoringWeights,
 } from "@/lib/dispatch/stats";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
+import { matchesFacets } from "@/lib/partner-facets";
 import { usePartnerFilter, type DateFilter } from "./PartnerFilterContext";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { KpiTile } from "./stats/KpiTile";
@@ -71,33 +72,38 @@ export function StatsBoard({
   lookbackDaysByStage?: Record<string, number>;
 }) {
   const t = makePartnerT(dictionary);
-  const { filter, inRange } = usePartnerFilter();
+  const { filter, inRange, facets } = usePartnerFilter();
 
   const data = useMemo(() => {
+    // Facets apply to every metric the same way they apply on /leads —
+    // narrow the dispatch list once, then aggregate.
+    const filtered = dispatches.filter((d) =>
+      matchesFacets(d, facets, scoringWeights),
+    );
     const prev = previousRange(filter);
-    const kpis = summarize(dispatches, inRange, prev, scoringWeights);
-    const funnel = pipelineStats(dispatches, inRange, MAIN_STAGES);
-    const monthly = monthlyVolume(dispatches);
-    const sparkline = avgScoreByMonth(dispatches, scoringWeights, 6);
+    const kpis = summarize(filtered, inRange, prev, scoringWeights);
+    const funnel = pipelineStats(filtered, inRange, MAIN_STAGES);
+    const monthly = monthlyVolume(filtered);
+    const sparkline = avgScoreByMonth(filtered, scoringWeights, 6);
     // Conversion = end-to-end (new → won), maturity-gated by the "won"
     // lookback. Same metric as the Performance tab so the two views agree.
     const overall = overallConversionRate(
-      dispatches,
+      filtered,
       inRange,
       lookbackDaysByStage?.won ?? 30,
     );
     const lost = topReasons(
-      dispatches,
+      filtered,
       "lost_reason",
       (c) => c.stage === "lost" && !!c.lost_reason,
     );
     const disq = topReasons(
-      dispatches,
+      filtered,
       "disqualification_reason",
       (c) => c.disqualified && !!c.disqualification_reason,
     );
     return { kpis, funnel, monthly, sparkline, overall, lost, disq };
-  }, [dispatches, scoringWeights, inRange, filter, lookbackDaysByStage]);
+  }, [dispatches, scoringWeights, inRange, filter, facets, lookbackDaysByStage]);
 
   return (
     <div className="space-y-4">

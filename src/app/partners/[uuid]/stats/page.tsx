@@ -15,6 +15,7 @@ import { StatsBoard } from "@/components/partners/StatsBoard";
 import { PerformanceBoard } from "@/components/partners/PerformanceBoard";
 import { StatsTabs } from "@/components/partners/stats/StatsTabs";
 import { makePartnerT } from "@/lib/partner-i18n";
+import { collectFacetOptions } from "@/lib/partner-facets";
 
 const STATS_TABS = ["general", "performance"] as const;
 type StatsTabKey = (typeof STATS_TABS)[number];
@@ -99,9 +100,10 @@ export default async function PartnerStatsPage({
     lang,
   });
 
-  // Facet options aren't relevant on this page (no per-card filtering yet),
-  // but the sidebar prop is required → pass empty arrays.
-  const facetOptions = { housing: [], deadline: [], approval: [], score: [] };
+  // Facet options derived from the same dispatches the boards aggregate.
+  // The boards read `facets` from PartnerFilterContext and apply matchesFacets
+  // before computing — so the Filtres button works the same as on /leads.
+  const facetOptions = collectFacetOptions(dispatches, scoringWeights);
 
   const t = makePartnerT(dictionary);
   const tabs = STATS_TABS.map((key) => ({

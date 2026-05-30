@@ -29,6 +29,7 @@ import {
   scoreLead,
   type ScoringFactorKey,
 } from "@/lib/dispatch/scoring";
+import { matchesFacets } from "@/lib/partner-facets";
 
 type ScoringWeights = Record<ScoringFactorKey, number>;
 
@@ -152,32 +153,8 @@ export function Kanban({
 
   // Header filters (date window + attribute facets) apply across every
   // section. A facet group with no selection doesn't constrain.
-  const matchesFacets = (d: PartnerDispatchCard): boolean => {
-    const data = (d.submission?.data ?? {}) as Record<string, unknown>;
-    if (facets.housing.length > 0) {
-      const v =
-        typeof data.housingStatus === "string"
-          ? data.housingStatus.toLowerCase()
-          : null;
-      if (!v || !facets.housing.includes(v)) return false;
-    }
-    if (facets.deadline.length > 0) {
-      const v = typeof data.deadline === "string" ? data.deadline : null;
-      if (!v || !facets.deadline.includes(v)) return false;
-    }
-    if (facets.approval.length > 0) {
-      const v =
-        typeof data.approval === "string" ? data.approval.toLowerCase() : null;
-      if (!v || !facets.approval.includes(v)) return false;
-    }
-    if (facets.score.length > 0) {
-      const band = scoreLead(data, scoringWeights).band;
-      if (!facets.score.includes(band)) return false;
-    }
-    return true;
-  };
   const visibleDispatches = localDispatches.filter(
-    (d) => inRange(d.dispatched_at) && matchesFacets(d),
+    (d) => inRange(d.dispatched_at) && matchesFacets(d, facets, scoringWeights),
   );
 
   for (const d of visibleDispatches) {

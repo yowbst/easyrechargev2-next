@@ -307,6 +307,112 @@ export function transitionRates(
   return out;
 }
 
+const BANDS = ["hot", "warm", "cold"] as const;
+type Band = (typeof BANDS)[number];
+
+export interface TransitionByBand {
+  band: Band;
+  from: number;
+  to: number;
+  rate: number | null;
+}
+
+/** Per-band conversion rate for one transition, with the same maturity gate
+ *  as `transitionRates`. Each band tracks its own from/to counts. */
+export function transitionByBand(
+  cards: PartnerDispatchCard[],
+  inRange: (iso: string) => boolean,
+  fromStage: string,
+  toStage: string,
+  lookbackDays: number,
+  weights: ScoringWeights,
+  now: Date = new Date(),
+): TransitionByBand[] {
+  const fromRank = STAGE_RANK[fromStage as DispatchStage];
+  const toRank = STAGE_RANK[toStage as DispatchStage];
+  const isWonStep = toStage === "won";
+  const cutoffMs = lookbackDays * 86_400_000;
+  const buckets: Record<Band, { from: number; to: number }> = {
+    hot: { from: 0, to: 0 },
+    warm: { from: 0, to: 0 },
+    cold: { from: 0, to: 0 },
+  };
+  for (const c of cards) {
+    if (!inRange(c.dispatched_at)) continue;
+    const cardRank = STAGE_RANK[c.stage as DispatchStage];
+    if (typeof cardRank !== "number") continue;
+    const ageMs = now.getTime() - new Date(c.dispatched_at).getTime();
+    if (ageMs < cutoffMs) continue;
+    if (cardRank < fromRank) continue;
+    const band = scoreLead(c.submission?.data, weights).band;
+    buckets[band].from += 1;
+    const reachedTo = isWonStep ? c.stage === "won" : cardRank >= toRank;
+    if (reachedTo) buckets[band].to += 1;
+  }
+  return BANDS.map((band) => ({
+    band,
+    from: buckets[band].from,
+    to: buckets[band].to,
+    rate:
+      buckets[band].from > 0
+        ? Math.round((100 * buckets[band].to) / buckets[band].from)
+        : null,
+  }));
+}
+
+export interface StageCostByBand {
+  band: Band;
+  /** Number of leads in this band that reached the target stage. */
+  count: number;
+  /** Total CHF spent on non-gift leads in this band (within the window). */
+  investment: number;
+  /** investment / count. null when count === 0. */
+  costPer: number | null;
+}
+
+/** Per-band CAC for one cumulative stage. Investment is the band's total
+ *  non-gift spend; count is the band's reach to that stage. */
+export function stageCostByBand(
+  cards: PartnerDispatchCard[],
+  inRange: (iso: string) => boolean,
+  stage: string,
+  weights: ScoringWeights,
+): StageCostByBand[] {
+  const stageRank = STAGE_RANK[stage as DispatchStage];
+  const isWonStep = stage === "won";
+  const buckets: Record<Band, { count: number; investment: number }> = {
+    hot: { count: 0, investment: 0 },
+    warm: { count: 0, investment: 0 },
+    cold: { count: 0, investment: 0 },
+  };
+  for (const c of cards) {
+    if (!inRange(c.dispatched_at)) continue;
+    const band = scoreLead(c.submission?.data, weights).band;
+    if (!c.gift) {
+      const p =
+        typeof c.price_chf === "number"
+          ? c.price_chf
+          : typeof c.price_chf === "string"
+            ? Number(c.price_chf)
+            : NaN;
+      if (Number.isFinite(p)) buckets[band].investment += p;
+    }
+    const cardRank = STAGE_RANK[c.stage as DispatchStage];
+    if (typeof cardRank !== "number") continue;
+    const reached = isWonStep ? c.stage === "won" : cardRank >= stageRank;
+    if (reached) buckets[band].count += 1;
+  }
+  return BANDS.map((band) => ({
+    band,
+    count: buckets[band].count,
+    investment: buckets[band].investment,
+    costPer:
+      buckets[band].count > 0
+        ? Math.round(buckets[band].investment / buckets[band].count)
+        : null,
+  }));
+}
+
 export interface OverallConversion {
   won: number;
   total: number;
