@@ -16,8 +16,10 @@ export interface PartnerDispatchCard {
   gift: boolean;
   billable: boolean;
   billable_locked_at: string | null;
-  /** CHF price snapshotted at dispatch time. null for gifts. */
-  price_chf: number | null;
+  /** CHF price snapshotted at dispatch time. null for gifts. Directus
+   *  serialises decimals as strings (e.g. "40.00000") — consumers must
+   *  coerce. */
+  price_chf: number | string | null;
   canton: string;
   product: string | null;
   lead_category: string | null;

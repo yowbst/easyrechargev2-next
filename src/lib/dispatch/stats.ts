@@ -225,8 +225,15 @@ export function investmentSum(
   for (const c of cards) {
     if (!inRange(c.dispatched_at)) continue;
     if (c.gift) continue;
-    if (typeof c.price_chf !== "number") continue;
-    total += c.price_chf;
+    // Directus returns decimal columns as strings (e.g. "40.00000") — coerce.
+    const price =
+      typeof c.price_chf === "number"
+        ? c.price_chf
+        : typeof c.price_chf === "string"
+          ? Number(c.price_chf)
+          : NaN;
+    if (!Number.isFinite(price)) continue;
+    total += price;
   }
   return total;
 }
