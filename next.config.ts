@@ -22,9 +22,10 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     return [
-      // Partner CRM lives outside the [lang] layout (no public Header/Footer)
-      // but exposes a language-prefixed URL. The actual page is at
-      // src/app/partners/[uuid]/crm/page.tsx; we just pass lang as a query.
+      // Partner Leads view lives outside the [lang] layout (no public
+      // Header/Footer) but exposes a language-prefixed URL. The actual page
+      // is at src/app/partners/[uuid]/leads/page.tsx; we just pass lang as a
+      // query.
       {
         source: "/:lang(fr|de)/partners/:path*",
         destination: "/partners/:path*?lang=:lang",
@@ -79,6 +80,9 @@ const nextConfig: NextConfig = {
       // English not yet supported — redirect to French equivalent
       { source: "/en", destination: "/fr", permanent: false },
       { source: "/en/:path*", destination: "/fr/:path*", permanent: false },
+      // Legacy partner /crm path → /leads (route was renamed from CRM to Leads).
+      { source: "/:lang(fr|de)/partners/:uuid/crm", destination: "/:lang/partners/:uuid/leads", permanent: true },
+      { source: "/partners/:uuid/crm", destination: "/fr/partners/:uuid/leads", permanent: true },
     ];
   },
 

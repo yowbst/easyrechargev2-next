@@ -26,7 +26,7 @@ export function PartnerLanguageSwitcher({ lang }: { lang: Lang }) {
 
   function switchLang(next: Lang) {
     if (next === lang) return;
-    // pathname is the internal (post-rewrite) path, e.g. /partners/<uuid>/crm.
+    // pathname is the internal (post-rewrite) path, e.g. /partners/<uuid>/leads.
     // Re-prefix it with the chosen lang to keep the visible URL clean.
     const internal = pathname.replace(/^\/(fr|de)(?=\/|$)/, "");
     router.push(`/${next}${internal || "/"}`);

@@ -39,7 +39,7 @@ import { PartnerDateFilter } from "./PartnerDateFilter";
 import { PartnerSortControl } from "./PartnerSortControl";
 import { PartnerFacetFilter } from "./PartnerFacetFilter";
 
-export type PartnerNav = "crm" | "stats";
+export type PartnerNav = "leads" | "stats";
 type Lang = "fr" | "de";
 
 export interface StatsTabAnchor {
@@ -111,30 +111,30 @@ export function PartnerSidebar({
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  isActive={activeNav === "crm"}
-                  tooltip={t("sidebar.crm")}
+                  isActive={activeNav === "leads"}
+                  tooltip={t("sidebar.leads")}
                   className="font-medium"
-                  render={<Link href={`/${lang}/partners/${partnerToken}/crm`} prefetch={false} />}
+                  render={<Link href={`/${lang}/partners/${partnerToken}/leads`} prefetch={false} />}
                 >
                   <Users className="h-4 w-4" />
-                  <span>{t("sidebar.crm")}</span>
+                  <span>{t("sidebar.leads")}</span>
                 </SidebarMenuButton>
-                {activeNav === "crm" && (
+                {activeNav === "leads" && (
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton render={<a href="#crm-open" />}>
+                      <SidebarMenuSubButton render={<a href="#leads-open" />}>
                         <CircleDashed className="h-3.5 w-3.5 shrink-0" />
                         <span>{t("sidebar.nav.open")}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton render={<a href="#crm-disqualified" />}>
+                      <SidebarMenuSubButton render={<a href="#leads-disqualified" />}>
                         <Ban className="h-3.5 w-3.5 shrink-0" />
                         <span>{t("sidebar.nav.disqualified")}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton render={<a href="#crm-closed" />}>
+                      <SidebarMenuSubButton render={<a href="#leads-closed" />}>
                         <Archive className="h-3.5 w-3.5 shrink-0" />
                         <span>{t("sidebar.nav.closed")}</span>
                       </SidebarMenuSubButton>
@@ -236,7 +236,7 @@ export function PartnerSidebar({
           </div>
           <div className="flex items-center gap-1">
             <PartnerFacetFilter options={facetOptions} dictionary={dictionary} />
-            {activeNav === "crm" && <PartnerSortControl dictionary={dictionary} />}
+            {activeNav === "leads" && <PartnerSortControl dictionary={dictionary} />}
             <PartnerDateFilter dictionary={dictionary} />
             <PartnerLanguageSwitcher lang={lang} />
             <ThemeToggle />

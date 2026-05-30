@@ -1,20 +1,20 @@
 /**
  * Translation helper for the partner section.
  *
- * Translations live on a handful of Directus pages (`partner-crm` for CRM +
- * shared chrome, `partner-stats` for stats-specific strings) and are flattened
- * by extractPageDictionary() into `pages.<routeId>.*` keys. This helper hides
- * that prefix, tries each partner-section prefix in order, and — matching the
- * rest of the site's convention — renders a missing key as `[key]` so
- * untranslated strings are obvious.
+ * Translations live on a handful of Directus pages (`partner-leads` for the
+ * Leads view + shared chrome, `partner-stats` for stats-specific strings) and
+ * are flattened by extractPageDictionary() into `pages.<routeId>.*` keys.
+ * This helper hides that prefix, tries each partner-section prefix in order,
+ * and — matching the rest of the site's convention — renders a missing key
+ * as `[key]` so untranslated strings are obvious.
  */
 
 export type PartnerDict = Record<string, string>;
 
-// Order matters: the CRM page owns the shared chrome (sidebar, filter, card,
+// Order matters: the Leads page owns the shared chrome (sidebar, filter, card,
 // modals…) and stats-specific strings live on partner-stats. A key is looked
 // up in each prefix and the first hit wins.
-const PREFIXES = ["pages.partner-crm.", "pages.partner-stats."] as const;
+const PREFIXES = ["pages.partner-leads.", "pages.partner-stats."] as const;
 
 export function partnerT(
   dict: PartnerDict,

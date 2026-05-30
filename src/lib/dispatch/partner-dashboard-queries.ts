@@ -69,41 +69,42 @@ const CARD_FIELDS = [
  * environment, newest first. Returns up to 500 cards (we don't paginate the
  * dashboard for v1).
  */
-export interface PartnerCrmConfig {
+export interface PartnerLeadsConfig {
   /** Per-stage rotting threshold (visual nudge on the card). */
   rotting_days_by_stage: Record<string, number>;
   /** Per-stage allowed disqualification reasons. Empty = all reasons allowed. */
   reasons_by_stage: Record<string, string[]>;
 }
 
-const PARTNER_CRM_DEFAULTS: PartnerCrmConfig = {
+const PARTNER_LEADS_DEFAULTS: PartnerLeadsConfig = {
   rotting_days_by_stage: { new: 5, contacted: 7, appointment: 14, quote_sent: 21 },
   reasons_by_stage: {},
 };
 
 /**
- * CRM-specific config stored on the Directus `partner-crm` page `config` field
- * (kept separate from site_settings.dispatch which drives the dispatch/billing
- * engine). Falls back to sensible defaults if the page or keys are absent.
+ * Leads-specific config stored on the Directus `partner-leads` page `config`
+ * field (kept separate from site_settings.dispatch which drives the
+ * dispatch/billing engine). Falls back to sensible defaults if the page or
+ * keys are absent.
  */
-export async function fetchPartnerCrmConfig(): Promise<PartnerCrmConfig> {
+export async function fetchPartnerLeadsConfig(): Promise<PartnerLeadsConfig> {
   try {
     const res = await directusFetch<{
-      data: { config?: Partial<PartnerCrmConfig> | null }[];
+      data: { config?: Partial<PartnerLeadsConfig> | null }[];
     }>(
-      `/items/pages?filter[route_id][_eq]=partner-crm&fields=config&limit=1`,
+      `/items/pages?filter[route_id][_eq]=partner-leads&fields=config&limit=1`,
       { next: { revalidate: 60 } },
     );
     const cfg = res?.data?.[0]?.config ?? {};
     return {
       rotting_days_by_stage: {
-        ...PARTNER_CRM_DEFAULTS.rotting_days_by_stage,
+        ...PARTNER_LEADS_DEFAULTS.rotting_days_by_stage,
         ...(cfg.rotting_days_by_stage ?? {}),
       },
       reasons_by_stage: cfg.reasons_by_stage ?? {},
     };
   } catch {
-    return PARTNER_CRM_DEFAULTS;
+    return PARTNER_LEADS_DEFAULTS;
   }
 }
 

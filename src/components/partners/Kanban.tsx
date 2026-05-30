@@ -447,7 +447,7 @@ export function Kanban({
         {/* Active pipeline. Mobile: horizontal scroll-snap so the partner
             can swipe between stage columns. Desktop: 4-column grid. */}
         <div
-          id="crm-open"
+          id="leads-open"
           className="-mx-4 flex snap-x snap-mandatory scroll-mt-16 gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 lg:grid-cols-4"
         >
           {MAIN_STAGES.map((stage) => {
@@ -503,7 +503,7 @@ export function Kanban({
 
         {/* Disqualified: same 4-column layout, aligned with active funnel. */}
         {mainDisqCount > 0 && (
-          <details id="crm-disqualified" className="group scroll-mt-16 space-y-3" open>
+          <details id="leads-disqualified" className="group scroll-mt-16 space-y-3" open>
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
               <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
               <Ban className="h-4 w-4 shrink-0" />
@@ -555,7 +555,7 @@ export function Kanban({
             each card (rendered by LeadCard from its won/lost stage) marks the
             outcome. Read-only review — closing happens via the card buttons. */}
         {closedCount > 0 && (
-          <details id="crm-closed" className="group scroll-mt-16 space-y-3" open>
+          <details id="leads-closed" className="group scroll-mt-16 space-y-3" open>
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
               <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
               <Archive className="h-4 w-4 shrink-0" />

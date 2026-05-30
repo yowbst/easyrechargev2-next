@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { directusFetch } from "@/lib/directus";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import { fetchDispatchConfig } from "@/lib/dispatch/queries";
-import { fetchPartnerCrmConfig } from "@/lib/dispatch/partner-dashboard-queries";
+import { fetchPartnerLeadsConfig } from "@/lib/dispatch/partner-dashboard-queries";
 import { isAcceptanceExpired } from "@/lib/dispatch/billing";
 import {
   DISQUALIFICATION_REASONS,
@@ -74,7 +74,7 @@ export async function POST(
 
   const [config, crmConfig] = await Promise.all([
     fetchDispatchConfig(),
-    fetchPartnerCrmConfig(),
+    fetchPartnerLeadsConfig(),
   ]);
 
   // Stage-specific reason validation. Missing key in config = all reasons allowed.

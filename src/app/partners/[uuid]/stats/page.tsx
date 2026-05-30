@@ -74,20 +74,20 @@ export default async function PartnerStatsPage({
   if (!partner) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [dispatches, crmPage, statsPage, statsConfig] = await Promise.all([
+  const [dispatches, leadsPage, statsPage, statsConfig] = await Promise.all([
     fetchPartnerDispatches(partner.id),
-    fetchPage("partner-crm", locale),
+    fetchPage("partner-leads", locale),
     // Dedicated fetcher (60s ISR) so stats translations propagate fast — the
     // default fetchPage caches public pages for 3600s, which can serve a
     // pre-population empty payload for up to an hour after we seed content.
     fetchPartnerStatsPage(locale),
     fetchPartnerStatsConfig(),
   ]);
-  // Partner-section i18n is split across two Directus pages: partner-crm owns
-  // the shared chrome (sidebar / filter / card / modals), partner-stats owns
-  // the stats-specific strings. Merge them — partnerT looks up both prefixes.
+  // Partner-section i18n is split across two Directus pages: partner-leads
+  // owns the shared chrome (sidebar / filter / card / modals), partner-stats
+  // owns the stats-specific strings. Merge — partnerT looks up both prefixes.
   const dictionary = {
-    ...(crmPage ? extractPageDictionary("partner-crm", crmPage, locale) : {}),
+    ...(leadsPage ? extractPageDictionary("partner-leads", leadsPage, locale) : {}),
     ...(statsPage ? extractPageDictionary("partner-stats", statsPage, locale) : {}),
   };
 

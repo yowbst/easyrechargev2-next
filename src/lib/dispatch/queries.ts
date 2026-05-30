@@ -165,8 +165,8 @@ export interface BillingConfig {
 /**
  * Fetch `site_settings.global_config.dispatch` config (singleton). This holds
  * the dispatch/billing engine config only. CRM-display config (rotting
- * thresholds, per-stage disqualification reasons) lives on the partner-crm
- * page — see fetchPartnerCrmConfig().
+ * thresholds, per-stage disqualification reasons) lives on the partner-leads
+ * page — see fetchPartnerLeadsConfig().
  */
 export async function fetchDispatchConfig(): Promise<{
   max_shared_targets: number;

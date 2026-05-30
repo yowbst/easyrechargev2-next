@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import {
   fetchPartnerDispatches,
-  fetchPartnerCrmConfig,
+  fetchPartnerLeadsConfig,
   type PartnerDispatchCard,
 } from "@/lib/dispatch/partner-dashboard-queries";
 import {
@@ -82,8 +82,8 @@ function buildSupportMailto(opts: {
   dashboardToken: string;
   lang: string;
 }): string {
-  const subject = `[CRM partenaire] ${opts.partnerName} — `;
-  const crmUrl = `https://easyrecharge.ch/${opts.lang}/partners/${opts.dashboardToken}/crm`;
+  const subject = `[Leads partenaire] ${opts.partnerName} — `;
+  const leadsUrl = `https://easyrecharge.ch/${opts.lang}/partners/${opts.dashboardToken}/leads`;
   const body = [
     "Bonjour Yoan,",
     "",
@@ -91,14 +91,14 @@ function buildSupportMailto(opts: {
     "",
     "---",
     `Partenaire : ${opts.partnerName} (${opts.partnerSlug})`,
-    `CRM : ${crmUrl}`,
+    `Leads : ${leadsUrl}`,
     "",
   ].join("\n");
   const params = new URLSearchParams({ subject, body });
   return `mailto:${SUPPORT_EMAIL}?${params.toString()}`;
 }
 
-export default async function PartnerCRMPage({
+export default async function PartnerLeadsPage({
   params,
   searchParams,
 }: {
@@ -116,13 +116,13 @@ export default async function PartnerCRMPage({
   if (!partner) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [dispatches, crmConfig, crmPage] = await Promise.all([
+  const [dispatches, leadsConfig, leadsPage] = await Promise.all([
     fetchPartnerDispatches(partner.id),
-    fetchPartnerCrmConfig(),
-    fetchPage("partner-crm", locale),
+    fetchPartnerLeadsConfig(),
+    fetchPage("partner-leads", locale),
   ]);
-  const dictionary = crmPage
-    ? extractPageDictionary("partner-crm", crmPage, locale)
+  const dictionary = leadsPage
+    ? extractPageDictionary("partner-leads", leadsPage, locale)
     : {};
 
   const supportHref = buildSupportMailto({
@@ -141,7 +141,7 @@ export default async function PartnerCRMPage({
       partnerName={partner.name}
       leadCount={dispatches.length}
       supportHref={supportHref}
-      activeNav="crm"
+      activeNav="leads"
       lang={lang}
       dictionary={dictionary}
       facetOptions={facetOptions}
@@ -150,8 +150,8 @@ export default async function PartnerCRMPage({
         partnerToken={uuid}
         lang={lang}
         dispatches={dispatches}
-        rottingDaysByStage={crmConfig.rotting_days_by_stage}
-        reasonsByStage={crmConfig.reasons_by_stage}
+        rottingDaysByStage={leadsConfig.rotting_days_by_stage}
+        reasonsByStage={leadsConfig.reasons_by_stage}
         scoringWeights={scoringWeights}
         dictionary={dictionary}
       />
