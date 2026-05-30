@@ -107,6 +107,46 @@ export async function fetchPartnerCrmConfig(): Promise<PartnerCrmConfig> {
   }
 }
 
+export interface PartnerStatsConfig {
+  /** Per-stage maturity threshold (days). A lead must be at least this old
+   *  to be counted in that stage's conversion-rate denominator. */
+  lookback_days_by_stage: Record<string, number>;
+}
+
+const PARTNER_STATS_DEFAULTS: PartnerStatsConfig = {
+  lookback_days_by_stage: {
+    contacted: 3,
+    appointment: 10,
+    quote_sent: 21,
+    won: 45,
+  },
+};
+
+/**
+ * Stats-specific config stored on the Directus `partner-stats` page. Same
+ * defaults-merge pattern as the CRM config — falls back to sensible defaults
+ * if the page or keys are absent.
+ */
+export async function fetchPartnerStatsConfig(): Promise<PartnerStatsConfig> {
+  try {
+    const res = await directusFetch<{
+      data: { config?: Partial<PartnerStatsConfig> | null }[];
+    }>(
+      `/items/pages?filter[route_id][_eq]=partner-stats&fields=config&limit=1`,
+      { next: { revalidate: 60 } },
+    );
+    const cfg = res?.data?.[0]?.config ?? {};
+    return {
+      lookback_days_by_stage: {
+        ...PARTNER_STATS_DEFAULTS.lookback_days_by_stage,
+        ...(cfg.lookback_days_by_stage ?? {}),
+      },
+    };
+  } catch {
+    return PARTNER_STATS_DEFAULTS;
+  }
+}
+
 export async function fetchPartnerDispatches(
   partnerId: string,
 ): Promise<PartnerDispatchCard[]> {

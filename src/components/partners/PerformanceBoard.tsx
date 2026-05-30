@@ -60,10 +60,12 @@ export function PerformanceBoard({
   dispatches,
   scoringWeights: _scoringWeights, // kept in the signature for symmetry with StatsBoard
   dictionary,
+  lookbackDaysByStage,
 }: {
   dispatches: PartnerDispatchCard[];
   scoringWeights: ScoringWeights;
   dictionary: PartnerDict;
+  lookbackDaysByStage: Record<string, number>;
 }) {
   // Underscore satisfies the unused-param lint while keeping the prop name
   // identical to StatsBoard so a future scoring-aware metric stays simple.
@@ -78,7 +80,12 @@ export function PerformanceBoard({
   const data = useMemo(() => {
     const investment = investmentSum(dispatches, inRange);
     const funnel = pipelineStats(dispatches, inRange, MAIN_STAGES);
-    const transitions = transitionRates(funnel);
+    const transitions = transitionRates(
+      dispatches,
+      inRange,
+      MAIN_STAGES,
+      lookbackDaysByStage,
+    );
     const stageCosts = costPerStage(funnel, investment);
     const cacRows = CAC_STAGES.map((s) => pickStageCost(stageCosts, s)).filter(
       (r): r is StageCostRow => r !== null,
@@ -94,7 +101,7 @@ export function PerformanceBoard({
       transitions,
       cacRows,
     };
-  }, [dispatches, inRange]);
+  }, [dispatches, inRange, lookbackDaysByStage]);
 
   return (
     <div className="space-y-4">
@@ -153,23 +160,36 @@ function ConversionCascade({
           {t("stats.empty")}
         </p>
       ) : (
-        <ul className="divide-y divide-dotted divide-border">
-          {transitions.map((r) => {
-            const width = r.rate ?? 0;
-            return (
-              <li
-                key={`${r.from}-${r.to}`}
-                className="grid grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
-              >
-                <div className="flex min-w-0 items-center gap-1.5 text-xs">
-                  <span className="truncate font-medium text-foreground">
-                    {t(`stages.${r.from}`)}
-                  </span>
-                  <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-                  <span className="truncate font-medium text-foreground">
-                    {t(`stages.${r.to}`)}
-                  </span>
-                </div>
+        <>
+          <p className="mb-2 text-[11px] text-muted-foreground">
+            {t("stats.performance.maturity_hint")}
+          </p>
+          <ul className="divide-y divide-dotted divide-border">
+            {transitions.map((r) => {
+              const width = r.rate ?? 0;
+              return (
+                <li
+                  key={`${r.from}-${r.to}`}
+                  className="grid grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
+                >
+                  <div className="flex min-w-0 flex-col gap-0.5 text-xs">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate font-medium text-foreground">
+                        {t(`stages.${r.from}`)}
+                      </span>
+                      <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <span className="truncate font-medium text-foreground">
+                        {t(`stages.${r.to}`)}
+                      </span>
+                    </div>
+                    {r.lookbackDays > 0 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {t("stats.performance.maturity_row", {
+                          n: r.lookbackDays,
+                        })}
+                      </span>
+                    )}
+                  </div>
                 <div className="relative h-2 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
@@ -186,6 +206,7 @@ function ConversionCascade({
             );
           })}
         </ul>
+        </>
       )}
     </Card>
   );

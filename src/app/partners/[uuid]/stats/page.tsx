@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
-import { fetchPartnerDispatches } from "@/lib/dispatch/partner-dashboard-queries";
+import {
+  fetchPartnerDispatches,
+  fetchPartnerStatsConfig,
+} from "@/lib/dispatch/partner-dashboard-queries";
 import { resolveWeights } from "@/lib/dispatch/scoring";
 import { fetchPage } from "@/lib/directus-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
@@ -70,11 +73,19 @@ export default async function PartnerStatsPage({
   if (!partner) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [dispatches, page] = await Promise.all([
+  const [dispatches, crmPage, statsPage, statsConfig] = await Promise.all([
     fetchPartnerDispatches(partner.id),
     fetchPage("partner-crm", locale),
+    fetchPage("partner-stats", locale),
+    fetchPartnerStatsConfig(),
   ]);
-  const dictionary = page ? extractPageDictionary("partner-crm", page, locale) : {};
+  // Partner-section i18n is split across two Directus pages: partner-crm owns
+  // the shared chrome (sidebar / filter / card / modals), partner-stats owns
+  // the stats-specific strings. Merge them — partnerT looks up both prefixes.
+  const dictionary = {
+    ...(crmPage ? extractPageDictionary("partner-crm", crmPage, locale) : {}),
+    ...(statsPage ? extractPageDictionary("partner-stats", statsPage, locale) : {}),
+  };
 
   const scoringWeights = resolveWeights(partner.lead_scoring_weights);
   const supportHref = buildSupportMailto({
@@ -122,6 +133,7 @@ export default async function PartnerStatsPage({
             dispatches={dispatches}
             scoringWeights={scoringWeights}
             dictionary={dictionary}
+            lookbackDaysByStage={statsConfig.lookback_days_by_stage}
           />
         )}
       </div>

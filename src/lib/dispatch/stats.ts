@@ -245,25 +245,59 @@ export interface TransitionRow {
   toCount: number;
   /** toCount / fromCount, percent (0..100). null when fromCount === 0. */
   rate: number | null;
+  /** Maturity threshold (days) used to gate this transition's denominator. */
+  lookbackDays: number;
 }
 
 /**
- * Stage-to-stage transition rates derived from the cumulative funnel rows.
- * Each row is the share of the previous stage that progressed to the next.
+ * Stage-to-stage transition rates with per-stage maturity gating.
+ *
+ * A lead only enters the denominator for stage `to` if it has been dispatched
+ * at least `lookbackDaysByStage[to]` days ago — long enough to have had a fair
+ * shot at progressing. This avoids dragging the rate down with leads that are
+ * still maturing (typical SaaS cohort treatment).
+ *
+ * The numerator follows the funnel's cumulative rule: any card whose stage
+ * rank is ≥ `to`'s rank counts as having reached it. The "won" terminal is
+ * matched exactly (lost shares rank 4 but isn't a win).
  */
-export function transitionRates(funnel: FunnelRow[]): TransitionRow[] {
+export function transitionRates(
+  cards: PartnerDispatchCard[],
+  inRange: (iso: string) => boolean,
+  stages: string[],
+  lookbackDaysByStage: Record<string, number>,
+  now: Date = new Date(),
+): TransitionRow[] {
   const out: TransitionRow[] = [];
-  for (let i = 1; i < funnel.length; i++) {
-    const from = funnel[i - 1];
-    const to = funnel[i];
-    const rate =
-      from.count > 0 ? Math.round((100 * to.count) / from.count) : null;
+  for (let i = 1; i < stages.length; i++) {
+    const fromStage = stages[i - 1];
+    const toStage = stages[i];
+    const fromRank = STAGE_RANK[fromStage as DispatchStage];
+    const toRank = STAGE_RANK[toStage as DispatchStage];
+    const lookbackDays = lookbackDaysByStage[toStage] ?? 0;
+    const cutoffMs = lookbackDays * 86_400_000;
+    const isWonStep = toStage === "won";
+    let denom = 0;
+    let num = 0;
+    for (const c of cards) {
+      if (!inRange(c.dispatched_at)) continue;
+      const cardRank = STAGE_RANK[c.stage as DispatchStage];
+      if (typeof cardRank !== "number") continue;
+      const ageMs = now.getTime() - new Date(c.dispatched_at).getTime();
+      if (ageMs < cutoffMs) continue;
+      // Must have reached `from` cumulatively.
+      if (cardRank < fromRank) continue;
+      denom += 1;
+      const reachedTo = isWonStep ? c.stage === "won" : cardRank >= toRank;
+      if (reachedTo) num += 1;
+    }
     out.push({
-      from: from.stage,
-      to: to.stage,
-      fromCount: from.count,
-      toCount: to.count,
-      rate,
+      from: fromStage,
+      to: toStage,
+      fromCount: denom,
+      toCount: num,
+      rate: denom > 0 ? Math.round((100 * num) / denom) : null,
+      lookbackDays,
     });
   }
   return out;
