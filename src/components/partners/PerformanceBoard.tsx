@@ -13,8 +13,10 @@ import { Card } from "@/components/ui/card";
 import {
   costPerStage,
   investmentSum,
+  overallConversionRate,
   pipelineStats,
   transitionRates,
+  type OverallConversion,
   type ScoringWeights,
   type StageCostRow,
   type TransitionRow,
@@ -86,6 +88,11 @@ export function PerformanceBoard({
       MAIN_STAGES,
       lookbackDaysByStage,
     );
+    const overall = overallConversionRate(
+      dispatches,
+      inRange,
+      lookbackDaysByStage?.won ?? 45,
+    );
     const stageCosts = costPerStage(funnel, investment);
     const cacRows = CAC_STAGES.map((s) => pickStageCost(stageCosts, s)).filter(
       (r): r is StageCostRow => r !== null,
@@ -99,6 +106,7 @@ export function PerformanceBoard({
       costPerAppt: appt > 0 ? Math.round(investment / appt) : null,
       costPerQuote: quote > 0 ? Math.round(investment / quote) : null,
       transitions,
+      overall,
       cacRows,
     };
   }, [dispatches, inRange, lookbackDaysByStage]);
@@ -130,6 +138,7 @@ export function PerformanceBoard({
 
       <ConversionCascade
         transitions={data.transitions}
+        overall={data.overall}
         mounted={mounted}
         t={t}
       />
@@ -141,10 +150,12 @@ export function PerformanceBoard({
 
 function ConversionCascade({
   transitions,
+  overall,
   mounted,
   t,
 }: {
   transitions: TransitionRow[];
+  overall: OverallConversion;
   mounted: boolean;
   t: PartnerT;
 }) {
@@ -155,6 +166,30 @@ function ConversionCascade({
         <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <span>{t("stats.performance.cascade")}</span>
       </h3>
+
+      {overall.total > 0 && (
+        <div className="mb-3 rounded-md border bg-muted/40 px-3 py-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 text-xs font-medium">
+              <span>{t("stages.new")}</span>
+              <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+              <span>{t("stages.won")}</span>
+            </div>
+            <span className="text-sm font-semibold tabular-nums">
+              {overall.rate === null ? "—" : `${overall.rate}%`}{" "}
+              <span className="font-normal text-muted-foreground">
+                ({overall.won}/{overall.total})
+              </span>
+            </span>
+          </div>
+          {overall.lookbackDays > 0 && (
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              {t("stats.performance.maturity_row", { n: overall.lookbackDays })}
+            </p>
+          )}
+        </div>
+      )}
+
       {empty ? (
         <p className="py-6 text-center text-xs text-muted-foreground">
           {t("stats.empty")}

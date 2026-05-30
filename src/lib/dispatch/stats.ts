@@ -307,6 +307,43 @@ export function transitionRates(
   return out;
 }
 
+export interface OverallConversion {
+  won: number;
+  total: number;
+  /** won / total, percent (0..100). null when total === 0. */
+  rate: number | null;
+  lookbackDays: number;
+}
+
+/**
+ * End-to-end conversion rate (new → won) over leads that have had time to
+ * mature. Uses the "won" lookback as the maturity gate so the denominator
+ * only contains leads that could plausibly have closed by now.
+ */
+export function overallConversionRate(
+  cards: PartnerDispatchCard[],
+  inRange: (iso: string) => boolean,
+  lookbackDays: number,
+  now: Date = new Date(),
+): OverallConversion {
+  const cutoffMs = lookbackDays * 86_400_000;
+  let total = 0;
+  let won = 0;
+  for (const c of cards) {
+    if (!inRange(c.dispatched_at)) continue;
+    const ageMs = now.getTime() - new Date(c.dispatched_at).getTime();
+    if (ageMs < cutoffMs) continue;
+    total += 1;
+    if (c.stage === "won") won += 1;
+  }
+  return {
+    won,
+    total,
+    rate: total > 0 ? Math.round((100 * won) / total) : null,
+    lookbackDays,
+  };
+}
+
 export interface StageCostRow {
   stage: string;
   count: number;
