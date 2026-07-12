@@ -22,12 +22,18 @@ export function normalizeName(raw: string): string {
     .join(" ");
 }
 
-// Curated known domains (Swiss + global) for near-miss detection.
+// Curated known domains (Swiss + global) for near-miss detection. Listing a
+// domain here also means we never "correct" it (exact-known short-circuit), so
+// real domains that sit one edit away from a popular one (e.g. email.com vs
+// gmail.com, life.com vs live.com) are included to avoid wrongly nudging users.
 const KNOWN_DOMAINS = [
   "gmail.com", "googlemail.com", "hotmail.com", "outlook.com", "live.com",
   "msn.com", "yahoo.com", "yahoo.fr", "icloud.com", "me.com", "proton.me",
   "protonmail.com", "gmx.ch", "gmx.net", "bluewin.ch", "hispeed.ch",
   "sunrise.ch", "swissonline.ch", "windowslive.com",
+  // Real domains that collide (edit-distance 1) with a popular one above —
+  // present so they short-circuit instead of being "corrected".
+  "email.com", "life.com",
 ];
 
 // Unambiguous TLD typos only — never includes valid TLDs like "co".
