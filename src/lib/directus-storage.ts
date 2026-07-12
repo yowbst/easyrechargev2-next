@@ -1,6 +1,7 @@
 import { directusFetch } from "./directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import type { FormSession, FormUser, FormSubmission } from "@shared/types";
+import { normalizeName } from "@/lib/form-hygiene";
 
 /** Truncate a string to fit Directus VARCHAR columns (default 255). */
 function truncate(value: string | null | undefined, max = 255): string | null {
@@ -122,8 +123,8 @@ class DirectusStorage {
         {
           method: "PATCH",
           body: JSON.stringify({
-            first_name: data.first_name || user.first_name,
-            last_name: data.last_name || user.last_name,
+            first_name: (data.first_name ? normalizeName(data.first_name) : "") || user.first_name,
+            last_name: (data.last_name ? normalizeName(data.last_name) : "") || user.last_name,
             phone: normalizePhone(data.phone) || user.phone,
             language: data.language || user.language,
             submission_count: (user.submission_count || 0) + 1,
@@ -141,8 +142,8 @@ class DirectusStorage {
         method: "POST",
         body: JSON.stringify({
           email: data.email,
-          first_name: data.first_name,
-          last_name: data.last_name,
+          first_name: data.first_name ? normalizeName(data.first_name) : data.first_name,
+          last_name: data.last_name ? normalizeName(data.last_name) : data.last_name,
           phone: normalizePhone(data.phone),
           language: data.language || null,
           date_terms_accepted: data.date_terms_accepted || null,
