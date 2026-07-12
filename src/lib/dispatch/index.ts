@@ -64,6 +64,12 @@ interface RunDispatchInput {
   leadCategory: LeadCategory;
   /** Product key for pricing + future quote funnels. Defaults to "ecp". */
   product?: string;
+  /**
+   * Force a specific dispatch mode, ignoring the DISPATCH_MODE env var. Used by
+   * the manual admin dispatch endpoint to resolve as `live` even when the global
+   * mode is `off`/`shadow`. The quote route never sets this.
+   */
+  modeOverride?: DispatchMode;
 }
 
 /**
@@ -72,7 +78,7 @@ interface RunDispatchInput {
  * unaffected by dispatch issues.
  */
 export async function runDispatch(input: RunDispatchInput): Promise<DispatchResult> {
-  const mode = getDispatchMode();
+  const mode = input.modeOverride ?? getDispatchMode();
   const environment = getEnvironment();
   const canton = normalizeCanton(input.rawCanton) ?? "";
 
