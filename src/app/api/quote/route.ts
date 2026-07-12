@@ -1,38 +1,10 @@
 import { NextResponse, after } from "next/server";
 import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
-import { directusFetch } from "@/lib/directus";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 import { runDispatch, normalizeCanton, type DispatchResult } from "@/lib/dispatch";
 import { deriveLeadCategory } from "@/lib/dispatch/categorize";
-
-function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
-  if (!raw) return { raw: null, international: null, countryCode: null, countryCallingCode: null };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parsed = parsePhoneNumberFromString(raw, (defaultCountry as any) ?? undefined);
-  if (!parsed) return { raw, international: null, countryCode: null, countryCallingCode: null };
-  return {
-    raw,
-    international: parsed.formatInternational(),
-    countryCode: parsed.country ?? null,
-    countryCallingCode: `+${parsed.countryCallingCode}`,
-  };
-}
-
-async function getQuoteWebhookUrl(): Promise<string | null> {
-  try {
-    const result = await directusFetch<{ data: { global_config?: { webhooks?: { quote?: string } } }[] }>(
-      `/items/site_settings?fields=global_config&filter[status][_eq]=published`,
-      { next: { revalidate: 3600 } },
-    );
-    const raw = result?.data;
-    const record = Array.isArray(raw) ? raw[0] : raw;
-    return record?.global_config?.webhooks?.quote ?? null;
-  } catch {
-    return null;
-  }
-}
+import { getQuoteWebhookUrl, parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
 
 export async function POST(req: Request) {
   try {
@@ -145,21 +117,16 @@ export async function POST(req: Request) {
     if (webhookUrl) {
       const phDistinctId = phIds.phDistinctId ?? null;
       const posthogDashboard = "https://eu.posthog.com/project/103083";
+      const isRepeat = (dispatchResult.dedup?.skippedPartnerSlugs?.length ?? 0) > 0;
 
-      const isRepeat =
-        (dispatchResult.dedup?.skippedPartnerSlugs?.length ?? 0) > 0;
-
-      const webhookPayload = {
+      const payload = buildQuoteWebhookPayload({
         submission: {
           id: submission.id,
-          formType: "quote",
-          locationRoute: "quote",
           locationHost: refererUrl?.host ?? req.headers.get("host") ?? null,
           locationPath: refererUrl?.pathname ?? null,
           submittedAt: new Date().toISOString(),
           environment: process.env.VERCEL_ENV || "development",
           miniQuoteSessionToken: miniQuoteToken || null,
-          product: "ecp",
           leadCategory,
           isRepeat,
           data: quoteData,
@@ -185,36 +152,10 @@ export async function POST(req: Request) {
         },
         attribution: body.attribution ?? {},
         dispatch: dispatchResult,
-      };
+        trigger: "quote_submission",
+      });
 
-      try {
-        const webhookRes = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(webhookPayload),
-        });
-        if (!webhookRes.ok) {
-          console.error("[Quote] Webhook returned:", webhookRes.status);
-          serverLog("WARNING", "Webhook returned non-OK status", { route: "quote", status: webhookRes.status, submission_id: submission.id });
-          const posthog = getPostHogServer();
-          posthog.capture({
-            distinctId: phIds.phDistinctId ?? "anonymous",
-            event: "server_webhook_failed",
-            properties: { form_type: "quote", submission_id: submission.id, status: webhookRes.status },
-          });
-          after(() => posthog.flush());
-        }
-      } catch (err) {
-        console.error("[Quote] Webhook failed:", err);
-        serverLog("ERROR", "Webhook delivery failed", { route: "quote", submission_id: submission.id, error: err instanceof Error ? err.message : String(err) });
-        const posthog = getPostHogServer();
-        posthog.captureException(err, phIds.phDistinctId ?? "anonymous", {
-          form_type: "quote",
-          submission_id: submission.id,
-          context: "webhook_delivery",
-        });
-        after(() => posthog.flush());
-      }
+      await fireQuoteWebhook(webhookUrl, payload, { submissionId: submission.id, distinctId: phDistinctId });
     }
 
     return NextResponse.json({ success: true, submissionId: submission.id });
