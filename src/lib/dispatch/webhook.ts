@@ -100,7 +100,8 @@ export function buildQuoteWebhookPayload(parts: QuoteWebhookParts) {
   const host = parts.submission.locationHost
     ? `https://${parts.submission.locationHost}`
     : SITE_URL;
-  const request_url = `${host}${parts.submission.locationPath ?? ""}/${parts.submission.id}`;
+  const path = (parts.submission.locationPath ?? "").replace(/\/+$/, "");
+  const request_url = `${host}${path}/${parts.submission.id}`;
 
   const dispatch = {
     ...parts.dispatch,
