@@ -205,6 +205,9 @@ export interface DispatchTarget {
   legalForm: LegalForm | null;
   uid: string | null;
   address: TargetAddress;
+  // Partner dashboard credential — surfaced so the webhook can build the
+  // partner's CRM URL. Null when the partner has no token.
+  dashboardToken: string | null;
   // Lead pricing snapshot (resolved at dispatch time).
   priceChf: number | null; // null = gift
   leadCategory: LeadCategory;

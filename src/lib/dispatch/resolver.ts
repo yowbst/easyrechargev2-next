@@ -155,6 +155,7 @@ function toTarget(
       locality: p.locality ?? null,
       canton: p.canton?.code ?? null,
     },
+    dashboardToken: p.dashboard_token ?? null,
     priceChf,
     leadCategory,
     gift,
