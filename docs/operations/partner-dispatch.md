@@ -179,3 +179,30 @@ while `DISPATCH_MODE=off`, or that had no partner at the time):
   billing) — the webhook fires with empty `targets`.
 - Refuses with `409` if the submission already has a `dispatched` row. Add
   `?force=1` to dispatch anyway (can double-bill / double-email).
+
+## Google Ads conversions via the Data Manager API (token endpoint)
+
+Google is moving offline click-conversion uploads off the Google Ads API to the
+Data Manager API. Make can't sign the service-account JWT the Data Manager API
+needs, so the app mints the token instead:
+
+    GET /api/datamanager-token
+    Header: x-datamanager-secret: <DATAMANAGER_ENDPOINT_SECRET>
+    -> { "access_token": "...", "expires_at": "<ISO>" }
+
+Make calls this once before the `events:ingest` request and uses
+`access_token` as `Authorization: Bearer`. It can cache the token until
+`expires_at` minus ~60s.
+
+**Env vars** (set in Vercel Production and `.env.local`):
+- `DATAMANAGER_SA_JSON` — the full service-account JSON (single-line).
+- `DATAMANAGER_ENDPOINT_SECRET` — random secret shared with Make.
+
+**One-time Google setup** (not code):
+1. Enable the **Data Manager API** in a Google Cloud project.
+2. Create a **service account**; download its JSON key into `DATAMANAGER_SA_JSON`.
+3. In the **Google Ads UI** (Admin → Access and security), add the service
+   account's `client_email` with an access level that can edit conversions.
+
+The scope minted is `https://www.googleapis.com/auth/datamanager`. Verify the
+token by calling `events:ingest` with `"validateOnly": true`.
