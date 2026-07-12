@@ -131,6 +131,17 @@ export async function POST(
         error: fired.error,
       });
     }
+  } else if (dispatchResult.targets.length > 0) {
+    // Targets were dispatched (partners billed) but the webhook was skipped —
+    // surface it so a bill-without-notify never passes silently. Reason is the
+    // missing precondition: no configured webhook URL, or no email on the
+    // submission (nothing to send the customer confirmation to).
+    serverLog("WARNING", "Manual dispatch: partners billed but webhook skipped", {
+      route: "admin/dispatch",
+      submission_id: submission.id,
+      target_count: dispatchResult.targets.length,
+      reason: !webhookUrl ? "no_webhook_url" : "no_email",
+    });
   }
 
   return NextResponse.json({
