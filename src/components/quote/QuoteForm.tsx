@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
+import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
 import dynamic from "next/dynamic";
 
 const LazyPlaceAutocomplete = dynamic(
@@ -1193,6 +1194,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         type="text"
                         value={formData.firstName}
                         onChange={(e) => handleFieldChange("firstName", e.target.value)}
+                        onBlur={(e) => handleFieldChange("firstName", normalizeName(e.target.value))}
                         data-testid="input-firstName"
                       />
                     </div>
@@ -1206,6 +1208,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         type="text"
                         value={formData.lastName}
                         onChange={(e) => handleFieldChange("lastName", e.target.value)}
+                        onBlur={(e) => handleFieldChange("lastName", normalizeName(e.target.value))}
                         data-testid="input-lastName"
                       />
                     </div>
@@ -1226,6 +1229,19 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     />
                     {formData.email && !isEmailValid && (
                       <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.email.error")}</p>
+                    )}
+                    {isEmailValid && suggestEmailCorrection(formData.email) && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {tqOpt("steps.contact.fields.email.suggestion") ?? (lang === "de" ? "Meinten Sie" : "Vouliez-vous dire")}{" "}
+                        <button
+                          type="button"
+                          className="font-medium text-primary underline underline-offset-2"
+                          onClick={() => handleFieldChange("email", suggestEmailCorrection(formData.email)!)}
+                        >
+                          {suggestEmailCorrection(formData.email)}
+                        </button>
+                        {" ?"}
+                      </p>
                     )}
                   </div>
 
