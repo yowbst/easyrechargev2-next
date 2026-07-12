@@ -162,3 +162,20 @@ The dashboard is a 6-column kanban (`Nouveau → Contacté → RDV pris → Devi
 | `skipped_dedup` | Same email-to-same-partner within `dedup_window_days`. |
 | `skipped_test` | Test submission (non-production env or email matches a test pattern). |
 | `skipped_quota` | **Deprecated** — kept for back-compat reads only. New rows use `dispatched + gift=true` instead. |
+
+## Manually dispatching a submission
+
+To dispatch an existing submission that was never dispatched (e.g. submitted
+while `DISPATCH_MODE=off`, or that had no partner at the time):
+
+    curl -X POST -H "x-admin-token: $DIRECTUS_STATIC_TOKEN" \
+      "https://easyrecharge.ch/api/admin/dispatch/<submissionId>"
+
+- Resolves as `live` regardless of the global `DISPATCH_MODE`, writes the
+  `partner_dispatches` ledger, and fires the Make webhook (customer email +
+  partner notification). The webhook payload carries `submission.trigger =
+  "manual_dispatch"` so Make can skip the customer confirmation if desired.
+- Test-pattern emails still resolve to `skipped_test` (no partner email, no
+  billing) — the webhook fires with empty `targets`.
+- Refuses with `409` if the submission already has a `dispatched` row. Add
+  `?force=1` to dispatch anyway (can double-bill / double-email).
