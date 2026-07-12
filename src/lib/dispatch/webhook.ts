@@ -6,7 +6,7 @@ import type { DispatchResult } from "./types";
 
 export type WebhookTrigger = "quote_submission" | "manual_dispatch";
 
-export function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
+export function parsePhone(raw: string | null | undefined, defaultCountry: string = "CH") {
   if (!raw) return { raw: null, international: null, countryCode: null, countryCallingCode: null };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const parsed = parsePhoneNumberFromString(raw, (defaultCountry as any) ?? undefined);
@@ -66,7 +66,52 @@ export interface QuoteWebhookParts {
   trigger: WebhookTrigger;
 }
 
+/**
+ * Human-readable reference shown in partner emails/SMS. Format:
+ *   P / {UPPER(trim(lastName))} / {postalCode} {locality} / {YYYY-MM-DD}
+ * Missing pieces render as empty segments; the skeleton is always present.
+ */
+export function buildQuoteRef(input: {
+  lastName: string | null;
+  postalCode: string | null;
+  locality: string | null;
+  submittedAt: string;
+}): string {
+  const last = (input.lastName ?? "").trim().toUpperCase();
+  const postal = (input.postalCode ?? "").trim();
+  const loc = (input.locality ?? "").trim();
+  const date = (input.submittedAt ?? "").slice(0, 10);
+  return `P / ${last} / ${postal} ${loc} / ${date}`;
+}
+
 export function buildQuoteWebhookPayload(parts: QuoteWebhookParts) {
+  const SITE_URL = process.env.SITE_URL || "https://easyrecharge.ch";
+  const data = parts.submission.data;
+  const postalCode = typeof data.postalCode === "string" ? data.postalCode : "";
+  const locality = typeof data.locality === "string" ? data.locality : "";
+
+  const ref = buildQuoteRef({
+    lastName: parts.user.lastName,
+    postalCode,
+    locality,
+    submittedAt: parts.submission.submittedAt,
+  });
+
+  const host = parts.submission.locationHost
+    ? `https://${parts.submission.locationHost}`
+    : SITE_URL;
+  const request_url = `${host}${parts.submission.locationPath ?? ""}/${parts.submission.id}`;
+
+  const dispatch = {
+    ...parts.dispatch,
+    targets: parts.dispatch.targets.map((t) => ({
+      ...t,
+      crmUrl: t.dashboardToken
+        ? `${SITE_URL}/${t.language}/partners/${t.dashboardToken}/leads`
+        : null,
+    })),
+  };
+
   return {
     submission: {
       id: parts.submission.id,
@@ -81,13 +126,15 @@ export function buildQuoteWebhookPayload(parts: QuoteWebhookParts) {
       leadCategory: parts.submission.leadCategory,
       isRepeat: parts.submission.isRepeat,
       trigger: parts.trigger,
+      ref,
+      request_url,
       data: parts.submission.data,
     },
     user: parts.user,
     session: parts.session,
     posthog: parts.posthog,
     attribution: parts.attribution,
-    dispatch: parts.dispatch,
+    dispatch,
   };
 }
 
