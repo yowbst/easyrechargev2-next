@@ -25,6 +25,7 @@ import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { getAttributionCompact } from "@/lib/attribution";
 import { usePostHog } from "@/components/PostHogProvider";
 import { PlaceAutocomplete } from "@/components/quote/PlaceAutocomplete";
+import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
 
 const APIProvider = dynamic(
   () => import("@vis.gl/react-google-maps").then(m => m.APIProvider),
@@ -267,7 +268,7 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
         value={formData.firstName}
         onChange={(e) => handleFieldChange("firstName", e.target.value)}
         onFocus={() => telemetry.trackFocus("firstName")}
-        onBlur={() => telemetry.trackBlur("firstName")}
+        onBlur={(e) => { telemetry.trackBlur("firstName"); handleFieldChange("firstName", normalizeName(e.target.value)); }}
         required
         data-testid="input-first-name"
       />
@@ -282,7 +283,7 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
         value={formData.lastName}
         onChange={(e) => handleFieldChange("lastName", e.target.value)}
         onFocus={() => telemetry.trackFocus("lastName")}
-        onBlur={() => telemetry.trackBlur("lastName")}
+        onBlur={(e) => { telemetry.trackBlur("lastName"); handleFieldChange("lastName", normalizeName(e.target.value)); }}
         required
         data-testid="input-last-name"
       />
@@ -324,6 +325,19 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
     {formData.email && !isEmailValid && (
       <p className="text-xs text-destructive mt-1">
         {d(`${P}.form.emailError`, "Adresse email invalide")}
+      </p>
+    )}
+    {isEmailValid && suggestEmailCorrection(formData.email) && (
+      <p className="text-xs text-muted-foreground mt-1">
+        {d(`${P}.form.emailSuggestion`, lang === "de" ? "Meinten Sie" : "Vouliez-vous dire")}{" "}
+        <button
+          type="button"
+          className="font-medium text-primary underline underline-offset-2"
+          onClick={() => handleFieldChange("email", suggestEmailCorrection(formData.email)!)}
+        >
+          {suggestEmailCorrection(formData.email)}
+        </button>
+        {" ?"}
       </p>
     )}
   </div>
