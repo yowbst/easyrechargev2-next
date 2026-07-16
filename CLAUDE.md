@@ -11,6 +11,7 @@ npm run dev          # Dev server on port 3000
 npm run build        # Production build (generates ~800 static pages)
 npm run start        # Run production build
 npm run lint         # ESLint
+npm test             # Vitest unit tests
 ```
 
 ## Deploy
@@ -49,9 +50,21 @@ SITE_URL=https://easyrecharge.ch
 NEXT_PUBLIC_POSTHOG_API_KEY=<key>
 NEXT_PUBLIC_POSTHOG_HOST=<host>
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=<key>
+
+GOOGLE_OAUTH_CLIENT_ID=<key>
+GOOGLE_OAUTH_CLIENT_SECRET=<secret>
+MCP_JWT_SECRET=<generate with `openssl rand -base64 32`>
+MCP_STATIC_TOKEN=<generate with `openssl rand -base64 32`>
+MCP_ALLOWED_EMAILS=yoan@easyrecharge.ch
 ```
 
 Optional: `DIRECTUS_LOCALITIES_COLLECTION` (defaults to "localities")
+
+MCP server env vars (see `docs/mcp-setup.md`):
+- `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` — Google OAuth client for MCP Google SSO login
+- `MCP_JWT_SECRET` — signs/verifies MCP OAuth JWTs (auth codes, access/refresh tokens); rotating it revokes all outstanding tokens
+- `MCP_STATIC_TOKEN` — static bearer token for CLI/CI MCP access (treat like `DIRECTUS_STATIC_TOKEN`)
+- `MCP_ALLOWED_EMAILS` — comma-separated Google SSO allowlist for the MCP server (defaults to `yoan@easyrecharge.ch`)
 
 ## Design System
 
@@ -96,15 +109,19 @@ Route types per level:
 
 ### Middleware
 
-`middleware.ts` at project root handles:
+`src/proxy.ts` (Next 16 proxy convention, replaces the old `middleware.ts`) handles:
 1. Root `/` → 301 redirect to `/fr`
 2. WordPress infrastructure paths → 410 Gone (`/wp-admin`, `/wp-login.php`, `/wp-content/`, etc.)
 3. Trailing slash removal (301 redirect, except lang roots `/fr/`, `/de/`)
 4. Attribution cookie middleware — mirrors ad click URL params (gclid, fbclid, msclkid, etc.) into server-set cookies to bypass Safari ITP 7-day JS cookie limit
 
-**Important:** Prefer `next.config.ts` `redirects()` over middleware for URL redirects. Middleware causes issues with Vercel's Turbopack builds and should only be used when redirect logic requires request inspection (cookies, headers, geo). All static URL redirects (legacy WordPress paths, language redirects, slug aliases) belong in `next.config.ts`.
+**Important:** Prefer `next.config.ts` `redirects()` over proxy/middleware for URL redirects. Middleware causes issues with Vercel's Turbopack builds and should only be used when redirect logic requires request inspection (cookies, headers, geo). All static URL redirects (legacy WordPress paths, language redirects, slug aliases) belong in `next.config.ts`.
 
 WordPress 301 redirects (legacy URLs) are in `next.config.ts` `redirects()`.
+
+### MCP Server
+
+A remote MCP server at `/api/mcp` (streamable HTTP via `mcp-handler`, implemented in `src/app/api/[transport]/route.ts`) exposes 25 tools — CMS reads, form submission writes, billing/admin, and generic Directus CRUD — to LLM clients (claude.ai, Claude Desktop, Claude Code). Auth is Google SSO with an email allowlist, or a static bearer token for CLI use; the OAuth authorization server lives at `/api/mcp-auth/{register,authorize,callback,token}` with discovery at `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource`. Tool implementations live in `src/lib/mcp/tools/`, auth/JWT logic in `src/lib/mcp/`. Full setup, env vars, and security caveats: `docs/mcp-setup.md`.
 
 ---
 
@@ -266,6 +283,9 @@ Dictionary strings can contain `{quote_request_duration}`, `{first_contact}`, `{
 | `/api/docs` | GET | OpenAPI 3.0 spec (JSON) |
 | `/api/debug/urls` | GET | List all generated URLs by type |
 | `/api-docs` | — | Swagger UI (interactive docs page) |
+| `/api/mcp` | GET/POST/DELETE | MCP server (streamable HTTP, 25 tools; OAuth or static bearer auth) — see `docs/mcp-setup.md` |
+| `/api/mcp-auth/*` | GET/POST | MCP OAuth AS endpoints: `register`, `authorize`, `callback`, `token` |
+| `/.well-known/oauth-*` | GET | MCP OAuth discovery (`oauth-authorization-server`, `oauth-protected-resource`) |
 
 Form submission routes create a session → user → submission chain in Directus, then fire a webhook to an external handler URL (configured in Directus `site_settings.global_config.webhooks`).
 
