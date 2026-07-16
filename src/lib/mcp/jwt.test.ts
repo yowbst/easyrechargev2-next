@@ -14,7 +14,7 @@ describe("jwt", () => {
 
   it("rejects a tampered payload", () => {
     const token = signJwt({ sub: "a" }, SECRET, 60);
-    const [h, p, s] = token.split(".");
+    const [h, , s] = token.split(".");
     const forged = Buffer.from(JSON.stringify({ sub: "b", exp: 9999999999 })).toString("base64url");
     expect(verifyJwt(`${h}.${forged}.${s}`, SECRET)).toBeNull();
   });
