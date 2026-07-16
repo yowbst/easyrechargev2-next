@@ -1,21 +1,5 @@
 import { NextResponse } from "next/server";
-import { directusFetch } from "@/lib/directus";
-import { getEnvironment } from "@/lib/directus-storage";
-
-const DISPATCH_FIELDS = [
-  "id",
-  "dispatched_at",
-  "status",
-  "canton",
-  "mode_used",
-  "month_bucket",
-  "environment",
-  "submission",
-  "partner.id",
-  "partner.slug",
-  "partner.name",
-  "partner.notification_email",
-].join(",");
+import { listDispatches } from "@/lib/dispatch/admin";
 
 /**
  * Read-only view of the partner_dispatches ledger. Filters to current
@@ -29,33 +13,22 @@ const DISPATCH_FIELDS = [
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const limit = Math.min(parseInt(searchParams.get("limit") ?? "20", 10) || 20, 200);
+  const limitParam = searchParams.get("limit");
+  const limit = limitParam !== null ? parseInt(limitParam, 10) : undefined;
   const canton = searchParams.get("canton");
   const status = searchParams.get("status");
   const envParam = searchParams.get("env");
   const partner = searchParams.get("partner");
 
-  const params = new URLSearchParams();
-  params.set("fields", DISPATCH_FIELDS);
-  params.set("sort", "-dispatched_at");
-  params.set("limit", String(limit));
-  if (envParam !== "all") {
-    params.set("filter[environment][_eq]", envParam ?? getEnvironment());
-  }
-  if (canton) params.set("filter[canton][_eq]", canton.toUpperCase());
-  if (status) params.set("filter[status][_eq]", status);
-  if (partner) params.set("filter[partner][slug][_eq]", partner);
-
   try {
-    const res = await directusFetch<{ data: unknown[] }>(
-      `/items/partner_dispatches?${params}`,
-      { next: { revalidate: 0 } },
-    );
-    return NextResponse.json({
-      count: res?.data?.length ?? 0,
-      environment: envParam ?? getEnvironment(),
-      rows: res?.data ?? [],
+    const result = await listDispatches({
+      limit,
+      canton,
+      status,
+      partner,
+      env: envParam,
     });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("[Debug Dispatches] Error:", error);
     return NextResponse.json(

@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-import { directusFetch } from "@/lib/directus";
-
-interface Row {
-  partner: string;
-  count: { id: string | number };
-  sum: { price_chf: string | number };
-}
+import { getMonthlyBilling } from "@/lib/dispatch/admin";
 
 /**
  * Monthly billing report — sums `price_chf` per partner where billable=true
@@ -25,39 +19,15 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
-  const month = searchParams.get("month");
-  if (!month || !/^\d{4}-\d{2}$/.test(month)) {
-    return NextResponse.json({ error: "invalid_month" }, { status: 400 });
+  const month = searchParams.get("month") ?? "";
+
+  try {
+    const result = await getMonthlyBilling(month);
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof Error && error.message === "invalid_month") {
+      return NextResponse.json({ error: "invalid_month" }, { status: 400 });
+    }
+    throw error;
   }
-
-  const params = new URLSearchParams();
-  params.set("aggregate[count]", "id");
-  params.set("aggregate[sum]", "price_chf");
-  params.set("groupBy", "partner");
-  params.set("filter[month_bucket][_eq]", month);
-  params.set("filter[billable][_eq]", "true");
-  params.set("filter[gift][_eq]", "false");
-  params.set("filter[disqualified][_eq]", "false");
-  params.set("limit", "500");
-
-  const res = await directusFetch<{ data: Row[] }>(
-    `/items/partner_dispatches?${params}`,
-    { next: { revalidate: 0 } },
-  );
-
-  const rows = (res?.data ?? []).map((r) => ({
-    partnerId: r.partner,
-    leadCount:
-      typeof r.count?.id === "string" ? parseInt(r.count.id, 10) : (r.count?.id ?? 0),
-    totalChf:
-      typeof r.sum?.price_chf === "string"
-        ? parseInt(r.sum.price_chf, 10)
-        : (r.sum?.price_chf ?? 0),
-  }));
-
-  return NextResponse.json({
-    month,
-    rows,
-    totalChf: rows.reduce((s, r) => s + (r.totalChf ?? 0), 0),
-  });
 }
