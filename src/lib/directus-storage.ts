@@ -202,6 +202,23 @@ class DirectusStorage {
       return null;
     }
   }
+
+  async listSubmissions(
+    opts: { limit?: number; formType?: string; status?: string; environment?: string } = {},
+  ): Promise<FormSubmission[]> {
+    const params = new URLSearchParams();
+    params.set("fields", "*,user.*,session.*");
+    params.set("sort", "-date_created");
+    params.set("limit", String(Math.min(Math.max(opts.limit ?? 20, 1), 200)));
+    const env = opts.environment ?? getEnvironment();
+    if (env !== "all") params.set("filter[environment][_eq]", env);
+    if (opts.formType) params.set("filter[form_type][_eq]", opts.formType);
+    if (opts.status) params.set("filter[status][_eq]", opts.status);
+    const res = await directusFetch<{ data: FormSubmission[] }>(`/items/form_submissions?${params.toString()}`, {
+      next: { revalidate: 0 },
+    });
+    return res?.data ?? [];
+  }
 }
 
 export const storage = new DirectusStorage();
