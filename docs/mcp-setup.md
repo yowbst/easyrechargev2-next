@@ -23,11 +23,13 @@ Every tool is annotated (`readOnlyHint` / `destructiveHint` / `idempotentHint`) 
 - `submit_quote` / `submit_contact` / `submit_mini_quote` create real Directus records and (for quote/contact) fire the production webhook — real emails go out.
 - `directus_create_item` / `directus_update_item` write directly to the production CMS.
 - `reconcile_billing` defaults to `dryRun: true` — it only *lists* what would be locked unless called with `dryRun: false`.
-- `dispatch_submission` is always live: it writes billing ledger rows and sends real partner + customer emails.
+- `dispatch_submission` is always live: it writes billing ledger rows and sends real partner + customer emails. It refuses to re-dispatch a submission that already has a dispatched ledger row (returns `already_dispatched` with the existing row count); `force: true` bypasses that guard.
 
 Auth is one of:
 - **Google SSO** (OAuth 2.1 + PKCE) — restricted to an email allowlist (default `yoan@easyrecharge.ch`, overridable via `MCP_ALLOWED_EMAILS`).
 - **Static bearer token** (`MCP_STATIC_TOKEN`) — same access as OAuth, meant for CLI/CI use (e.g. Claude Code) and for preview deployments where the OAuth redirect URIs aren't registered.
+
+OAuth endpoints: the authorization server lives at `/api/mcp-auth/{register,authorize,callback,token}`; discovery metadata is served at `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource` (plus the RFC 9728 path-suffix variant `/.well-known/oauth-protected-resource/api/mcp`, which some clients query).
 
 ## 2. Google OAuth client setup (one-time)
 
@@ -88,7 +90,7 @@ Export `MCP_STATIC_TOKEN` in your shell first (from your password manager / Verc
 - **Auth codes are short-lived but not replay-tracked.** Authorization codes expire after 5 minutes (standard OAuth code flow) but the server doesn't track single-use consumption beyond expiry — treat the 5-minute window as the only protection.
 - **The static token is equivalent to the Directus admin token.** It bypasses the Google allowlist entirely and grants the same full read/write tool access as OAuth. Store and rotate it with the same care as `DIRECTUS_STATIC_TOKEN`.
 - **`reconcile_billing` defaults to `dryRun: true`.** Always inspect the dry-run output before calling it with `dryRun: false` — that locks billing rows irreversibly.
-- **`dispatch_submission` has no dry-run.** It always sends real partner/customer emails and writes billing ledger rows when called.
+- **`dispatch_submission` has no dry-run.** It always sends real partner/customer emails and writes billing ledger rows when called. Its duplicate guard refuses submissions that already have a dispatched ledger row (`already_dispatched`) — but **`force: true` bypasses the guard and risks DOUBLE-billing and DOUBLE partner/customer emails**. Only use `force` deliberately, after checking `list_dispatches` for the submission to understand why a dispatched row already exists.
 - **Preview deployments work with the static token only** — the Google OAuth redirect URIs are fixed to production (`https://easyrecharge.ch/...`) and localhost, so PR/branch preview URLs can't complete the Google flow.
 
 ## 7. Smoke test

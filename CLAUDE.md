@@ -121,7 +121,12 @@ WordPress 301 redirects (legacy URLs) are in `next.config.ts` `redirects()`.
 
 ### MCP Server
 
-A remote MCP server at `/api/mcp` (streamable HTTP via `mcp-handler`, implemented in `src/app/api/[transport]/route.ts`) exposes 25 tools — CMS reads, form submission writes, billing/admin, and generic Directus CRUD — to LLM clients (claude.ai, Claude Desktop, Claude Code). Auth is Google SSO with an email allowlist, or a static bearer token for CLI use; the OAuth authorization server lives at `/api/mcp-auth/{register,authorize,callback,token}` with discovery at `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource`. Tool implementations live in `src/lib/mcp/tools/`, auth/JWT logic in `src/lib/mcp/`. Full setup, env vars, and security caveats: `docs/mcp-setup.md`.
+- Remote MCP server at `/api/mcp` — streamable HTTP via `mcp-handler`, implemented in `src/app/api/[transport]/route.ts`
+- 25 tools: CMS reads, form submission writes, billing/admin, generic Directus CRUD — for LLM clients (claude.ai, Claude Desktop, Claude Code)
+- Auth: Google SSO with email allowlist, OR static bearer token (`MCP_STATIC_TOKEN`) for CLI use
+- OAuth AS at `/api/mcp-auth/{register,authorize,callback,token}`; discovery at `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource`
+- Tool implementations in `src/lib/mcp/tools/`, auth/JWT logic in `src/lib/mcp/`
+- Full setup, env vars, and security caveats: `docs/mcp-setup.md`
 
 ---
 
