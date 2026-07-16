@@ -50,8 +50,12 @@ describe("GET /api/mcp-auth/authorize", () => {
   });
 
   it("redirects back with error=invalid_request when PKCE is missing or not S256", async () => {
-    for (const bad of [{ code_challenge: null }, { code_challenge_method: "plain" }]) {
-      const res = await authorize(bad as Record<string, string | null>);
+    const badPkce: Array<Record<string, string | null>> = [
+      { code_challenge: null },
+      { code_challenge_method: "plain" },
+    ];
+    for (const bad of badPkce) {
+      const res = await authorize(bad);
       const loc = new URL(res.headers.get("location")!);
       expect(loc.origin).toBe("https://claude.ai");
       expect(loc.searchParams.get("error")).toBe("invalid_request");
