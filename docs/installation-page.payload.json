@@ -1,0 +1,219 @@
+{
+ "status": "published",
+ "route_id": "installation",
+ "type": "app",
+ "translations": [
+  {
+   "languages_code": "fr-FR",
+   "title": "Installation de borne de recharge en Suisse",
+   "slug": "installation-borne-de-recharge",
+   "seo": {
+    "title": "Installation borne de recharge Suisse | Devis gratuit",
+    "meta_description": "Installation de borne de recharge par des électriciens certifiés, partout en Suisse romande. Prix fixe, subventions gérées pour vous. Devis gratuit en 5 min.",
+    "focus_keyphrase": "installation borne de recharge",
+    "no_index": false
+   },
+   "content": {
+    "intro": "<p>Vous cherchez un installateur pour votre borne de recharge ? easyRecharge organise l'installation de votre borne de recharge à domicile, partout en Suisse romande. Devis gratuit en 5 minutes, prix fixe et électriciens certifiés : plus de 550 installations déjà réalisées.</p><p>Maison individuelle, copropriété (PPE) ou location : nous coordonnons l'ensemble du projet, du choix de la borne aux démarches de subventions. Vous n'avez qu'un seul interlocuteur.</p>",
+    "steps": {
+     "heading": "Comment se déroule l'installation d'une borne de recharge ?",
+     "intro": "<p>De la demande en ligne à la mise en service, votre projet suit cinq étapes simples. Chacune est pensée pour vous éviter les allers-retours avec plusieurs corps de métier.</p>",
+     "items": [
+      {
+       "title": "Demande de devis en ligne",
+       "text": "Décrivez votre situation — maison, PPE ou location — en 5 minutes. C'est gratuit et sans engagement."
+      },
+      {
+       "title": "Analyse technique",
+       "text": "Un conseiller vous contacte sous 72 heures pour préciser votre installation électrique : distance au tableau, puissance disponible, type de stationnement."
+      },
+      {
+       "title": "Devis à prix fixe",
+       "text": "Vous recevez sous 3 à 5 jours un devis ferme, matériel et main-d'œuvre compris. Le montant annoncé est celui que vous payez."
+      },
+      {
+       "title": "Installation par un électricien certifié",
+       "text": "L'intervention dure généralement 2 à 4 heures. Le raccordement respecte les normes suisses (OIBT) et la borne est testée avec vous."
+      },
+      {
+       "title": "Mise en service et subventions",
+       "text": "Votre borne est configurée et prête à charger. Nous vous aidons à faire valoir les subventions disponibles dans votre commune."
+      }
+     ]
+    },
+    "price": {
+     "heading": "Combien coûte l'installation d'une borne de recharge ?",
+     "intro": "<p>L'installation complète d'une borne de recharge en Suisse coûte entre CHF 1'500 et 4'000, matériel et pose compris. Pour une borne 11 kW triphasée standard — le choix le plus courant — comptez CHF 2'000 à 3'000 dans la majorité des cas.</p><p>Le budget se répartit entre la borne elle-même et le travail de l'électricien. La distance entre votre tableau électrique et la place de stationnement est le facteur qui fait le plus varier le prix.</p>",
+     "rows": [
+      {
+       "label": "Borne (wallbox)",
+       "value": "CHF {charger_min} à {charger_max} selon la gamme"
+      },
+      {
+       "label": "Main-d'œuvre (2 à 4 h)",
+       "value": "CHF 400 à 800"
+      },
+      {
+       "label": "Câblage, protections et mise en conformité",
+       "value": "CHF 300 à 1'200"
+      },
+      {
+       "label": "Total typique borne 11 kW",
+       "value": "CHF 2'000 à 3'000"
+      }
+     ],
+     "note": "<p>Notre devis est à prix fixe : pas de supplément découvert en cours de chantier. Pour le détail poste par poste, consultez notre <a href=\"/fr/blog/guide-recharge/combien-coute-linstallation-dune-borne-de-recharge-electrique\">guide complet des prix d'installation</a>.</p>"
+    },
+    "delais": {
+     "heading": "Quels sont les délais pour installer une borne de recharge ?",
+     "text": "<p>Votre demande de devis prend 5 minutes en ligne. Un conseiller vous contacte ensuite sous 72 heures, et vous recevez votre devis ferme sous 3 à 5 jours.</p><p>L'intervention chez vous dure 2 à 4 heures pour une configuration standard. Au total, la plupart des projets aboutissent en quelques semaines — le délai dépend surtout des éventuelles autorisations à obtenir (accord de PPE, annonce au fournisseur d'énergie) et de la disponibilité des installateurs dans votre région.</p>"
+    },
+    "subventions": {
+     "heading": "Quelles subventions pour votre borne de recharge ?",
+     "text": "<p>De nombreux cantons et communes soutiennent l'installation de bornes de recharge : les aides vont généralement de CHF 500 à 2'000. À Genève par exemple, la subvention peut atteindre CHF 2'000 pour une borne intelligente posée par un installateur agréé.</p><p>Consultez les <a href=\"{r:localities}\">subventions bornes de recharge par commune</a> pour connaître les montants exacts dans votre localité. Et bonne nouvelle : dans le cadre de votre projet, nous gérons les démarches de subvention pour vous.</p>"
+    },
+    "zones": {
+     "heading": "Où installons-nous des bornes de recharge en Suisse ?",
+     "text": "<p>Nos électriciens certifiés interviennent dans les cantons de Vaud, Genève, Valais et Fribourg — partout en Suisse romande, de Genève à Sion en passant par Lausanne et Fribourg.</p><p>Votre commune n'est pas encore couverte ? Déposez quand même votre demande : notre réseau d'installateurs partenaires s'étend en continu et nous vous informons dès qu'une intervention est possible.</p>"
+    },
+    "faq": {
+     "heading": "Questions fréquentes sur l'installation de borne de recharge",
+     "items": [
+      {
+       "q": "Puis-je installer ma borne de recharge moi-même ?",
+       "a": "Non. En Suisse, le raccordement d'une borne de recharge doit être réalisé par un électricien autorisé, conformément à l'ordonnance OIBT. Une installation non conforme peut invalider votre assurance et compromettre la sécurité de votre logement — notre article <a href=\"/fr/blog/guide-recharge/puis-je-installer-une-borne-de-recharge-electrique-moi-meme\">« Puis-je installer une borne moi-même ? »</a> détaille ce point."
+      },
+      {
+       "q": "Faut-il une autorisation pour installer une borne ?",
+       "a": "Selon votre canton et votre fournisseur d'énergie, une annonce préalable ou une autorisation peut être requise, surtout au-delà de 11 kW. Nous vérifions et gérons ces démarches dans le cadre de votre projet — voir aussi notre article sur <a href=\"/fr/blog/guide-recharge/dois-je-demander-une-autorisation-a-mon-fournisseur-denergie-avant-dinstaller-une-borne\">l'autorisation du fournisseur d'énergie</a>."
+      },
+      {
+       "q": "Quelle puissance choisir : 11 kW ou 22 kW ?",
+       "a": "Une borne 11 kW triphasée suffit pour la quasi-totalité des usages : elle redonne environ 60 km d'autonomie par heure de charge. Le 22 kW exige souvent un renforcement du raccordement et une autorisation supplémentaire, pour un gain réel limité au quotidien."
+      },
+      {
+       "q": "Je suis locataire ou en copropriété (PPE) : est-ce possible ?",
+       "a": "Oui, avec l'accord du propriétaire ou de l'assemblée de copropriété. Nos partenaires maîtrisent les solutions adaptées — comptage individuel, gestion de charge dynamique — et nous vous guidons dans les <a href=\"/fr/blog/guide-recharge/quelles-sont-les-demarches-administratives-en-tant-que-co-proprietaire-en-ppe-pour-installer-une-borne-de-recharge\">démarches administratives</a>."
+      },
+      {
+       "q": "Quelle borne est compatible avec ma voiture électrique ?",
+       "a": "Toutes les bornes que nous installons utilisent le connecteur Type 2, standard européen compatible avec tous les véhicules récents. Consultez notre <a href=\"{r:vehicles}\">catalogue de véhicules électriques</a> pour les temps de charge propres à votre modèle."
+      }
+     ]
+    },
+    "cta": {
+     "headline": "Prêt à installer votre borne de recharge ?",
+     "subheadline": "Obtenez votre devis personnalisé en moins de 5 minutes.",
+     "label": "Obtenir un devis gratuit",
+     "note": "Sans engagement • Réponse sous 72 h"
+    }
+   }
+  },
+  {
+   "languages_code": "de-DE",
+   "title": "Installation einer Ladestation in der Schweiz",
+   "slug": "installation-ladestation",
+   "seo": {
+    "title": "Installation Ladestation Schweiz | Kostenlose Offerte",
+    "meta_description": "Installation Ihrer Ladestation durch zertifizierte Elektriker in der Westschweiz. Fixpreis, Fördergelder für Sie verwaltet. Kostenlose Offerte in 5 Minuten.",
+    "focus_keyphrase": "Installation Ladestation",
+    "no_index": false
+   },
+   "content": {
+    "intro": "<p>Sie suchen einen Installateur für Ihre Ladestation? easyRecharge organisiert die Installation Ihrer Heimladestation in der ganzen Westschweiz. Kostenlose Offerte in 5 Minuten, Fixpreis und zertifizierte Elektriker: über 550 realisierte Installationen.</p><p>Einfamilienhaus, Stockwerkeigentum oder Mietwohnung: Wir koordinieren das gesamte Projekt, von der Wahl der Ladestation bis zu den Fördergesuchen. Sie haben nur einen Ansprechpartner.</p>",
+    "steps": {
+     "heading": "Wie läuft die Installation einer Ladestation ab?",
+     "intro": "<p>Von der Online-Anfrage bis zur Inbetriebnahme folgt Ihr Projekt fünf einfachen Schritten.</p>",
+     "items": [
+      {
+       "title": "Offerte online anfragen",
+       "text": "Beschreiben Sie Ihre Situation — Haus, Stockwerkeigentum oder Miete — in 5 Minuten. Kostenlos und unverbindlich."
+      },
+      {
+       "title": "Technische Analyse",
+       "text": "Ein Berater kontaktiert Sie innert 72 Stunden und klärt Ihre Elektroinstallation: Distanz zum Verteiler, verfügbare Leistung, Parkplatzsituation."
+      },
+      {
+       "title": "Offerte zum Fixpreis",
+       "text": "Sie erhalten innert 3 bis 5 Tagen eine verbindliche Offerte, Material und Arbeit inbegriffen. Der genannte Betrag ist der, den Sie bezahlen."
+      },
+      {
+       "title": "Installation durch zertifizierten Elektriker",
+       "text": "Der Einsatz dauert in der Regel 2 bis 4 Stunden. Der Anschluss entspricht den Schweizer Normen (NIV) und die Ladestation wird mit Ihnen getestet."
+      },
+      {
+       "title": "Inbetriebnahme und Fördergelder",
+       "text": "Ihre Ladestation ist konfiguriert und einsatzbereit. Wir helfen Ihnen, die in Ihrer Gemeinde verfügbaren Fördergelder geltend zu machen."
+      }
+     ]
+    },
+    "price": {
+     "heading": "Was kostet die Installation einer Ladestation?",
+     "intro": "<p>Die komplette Installation einer Ladestation kostet in der Schweiz zwischen CHF 1'500 und 4'000, Material und Montage inbegriffen. Für eine dreiphasige 11-kW-Ladestation — die häufigste Wahl — rechnen Sie in den meisten Fällen mit CHF 2'000 bis 3'000.</p>",
+     "rows": [
+      {
+       "label": "Ladestation (Wallbox)",
+       "value": "CHF {charger_min} bis {charger_max} je nach Modell"
+      },
+      {
+       "label": "Arbeitsaufwand (2 bis 4 h)",
+       "value": "CHF 400 bis 800"
+      },
+      {
+       "label": "Verkabelung, Absicherung und Konformität",
+       "value": "CHF 300 bis 1'200"
+      },
+      {
+       "label": "Typische Gesamtkosten 11 kW",
+       "value": "CHF 2'000 bis 3'000"
+      }
+     ],
+     "note": "<p>Unsere Offerte ist ein Fixpreis: keine Überraschungen während der Arbeiten.</p>"
+    },
+    "delais": {
+     "heading": "Wie lange dauert die Installation einer Ladestation?",
+     "text": "<p>Ihre Offertenanfrage dauert 5 Minuten. Ein Berater kontaktiert Sie innert 72 Stunden, die verbindliche Offerte folgt innert 3 bis 5 Tagen.</p><p>Der Einsatz bei Ihnen dauert 2 bis 4 Stunden bei einer Standardkonfiguration. Insgesamt sind die meisten Projekte in wenigen Wochen abgeschlossen — abhängig von allfälligen Bewilligungen (STWE, Meldung an den Energieversorger) und der Verfügbarkeit der Installateure.</p>"
+    },
+    "subventions": {
+     "heading": "Welche Fördergelder gibt es für Ihre Ladestation?",
+     "text": "<p>Viele Kantone und Gemeinden unterstützen die Installation von Ladestationen mit Beiträgen von in der Regel CHF 500 bis 2'000. In Genf kann der Beitrag für eine intelligente Ladestation bis zu CHF 2'000 betragen.</p><p>Prüfen Sie die <a href=\"{r:localities}\">Förderung für Ladestationen nach Gemeinde</a> — und im Rahmen Ihres Projekts übernehmen wir die Fördergesuche für Sie.</p>"
+    },
+    "zones": {
+     "heading": "Wo installieren wir Ladestationen in der Schweiz?",
+     "text": "<p>Unsere zertifizierten Elektriker sind in den Kantonen Waadt, Genf, Wallis und Freiburg tätig — in der ganzen Westschweiz, von Genf über Lausanne und Freiburg bis Sitten.</p><p>Ihre Gemeinde ist noch nicht abgedeckt? Stellen Sie Ihre Anfrage trotzdem: Unser Partnernetz wächst laufend.</p>"
+    },
+    "faq": {
+     "heading": "Häufige Fragen zur Installation einer Ladestation",
+     "items": [
+      {
+       "q": "Kann ich meine Ladestation selbst installieren?",
+       "a": "Nein. In der Schweiz muss der Anschluss einer Ladestation gemäss NIV durch einen bewilligten Elektriker erfolgen. Eine nicht konforme Installation kann Ihren Versicherungsschutz gefährden."
+      },
+      {
+       "q": "Braucht es eine Bewilligung für die Installation?",
+       "a": "Je nach Kanton und Energieversorger ist eine Meldung oder Bewilligung nötig, insbesondere über 11 kW. Wir prüfen und übernehmen diese Schritte im Rahmen Ihres Projekts."
+      },
+      {
+       "q": "Welche Leistung wählen: 11 kW oder 22 kW?",
+       "a": "Eine dreiphasige 11-kW-Ladestation genügt für fast alle Bedürfnisse: rund 60 km Reichweite pro Ladestunde. 22 kW erfordert oft eine Verstärkung des Anschlusses und eine zusätzliche Bewilligung."
+      },
+      {
+       "q": "Ich bin Mieter oder im Stockwerkeigentum: Ist das möglich?",
+       "a": "Ja, mit dem Einverständnis des Eigentümers bzw. der Eigentümerversammlung. Unsere Partner kennen die passenden Lösungen — individuelle Abrechnung, dynamisches Lastmanagement — und wir begleiten Sie bei den Schritten."
+      },
+      {
+       "q": "Welche Ladestation passt zu meinem Elektroauto?",
+       "a": "Alle von uns installierten Ladestationen nutzen den Typ-2-Stecker, den europäischen Standard für alle neueren Fahrzeuge. In unserem <a href=\"{r:vehicles}\">Elektrofahrzeug-Katalog</a> finden Sie die Ladezeiten Ihres Modells."
+      }
+     ]
+    },
+    "cta": {
+     "headline": "Bereit für Ihre eigene Ladestation?",
+     "subheadline": "Erhalten Sie Ihre persönliche Offerte in weniger als 5 Minuten.",
+     "label": "Kostenlose Offerte anfordern",
+     "note": "Unverbindlich • Antwort innert 72 h"
+    }
+   }
+  }
+ ]
+}

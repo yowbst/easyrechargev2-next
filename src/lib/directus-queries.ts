@@ -514,3 +514,35 @@ export async function fetchCantonArticle(
 
   return result?.data?.[0] ?? null;
 }
+
+// ─── Chargers (installation service page price bounds) ──────────────────
+
+/**
+ * CHF price bounds across the published charger catalog (price_from on the
+ * charger plus live SKU prices). Used by the installation service page so
+ * the displayed range tracks the catalog instead of going stale.
+ */
+export async function fetchChargerPriceRange(): Promise<{ min: number; max: number } | null> {
+  const path = buildItemsQuery({
+    collection: "chargers",
+    fields: ["price_from", "skus.price"],
+    filter: { "[status][_eq]": "published" },
+    limit: 200,
+  });
+
+  const result = await directusFetch<{ data: AnyRecord[] }>(path, {
+    next: { revalidate: 3600, tags: ["chargers-prices"] },
+  });
+
+  const prices: number[] = [];
+  for (const charger of result?.data ?? []) {
+    const from = typeof charger.price_from === "object" ? charger.price_from?.value : charger.price_from;
+    if (typeof from === "number" && from > 0) prices.push(from);
+    for (const sku of charger.skus ?? []) {
+      const value = sku?.price?.value;
+      if (typeof value === "number" && value > 0) prices.push(value);
+    }
+  }
+  if (!prices.length) return null;
+  return { min: Math.min(...prices), max: Math.max(...prices) };
+}

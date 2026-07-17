@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands, fetchAllLocalitySlugs, fetchCantonCoats } from "@/lib/directus-queries";
+import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands, fetchAllLocalitySlugs, fetchCantonCoats, fetchChargerPriceRange } from "@/lib/directus-queries";
+import { InstallationServicePage } from "@/components/InstallationServicePage";
 import Link from "next/link";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -427,6 +428,30 @@ export default async function SlugPage({ params }: SlugPageProps) {
         </section>
       </div>
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Installation service page (SEO landing for "installation borne de
+  // recharge" queries) — copy lives in the Directus page translation's
+  // `content` JSON; charger price bounds are computed live from the catalog.
+  // ---------------------------------------------------------------------------
+  if (entry.id === "installation") {
+    const installTranslation = page?.translations?.[0];
+    const installContent = installTranslation?.content;
+    if (installContent) {
+      const chargerRange = await fetchChargerPriceRange();
+      return (
+        <InstallationServicePage
+          lang={lang}
+          slug={slug}
+          title={installTranslation?.title || ""}
+          content={installContent}
+          registry={registry}
+          chargerRange={chargerRange}
+        />
+      );
+    }
+    // No content yet in Directus → fall through to the generic renderer.
   }
 
   // ---------------------------------------------------------------------------
