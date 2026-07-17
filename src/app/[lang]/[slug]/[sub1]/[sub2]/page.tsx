@@ -566,8 +566,9 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
               alt={articleTitle}
               fill
               priority
+              fetchPriority="high"
               quality={65}
-              sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1200px"
+              sizes="(max-width: 1024px) 100vw, 1200px"
               className="object-cover"
               data-testid="img-article-hero"
             />

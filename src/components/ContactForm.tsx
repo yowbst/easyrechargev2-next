@@ -225,14 +225,16 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
   }, [pageRegistry, lang]);
 
   return (
-    <APIProvider apiKey={googleMapsApiKey} libraries={["places"]}>
     <div>
-      {/* Hero Section */}
+      {/* Hero Section — kept OUTSIDE the ssr:false APIProvider so the LCP
+          hero image and H1 are server-rendered; only the form (which needs
+          Google Places) waits for the client-only maps chunk. */}
       <section
         className="relative py-20 md:py-28 overflow-hidden"
       >
         {hasHeroImage && (
-          <Image src={heroImage!} alt="" fill quality={60} sizes="100vw" className="object-cover object-center" />
+          // LCP element of the contact page — must never lazy-load.
+          <Image src={heroImage!} alt="" fill priority fetchPriority="high" quality={60} sizes="100vw" className="object-cover object-center" />
         )}
         {hasHeroImage ? (
           <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />
@@ -250,6 +252,7 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
         </div>
       </section>
 
+      <APIProvider apiKey={googleMapsApiKey} libraries={["places"]}>
       <div className="bg-muted/30">
       <div className="container mx-auto px-4 py-16 pb-20">
         <div className="max-w-3xl mx-auto">
@@ -649,6 +652,7 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
         </div>
       </div>
       </div>
+      </APIProvider>
 
       {/* GetQuote CTA */}
       <GetQuote
@@ -661,6 +665,5 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
         image={getQuoteBlock?.image}
       />
     </div>
-    </APIProvider>
   );
 }

@@ -35,8 +35,12 @@ export function Hero({
           alt=""
           fill
           priority
+          // LCP element on every template that uses this hero. `priority`
+          // alone only preloads; without fetchPriority the browser queues the
+          // image at Low priority behind CSS/fonts/JS on slow mobile networks.
+          fetchPriority="high"
           quality={60}
-          sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
+          sizes="(max-width: 1024px) 100vw, 1920px"
           className="object-cover object-center brightness-105 saturate-105 dark:brightness-100 dark:saturate-100"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 to-slate-900/30 dark:from-slate-900/80 dark:to-slate-900/40" />

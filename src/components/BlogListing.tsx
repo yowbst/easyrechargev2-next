@@ -166,8 +166,11 @@ export function BlogListing({
                 alt=""
                 fill
                 priority
+                // LCP element of the blog listing — fetch at high priority so
+                // it isn't queued behind CSS/fonts/JS on mobile.
+                fetchPriority="high"
                 quality={60}
-                sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
+                sizes="(max-width: 1024px) 100vw, 1920px"
                 className="object-cover object-center"
               />
               <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />

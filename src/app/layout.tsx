@@ -22,6 +22,9 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
   display: "swap",
+  // Only used for specs/data below the fold — don't let its preload compete
+  // with the LCP hero image on slow mobile connections.
+  preload: false,
 });
 
 const SITE_URL = process.env.SITE_URL || "https://easyrecharge.ch";
