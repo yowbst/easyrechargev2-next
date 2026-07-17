@@ -2,7 +2,10 @@
 
 A remote [Model Context Protocol](https://modelcontextprotocol.io) server exposing easyRecharge's CMS, forms, and admin data to LLM clients (Claude.ai, Claude Desktop, Claude Code, or any MCP-compatible client).
 
-- **Endpoint:** `https://easyrecharge.ch/api/mcp`
+- **Endpoint:** `https://www.easyrecharge.ch/api/mcp` — the **`www` host is mandatory**.
+  The apex domain 307-redirects to `www`, and HTTP clients drop the `Authorization`
+  header on cross-origin redirects, so a connector configured with the apex URL
+  completes OAuth but then gets 401 on every MCP call.
 - **Transport:** streamable HTTP (via [`mcp-handler`](https://www.npmjs.com/package/mcp-handler))
 - **Implementation:** `src/app/api/[transport]/route.ts` + `src/lib/mcp/`
 
@@ -73,14 +76,14 @@ Notes:
 ## 4. Connect claude.ai / Claude Desktop (Google SSO)
 
 1. **Settings → Connectors → Add custom connector**.
-2. URL: `https://easyrecharge.ch/api/mcp`
+2. URL: `https://www.easyrecharge.ch/api/mcp`
 3. Claude opens the OAuth flow → redirects to Google → sign in with an allowlisted Google account (`yoan@easyrecharge.ch` by default).
 4. After consent, Claude receives an access token (30-day expiry) and refresh token (90-day expiry) and the connector goes green.
 
 ## 5. Connect Claude Code (static token)
 
 ```bash
-claude mcp add --transport http easyrecharge https://easyrecharge.ch/api/mcp \
+claude mcp add --transport http easyrecharge https://www.easyrecharge.ch/api/mcp \
   --header "Authorization: Bearer $MCP_STATIC_TOKEN"
 ```
 
@@ -115,5 +118,5 @@ The script (`scripts/mcp-smoke.mjs`):
 To run it against a deployed environment instead of local dev, set `MCP_URL`:
 
 ```bash
-MCP_URL=https://easyrecharge.ch/api/mcp MCP_STATIC_TOKEN="..." node scripts/mcp-smoke.mjs
+MCP_URL=https://www.easyrecharge.ch/api/mcp MCP_STATIC_TOKEN="..." node scripts/mcp-smoke.mjs
 ```
