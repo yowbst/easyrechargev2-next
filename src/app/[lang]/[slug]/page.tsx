@@ -441,7 +441,13 @@ export default async function SlugPage({ params }: SlugPageProps) {
     "block_testimonials", "block_getquote", "block_postgroup",
     "block_swissmap", "block_miniquote",
   ]);
-  const hasRenderableBlocks = blocks.some(
+  // Pages with a prose `body` (legal notices, privacy policy) are content
+  // pages: they must render the H1 + body fallback below. Without this
+  // guard, their lone GetQuote CTA block flipped them into the block path,
+  // which rendered ONLY the CTA — no H1 and none of the legal text.
+  // (The CTA block is still rendered, after the prose, in the fallback.)
+  const pageBody = page?.translations?.[0]?.body;
+  const hasRenderableBlocks = !pageBody && blocks.some(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (b: any) => b?.collection && RENDERABLE_BLOCK_TYPES.has(b.collection),
   );
@@ -829,6 +835,27 @@ export default async function SlugPage({ params }: SlugPageProps) {
           )}
         </div>
       </div>
+
+      {/* CTA block from Directus (legal pages carry a GetQuote block) */}
+      {(() => {
+        const getQuoteItem = findBlock(blocks, "block_getquote");
+        if (!getQuoteItem) return null;
+        const quoteEntry = registry.find((p) => p.id === "quote");
+        const quoteSlug = quoteEntry?.slugs[lang];
+        const ctaHref = quoteSlug ? `/${lang}/${quoteSlug}` : `/${lang}`;
+        return (
+          <section id="getquote">
+            <GetQuote
+              title={t(dictionary, `${tPrefix}.blocks.getquote.headline`)}
+              subtitle={t(dictionary, `${tPrefix}.blocks.getquote.subheadline`)}
+              ctaLabel={t(dictionary, `${tPrefix}.blocks.getquote.cta.label`)}
+              ctaHref={ctaHref}
+              note={t(dictionary, `${tPrefix}.blocks.getquote.note`)}
+              image={getQuoteItem.image ? `${DIRECTUS_URL}/assets/${getQuoteItem.image}` : undefined}
+            />
+          </section>
+        );
+      })()}
     </>
   );
 }
