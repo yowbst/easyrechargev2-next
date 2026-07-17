@@ -88,7 +88,11 @@ export function normalizeTitle(raw: string): string {
   const content = raw
     .replace(/\s*[|\-\u2013\u2014]\s*easyRecharge\s*$/i, "")
     .trim();
-  return truncate(content, TITLE_CONTENT_MAX) + TITLE_SUFFIX;
+  // Short titles get the brand suffix. Longer ones keep their full wording
+  // and drop the brand instead of being ellipsis-truncated to make room for
+  // it \u2014 "\u2026| easyRecharge" in the SERP loses keywords and clicks.
+  if (content.length <= TITLE_CONTENT_MAX) return content + TITLE_SUFFIX;
+  return truncate(content, 60);
 }
 
 // ── Template SEO logic ──────────────────────────────────────────────────
