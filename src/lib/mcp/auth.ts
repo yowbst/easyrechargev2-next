@@ -127,26 +127,13 @@ export function checkStaticToken(token: string): boolean {
 }
 
 // ── verifyToken for withMcpAuth ────────────────────────────────────────
-export async function verifyMcpToken(req: Request, bearerToken?: string): Promise<AuthInfo | undefined> {
-  const rawAuth = req.headers.get("authorization");
-  if (!bearerToken) {
-    console.warn(`[mcp/verify] no_bearer rawAuthPresent=${!!rawAuth} rawAuthPrefix=${rawAuth?.slice(0, 7) ?? "none"}`);
-    return undefined;
-  }
+export async function verifyMcpToken(_req: Request, bearerToken?: string): Promise<AuthInfo | undefined> {
+  if (!bearerToken) return undefined;
   if (checkStaticToken(bearerToken)) {
-    console.log("[mcp/verify] static_ok");
     return { token: bearerToken, scopes: ["mcp"], clientId: "static-token", extra: { method: "static" } };
   }
   const c = verifyJwt(bearerToken, secret());
-  if (!c) {
-    console.warn(`[mcp/verify] jwt_invalid staticConfigured=${(process.env.MCP_STATIC_TOKEN?.length ?? 0) >= 16} tokenLen=${bearerToken.length}`);
-    return undefined;
-  }
-  if (c.typ !== "access" || typeof c.sub !== "string" || !isAllowedEmail(c.sub)) {
-    console.warn(`[mcp/verify] rejected typ=${String(c.typ)} sub=${String(c.sub)} allowed=${typeof c.sub === "string" ? isAllowedEmail(c.sub) : false}`);
-    return undefined;
-  }
-  console.log(`[mcp/verify] oauth_ok sub=${c.sub}`);
+  if (!c || c.typ !== "access" || typeof c.sub !== "string" || !isAllowedEmail(c.sub)) return undefined;
   return { token: bearerToken, scopes: ["mcp"], clientId: c.sub, extra: { method: "oauth", email: c.sub } };
 }
 
