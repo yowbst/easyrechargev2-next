@@ -36,8 +36,11 @@ OAuth endpoints: the authorization server lives at `/api/mcp-auth/{register,auth
 1. Go to [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services → Credentials**.
 2. **Create Credentials → OAuth client ID**.
 3. Application type: **Web application**.
-4. **Authorized redirect URIs** — add both:
-   - `https://easyrecharge.ch/api/mcp-auth/callback`
+4. **Authorized redirect URIs** — add both. Use the **`www`** host: the site
+   canonicalizes `easyrecharge.ch` → `www.easyrecharge.ch`, so the server always
+   tells Google the callback is on `www`. Registering the apex (non-`www`) URL
+   causes `Error 400: redirect_uri_mismatch`.
+   - `https://www.easyrecharge.ch/api/mcp-auth/callback`
    - `http://localhost:3000/api/mcp-auth/callback`
 5. Create, then copy the **Client ID** and **Client secret** — these become `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` below.
 
@@ -91,7 +94,7 @@ Export `MCP_STATIC_TOKEN` in your shell first (from your password manager / Verc
 - **The static token is equivalent to the Directus admin token.** It bypasses the Google allowlist entirely and grants the same full read/write tool access as OAuth. Store and rotate it with the same care as `DIRECTUS_STATIC_TOKEN`.
 - **`reconcile_billing` defaults to `dryRun: true`.** Always inspect the dry-run output before calling it with `dryRun: false` — that locks billing rows irreversibly.
 - **`dispatch_submission` has no dry-run.** It always sends real partner/customer emails and writes billing ledger rows when called. Its duplicate guard refuses submissions that already have a dispatched ledger row (`already_dispatched`) — but **`force: true` bypasses the guard and risks DOUBLE-billing and DOUBLE partner/customer emails**. Only use `force` deliberately, after checking `list_dispatches` for the submission to understand why a dispatched row already exists.
-- **Preview deployments work with the static token only** — the Google OAuth redirect URIs are fixed to production (`https://easyrecharge.ch/...`) and localhost, so PR/branch preview URLs can't complete the Google flow.
+- **Preview deployments work with the static token only** — the Google OAuth redirect URIs are fixed to production (`https://www.easyrecharge.ch/...`) and localhost, so PR/branch preview URLs can't complete the Google flow.
 
 ## 7. Smoke test
 
