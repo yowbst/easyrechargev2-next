@@ -167,10 +167,13 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
+     * - api/ (route handlers — the proxy no-ops on these anyway, and running
+     *   Edge middleware on them can strip the Authorization header the MCP
+     *   endpoint at /api/mcp depends on)
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico, sitemap.xml, robots.txt
      */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!api/|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
