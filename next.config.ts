@@ -54,11 +54,12 @@ const nextConfig: NextConfig = {
       { source: "/espace-pour-partenaires", destination: "/fr/contact", permanent: true },
       { source: "/espace-pour-partenaires/conditions-generales-partenaires", destination: "/fr/mentions-legales", permanent: true },
       { source: "/espace-pour-partenaires/:path*", destination: "/fr/contact", permanent: true },
-      // Sitemap aliases — redirect legacy URLs to individual sitemaps
-      { source: "/sitemap.xml", destination: "/api/sitemap-index", permanent: false },
-      { source: "/sitemap_index.xml", destination: "/api/sitemap-index", permanent: false },
-      { source: "/sitemap-index.xml", destination: "/api/sitemap-index", permanent: false },
-      { source: "/wp-sitemap.xml", destination: "/api/sitemap-index", permanent: false },
+      // Sitemap aliases — legacy URLs redirect to the canonical index.
+      // /sitemap.xml itself is served directly (200) by
+      // src/app/sitemap.xml/route.ts — no redirect.
+      { source: "/sitemap_index.xml", destination: "/sitemap.xml", permanent: false },
+      { source: "/sitemap-index.xml", destination: "/sitemap.xml", permanent: false },
+      { source: "/wp-sitemap.xml", destination: "/sitemap.xml", permanent: false },
       // WordPress infrastructure → gone (directories & API)
       { source: "/wp-admin/:path*", destination: "/api/gone", permanent: false },
       { source: "/wp-content/:path*", destination: "/api/gone", permanent: false },
@@ -95,6 +96,21 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         ],
+      },
+      // Keep non-production hosts out of search indexes. The `has` host
+      // conditions match ONLY staging.easyrecharge.ch and *.vercel.app
+      // (preview deploys) — the production apex easyrecharge.ch matches
+      // neither pattern, so it never receives this header and stays
+      // indexable. Guarded by src/lib/noindex-hosts.test.ts.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "staging.easyrecharge.ch" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "(?<vercelHost>.+\\.vercel\\.app)" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       // Long cache for static assets (fonts, images, GeoJSON)
       {
