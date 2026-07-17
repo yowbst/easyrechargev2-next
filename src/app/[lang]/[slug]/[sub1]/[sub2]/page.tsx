@@ -521,13 +521,19 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
         categoryName,
         url: `${SITE_URL}${currentPath}`,
         langCode,
+        authorName,
       }),
       !customSchemaHasFaq && faqItems.length > 0 ? buildFAQPage(faqItems) : null,
-      // Flatten customSchema @graph items into our graph (avoid nested @graph)
+      // Flatten customSchema @graph items into our graph (avoid nested
+      // @graph), dropping article-type entries: the code-built BlogPosting
+      // above is authoritative, and editor-pasted Article schemas were
+      // shipping a second article entity with stale hardcoded dates.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(Array.isArray((customSchema as any)?.["@graph"])
         ? (customSchema as any)["@graph"]
-        : customSchema ? [customSchema] : []),
+        : customSchema ? [customSchema] : []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ).filter((s: any) => !["Article", "BlogPosting", "NewsArticle"].includes(s?.["@type"])),
     );
 
     // Strip Directus WYSIWYG editor classes/attributes and trailing <hr>, then resolve internal links

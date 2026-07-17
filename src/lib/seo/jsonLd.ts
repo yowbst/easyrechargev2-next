@@ -64,6 +64,7 @@ export function buildBlogPosting(input: {
   categoryName?: string;
   url: string;
   langCode: string;
+  authorName?: string | null;
 }) {
   return {
     "@type": "BlogPosting",
@@ -72,12 +73,26 @@ export function buildBlogPosting(input: {
     image: input.imageUrl,
     datePublished: input.datePublished,
     dateModified: input.dateModified || input.datePublished,
-    author: {
+    // Author: the post's real author when set in Directus, easyRecharge
+    // otherwise. Publisher is inlined in full (not just an @id reference):
+    // the #organization node only exists on the homepage graph, and
+    // Google's Rich Results Test does not resolve @ids across pages — a
+    // bare reference reads as an Article with no publisher/logo.
+    author: input.authorName
+      ? { "@type": "Person", name: input.authorName, url: SITE_URL }
+      : {
+          "@type": "Organization",
+          "@id": `${SITE_URL}/#organization`,
+          name: "easyRecharge",
+          url: SITE_URL,
+        },
+    publisher: {
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
       name: "easyRecharge",
+      url: SITE_URL,
+      logo: `${SITE_URL}/og-default.webp`,
     },
-    publisher: { "@id": `${SITE_URL}/#organization` },
     mainEntityOfPage: { "@type": "WebPage", "@id": input.url },
     inLanguage: input.langCode,
     articleSection: input.categoryName,
