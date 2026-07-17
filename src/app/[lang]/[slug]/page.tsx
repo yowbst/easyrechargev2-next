@@ -388,10 +388,20 @@ export default async function SlugPage({ params }: SlugPageProps) {
               ))}
             </div>
 
-            {/* Localities by canton */}
+            {/* Localities by canton.
+                Plain <a> instead of next/link: 4060 Link components hydrate
+                and each registers a viewport prefetch observer — ~800ms of
+                long main-thread tasks on mobile. Full-page navigation is fine
+                for this SEO directory, and every link stays in the HTML.
+                content-visibility:auto lets the browser skip layout/paint of
+                off-screen canton sections (~640ms of Style & Layout). */}
             <div className="space-y-10">
               {sortedCantons.map((canton) => (
-                <section key={canton} id={`canton-${canton}`} className="scroll-mt-20">
+                <section
+                  key={canton}
+                  id={`canton-${canton}`}
+                  className="scroll-mt-20 [content-visibility:auto] [contain-intrinsic-size:auto_800px]"
+                >
                   <h2 className="text-lg font-heading font-semibold mb-4 sticky top-16 bg-background/95 backdrop-blur py-2 -mx-1 px-1 z-10 flex items-center gap-2">
                     {cantonCoats[canton] && (
                       /* eslint-disable-next-line @next/next/no-img-element */
@@ -401,13 +411,13 @@ export default async function SlugPage({ params }: SlugPageProps) {
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-1.5">
                     {byCanton[canton].map((loc) => (
-                      <Link
+                      <a
                         key={loc.slug}
                         href={`/${lang}/${slug}/${loc.slug}/${subsidiesSegment}`}
                         className="text-sm text-muted-foreground hover:text-foreground transition-colors py-0.5"
                       >
                         {loc.postalCode} {loc.name}
-                      </Link>
+                      </a>
                     ))}
                   </div>
                 </section>
