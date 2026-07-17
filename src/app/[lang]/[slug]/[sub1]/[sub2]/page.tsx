@@ -981,6 +981,23 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     );
 
     const jsonLd = wrapInGraph(
+      // WebPage carries dateModified (GovernmentService is not a
+      // CreativeWork and cannot). Same source as the visible "Dernière
+      // mise à jour" line and the sitemap lastmod: subsidies_fetched_at —
+      // the timestamp of the last subsidy-data sync for this locality.
+      locality.subsidies_fetched_at
+        ? {
+            "@type": "WebPage",
+            "@id": `${SITE_URL}${currentPath}`,
+            url: `${SITE_URL}${currentPath}`,
+            dateModified:
+              locality.subsidies_fetched_at.endsWith("Z") ||
+              locality.subsidies_fetched_at.includes("+")
+                ? locality.subsidies_fetched_at
+                : `${locality.subsidies_fetched_at}Z`,
+            inLanguage: lang === "de" ? "de-CH" : "fr-CH",
+          }
+        : null,
       buildBreadcrumbList([
         { name: localitiesLabel, url: `${SITE_URL}/${lang}/${slug}` },
         { name: locality.name, url: `${SITE_URL}/${lang}/${slug}/${sub1}` },
