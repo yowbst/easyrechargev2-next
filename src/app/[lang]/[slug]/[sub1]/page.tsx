@@ -48,13 +48,16 @@ import {
 import { findSameBrandVehicles, findSimilarVehicles } from "@/lib/vehicles/related";
 import { transformBlogPost } from "@/lib/blog/transform";
 import { RelatedContent } from "@/components/RelatedContent";
-import dynamic from "next/dynamic";
 import { LazyMiniQuoteCard as MiniQuoteCard } from "@/components/LazyMiniQuoteCard";
 import { GetQuote } from "@/components/GetQuote";
 
-const VehicleDetailClient = dynamic(() => import("@/components/VehicleDetailClient").then(m => m.VehicleDetailClient));
-const QuoteSuccessClient = dynamic(() => import("@/components/quote/QuoteSuccess").then(m => m.QuoteSuccess));
-const QuoteSubmissionViewClient = dynamic(() => import("@/components/quote/QuoteSubmissionView").then(m => m.QuoteSubmissionView));
+// Client-side lazy variants — see lazy-page-variants.tsx for why these must
+// not be dynamic()-imported from this Server Component.
+import {
+  VehicleDetailClient,
+  QuoteSuccess as QuoteSuccessClient,
+  QuoteSubmissionView as QuoteSubmissionViewClient,
+} from "@/components/lazy-page-variants";
 import {
   ArrowLeft,
   ChevronRight,

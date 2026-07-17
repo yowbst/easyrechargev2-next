@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,17 +20,17 @@ import {
 } from "lucide-react";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
 import Image from "next/image";
-import dynamic from "next/dynamic";
+// APIProvider is statically imported (the component itself is small); the
+// heavy Google Maps JS only loads when it MOUNTS, which is gated on address-
+// field focus below. A dynamic() wrapper here would unmount the input while
+// its chunk loads, dropping focus and keystrokes mid-swap.
+import { APIProvider } from "@vis.gl/react-google-maps";
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { getAttributionCompact } from "@/lib/attribution";
 import { usePostHog } from "@/components/PostHogProvider";
 import { PlaceAutocomplete } from "@/components/quote/PlaceAutocomplete";
 import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
 
-const APIProvider = dynamic(
-  () => import("@vis.gl/react-google-maps").then(m => m.APIProvider),
-  { ssr: false },
-);
 import { getCantonCode, CANTON_CODES } from "@shared/swiss-cantons";
 import { GetQuote } from "@/components/GetQuote";
 import { toast } from "sonner";
@@ -64,6 +64,21 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Mounting APIProvider loads ~215KB of Google Maps JS, and the form is
+  // visible on page load — so visibility gating would load it immediately.
+  // Instead Maps loads on first interaction with the address field: until
+  // then a plain input renders, and on focus the provider + autocomplete
+  // swap in (scoped to the address block only, so nothing else remounts)
+  // and focus is restored.
+  const [mapsActive, setMapsActive] = useState(false);
+  const refocusAddress = useRef(false);
+  useEffect(() => {
+    if (mapsActive && refocusAddress.current) {
+      refocusAddress.current = false;
+      requestAnimationFrame(() => document.getElementById("address")?.focus());
+    }
+  }, [mapsActive]);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -226,9 +241,7 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
 
   return (
     <div>
-      {/* Hero Section — kept OUTSIDE the ssr:false APIProvider so the LCP
-          hero image and H1 are server-rendered; only the form (which needs
-          Google Places) waits for the client-only maps chunk. */}
+      {/* Hero Section */}
       <section
         className="relative py-20 md:py-28 overflow-hidden"
       >
@@ -252,7 +265,6 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
         </div>
       </section>
 
-      <APIProvider apiKey={googleMapsApiKey} libraries={["places"]}>
       <div className="bg-muted/30">
       <div className="container mx-auto px-4 py-16 pb-20">
         <div className="max-w-3xl mx-auto">
@@ -411,13 +423,33 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
     {formData.addressMode === "google" ? (
       <>
         <div className={formData.streetName ? "hidden" : ""}>
-          <PlaceAutocomplete
-            id="address"
-            value={formData.address}
-            onChange={(value) => handleFieldChange("address", value)}
-            onPlaceSelect={handlePlaceSelect}
-            placeholder={d(`${P}.form.addressPlaceholder`, "Rue et numéro, NPA Localité")}
-          />
+          {mapsActive ? (
+            <APIProvider apiKey={googleMapsApiKey} libraries={["places"]}>
+              <PlaceAutocomplete
+                id="address"
+                value={formData.address}
+                onChange={(value) => handleFieldChange("address", value)}
+                onPlaceSelect={handlePlaceSelect}
+                placeholder={d(`${P}.form.addressPlaceholder`, "Rue et numéro, NPA Localité")}
+              />
+            </APIProvider>
+          ) : (
+            // Plain stand-in until first focus: mounting Google Maps for
+            // visitors who never touch the address field is wasted JS. The
+            // value carries over and focus is restored when the real
+            // autocomplete swaps in (see the mapsActive effect above).
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => handleFieldChange("address", e.target.value)}
+              onFocus={() => {
+                refocusAddress.current = true;
+                setMapsActive(true);
+              }}
+              placeholder={d(`${P}.form.addressPlaceholder`, "Rue et numéro, NPA Localité")}
+              autoComplete="off"
+            />
+          )}
         </div>
 
         {(formData.streetName || formData.locality) && (
@@ -652,7 +684,6 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
         </div>
       </div>
       </div>
-      </APIProvider>
 
       {/* GetQuote CTA */}
       <GetQuote

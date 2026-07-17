@@ -15,7 +15,6 @@ import {
 } from "@/lib/seo/resolver";
 import { wrapInGraph, buildBreadcrumbList, buildFAQPage } from "@/lib/seo/jsonLd";
 import { extractPageDictionary, extractLayoutDictionary, t } from "@/lib/i18n/dictionaries";
-import dynamic from "next/dynamic";
 import { VehicleBrandsListView } from "@/lib/vehicles/shared";
 import { transformDirectusVehicle, type Vehicle } from "@/lib/vehicleTransformer";
 import { DIRECTUS_URL } from "@/lib/directus";
@@ -28,12 +27,16 @@ import { FAQ } from "@/components/FAQ";
 import { GetQuote } from "@/components/GetQuote";
 import { LazySwissMap as SwissMap, LazyTestimonials as Testimonials, LazyGuideCarousel as GuideCarousel } from "@/components/lazy";
 
-// Heavy client components — dynamic import so each page only loads what it needs
-const QuoteForm = dynamic(() => import("@/components/quote/QuoteForm").then(m => m.QuoteForm));
-const ContactForm = dynamic(() => import("@/components/ContactForm").then(m => m.ContactForm));
-const BlogListing = dynamic(() => import("@/components/BlogListing").then(m => m.BlogListing));
-const VehiclesHub = dynamic(() => import("@/components/VehiclesHub").then(m => m.VehiclesHub));
-const MiniQuoteForm = dynamic(() => import("@/components/MiniQuoteForm").then(m => m.MiniQuoteForm));
+// Heavy per-variant client components — imported via the client-side lazy
+// wrapper so each page only downloads the chunk of the variant it renders
+// (dynamic() in a Server Component would bundle ALL of them into this route).
+import {
+  QuoteForm,
+  ContactForm,
+  BlogListing,
+  VehiclesHub,
+  MiniQuoteForm,
+} from "@/components/lazy-page-variants";
 
 interface SlugPageProps {
   params: Promise<{ lang: string; slug: string }>;
