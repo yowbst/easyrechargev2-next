@@ -18,7 +18,8 @@ import {
   Mail, Send, Loader2, MapPin, Phone as PhoneIcon,
   User, Users, Building2,
 } from "lucide-react";
-import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
+import { SUPPORTED_COUNTRIES, validatePhone, formatPhoneE164 } from "@/lib/phone-utils";
+import { adsSendTo, fireAdsConversion, type GoogleAdsConfig } from "@/lib/googleAds";
 import Image from "next/image";
 // APIProvider is statically imported (the component itself is small); the
 // heavy Google Maps JS only loads when it MOUNTS, which is gated on address-
@@ -48,11 +49,12 @@ interface ContactFormProps {
   heroImage?: string;
   getQuoteBlock?: GetQuoteBlockData;
   pageRegistry?: PageRegistryEntry[];
+  googleAds?: GoogleAdsConfig;
 }
 
 const P = "pages.contact";
 
-export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRegistry }: ContactFormProps) {
+export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRegistry, googleAds }: ContactFormProps) {
   const hasHeroImage = !!heroImage;
   /** Translate with optional interpolation vars or a plain-string default. */
   const d = (key: string, varsOrDefault?: Record<string, string | number> | string) => {
@@ -197,6 +199,27 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
             status: "success",
           }),
         }).catch(() => {});
+
+        // Google Ads contact conversion with enhanced-conversion user data
+        // (raw values are hashed client-side by gtag; dropped while
+        // ad_user_data consent is denied). Inert without the label.
+        const contactSendTo = adsSendTo(googleAds, "contact_submit");
+        if (contactSendTo) {
+          fireAdsConversion(contactSendTo, {
+            transactionId: result.emailId || telemetry.sessionToken,
+            userData: {
+              email: formData.email || undefined,
+              phone_number:
+                formatPhoneE164(formData.phone, formData.phoneCountry as CountryCode) || undefined,
+              address: {
+                first_name: formData.firstName || undefined,
+                last_name: formData.lastName || undefined,
+                postal_code: formData.postalCode || undefined,
+                country: "CH",
+              },
+            },
+          });
+        }
 
         toast.success(d(`${P}.toasts.success.title`), {
           description: d(`${P}.toasts.success.description`),

@@ -171,7 +171,9 @@ export default async function SlugPage({ params }: SlugPageProps) {
       const quoteHeroBlock = page?.blocks?.find((b: any) => b?.collection === "block_hero")?.item;
       const quoteHeroImage = quoteHeroBlock?.image ? `${DIRECTUS_URL}/assets/${quoteHeroBlock.image}` : undefined;
       const quotePageConfig = page?.config || {};
-      const globalConfig = layoutData?.globalConfig ?? {};
+      // NB: the Directus field is snake_case — `globalConfig` was a latent
+      // bug that left the quote form with default stats/SLAs and no ads config.
+      const globalConfig = layoutData?.global_config ?? {};
       return (
         <QuoteForm
           lang={lang}
@@ -202,6 +204,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
           heroImage={contactHeroImage}
           getQuoteBlock={contactGetQuoteData}
           pageRegistry={registry}
+          googleAds={layoutData?.global_config?.google_ads}
         />
       );
     }

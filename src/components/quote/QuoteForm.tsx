@@ -26,7 +26,8 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
+import { SUPPORTED_COUNTRIES, validatePhone, formatPhoneE164 } from "@/lib/phone-utils";
+import { adsSendTo, fireAdsConversion, type GoogleAdsConfig } from "@/lib/googleAds";
 import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
 import dynamic from "next/dynamic";
 
@@ -65,6 +66,7 @@ interface QuoteFormProps {
       first_contact?: { value?: number; unit?: string };
       quote_delivery_timeline?: { value?: number | string; unit?: string };
     };
+    google_ads?: GoogleAdsConfig;
   };
   /** Logo URLs from Directus layout (light / dark variants) */
   logoSrc?: string;
@@ -387,6 +389,12 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
   const goToStep = (nextStep: number) => {
     if (nextStep > step) {
       ph?.capture("quote_step_completed", { step, step_name: stepNames[step] });
+      // Micro-conversion: quote started (first forward step). Secondary/
+      // observation signal in Google Ads; inert without the label.
+      if (step === 0) {
+        const startSendTo = adsSendTo(gc.google_ads, "quote_start");
+        if (startSendTo) fireAdsConversion(startSendTo);
+      }
     }
     ph?.capture("quote_step_viewed", { step: nextStep, step_name: stepNames[nextStep] });
 
@@ -1795,7 +1803,37 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         if (name) qs.set("firstName", name);
                         if (result.submissionId) qs.set("submissionId", result.submissionId);
                         const qsStr = qs.toString();
-                        window.location.href = `${successPath}${qsStr ? `?${qsStr}` : ""}`;
+                        const redirect = () => {
+                          window.location.href = `${successPath}${qsStr ? `?${qsStr}` : ""}`;
+                        };
+
+                        // Google Ads lead conversion with enhanced-conversion
+                        // user data — must fire HERE (the redirect below is a
+                        // full page load, so form data would be lost). The
+                        // success page re-fires without user data as a
+                        // fallback; the shared transaction_id dedupes. gtag
+                        // hashes user_data client-side and drops it while
+                        // ad_user_data consent is denied.
+                        const leadSendTo = adsSendTo(gc.google_ads, "lead_submit");
+                        if (leadSendTo) {
+                          fireAdsConversion(leadSendTo, {
+                            transactionId: result.submissionId,
+                            userData: {
+                              email: formData.email || undefined,
+                              phone_number:
+                                formatPhoneE164(formData.phone, formData.phoneCountry as CountryCode) || undefined,
+                              address: {
+                                first_name: formData.firstName || undefined,
+                                last_name: formData.lastName || undefined,
+                                postal_code: formData.postalCode || undefined,
+                                country: "CH",
+                              },
+                            },
+                            onDone: redirect,
+                          });
+                        } else {
+                          redirect();
+                        }
                       } catch (err) {
                         telemetry.trackSubmit(false, { error: String(err) });
                         ph?.capture("quote_form_error", { error_message: String(err) });

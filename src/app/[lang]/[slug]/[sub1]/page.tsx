@@ -1060,14 +1060,14 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     const deliveryTimeline =
       slas?.quote_delivery_timeline?.value ?? "3-5";
 
-    // Google Ads lead conversion (browser signal; deduped against the
-    // offline Data Manager upload via transaction_id). Inert unless both
-    // tag_id and lead_conversion_label are set in Directus global_config.
+    // Google Ads lead conversion — fallback signal only: the primary fire
+    // happens in QuoteForm at submit time (with enhanced-conversion user
+    // data); this one covers lost beacons and shares the transaction_id so
+    // Google dedupes. Inert unless tag_id + lead_submit label are set.
     const googleAds = gc?.google_ads ?? {};
+    const leadLabel = googleAds.labels?.lead_submit ?? googleAds.lead_conversion_label;
     const adsConversionSendTo =
-      googleAds.tag_id && googleAds.lead_conversion_label
-        ? `${googleAds.tag_id}/${googleAds.lead_conversion_label}`
-        : null;
+      googleAds.tag_id && leadLabel ? `${googleAds.tag_id}/${leadLabel}` : null;
 
     return (
       <Suspense>
