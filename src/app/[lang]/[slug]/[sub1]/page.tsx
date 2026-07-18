@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { isValidLang, slugToDirectusLocale, getRouteSlug } from "@/lib/i18n/config";
+import { GoogleAdsConversion } from "@/components/GoogleAdsConversion";
 import { resolveSub1Route } from "@/lib/route-resolver";
 import {
   fetchVehicle,
@@ -1059,8 +1060,18 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     const deliveryTimeline =
       slas?.quote_delivery_timeline?.value ?? "3-5";
 
+    // Google Ads lead conversion (browser signal; deduped against the
+    // offline Data Manager upload via transaction_id). Inert unless both
+    // tag_id and lead_conversion_label are set in Directus global_config.
+    const googleAds = gc?.google_ads ?? {};
+    const adsConversionSendTo =
+      googleAds.tag_id && googleAds.lead_conversion_label
+        ? `${googleAds.tag_id}/${googleAds.lead_conversion_label}`
+        : null;
+
     return (
       <Suspense>
+        <GoogleAdsConversion sendTo={adsConversionSendTo} />
         <QuoteSuccessClient
           lang={lang}
           dictionary={dictionary}
