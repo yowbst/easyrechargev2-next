@@ -2,11 +2,80 @@ import { directusFetch } from "./directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import type { FormSession, FormUser, FormSubmission } from "@shared/types";
 import { normalizeName } from "@/lib/form-hygiene";
+import { serverLog } from "@/lib/posthog-server";
 
 /** Truncate a string to fit Directus VARCHAR columns (default 255). */
 function truncate(value: string | null | undefined, max = 255): string | null {
   if (!value) return null;
   return value.length > max ? value.slice(0, max) : value;
+}
+
+const TRUNCATION_MARKER = "…[truncated]";
+
+/**
+ * Directus rejects an oversized value with a 400 whose message contains
+ * "too long" (the `form_submissions.data` column is a bounded string rather
+ * than a text/json column). Detect that specific failure so we can degrade
+ * gracefully instead of dropping the whole submission.
+ */
+export function isValueTooLongError(err: unknown): boolean {
+  const message = (err as Error)?.message ?? "";
+  return message.includes("400") && /too long/i.test(message);
+}
+
+/**
+ * Produce a size-capped copy of a submission `data` object that serializes to
+ * at most `maxLen` characters, so it fits a bounded Directus column. String
+ * values are shrunk longest-first (marked as truncated); the result is flagged
+ * with `_truncated` and the original size so nothing looks complete when it
+ * isn't. Guaranteed to return a small object even in the worst case.
+ */
+export function capSubmissionData(
+  data: Record<string, unknown>,
+  maxLen: number,
+): Record<string, unknown> {
+  const originalSize = JSON.stringify(data).length;
+  const out: Record<string, unknown> = {
+    ...data,
+    _truncated: true,
+    _original_size: originalSize,
+  };
+
+  const asString = (v: unknown): string =>
+    typeof v === "string" ? v : JSON.stringify(v ?? null);
+
+  while (JSON.stringify(out).length > maxLen) {
+    // Shrink the longest value-bearing field (never the bookkeeping keys).
+    let longestKey: string | null = null;
+    let longestLen = 0;
+    for (const [k, v] of Object.entries(out)) {
+      if (k === "_truncated" || k === "_original_size") continue;
+      const len = asString(v).length;
+      if (len > longestLen) {
+        longestLen = len;
+        longestKey = k;
+      }
+    }
+
+    // Nothing left worth shrinking — fall back to a guaranteed-tiny payload.
+    if (!longestKey || longestLen <= TRUNCATION_MARKER.length) {
+      return {
+        _truncated: true,
+        _original_size: originalSize,
+        _note: "Payload exceeded the Directus data column limit and could not be stored.",
+      };
+    }
+
+    const current = asString(out[longestKey]);
+    const target = Math.max(
+      TRUNCATION_MARKER.length,
+      Math.floor(current.length / 2),
+    );
+    out[longestKey] =
+      current.slice(0, target - TRUNCATION_MARKER.length) + TRUNCATION_MARKER;
+  }
+
+  return out;
 }
 
 function normalizePhone(raw: string | null | undefined): string | null {
@@ -159,19 +228,51 @@ class DirectusStorage {
   async createFormSubmission(
     data: CreateSubmissionData,
   ): Promise<FormSubmission> {
-    const result = await directusFetch<{ data: FormSubmission }>(
-      "/items/form_submissions",
-      {
+    const post = (payload: Record<string, unknown>) =>
+      directusFetch<{ data: FormSubmission }>("/items/form_submissions", {
         method: "POST",
         body: JSON.stringify({
           ...data,
+          data: payload,
           status: data.status ?? "success",
           environment: getEnvironment(),
         }),
         next: { revalidate: 0 },
-      },
-    );
-    return result.data;
+      });
+
+    // The real fix for oversized payloads is widening the Directus
+    // `form_submissions.data` column to a text/json type (CMS-side schema
+    // change). Until that lands, don't let an oversized `data` fail the whole
+    // write: a thrown error here aborts the route before the lead webhook
+    // fires, silently losing the lead on the core quote flow. Instead, retry
+    // with a progressively size-capped copy so the row (and the downstream
+    // webhook/dispatch, which still gets the full payload) survives. The
+    // truncated copy is flagged and logged, so the loss is never silent.
+    let payload = data.data;
+    const maxAttempts = 5;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const result = await post(payload);
+        return result.data;
+      } catch (err: unknown) {
+        if (isValueTooLongError(err) && attempt < maxAttempts) {
+          const target = Math.max(200, Math.floor(JSON.stringify(payload).length / 2));
+          payload = capSubmissionData(data.data, target);
+          serverLog("WARNING", "form_submission data truncated to fit Directus column", {
+            form_type: data.form_type,
+            session: data.session,
+            original_size: JSON.stringify(data.data).length,
+            target_size: target,
+            attempt,
+          });
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    // Unreachable: the final attempt either returns or throws above.
+    throw new Error("[DirectusStorage] createFormSubmission: max attempts reached");
   }
 
   async getSubmissionById(id: string): Promise<{
