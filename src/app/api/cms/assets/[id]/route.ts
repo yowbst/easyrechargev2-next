@@ -20,9 +20,11 @@ import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 export function normalizeAssetQuery(search: string): string {
   if (!search) return search;
   return search
-    // optional literal or %-encoded backslash, then `u0026`; covers the bare
-    // `u0026` variant where the leading backslash was stripped before the request
-    .replace(/(?:%5C|\\)?u0026/gi, "&")
+    .replace(/(?:%5C|\\)u0026/gi, "&") // literal or %-encoded backslash + u0026
+    // bare `u0026` (backslash stripped entirely) is only treated as a separator
+    // when a known transform param follows — a bare match inside a legitimate
+    // value (e.g. `key=heroU0026banner`) must stay untouched
+    .replace(/u0026(?=(?:format|quality|width|height|fit|withoutEnlargement|key)=)/gi, "&")
     .replace(/&amp;/gi, "&");
 }
 
@@ -113,16 +115,18 @@ export async function GET(
         continue;
       }
       const errorBody = await upstream.text().catch(() => "");
-      // 4xx responses are overwhelmingly crawler/link-preview bots requesting
-      // mangled or truncated transform query strings that no repair can fix.
-      // Log them for visibility but do NOT capture them as exceptions — they are
-      // not actionable and only create error-tracking noise. 5xx stays captured.
-      const isClientError = upstream.status >= 400 && upstream.status < 500;
+      // 400s are overwhelmingly crawler/link-preview bots requesting mangled or
+      // truncated transform query strings that no repair can fix. Log them for
+      // visibility but do NOT capture them as exceptions — they are not
+      // actionable and only create error-tracking noise. Every other status
+      // stays captured: 401/403 means the Directus token is broken (site-wide
+      // image outage) and 404 means a live page references a deleted asset.
+      const isBotNoise = upstream.status === 400;
       console.error(
         `[Asset proxy] Upstream ${upstream.status} for ${id}: ${errorBody}`,
       );
-      serverLog(isClientError ? "WARNING" : "ERROR", "Asset proxy upstream error", { route: "assets", asset_id: id, status: upstream.status, error: errorBody });
-      if (!isClientError) {
+      serverLog(isBotNoise ? "WARNING" : "ERROR", "Asset proxy upstream error", { route: "assets", asset_id: id, status: upstream.status, error: errorBody });
+      if (!isBotNoise) {
         try {
           const posthog = getPostHogServer();
           posthog.captureException(new Error(`Asset proxy ${upstream.status}: ${errorBody}`), "anonymous", { context: "asset_proxy", asset_id: id, upstream_status: upstream.status });

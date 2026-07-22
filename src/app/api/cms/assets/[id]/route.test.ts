@@ -23,6 +23,12 @@ describe("normalizeAssetQuery", () => {
     expect(normalizeAssetQuery(mangled)).toBe(CANONICAL);
   });
 
+  it("leaves a bare u0026 inside a legitimate param value untouched", () => {
+    // Bare u0026 is only a separator when a known transform param follows;
+    // a preset key like heroU0026banner is valid per the `key` whitelist.
+    expect(normalizeAssetQuery("?key=heroU0026banner")).toBe("?key=heroU0026banner");
+  });
+
   it("repairs &amp; entity separators", () => {
     const mangled = "?format=webp&amp;quality=80&amp;width=1200&amp;height=630&amp;fit=cover";
     expect(normalizeAssetQuery(mangled)).toBe(CANONICAL);
@@ -64,8 +70,8 @@ describe("sanitizeTransformParams", () => {
     expect(sanitizeTransformParams("")).toBe("");
   });
 
-  it("collapses a bot request with no salvageable params to empty", () => {
-    // After normalizeAssetQuery cannot help (no separators), whitelist yields nothing.
-    expect(sanitizeTransformParams("?format=we")).toBe("");
+  it("keeps a whitelisted key value that contains a bare u0026 end-to-end", () => {
+    const qs = "?key=heroU0026banner";
+    expect(sanitizeTransformParams(normalizeAssetQuery(qs))).toBe(qs);
   });
 });
