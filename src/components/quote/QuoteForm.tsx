@@ -32,6 +32,7 @@ import { adsSendTo, fireAdsConversion, type GoogleAdsConfig } from "@/lib/google
 import { normalizeProduct } from "@/lib/products";
 import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
 import { NAV_BAR_CLEARANCE } from "@/lib/dropdownPlacement";
+import { QUOTE_DRAFT_KEY, serializeQuoteDraft, parseQuoteDraft } from "@/lib/quoteDraft";
 import dynamic from "next/dynamic";
 
 const LazyPlaceAutocomplete = dynamic(
@@ -256,6 +257,11 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   // Pre-fill from hero form if coming from home page
   useEffect(() => {
+    try {
+      const draft = parseQuoteDraft(sessionStorage.getItem(QUOTE_DRAFT_KEY), Date.now());
+      if (draft) setFormData((prev) => ({ ...prev, ...draft }));
+    } catch { /* storage unavailable (private mode) — start fresh */ }
+
     const params = new URLSearchParams(window.location.search);
     const locality = params.get("locality");
     const postalCode = params.get("postalCode");
@@ -290,6 +296,17 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     formType: "quote",
     locale: lang,
   });
+
+  // Persist a draft so refresh / back-navigation resumes instead of
+  // dead-ending on a later step with empty state.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      try {
+        sessionStorage.setItem(QUOTE_DRAFT_KEY, serializeQuoteDraft(formData as unknown as Record<string, unknown>, Date.now()));
+      } catch { /* quota/private mode — non-fatal */ }
+    }, 400);
+    return () => clearTimeout(id);
+  }, [formData]);
 
   const handleFieldChange = (fieldName: keyof FormData, value: string | number | boolean | "na" | null) => {
     if (showMissingHint) setShowMissingHint(false);
@@ -1776,6 +1793,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         if (!res.ok) throw new Error("Submit failed");
                         const result = await res.json();
                         telemetry.trackSubmit(true, { submissionId: result.submissionId });
+                        try { sessionStorage.removeItem(QUOTE_DRAFT_KEY); } catch { /* ignore */ }
                         try { ph?.capture("quote_submitted", { form_type: "quote", locale: lang }); } catch { /* noop */ }
                         try { ph?.identify(formData.email, { first_name: formData.firstName, last_name: formData.lastName, locale: lang }); } catch { /* noop */ }
 
