@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { Input } from "@/components/ui/input";
+import { dropdownPlacement } from "@/lib/dropdownPlacement";
 
 interface Suggestion {
   placeId: string;
@@ -30,6 +31,7 @@ export function PlaceAutocomplete({
   const places = useMapsLibrary("places");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [placement, setPlacement] = useState<"down" | "up">("down");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isSelectingRef = useRef(false);
@@ -68,6 +70,10 @@ export function PlaceAutocomplete({
           });
 
         setSuggestions(mapped);
+        if (mapped.length > 0 && inputRef.current) {
+          const r = inputRef.current.getBoundingClientRect();
+          setPlacement(dropdownPlacement({ top: r.top, bottom: r.bottom }, window.innerHeight));
+        }
         setIsOpen(mapped.length > 0);
       } catch {
         setSuggestions([]);
@@ -155,12 +161,18 @@ export function PlaceAutocomplete({
         }}
         placeholder={placeholder}
         autoComplete="off"
+        onFocus={() => {
+          const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          inputRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+        }}
       />
 
       {isOpen && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+          className={`absolute z-[60] w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto ${
+            placement === "up" ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
         >
           {suggestions.map((suggestion) => (
             <div
