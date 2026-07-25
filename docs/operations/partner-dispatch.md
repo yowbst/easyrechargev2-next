@@ -214,6 +214,11 @@ vertical (source of truth: `src/lib/products.ts`). The Make ingest module
 currently targets one conversion action (`productDestinationId: 7076158233`,
 "ECP Quote Form Submitted (API)").
 
+**Make must only ever read `submission.product`** — the top-level,
+server-validated field. `submission.data.product` also exists (raw client
+input inside the form-data blob) and must never be used for routing or
+conversion mapping.
+
 **When a second product launches:**
 1. Create its offline conversion action in the Ads UI (primary, own category).
 2. In the Make scenario, add a router switching on `submission.product` (or an
