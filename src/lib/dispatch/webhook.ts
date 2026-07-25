@@ -42,6 +42,7 @@ export interface QuoteWebhookParts {
     environment: string;
     miniQuoteSessionToken: string | null;
     leadCategory: string;
+    product: string;
     isRepeat: boolean;
     data: Record<string, unknown>;
   };
@@ -123,7 +124,7 @@ export function buildQuoteWebhookPayload(parts: QuoteWebhookParts) {
       submittedAt: parts.submission.submittedAt,
       environment: parts.submission.environment,
       miniQuoteSessionToken: parts.submission.miniQuoteSessionToken,
-      product: "ecp",
+      product: parts.submission.product,
       leadCategory: parts.submission.leadCategory,
       isRepeat: parts.submission.isRepeat,
       trigger: parts.trigger,
