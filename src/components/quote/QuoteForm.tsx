@@ -21,7 +21,8 @@ import {
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { ProgressBar } from "@/components/quote/ProgressBar";
 import { IconButtonGroup, type IconButtonOption } from "@/components/quote/IconButtonGroup";
-import { SliderWithCheckbox } from "@/components/quote/SliderWithCheckbox";
+import { RangeButtonGroup } from "@/components/quote/RangeButtonGroup";
+import { resolveBuckets } from "@/lib/quoteBuckets";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -948,35 +949,31 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Electrical Line Distance */}
                   <RevealField visible={validParkingLocations.includes(formData.parkingSpotLocation)}>
-                    <SliderWithCheckbox
+                    <RangeButtonGroup
                       value={formData.electricalLineDistance}
                       onChange={(value) => handleFieldChange("electricalLineDistance", value)}
-                      min={getFieldConfig("parking", "electricalLineDistance").min ?? 5}
-                      max={getFieldConfig("parking", "electricalLineDistance").max ?? 50}
-                      step={getFieldConfig("parking", "electricalLineDistance").step ?? 5}
+                      options={resolveBuckets("electricalLineDistance", getFieldConfig("parking", "electricalLineDistance").buckets, tq("steps.parking.fields.electricalLineDistance.unit"))}
                       label={tq("steps.parking.fields.electricalLineDistance.label")}
-                      unit={tq("steps.parking.fields.electricalLineDistance.unit")}
-                      checkboxLabel={tq("steps.parking.fields.electricalLineDistance.checkboxLabel")}
+                      naLabel={tq("steps.parking.fields.electricalLineDistance.checkboxLabel")}
                       icon={Cable}
                       tooltip={tqOpt("steps.parking.fields.electricalLineDistance.tooltip")}
                       tooltipImage={tooltipImage("parking", "electricalLineDistance")}
+                      testId="electricalLineDistance"
                     />
                   </RevealField>
 
                   {/* Walls to Cross */}
                   <RevealField visible={validParkingLocations.includes(formData.parkingSpotLocation) && formData.electricalLineDistance !== null}>
-                    <SliderWithCheckbox
+                    <RangeButtonGroup
                       value={formData.electricalLineHoleCount}
                       onChange={(value) => handleFieldChange("electricalLineHoleCount", value)}
-                      min={getFieldConfig("parking", "electricalLineHoleCount").min ?? 0}
-                      max={getFieldConfig("parking", "electricalLineHoleCount").max ?? 5}
-                      step={getFieldConfig("parking", "electricalLineHoleCount").step ?? 1}
+                      options={resolveBuckets("electricalLineHoleCount", getFieldConfig("parking", "electricalLineHoleCount").buckets, "")}
                       label={tq("steps.parking.fields.electricalLineHoleCount.label")}
-                      unit={` ${tq("steps.parking.fields.electricalLineHoleCount.unit")}`}
-                      checkboxLabel={tq("steps.parking.fields.electricalLineHoleCount.checkboxLabel")}
+                      naLabel={tq("steps.parking.fields.electricalLineHoleCount.checkboxLabel")}
                       icon={Blocks}
                       tooltip={tqOpt("steps.parking.fields.electricalLineHoleCount.tooltip")}
                       tooltipImage={tooltipImage("parking", "electricalLineHoleCount")}
+                      testId="electricalLineHoleCount"
                     />
                   </RevealField>
                 </div>
@@ -1148,38 +1145,31 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Trip Distance Slider */}
                   <RevealField visible={!!formData.vehicleStatus}>
-                    <SliderWithCheckbox
+                    <RangeButtonGroup
                       value={formData.vehicleTripDistance}
                       onChange={(value) => handleFieldChange("vehicleTripDistance", value)}
-                      min={getFieldConfig("vehicle", "vehicleTripDistance").min ?? 5}
-                      max={getFieldConfig("vehicle", "vehicleTripDistance").max ?? 180}
-                      step={getFieldConfig("vehicle", "vehicleTripDistance").step ?? 5}
+                      options={resolveBuckets("vehicleTripDistance", getFieldConfig("vehicle", "vehicleTripDistance").buckets, tq("steps.vehicle.fields.vehicleTripDistance.unit"))}
                       label={tq("steps.vehicle.fields.vehicleTripDistance.label")}
-                      unit={tq("steps.vehicle.fields.vehicleTripDistance.unit")}
-                      checkboxLabel={tq("steps.vehicle.fields.vehicleTripDistance.na")}
-                      showEdgeLabels={true}
+                      naLabel={tq("steps.vehicle.fields.vehicleTripDistance.na")}
                       icon={Navigation}
-                      tickInterval={getFieldConfig("vehicle", "vehicleTripDistance").tickInterval ?? 25}
                       tooltip={tqOpt("steps.vehicle.fields.vehicleTripDistance.tooltip")}
                       tooltipImage={tooltipImage("vehicle", "vehicleTripDistance")}
+                      testId="vehicleTripDistance"
                     />
                   </RevealField>
 
                   {/* Charging Hours Slider */}
                   <RevealField visible={!!formData.vehicleStatus && formData.vehicleTripDistance !== null}>
-                    <SliderWithCheckbox
+                    <RangeButtonGroup
                       value={formData.vehicleChargingHours}
                       onChange={(value) => handleFieldChange("vehicleChargingHours", value)}
-                      min={getFieldConfig("vehicle", "vehicleChargingHours").min ?? 5}
-                      max={getFieldConfig("vehicle", "vehicleChargingHours").max ?? 10}
-                      step={getFieldConfig("vehicle", "vehicleChargingHours").step ?? 1}
+                      options={resolveBuckets("vehicleChargingHours", getFieldConfig("vehicle", "vehicleChargingHours").buckets, tq("steps.vehicle.fields.vehicleChargingHours.unit"))}
                       label={tq("steps.vehicle.fields.vehicleChargingHours.label")}
-                      unit={tq("steps.vehicle.fields.vehicleChargingHours.unit")}
-                      checkboxLabel={tq("steps.vehicle.fields.vehicleChargingHours.na")}
-                      showEdgeLabels={true}
+                      naLabel={tq("steps.vehicle.fields.vehicleChargingHours.na")}
                       icon={Gauge}
                       tooltip={tqOpt("steps.vehicle.fields.vehicleChargingHours.tooltip")}
                       tooltipImage={tooltipImage("vehicle", "vehicleChargingHours")}
+                      testId="vehicleChargingHours"
                     />
                   </RevealField>
                 </div>
