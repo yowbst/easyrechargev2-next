@@ -61,9 +61,7 @@ export async function manualDispatch(
   // Reconstruct dispatch inputs from stored data.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = (submission.data ?? {}) as Record<string, any>;
-  // `product` isn't on the typed FormSubmission record yet (Directus schema
-  // field added in Task 2) — read it the same loose way as `data` above.
-  const product = normalizeProduct((submission as { product?: string }).product);
+  const product = normalizeProduct(submission.product);
   const email = user?.email ?? null;
   const locale = user?.language === "de" ? "de" : "fr";
   const leadCategory = deriveLeadCategory(data);

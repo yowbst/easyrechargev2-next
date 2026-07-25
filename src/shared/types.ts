@@ -30,6 +30,7 @@ export interface FormSubmission {
   session: string | FormSession | null;
   user: string | FormUser | null;
   form_type: string;
+  product: string | null;
   location_route: string | null;
   location_path: string | null;
   location_params: string | null;

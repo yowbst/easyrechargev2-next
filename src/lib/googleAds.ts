@@ -24,16 +24,7 @@ export interface GoogleAdsConfig {
   conversions?: Partial<
     Record<Product, Partial<Record<GoogleAdsEvent, GoogleAdsConversionEntry | null>> | null>
   > | null;
-  /** legacy flat map (pre-2026-07 config shape; `lead_submit` = today's `quote_submit`) */
-  labels?: Record<string, string | null> | null;
-  /** legacy single-label field, older still */
-  lead_conversion_label?: string | null;
 }
-
-/** Config keys an event was previously stored under, newest shape first. */
-const LEGACY_LABEL_KEYS: Partial<Record<GoogleAdsEvent, string>> = {
-  quote_submit: "lead_submit",
-};
 
 /** User-provided data for enhanced conversions for leads. Passed RAW —
  * gtag.js normalizes and SHA-256 hashes it client-side before sending,
@@ -54,12 +45,8 @@ export function adsSendTo(
   event: GoogleAdsEvent,
   product: Product = DEFAULT_PRODUCT,
 ): string | null {
-  const l =
-    config?.conversions?.[product]?.[event]?.label ??
-    config?.labels?.[event] ??
-    config?.labels?.[LEGACY_LABEL_KEYS[event] ?? ""] ??
-    (event === "quote_submit" ? config?.lead_conversion_label : null);
-  return config?.tag_id && l ? `${config.tag_id}/${l}` : null;
+  const label = config?.conversions?.[product]?.[event]?.label;
+  return config?.tag_id && label ? `${config.tag_id}/${label}` : null;
 }
 
 /**
