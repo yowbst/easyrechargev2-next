@@ -77,19 +77,30 @@ interface QuoteFormProps {
   pageRegistry?: PageRegistryEntry[];
 }
 
+// Shared guard: when one answer reveals several fields at once, only the
+// topmost (first effect to fire) scrolls — competing smooth-scrolls cancel
+// each other and land nowhere.
+const lastRevealScroll = { at: 0 };
+
 /** Progressive-reveal wrapper: renders children hidden until `visible` is true, with a slide-down animation. */
 function RevealField({ visible, children }: { visible: boolean; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const hasBeenVisible = useRef(false);
 
-  // Once visible, scroll into view
+  // Once visible, scroll into view — AFTER the 300ms height transition, so
+  // the element's final geometry is what gets centered. block:"center"
+  // keeps it clear of the fixed bottom nav bar (which scrollIntoView
+  // doesn't know about).
   useEffect(() => {
     if (visible && !hasBeenVisible.current) {
       hasBeenVisible.current = true;
-      // Small delay so the transition starts before scrolling
       const timer = setTimeout(() => {
-        ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }, 150);
+        const now = Date.now();
+        if (now - lastRevealScroll.at < 400) return;
+        lastRevealScroll.at = now;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        ref.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+      }, 320);
       return () => clearTimeout(timer);
     }
     if (!visible) hasBeenVisible.current = false;
@@ -921,26 +932,28 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                           </div>
 
                           {/* Sub-options */}
-                          {parkingSubOptions[option.value] && getParkingMainValue() === option.value && (
-                            <div className="ml-8 mt-2 space-y-2 pl-4 border-l-2 border-primary/20">
-                              {parkingSubOptions[option.value].map((subOption) => (
-                                <div key={subOption.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
-                                  <RadioGroupItem
-                                    value={subOption.value}
-                                    id={`parking-${subOption.value}`}
-                                    data-testid={`radio-parking-${subOption.value}`}
-                                  />
-                                  <Label htmlFor={`parking-${subOption.value}`} className="cursor-pointer flex-1 text-sm">
-                                    <InfoTooltip
-                                      content={tqOpt(`steps.parking.fields.parkingSpotLocation.optionTooltips.${subOption.value}`)}
-                                      image={optionTooltipImage("parking", "parkingSpotLocation", subOption.value)}
-                                    >
-                                      {subOption.label}
-                                    </InfoTooltip>
-                                  </Label>
-                                </div>
-                              ))}
-                            </div>
+                          {parkingSubOptions[option.value] && (
+                            <RevealField visible={getParkingMainValue() === option.value}>
+                              <div className="ml-8 mt-2 space-y-2 pl-4 border-l-2 border-primary/20">
+                                {parkingSubOptions[option.value].map((subOption) => (
+                                  <div key={subOption.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                                    <RadioGroupItem
+                                      value={subOption.value}
+                                      id={`parking-${subOption.value}`}
+                                      data-testid={`radio-parking-${subOption.value}`}
+                                    />
+                                    <Label htmlFor={`parking-${subOption.value}`} className="cursor-pointer flex-1 text-sm">
+                                      <InfoTooltip
+                                        content={tqOpt(`steps.parking.fields.parkingSpotLocation.optionTooltips.${subOption.value}`)}
+                                        image={optionTooltipImage("parking", "parkingSpotLocation", subOption.value)}
+                                      >
+                                        {subOption.label}
+                                      </InfoTooltip>
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </RevealField>
                           )}
                         </div>
                       ))}
@@ -1318,7 +1331,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         </div>
 
                         {/* Display editable address component fields */}
-                        {(formData.streetName || formData.locality) && (
+                        <RevealField visible={!!(formData.streetName || formData.locality)}>
                           <div className="space-y-3">
                             {/* Street Name and Number */}
                             <div className="grid grid-cols-4 gap-2">
@@ -1411,7 +1424,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                               </div>
                             </div>
                           </div>
-                        )}
+                        </RevealField>
 
                         <button
                           type="button"
