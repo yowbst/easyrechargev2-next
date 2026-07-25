@@ -50,6 +50,6 @@ export function resolveBuckets(fieldKey: string, configBuckets: unknown, unit: s
   const source = isValidConfigBuckets(configBuckets) ? configBuckets : (DEFAULT_BUCKETS[fieldKey] ?? []);
   return source.map((b) => ({
     value: b.value,
-    label: b.label.replace("{u}", unit ? ` ${unit}` : ""),
+    label: b.label.replace("{u}", unit ? ` ${unit}` : ""),
   }));
 }

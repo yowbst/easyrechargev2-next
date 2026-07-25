@@ -10,8 +10,8 @@ describe("quoteBuckets", () => {
 
   it("interpolates the unit with a non-breaking space", () => {
     const buckets = resolveBuckets("electricalLineDistance", undefined, "m");
-    expect(buckets[0]).toEqual({ value: 5, label: "≤ 5 m" });
-    expect(buckets[3]).toEqual({ value: 40, label: "> 30 m" });
+    expect(buckets[0]).toEqual({ value: 5, label: "≤ 5 m" });
+    expect(buckets[3]).toEqual({ value: 40, label: "> 30 m" });
   });
 
   it("leaves label untouched when there is no {u} placeholder", () => {
