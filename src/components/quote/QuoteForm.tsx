@@ -52,6 +52,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CountryCode } from "libphonenumber-js";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
+import { firstUnansweredField, VALID_PARKING_LOCATIONS } from "@/components/quote/stepValidation";
 
 interface QuoteFormProps {
   lang: string;
@@ -291,6 +292,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
   });
 
   const handleFieldChange = (fieldName: keyof FormData, value: string | number | boolean | "na" | null) => {
+    if (showMissingHint) setShowMissingHint(false);
     telemetry.trackChange(fieldName, String(value));
 
     // Auto-clear dependent fields when they become invalid
@@ -341,54 +343,13 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     (formData.housingStatus === "co-owner" && ["apartment", "house"].includes(formData.housingType)) ||
     (formData.housingStatus === "tenant" && formData.housingType === "apartment");
 
-  // Validation for each step
-  const isStep1Valid =
-    formData.housingStatus &&
-    formData.housingType &&
-    formData.solarEquipment &&
-    formData.electricalBoardType &&
-    (!shouldShowNeighborhoodEquipment || formData.neighborhoodEquipment) &&
-    (["exists", "in-progress"].includes(formData.solarEquipment) ? formData.homeBattery : true);
-
-  // Valid final parking spot locations (sub-options or underground)
-  const validParkingLocations = [
-    "exterior-adjacent", "exterior-standalone",
-    "garage-adjacent", "garage-standalone",
-    "covered-adjacent", "covered-standalone",
-    "underground",
-  ];
-
-  const isStep2Valid =
-    formData.parkingSpotLocation &&
-    validParkingLocations.includes(formData.parkingSpotLocation) &&
-    formData.electricalLineDistance !== null &&
-    formData.electricalLineHoleCount !== null;
-
-  const isStep3Valid =
-    formData.parkingSpotCount &&
-    formData.ecpProvided &&
-    formData.deadline;
-
-  const isStep4Valid =
-    formData.vehicleStatus &&
-    formData.vehicleTripDistance !== null &&
-    formData.vehicleChargingHours !== null;
-
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
-
-  const isStep6Valid = formData.acceptTerms;
   const isPhoneValid = formData.phone && validatePhone(formData.phone, formData.phoneCountry as CountryCode);
 
-  const isStep5Valid =
-    formData.firstName.trim() &&
-    formData.lastName.trim() &&
-    isEmailValid &&
-    isPhoneValid &&
-    (formData.addressMode === "google"
-      ? (formData.address && formData.postalCode && formData.locality && formData.canton)
-      : (formData.postalCode && formData.locality && formData.streetName && formData.streetNb && formData.canton));
-
-  const canProceed = step === 1 ? isStep1Valid : step === 2 ? isStep2Valid : step === 3 ? isStep3Valid : step === 4 ? isStep4Valid : step === 5 ? isStep5Valid : step === 6 ? isStep6Valid : false;
+  // Single source of truth for step completeness / what's missing lives in
+  // stepValidation.ts (mirrors the former per-step "is<N>Valid" booleans).
+  const missingField = firstUnansweredField(step, formData);
+  const canProceed = missingField === null;
 
   // Sync step with URL param; handle browser back/forward
   useEffect(() => {
@@ -420,6 +381,23 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     history.pushState({}, "", url.toString());
     setStep(nextStep);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const [showMissingHint, setShowMissingHint] = useState(false);
+
+  // Continue pressed on an incomplete step: scroll to the first unanswered
+  // question and show a hint instead of a silently disabled button.
+  const tryGoToStep = (nextStep: number) => {
+    if (nextStep > step && missingField) {
+      setShowMissingHint(true);
+      ph?.capture("quote_missing_answer_nudge", { step, field: missingField });
+      const el = document.getElementById(`q-${missingField}`);
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+      return;
+    }
+    setShowMissingHint(false);
+    goToStep(nextStep);
   };
 
   // Handle place selection from Google Places Autocomplete
@@ -610,7 +588,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
               <ProgressBar
                 currentStep={step}
                 totalSteps={totalSteps}
-                onStepClick={goToStep}
+                onStepClick={(s) => (s < step ? goToStep(s) : tryGoToStep(s))}
                 className="mb-4"
               />
             )}
@@ -731,7 +709,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Housing Status — always visible (first question) */}
-                  <div>
+                  <div id="q-housingStatus">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <User className="h-4 w-4 text-primary" />
                       {tq("steps.housing.fields.housingStatus.label")}
@@ -745,7 +723,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Housing Type */}
                   <RevealField visible={!!formData.housingStatus}>
-                    <div>
+                    <div id="q-housingType">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                         <Home className="h-4 w-4 text-primary" />
                         {tq("steps.housing.fields.housingType.label")}
@@ -761,7 +739,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Solar Equipment */}
                   <RevealField visible={!!formData.housingStatus && !!formData.housingType}>
-                    <div>
+                    <div id="q-solarEquipment">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.solarEquipment.tooltip")} image={tooltipImage("housing", "solarEquipment")}>
                           <Sun className="h-4 w-4 text-primary" />
@@ -791,7 +769,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Home Battery (conditional on solar) */}
                   <RevealField visible={["exists", "in-progress"].includes(formData.solarEquipment)}>
-                    <div className="pl-4 border-l-2 border-primary/20">
+                    <div id="q-homeBattery" className="pl-4 border-l-2 border-primary/20">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.homeBattery.tooltip")} image={tooltipImage("housing", "homeBattery")}>
                           <BatteryCharging className="h-4 w-4 text-primary" />
@@ -821,7 +799,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Neighborhood Equipment (conditional on status + type) */}
                   <RevealField visible={shouldShowNeighborhoodEquipment && !!formData.solarEquipment}>
-                    <div className="pl-4 border-l-2 border-primary/20">
+                    <div id="q-neighborhoodEquipment" className="pl-4 border-l-2 border-primary/20">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.neighborhoodEquipment.tooltip")} image={tooltipImage("housing", "neighborhoodEquipment")}>
                           <Users className="h-4 w-4 text-primary" />
@@ -851,7 +829,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Electrical Board Type */}
                   <RevealField visible={!!formData.solarEquipment}>
-                    <div>
+                    <div id="q-electricalBoardType">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.electricalBoardType.tooltip")} image={tooltipImage("housing", "electricalBoardType")}>
                           <Plug className="h-4 w-4 text-primary" />
@@ -890,7 +868,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Parking Spot Location (Hierarchical) */}
-                  <div>
+                  <div id="q-parkingSpotLocation">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <MapPin className="h-4 w-4 text-primary" />
                       {tq("steps.parking.fields.parkingSpotLocation.label")}
@@ -963,33 +941,37 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Electrical Line Distance */}
-                  <RevealField visible={validParkingLocations.includes(formData.parkingSpotLocation)}>
-                    <RangeButtonGroup
-                      value={formData.electricalLineDistance}
-                      onChange={(value) => handleFieldChange("electricalLineDistance", value)}
-                      options={resolveBuckets("electricalLineDistance", getFieldConfig("parking", "electricalLineDistance").buckets, tq("steps.parking.fields.electricalLineDistance.unit"))}
-                      label={tq("steps.parking.fields.electricalLineDistance.label")}
-                      naLabel={tq("steps.parking.fields.electricalLineDistance.checkboxLabel")}
-                      icon={Cable}
-                      tooltip={tqOpt("steps.parking.fields.electricalLineDistance.tooltip")}
-                      tooltipImage={tooltipImage("parking", "electricalLineDistance")}
-                      testId="electricalLineDistance"
-                    />
+                  <RevealField visible={VALID_PARKING_LOCATIONS.includes(formData.parkingSpotLocation)}>
+                    <div id="q-electricalLineDistance">
+                      <RangeButtonGroup
+                        value={formData.electricalLineDistance}
+                        onChange={(value) => handleFieldChange("electricalLineDistance", value)}
+                        options={resolveBuckets("electricalLineDistance", getFieldConfig("parking", "electricalLineDistance").buckets, tq("steps.parking.fields.electricalLineDistance.unit"))}
+                        label={tq("steps.parking.fields.electricalLineDistance.label")}
+                        naLabel={tq("steps.parking.fields.electricalLineDistance.checkboxLabel")}
+                        icon={Cable}
+                        tooltip={tqOpt("steps.parking.fields.electricalLineDistance.tooltip")}
+                        tooltipImage={tooltipImage("parking", "electricalLineDistance")}
+                        testId="electricalLineDistance"
+                      />
+                    </div>
                   </RevealField>
 
                   {/* Walls to Cross */}
-                  <RevealField visible={validParkingLocations.includes(formData.parkingSpotLocation) && formData.electricalLineDistance !== null}>
-                    <RangeButtonGroup
-                      value={formData.electricalLineHoleCount}
-                      onChange={(value) => handleFieldChange("electricalLineHoleCount", value)}
-                      options={resolveBuckets("electricalLineHoleCount", getFieldConfig("parking", "electricalLineHoleCount").buckets, "")}
-                      label={tq("steps.parking.fields.electricalLineHoleCount.label")}
-                      naLabel={tq("steps.parking.fields.electricalLineHoleCount.checkboxLabel")}
-                      icon={Blocks}
-                      tooltip={tqOpt("steps.parking.fields.electricalLineHoleCount.tooltip")}
-                      tooltipImage={tooltipImage("parking", "electricalLineHoleCount")}
-                      testId="electricalLineHoleCount"
-                    />
+                  <RevealField visible={VALID_PARKING_LOCATIONS.includes(formData.parkingSpotLocation) && formData.electricalLineDistance !== null}>
+                    <div id="q-electricalLineHoleCount">
+                      <RangeButtonGroup
+                        value={formData.electricalLineHoleCount}
+                        onChange={(value) => handleFieldChange("electricalLineHoleCount", value)}
+                        options={resolveBuckets("electricalLineHoleCount", getFieldConfig("parking", "electricalLineHoleCount").buckets, "")}
+                        label={tq("steps.parking.fields.electricalLineHoleCount.label")}
+                        naLabel={tq("steps.parking.fields.electricalLineHoleCount.checkboxLabel")}
+                        icon={Blocks}
+                        tooltip={tqOpt("steps.parking.fields.electricalLineHoleCount.tooltip")}
+                        tooltipImage={tooltipImage("parking", "electricalLineHoleCount")}
+                        testId="electricalLineHoleCount"
+                      />
+                    </div>
                   </RevealField>
                 </div>
               )}
@@ -1003,7 +985,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Parking Spot Count */}
-                  <div>
+                  <div id="q-parkingSpotCount">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <Grid3x3 className="h-4 w-4 text-primary" />
                       {tq("steps.charger.fields.parkingSpotCount.label")}
@@ -1038,7 +1020,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* ECP Provided (Supplies) */}
                   <RevealField visible={!!formData.parkingSpotCount}>
-                    <div>
+                    <div id="q-ecpProvided">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.charger.fields.ecpProvided.tooltip")} image={tooltipImage("charger", "ecpProvided")}>
                           <Package className="h-4 w-4 text-primary" />
@@ -1068,7 +1050,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Deadline (Timeline) */}
                   <RevealField visible={!!formData.parkingSpotCount && !!formData.ecpProvided}>
-                    <div>
+                    <div id="q-deadline">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.charger.fields.deadline.tooltip")} image={tooltipImage("charger", "deadline")}>
                           <Clock className="h-4 w-4 text-primary" />
@@ -1119,7 +1101,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Vehicle Status */}
-                  <div>
+                  <div id="q-vehicleStatus">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <Key className="h-4 w-4 text-primary" />
                       {tq("steps.vehicle.fields.vehicleStatus.label")}
@@ -1160,32 +1142,36 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Trip Distance Slider */}
                   <RevealField visible={!!formData.vehicleStatus}>
-                    <RangeButtonGroup
-                      value={formData.vehicleTripDistance}
-                      onChange={(value) => handleFieldChange("vehicleTripDistance", value)}
-                      options={resolveBuckets("vehicleTripDistance", getFieldConfig("vehicle", "vehicleTripDistance").buckets, tq("steps.vehicle.fields.vehicleTripDistance.unit"))}
-                      label={tq("steps.vehicle.fields.vehicleTripDistance.label")}
-                      naLabel={tq("steps.vehicle.fields.vehicleTripDistance.na")}
-                      icon={Navigation}
-                      tooltip={tqOpt("steps.vehicle.fields.vehicleTripDistance.tooltip")}
-                      tooltipImage={tooltipImage("vehicle", "vehicleTripDistance")}
-                      testId="vehicleTripDistance"
-                    />
+                    <div id="q-vehicleTripDistance">
+                      <RangeButtonGroup
+                        value={formData.vehicleTripDistance}
+                        onChange={(value) => handleFieldChange("vehicleTripDistance", value)}
+                        options={resolveBuckets("vehicleTripDistance", getFieldConfig("vehicle", "vehicleTripDistance").buckets, tq("steps.vehicle.fields.vehicleTripDistance.unit"))}
+                        label={tq("steps.vehicle.fields.vehicleTripDistance.label")}
+                        naLabel={tq("steps.vehicle.fields.vehicleTripDistance.na")}
+                        icon={Navigation}
+                        tooltip={tqOpt("steps.vehicle.fields.vehicleTripDistance.tooltip")}
+                        tooltipImage={tooltipImage("vehicle", "vehicleTripDistance")}
+                        testId="vehicleTripDistance"
+                      />
+                    </div>
                   </RevealField>
 
                   {/* Charging Hours Slider */}
                   <RevealField visible={!!formData.vehicleStatus && formData.vehicleTripDistance !== null}>
-                    <RangeButtonGroup
-                      value={formData.vehicleChargingHours}
-                      onChange={(value) => handleFieldChange("vehicleChargingHours", value)}
-                      options={resolveBuckets("vehicleChargingHours", getFieldConfig("vehicle", "vehicleChargingHours").buckets, tq("steps.vehicle.fields.vehicleChargingHours.unit"))}
-                      label={tq("steps.vehicle.fields.vehicleChargingHours.label")}
-                      naLabel={tq("steps.vehicle.fields.vehicleChargingHours.na")}
-                      icon={Gauge}
-                      tooltip={tqOpt("steps.vehicle.fields.vehicleChargingHours.tooltip")}
-                      tooltipImage={tooltipImage("vehicle", "vehicleChargingHours")}
-                      testId="vehicleChargingHours"
-                    />
+                    <div id="q-vehicleChargingHours">
+                      <RangeButtonGroup
+                        value={formData.vehicleChargingHours}
+                        onChange={(value) => handleFieldChange("vehicleChargingHours", value)}
+                        options={resolveBuckets("vehicleChargingHours", getFieldConfig("vehicle", "vehicleChargingHours").buckets, tq("steps.vehicle.fields.vehicleChargingHours.unit"))}
+                        label={tq("steps.vehicle.fields.vehicleChargingHours.label")}
+                        naLabel={tq("steps.vehicle.fields.vehicleChargingHours.na")}
+                        icon={Gauge}
+                        tooltip={tqOpt("steps.vehicle.fields.vehicleChargingHours.tooltip")}
+                        tooltipImage={tooltipImage("vehicle", "vehicleChargingHours")}
+                        testId="vehicleChargingHours"
+                      />
+                    </div>
                   </RevealField>
                 </div>
               )}
@@ -1200,7 +1186,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* First Name & Last Name */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
+                    <div id="q-firstName">
                       <Label htmlFor="firstName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                         <User className="h-4 w-4 text-primary" />
                         {tq("steps.contact.fields.firstName.label")}
@@ -1214,7 +1200,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         data-testid="input-firstName"
                       />
                     </div>
-                    <div>
+                    <div id="q-lastName">
                       <Label htmlFor="lastName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                         <Users className="h-4 w-4 text-primary" />
                         {tq("steps.contact.fields.lastName.label")}
@@ -1231,7 +1217,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Email */}
-                  <div>
+                  <div id="q-email">
                     <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <Mail className="h-4 w-4 text-primary" />
                       {tq("steps.contact.fields.email.label")}
@@ -1262,7 +1248,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Phone with Country Selector */}
-                  <div>
+                  <div id="q-phone">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <PhoneIcon className="h-4 w-4 text-primary" />
                       {tq("steps.contact.fields.phone.label")}
@@ -1311,7 +1297,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Address */}
-                  <div>
+                  <div id="q-address">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <MapPin className="h-4 w-4 text-primary" />
                       {tq("steps.contact.fields.address.label")}
@@ -1600,7 +1586,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Terms and Conditions */}
-                  <div className="space-y-2">
+                  <div id="q-acceptTerms" className="space-y-2">
                     <label
                       htmlFor="acceptTerms"
                       className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
@@ -1638,9 +1624,17 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
         <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 shadow-lg z-50 py-3">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
+              {showMissingHint && missingField && (
+                <p className="text-xs text-destructive text-center mb-2" role="status">
+                  {tqOpt("navigation.missingAnswer") ??
+                    (lang === "de"
+                      ? "Oben fehlt noch eine Antwort — wir haben sie für Sie markiert."
+                      : "Il manque une réponse ci-dessus — nous vous y avons amené.")}
+                </p>
+              )}
               {step === 0 && (
                 <Button
-                  onClick={() => goToStep(1)}
+                  onClick={() => tryGoToStep(1)}
                   className="w-full h-10 text-sm font-semibold rounded-lg"
                   data-testid="button-start-quote"
                 >
@@ -1651,9 +1645,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
               {step === 1 && (
                 <Button
-                  onClick={() => goToStep(2)}
-                  className="w-full h-10 text-sm font-semibold rounded-lg"
-                  disabled={!isStep1Valid}
+                  onClick={() => tryGoToStep(2)}
+                  className={`w-full h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                   data-testid="button-next-step-1"
                 >
                   {tq("navigation.next")}
@@ -1673,9 +1666,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     {tq("navigation.back")}
                   </Button>
                   <Button
-                    onClick={() => goToStep(3)}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep2Valid}
+                    onClick={() => tryGoToStep(3)}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                     data-testid="button-next-step-2"
                   >
                     {tq("navigation.next")}
@@ -1696,9 +1688,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     {tq("navigation.back")}
                   </Button>
                   <Button
-                    onClick={() => goToStep(4)}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep3Valid}
+                    onClick={() => tryGoToStep(4)}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                     data-testid="button-next-step-3"
                   >
                     {tq("navigation.next")}
@@ -1719,9 +1710,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     {tq("navigation.back")}
                   </Button>
                   <Button
-                    onClick={() => goToStep(5)}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep4Valid}
+                    onClick={() => tryGoToStep(5)}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                     data-testid="button-next-step-4"
                   >
                     {tq("navigation.next")}
@@ -1742,9 +1732,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     {tq("navigation.back")}
                   </Button>
                   <Button
-                    onClick={() => goToStep(6)}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep5Valid}
+                    onClick={() => tryGoToStep(6)}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                     data-testid="button-next-step-5"
                   >
                     {tq("navigation.next")}
@@ -1766,6 +1755,11 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </Button>
                   <Button
                     onClick={async () => {
+                      if (missingField) {
+                        setShowMissingHint(true);
+                        document.getElementById(`q-${missingField}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        return;
+                      }
                       setIsSubmitting(true);
                       setSubmitError(false);
                       try {
@@ -1850,8 +1844,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         setIsSubmitting(false);
                       }
                     }}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep6Valid || isSubmitting}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
+                    disabled={isSubmitting}
                     data-testid="button-submit"
                   >
                     {isSubmitting
