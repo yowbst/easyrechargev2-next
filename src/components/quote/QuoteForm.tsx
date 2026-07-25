@@ -109,6 +109,7 @@ function RevealField({ visible, children }: { visible: boolean; children: React.
   return (
     <div
       ref={ref}
+      inert={!visible}
       className={`transition-all duration-300 ease-out ${
         visible
           ? "opacity-100 max-h-[2000px] translate-y-0"
