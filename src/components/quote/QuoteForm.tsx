@@ -31,6 +31,7 @@ import { SUPPORTED_COUNTRIES, validatePhone, formatPhoneE164 } from "@/lib/phone
 import { adsSendTo, fireAdsConversion, type GoogleAdsConfig } from "@/lib/googleAds";
 import { normalizeProduct } from "@/lib/products";
 import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
+import { NAV_BAR_CLEARANCE } from "@/lib/dropdownPlacement";
 import dynamic from "next/dynamic";
 
 const LazyPlaceAutocomplete = dynamic(
@@ -1327,6 +1328,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                               onChange={(value) => handleFieldChange("address", value)}
                               onPlaceSelect={handlePlaceSelect}
                               placeholder={tq("steps.contact.fields.address.placeholder") || undefined}
+                              bottomClearance={NAV_BAR_CLEARANCE}
                             />
                           </LazyAPIProvider>
                         </div>

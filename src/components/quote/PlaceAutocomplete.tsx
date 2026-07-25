@@ -19,6 +19,8 @@ interface PlaceAutocompleteProps {
   onPlaceSelect?: (place: google.maps.places.PlaceResult) => void;
   placeholder?: string;
   id?: string;
+  /** Space (px) reserved for a fixed bottom bar, e.g. the quote form nav. */
+  bottomClearance?: number;
 }
 
 export function PlaceAutocomplete({
@@ -27,11 +29,13 @@ export function PlaceAutocomplete({
   onPlaceSelect,
   placeholder = "Rue et numéro, NPA Localité",
   id,
+  bottomClearance = 0,
 }: PlaceAutocompleteProps) {
   const places = useMapsLibrary("places");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [placement, setPlacement] = useState<"down" | "up">("down");
+  const [maxHeight, setMaxHeight] = useState(240);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isSelectingRef = useRef(false);
@@ -72,7 +76,13 @@ export function PlaceAutocomplete({
         setSuggestions(mapped);
         if (mapped.length > 0 && inputRef.current) {
           const r = inputRef.current.getBoundingClientRect();
-          setPlacement(dropdownPlacement({ top: r.top, bottom: r.bottom }, window.innerHeight));
+          const result = dropdownPlacement(
+            { top: r.top, bottom: r.bottom },
+            window.innerHeight,
+            bottomClearance,
+          );
+          setPlacement(result.placement);
+          setMaxHeight(result.maxHeight);
         }
         setIsOpen(mapped.length > 0);
       } catch {
@@ -84,7 +94,7 @@ export function PlaceAutocomplete({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [places, value]);
+  }, [places, value, bottomClearance]);
 
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
@@ -170,9 +180,10 @@ export function PlaceAutocomplete({
       {isOpen && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
-          className={`absolute z-[60] w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto ${
+          className={`absolute z-[60] w-full bg-popover border border-border rounded-md shadow-lg overflow-auto ${
             placement === "up" ? "bottom-full mb-1" : "top-full mt-1"
           }`}
+          style={{ maxHeight }}
         >
           {suggestions.map((suggestion) => (
             <div
