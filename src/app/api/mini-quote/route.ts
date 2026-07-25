@@ -2,11 +2,13 @@ import { NextResponse, after } from "next/server";
 import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
+import { normalizeProduct } from "@/lib/products";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { housingStatus, postalCode, locality, canton, formType, pageId, locale } = body;
+    const product = normalizeProduct(body.product);
 
     if (!housingStatus || !postalCode) {
       const missing = [!housingStatus && "housingStatus", !postalCode && "postalCode"].filter(Boolean) as string[];
@@ -55,6 +57,7 @@ export async function POST(req: Request) {
       location_params: refererUrl?.search.slice(1) || null,
       data: { housingStatus, postalCode, locality, canton },
       status: "success",
+      product,
     });
 
     return NextResponse.json({ success: true, sessionToken });

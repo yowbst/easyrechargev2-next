@@ -54,6 +54,7 @@ interface CreateSubmissionData {
   session: string;
   user: string | null;
   form_type: string;
+  product?: string;
   location_route?: string | null;
   location_path?: string | null;
   location_params?: string | null;
@@ -87,7 +88,8 @@ class DirectusStorage {
             ...data,
             user_agent: truncate(data.user_agent),
             location_path: truncate(data.location_path),
-            location_params: truncate(data.location_params),
+            // location_params is a text column — cap is defensive, not a varchar limit
+            location_params: truncate(data.location_params, 2000),
             environment: getEnvironment(),
           }),
           next: { revalidate: 0 },
@@ -165,6 +167,9 @@ class DirectusStorage {
         method: "POST",
         body: JSON.stringify({
           ...data,
+          location_path: truncate(data.location_path),
+          // location_params is a text column — cap is defensive, not a varchar limit
+          location_params: truncate(data.location_params, 2000),
           status: data.status ?? "success",
           environment: getEnvironment(),
         }),

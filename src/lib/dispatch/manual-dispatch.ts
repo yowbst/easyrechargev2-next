@@ -9,6 +9,7 @@ import {
   fireQuoteWebhook,
 } from "@/lib/dispatch/webhook";
 import { serverLog } from "@/lib/posthog-server";
+import { normalizeProduct } from "@/lib/products";
 import type { DispatchMode, DispatchResult } from "./types";
 
 export type ManualDispatchResult =
@@ -60,6 +61,9 @@ export async function manualDispatch(
   // Reconstruct dispatch inputs from stored data.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = (submission.data ?? {}) as Record<string, any>;
+  // `product` isn't on the typed FormSubmission record yet (Directus schema
+  // field added in Task 2) — read it the same loose way as `data` above.
+  const product = normalizeProduct((submission as { product?: string }).product);
   const email = user?.email ?? null;
   const locale = user?.language === "de" ? "de" : "fr";
   const leadCategory = deriveLeadCategory(data);
@@ -71,7 +75,7 @@ export async function manualDispatch(
     email,
     locale,
     leadCategory,
-    product: "ecp",
+    product,
     modeOverride: "live",
   });
 
@@ -93,6 +97,7 @@ export async function manualDispatch(
         environment: getEnvironment(),
         miniQuoteSessionToken: null,
         leadCategory,
+        product,
         isRepeat: (dispatchResult.dedup?.skippedPartnerSlugs?.length ?? 0) > 0,
         data,
       },

@@ -5,6 +5,7 @@ import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 import { runDispatch, normalizeCanton, type DispatchResult } from "@/lib/dispatch";
 import { deriveLeadCategory } from "@/lib/dispatch/categorize";
 import { getQuoteWebhookUrl, parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
+import { normalizeProduct } from "@/lib/products";
 
 export async function POST(req: Request) {
   try {
@@ -61,6 +62,8 @@ export async function POST(req: Request) {
 
     const { attribution: _a, posthog: _ph, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, miniQuoteSessionToken: _mqt, lang: _lang, ...quoteData } = body;
 
+    const product = normalizeProduct(body.product);
+
     // Normalize canton before persistence so downstream consumers (CRM, ledger,
     // Make payload) all see the 2-letter code. The form sometimes writes the
     // localized name (e.g. "Valais" instead of "VS").
@@ -73,6 +76,7 @@ export async function POST(req: Request) {
       session: session.id,
       user: formUser.id,
       form_type: "quote",
+      product,
       location_route: "quote",
       location_path: refererUrl?.pathname ?? null,
       location_params: refererUrl?.search.slice(1) || null,
@@ -91,7 +95,7 @@ export async function POST(req: Request) {
       email,
       locale: (lang === "de" ? "de" : "fr"),
       leadCategory,
-      product: "ecp",
+      product,
     });
 
     // Identify user in PostHog server-side (client may not have loaded yet)
@@ -128,6 +132,7 @@ export async function POST(req: Request) {
           environment: process.env.VERCEL_ENV || "development",
           miniQuoteSessionToken: miniQuoteToken || null,
           leadCategory,
+          product,
           isRepeat,
           data: quoteData,
         },

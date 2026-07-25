@@ -307,6 +307,7 @@ Form submission routes create a session → user → submission chain in Directu
 | `lib/route-resolver.ts` | URL → page type resolution (SlugRoute, Sub1Route, Sub2Route) |
 | `lib/vehicleTransformer.ts` | Raw Directus vehicle → UI Vehicle interface |
 | `lib/pageConfig.ts` | Route ID resolution, route link builders |
+| `lib/products.ts` | Product registry (product keys for forms, dispatch pricing, ads conversions) |
 | `lib/attribution.ts` | Client-side cookie reading for ad attribution |
 | `lib/consent.ts` | Cookie consent state |
 | `lib/phone-utils.ts` | Phone number parsing utilities |

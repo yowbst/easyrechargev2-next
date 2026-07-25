@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SUPPORTED_COUNTRIES, validatePhone, formatPhoneE164 } from "@/lib/phone-utils";
 import { adsSendTo, fireAdsConversion, type GoogleAdsConfig } from "@/lib/googleAds";
+import { normalizeProduct } from "@/lib/products";
 import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
 import dynamic from "next/dynamic";
 
@@ -169,6 +170,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     // t() returns the raw key when missing — detect both that and [bracket] placeholders
     return (v === fullKey || v.startsWith("[")) ? undefined : v;
   };
+
+  const product = normalizeProduct((pageConfig as Record<string, unknown> | undefined)?.product);
 
   const [step, setStep] = useState(0);
   const ph = usePostHog();
@@ -392,7 +395,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
       // Micro-conversion: quote started (first forward step). Secondary/
       // observation signal in Google Ads; inert without the label.
       if (step === 0) {
-        const startSendTo = adsSendTo(gc.google_ads, "quote_start");
+        const startSendTo = adsSendTo(gc.google_ads, "quote_start", product);
         if (startSendTo) fireAdsConversion(startSendTo);
       }
     }
@@ -1768,7 +1771,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         const res = await fetch("/api/quote", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ ...formData, lang, attribution, posthog: phIds, ...(miniQuoteSessionTokenRef.current && { miniQuoteSessionToken: miniQuoteSessionTokenRef.current }) }),
+                          body: JSON.stringify({ ...formData, lang, product, attribution, posthog: phIds, ...(miniQuoteSessionTokenRef.current && { miniQuoteSessionToken: miniQuoteSessionTokenRef.current }) }),
                         });
                         if (!res.ok) throw new Error("Submit failed");
                         const result = await res.json();
@@ -1814,7 +1817,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         // fallback; the shared transaction_id dedupes. gtag
                         // hashes user_data client-side and drops it while
                         // ad_user_data consent is denied.
-                        const leadSendTo = adsSendTo(gc.google_ads, "lead_submit");
+                        const leadSendTo = adsSendTo(gc.google_ads, "quote_submit", product);
                         if (leadSendTo) {
                           fireAdsConversion(leadSendTo, {
                             transactionId: result.submissionId,

@@ -206,3 +206,25 @@ Make calls this once before the `events:ingest` request and uses
 
 The scope minted is `https://www.googleapis.com/auth/datamanager`. Verify the
 token by calling `events:ingest` with `"validateOnly": true`.
+
+### Product dimension
+
+The webhook payload's `submission.product` (e.g. `"ecp"`) identifies the lead
+vertical (source of truth: `src/lib/products.ts`). The Make ingest module
+currently targets one conversion action (`productDestinationId: 7076158233`,
+"ECP Quote Form Submitted (API)").
+
+**Make must only ever read `submission.product`** — the top-level,
+server-validated field. `submission.data.product` also exists (raw client
+input inside the form-data blob) and must never be used for routing or
+conversion mapping.
+
+**When a second product launches:**
+1. Create its offline conversion action in the Ads UI (primary, own category).
+2. In the Make scenario, add a router switching on `submission.product` (or an
+   `if()` on the `productDestinationId` field) mapping product → conversion
+   action ID.
+3. Add the browser conversion actions and put their labels in Directus
+   `global_config.google_ads.conversions.<product>.<event>.label`.
+4. Add the product column to partner pricing policies
+   (`pricing_policy.settings.prices[<product>][<category>]`).
