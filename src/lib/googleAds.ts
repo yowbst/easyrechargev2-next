@@ -1,18 +1,39 @@
 // Client-side Google Ads conversion helpers. The tag itself is loaded by
 // GoogleAdsTag (Consent Mode v2, idle-loaded); config comes from Directus
 // site_settings.global_config.google_ads:
-//   { tag_id, labels: { lead_submit, contact_submit, quote_start } }
-// A conversion only fires when tag_id and the relevant label are set.
+//   { tag_id, conversions: { <product>: { <event>: { label, ...metadata } } } }
+// Only `label` is functional — the other conversion fields document the
+// Ads-side setup (action_name, category, optimization, enhanced_conversions).
+// A conversion only fires when tag_id and the product+event label are set.
+
+import { DEFAULT_PRODUCT, type Product } from "@/lib/products";
+
+export type GoogleAdsEvent = "quote_submit" | "quote_start" | "contact_submit";
+
+export interface GoogleAdsConversionEntry {
+  label?: string | null;
+  action_name?: string;
+  category?: string;
+  optimization?: "primary" | "secondary";
+  enhanced_conversions?: boolean;
+}
 
 export interface GoogleAdsConfig {
   tag_id?: string | null;
-  lead_conversion_label?: string | null; // legacy single-label field
-  labels?: {
-    lead_submit?: string | null;
-    contact_submit?: string | null;
-    quote_start?: string | null;
-  } | null;
+  account_id?: string | null;
+  conversions?: Partial<
+    Record<Product, Partial<Record<GoogleAdsEvent, GoogleAdsConversionEntry | null>> | null>
+  > | null;
+  /** legacy flat map (pre-2026-07 config shape; `lead_submit` = today's `quote_submit`) */
+  labels?: Record<string, string | null> | null;
+  /** legacy single-label field, older still */
+  lead_conversion_label?: string | null;
 }
+
+/** Config keys an event was previously stored under, newest shape first. */
+const LEGACY_LABEL_KEYS: Partial<Record<GoogleAdsEvent, string>> = {
+  quote_submit: "lead_submit",
+};
 
 /** User-provided data for enhanced conversions for leads. Passed RAW —
  * gtag.js normalizes and SHA-256 hashes it client-side before sending,
@@ -30,11 +51,14 @@ export interface AdsUserData {
 
 export function adsSendTo(
   config: GoogleAdsConfig | undefined | null,
-  label: keyof NonNullable<GoogleAdsConfig["labels"]>,
+  event: GoogleAdsEvent,
+  product: Product = DEFAULT_PRODUCT,
 ): string | null {
   const l =
-    config?.labels?.[label] ??
-    (label === "lead_submit" ? config?.lead_conversion_label : null);
+    config?.conversions?.[product]?.[event]?.label ??
+    config?.labels?.[event] ??
+    config?.labels?.[LEGACY_LABEL_KEYS[event] ?? ""] ??
+    (event === "quote_submit" ? config?.lead_conversion_label : null);
   return config?.tag_id && l ? `${config.tag_id}/${l}` : null;
 }
 

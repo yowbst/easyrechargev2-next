@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { isValidLang, slugToDirectusLocale, getRouteSlug } from "@/lib/i18n/config";
 import { GoogleAdsConversion } from "@/components/GoogleAdsConversion";
+import { adsSendTo } from "@/lib/googleAds";
 import { resolveSub1Route } from "@/lib/route-resolver";
 import {
   fetchVehicle,
@@ -1063,11 +1064,12 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     // Google Ads lead conversion — fallback signal only: the primary fire
     // happens in QuoteForm at submit time (with enhanced-conversion user
     // data); this one covers lost beacons and shares the transaction_id so
-    // Google dedupes. Inert unless tag_id + lead_submit label are set.
+    // Google dedupes. Inert unless tag_id + quote_submit label are set.
     const googleAds = gc?.google_ads ?? {};
-    const leadLabel = googleAds.labels?.lead_submit ?? googleAds.lead_conversion_label;
-    const adsConversionSendTo =
-      googleAds.tag_id && leadLabel ? `${googleAds.tag_id}/${leadLabel}` : null;
+    // NOTE: quote-success doesn't know which product's funnel it terminates —
+    // defaults to DEFAULT_PRODUCT. When a second product gets its own quote
+    // funnel, give its success route its own product here.
+    const adsConversionSendTo = adsSendTo(googleAds, "quote_submit");
 
     return (
       <Suspense>
