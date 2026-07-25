@@ -88,7 +88,8 @@ const lastRevealScroll = { at: 0 };
 /** Progressive-reveal wrapper: renders children hidden until `visible` is true, with a slide-down animation. */
 function RevealField({ visible, children }: { visible: boolean; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const hasBeenVisible = useRef(false);
+  // Mounted-already-visible (filled step re-entered) must NOT scroll — only user-triggered reveals.
+  const hasBeenVisible = useRef(visible);
 
   // Once visible, scroll into view — AFTER the 300ms height transition, so
   // the element's final geometry is what gets centered. block:"center"
@@ -1774,7 +1775,10 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     onClick={async () => {
                       if (missingField) {
                         setShowMissingHint(true);
-                        document.getElementById(`q-${missingField}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        ph?.capture("quote_missing_answer_nudge", { step, field: missingField });
+                        const el = document.getElementById(`q-${missingField}`);
+                        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                        el?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
                         return;
                       }
                       setIsSubmitting(true);
