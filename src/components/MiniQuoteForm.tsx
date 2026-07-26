@@ -282,7 +282,7 @@ export function MiniQuoteForm({
               dataTestId="input-postal-code"
               iconClassName="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/70 z-10 pointer-events-none"
               inputClassName="h-12 pl-12 text-base rounded-md bg-white/10 border-white/30 focus:border-white hover:border-white/50 text-white placeholder:text-white/60"
-              dropdownClassName="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-[200px] overflow-auto"
+              dropdownClassName="bg-popover border border-border rounded-lg shadow-lg"
             />
           )}
         </div>
