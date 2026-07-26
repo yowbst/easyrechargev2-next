@@ -49,9 +49,9 @@ export function MiniQuoteForm({
     if (!el || hasTrackedView.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasTrackedView.current) {
+        if (entry.isIntersecting && ph && !hasTrackedView.current) {
           hasTrackedView.current = true;
-          ph?.capture("mini_quote_viewed", { form_type: "mini-quote-form", page_id: pageId, locale: lang });
+          ph.capture("mini_quote_viewed", { form_type: "mini-quote-form", page_id: pageId, locale: lang });
           observer.disconnect();
         }
       },
