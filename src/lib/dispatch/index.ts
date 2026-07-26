@@ -123,6 +123,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
           locale: input.locale,
           environment,
           isTest,
+          product: input.product ?? "ecp",
         },
         mode,
         [],
@@ -167,6 +168,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
       locale: input.locale,
       environment,
       isTest,
+      product,
     };
 
     // Record ledger rows. In shadow mode the status is still `dispatched` so
@@ -265,6 +267,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
           submission_id: input.submissionId,
           canton,
           mode,
+          product: input.product ?? "ecp",
           error: err instanceof Error ? err.message : String(err),
         },
       });
@@ -291,6 +294,7 @@ function fireDispatchEvents(
         submission_id: ctx.submissionId,
         canton: ctx.canton,
         environment: ctx.environment,
+        product: ctx.product,
         mode,
         is_test: ctx.isTest,
         target_count: targets.length,
@@ -307,6 +311,7 @@ function fireDispatchEvents(
           partner_slug: t.partnerSlug,
           mode_used: t.mode,
           environment: ctx.environment,
+          product: ctx.product,
         },
       });
     }
@@ -319,6 +324,7 @@ function fireDispatchEvents(
             submission_id: ctx.submissionId,
             canton: ctx.canton,
             environment: ctx.environment,
+            product: ctx.product,
           },
         });
       }

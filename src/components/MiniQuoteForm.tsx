@@ -14,6 +14,7 @@ import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { usePostHog } from "@/components/PostHogProvider";
 import type { LocalityResponse } from "@/lib/localities";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
+import { DEFAULT_PRODUCT } from "@/lib/products";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
@@ -63,7 +64,7 @@ export function MiniQuoteForm({
       ([entry]) => {
         if (entry.isIntersecting && ph && !hasTrackedView.current) {
           hasTrackedView.current = true;
-          ph.capture("mini_quote_viewed", { form_type: "mini-quote-form", page_id: pageId, locale: lang });
+          ph.capture("mini_quote_viewed", { form_type: "mini-quote-form", product: DEFAULT_PRODUCT, page_id: pageId, locale: lang });
           observer.disconnect();
         }
       },
@@ -162,12 +163,12 @@ export function MiniQuoteForm({
   const handleQuoteClick = async () => {
     if (isSubmitting) return;
     if (!housingStatus) {
-      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", field: "housingStatus" });
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", product: DEFAULT_PRODUCT, field: "housingStatus" });
       pulse(statusSectionRef.current);
       return;
     }
     if (!selectedLocality) {
-      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", field: "locality" });
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", product: DEFAULT_PRODUCT, field: "locality" });
       const target = localitySectionRef.current ?? statusSectionRef.current;
       pulse(target);
       localitySectionRef.current?.querySelector("input")?.focus();
@@ -176,7 +177,7 @@ export function MiniQuoteForm({
     setIsSubmitting(true);
     setSubmitError(false);
     telemetry.trackSubmit(true, { housingStatus: getHousingStatusValue(housingStatus), postalCode: selectedLocality.postalCode });
-    ph?.capture("mini_quote_submitted", { form_type: "mini-quote-form", page_id: pageId, locale: lang, housing_status: getHousingStatusValue(housingStatus) });
+    ph?.capture("mini_quote_submitted", { form_type: "mini-quote-form", product: DEFAULT_PRODUCT, page_id: pageId, locale: lang, housing_status: getHousingStatusValue(housingStatus) });
 
     const params = new URLSearchParams({
       postalCode: selectedLocality.postalCode,
@@ -195,6 +196,7 @@ export function MiniQuoteForm({
           locality: selectedLocality.locality,
           canton: selectedLocality.canton,
           formType: "mini-quote-form",
+          product: DEFAULT_PRODUCT,
           pageId: pageId ?? null,
           locale: lang,
           posthog: {

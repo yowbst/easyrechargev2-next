@@ -49,9 +49,9 @@ export function QuoteSuccess({
   const ph = usePostHog();
   useEffect(() => {
     if (submissionId) {
-      ph?.capture("quote_success_viewed", { submission_id: submissionId });
+      ph?.capture("quote_success_viewed", { form_type: "quote", locale: lang, submission_id: submissionId });
     }
-  }, [ph, submissionId]);
+  }, [ph, submissionId, lang]);
 
   const d = (key: string, vars?: Record<string, string | number>) => {
     let val = dictionary[key] ?? "";

@@ -394,10 +394,20 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   const stepNames = ["welcome", "housing", "parking", "charger", "vehicle", "contact", "finalize"] as const;
 
+  // Common dimensions on every quote_* PostHog event. A function (not a
+  // constant) because miniQuoteSessionTokenRef is only populated once the
+  // mount effect has read the URL params.
+  const quoteEventProps = () => ({
+    form_type: "quote",
+    product,
+    locale: lang,
+    entry_point: miniQuoteSessionTokenRef.current ? "mini-quote" : "direct",
+  });
+
   // Helper function to navigate to next step with scroll to top
   const goToStep = (nextStep: number) => {
     if (nextStep > step) {
-      ph?.capture("quote_step_completed", { step, step_name: stepNames[step] });
+      ph?.capture("quote_step_completed", { ...quoteEventProps(), step, step_name: stepNames[step] });
       // Micro-conversion: quote started (first forward step). Secondary/
       // observation signal in Google Ads; inert without the label.
       if (step === 0) {
@@ -405,7 +415,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
         if (startSendTo) fireAdsConversion(startSendTo);
       }
     }
-    ph?.capture("quote_step_viewed", { step: nextStep, step_name: stepNames[nextStep] });
+    ph?.capture("quote_step_viewed", { ...quoteEventProps(), step: nextStep, step_name: stepNames[nextStep] });
 
     const url = new URL(window.location.href);
     url.searchParams.set("step", String(nextStep));
@@ -422,7 +432,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
   // cue even when nothing scrolls.
   const nudgeField = (field: string) => {
     setShowMissingHint(true);
-    ph?.capture("quote_missing_answer_nudge", { step, field });
+    ph?.capture("quote_missing_answer_nudge", { ...quoteEventProps(), step, field });
     const el = document.getElementById(`q-${field}`);
     if (!el) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1821,7 +1831,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         const result = await res.json();
                         telemetry.trackSubmit(true, { submissionId: result.submissionId });
                         try { sessionStorage.removeItem(QUOTE_DRAFT_KEY); } catch { /* ignore */ }
-                        try { ph?.capture("quote_submitted", { form_type: "quote", locale: lang }); } catch { /* noop */ }
+                        try { ph?.capture("quote_submitted", quoteEventProps()); } catch { /* noop */ }
                         try { ph?.identify(formData.email, { first_name: formData.firstName, last_name: formData.lastName, locale: lang }); } catch { /* noop */ }
 
                         // Post to form-submissions for session tracking (non-blocking)
@@ -1884,7 +1894,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         }
                       } catch (err) {
                         telemetry.trackSubmit(false, { error: String(err) });
-                        ph?.capture("quote_form_error", { error_message: String(err) });
+                        ph?.capture("quote_form_error", { ...quoteEventProps(), error_message: String(err) });
                         setSubmitError(true);
                         setIsSubmitting(false);
                       }

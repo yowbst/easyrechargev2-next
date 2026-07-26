@@ -189,6 +189,7 @@ export interface DispatchContext {
   locale: Language;
   environment: Environment;
   isTest: boolean;
+  product: string;
 }
 
 export interface DispatchTarget {

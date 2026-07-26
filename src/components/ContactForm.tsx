@@ -173,7 +173,7 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
 
       if (res.ok && result.success) {
         telemetry.trackSubmit(true, { emailId: result.emailId });
-        ph?.capture("contact_form_submitted", { locale: lang, subject: formData.subject });
+        ph?.capture("contact_form_submitted", { form_type: "contact", locale: lang, subject: formData.subject });
         ph?.identify(formData.email, { first_name: formData.firstName, last_name: formData.lastName, locale: lang });
 
         // Post to form-submissions (non-blocking)
@@ -237,7 +237,7 @@ export function ContactForm({ lang, dictionary, heroImage, getQuoteBlock, pageRe
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error";
       telemetry.trackSubmit(false, { error: errorMsg });
-      ph?.capture("contact_form_error", { error_message: errorMsg });
+      ph?.capture("contact_form_error", { form_type: "contact", locale: lang, error_message: errorMsg });
 
       toast.error(d(`${P}.toasts.error.title`), {
         description: d(`${P}.toasts.error.description`),
