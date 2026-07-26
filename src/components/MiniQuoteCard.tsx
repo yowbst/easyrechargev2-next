@@ -150,10 +150,10 @@ export function MiniQuoteCard({
   return (
     <Card
       ref={containerRef}
-      className={`group relative flex flex-col rounded-2xl border border-border bg-card text-card-foreground shadow-md overflow-hidden transition-shadow duration-300 hover:shadow-lg ${className}`}
+      className={`group relative flex flex-col rounded-2xl border border-border bg-card text-card-foreground shadow-md transition-shadow duration-300 hover:shadow-lg ${className}`}
       data-testid="card-mini-quote"
     >
-      <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/70 to-primary/40" />
+      <div className="h-1 w-full rounded-t-2xl bg-gradient-to-r from-primary via-primary/70 to-primary/40" />
 
       <div className="p-6 pb-3 space-y-1.5">
         <h3 className="text-xl font-heading font-bold leading-tight text-foreground tracking-tight">
