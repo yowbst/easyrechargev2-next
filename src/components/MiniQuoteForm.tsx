@@ -18,6 +18,16 @@ import type { PageRegistryEntry } from "@/lib/directus-queries";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
 
+// Pulse the missing section when the CTA is pressed too early — reuses the
+// big form's .er-field-nudge ring (globals.css).
+function pulse(el: HTMLElement | null) {
+  if (!el) return;
+  el.classList.remove("er-field-nudge");
+  void el.offsetWidth;
+  el.classList.add("er-field-nudge");
+  window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+}
+
 interface MiniQuoteFormProps {
   miniQuoteContent?: AnyRecord;
   className?: string;
@@ -43,6 +53,8 @@ export function MiniQuoteForm({
   const telemetry = useFormTelemetry({ formType: "mini-quote-form", locale: lang });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const statusSectionRef = useRef<HTMLDivElement>(null);
+  const localitySectionRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
   useEffect(() => {
     const el = containerRef.current;
@@ -148,7 +160,18 @@ export function MiniQuoteForm({
   const [submitError, setSubmitError] = useState(false);
 
   const handleQuoteClick = async () => {
-    if (!housingStatus || !selectedLocality || isSubmitting) return;
+    if (isSubmitting) return;
+    if (!housingStatus) {
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", field: "housingStatus" });
+      pulse(statusSectionRef.current);
+      return;
+    }
+    if (!selectedLocality) {
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", field: "locality" });
+      pulse(localitySectionRef.current);
+      localitySectionRef.current?.querySelector("input")?.focus();
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(false);
     telemetry.trackSubmit(true, { housingStatus, postalCode: selectedLocality.postalCode });
@@ -220,7 +243,7 @@ export function MiniQuoteForm({
       </div>
 
       {/* Housing Status Selection */}
-      <div className="space-y-3">
+      <div className="space-y-3" ref={statusSectionRef}>
         {housingStatus && !isEditingHousingStatus ? (
           <div
             className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur"
@@ -265,7 +288,7 @@ export function MiniQuoteForm({
 
       {/* Locality Field */}
       {housingStatus && !isEditingHousingStatus && (
-        <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+        <div className="space-y-3 animate-in slide-in-from-top-2 duration-300" ref={localitySectionRef}>
           {selectedLocality && !isEditingLocation ? (
             <>
               <div
@@ -328,8 +351,8 @@ export function MiniQuoteForm({
           </p>
         )}
         <Button
-          className="w-full h-12 font-semibold rounded-lg text-[14px]"
-          disabled={!housingStatus || !selectedLocality || isSubmitting}
+          className={`w-full h-12 font-semibold rounded-lg text-[14px]${housingStatus && selectedLocality ? "" : " opacity-70"}`}
+          disabled={isSubmitting}
           data-testid="button-mini-quote"
           onClick={handleQuoteClick}
         >
