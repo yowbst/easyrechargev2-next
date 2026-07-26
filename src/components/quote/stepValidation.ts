@@ -84,15 +84,18 @@ export function firstUnansweredField(step: number, f: StepFields): string | null
       return null;
     }
     case 5: {
-      if (!f.firstName.trim()) return "firstName";
-      if (!f.lastName.trim()) return "lastName";
-      if (!EMAIL_RE.test(f.email)) return "email";
-      if (!f.phone || !validatePhone(f.phone, f.phoneCountry as CountryCode)) return "phone";
+      // Address is the first question on the contact step (2026-07 UX pass):
+      // it keeps the autocomplete dropdown high in the viewport and asks for
+      // the low-friction answer before personal details.
       const addressOk =
         f.addressMode === "google"
           ? f.address && f.postalCode && f.locality && f.canton
           : f.postalCode && f.locality && f.streetName && f.streetNb && f.canton;
       if (!addressOk) return "address";
+      if (!f.firstName.trim()) return "firstName";
+      if (!f.lastName.trim()) return "lastName";
+      if (!EMAIL_RE.test(f.email)) return "email";
+      if (!f.phone || !validatePhone(f.phone, f.phoneCountry as CountryCode)) return "phone";
       return null;
     }
     case 6:

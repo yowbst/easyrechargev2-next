@@ -57,13 +57,16 @@ describe("firstUnansweredField", () => {
     expect(firstUnansweredField(2, { ...complete, electricalLineHoleCount: 0 })).toBeNull();
   });
 
-  it("step 5: validates email/phone content and address per mode", () => {
-    expect(firstUnansweredField(5, { ...complete, email: "not-an-email" })).toBe("email");
-    expect(firstUnansweredField(5, { ...complete, phone: "1" })).toBe("phone");
+  it("step 5: address comes first (visual order), then name/email/phone validation", () => {
+    // Address moved to the top of the contact step in the 2026-07 UX pass
+    expect(firstUnansweredField(5, { ...complete, canton: "", firstName: "" })).toBe("address");
     expect(firstUnansweredField(5, { ...complete, canton: "" })).toBe("address");
     expect(
       firstUnansweredField(5, { ...complete, addressMode: "manual", streetName: "", address: "" }),
     ).toBe("address");
+    expect(firstUnansweredField(5, { ...complete, firstName: " " })).toBe("firstName");
+    expect(firstUnansweredField(5, { ...complete, email: "not-an-email" })).toBe("email");
+    expect(firstUnansweredField(5, { ...complete, phone: "1" })).toBe("phone");
   });
 
   it("step 6: terms", () => {

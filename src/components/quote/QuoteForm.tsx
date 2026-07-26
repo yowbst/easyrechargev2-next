@@ -1202,118 +1202,6 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     <h2 className="text-2xl font-heading font-bold">{tq("steps.contact.title")}</h2>
                   </div>
 
-                  {/* First Name & Last Name */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div id="q-firstName">
-                      <Label htmlFor="firstName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
-                        <User className="h-4 w-4 text-primary" />
-                        {tq("steps.contact.fields.firstName.label")}
-                      </Label>
-                      <Input
-                        id="firstName"
-                        type="text"
-                        value={formData.firstName}
-                        onChange={(e) => handleFieldChange("firstName", e.target.value)}
-                        onBlur={(e) => handleFieldChange("firstName", normalizeName(e.target.value))}
-                        data-testid="input-firstName"
-                      />
-                    </div>
-                    <div id="q-lastName">
-                      <Label htmlFor="lastName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
-                        <Users className="h-4 w-4 text-primary" />
-                        {tq("steps.contact.fields.lastName.label")}
-                      </Label>
-                      <Input
-                        id="lastName"
-                        type="text"
-                        value={formData.lastName}
-                        onChange={(e) => handleFieldChange("lastName", e.target.value)}
-                        onBlur={(e) => handleFieldChange("lastName", normalizeName(e.target.value))}
-                        data-testid="input-lastName"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email */}
-                  <div id="q-email">
-                    <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
-                      <Mail className="h-4 w-4 text-primary" />
-                      {tq("steps.contact.fields.email.label")}
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleFieldChange("email", e.target.value)}
-                      data-testid="input-email"
-                    />
-                    {formData.email && !isEmailValid && (
-                      <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.email.error")}</p>
-                    )}
-                    {isEmailValid && suggestEmailCorrection(formData.email) && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {tqOpt("steps.contact.fields.email.suggestion") ?? (lang === "de" ? "Meinten Sie" : "Vouliez-vous dire")}{" "}
-                        <button
-                          type="button"
-                          className="font-medium text-primary underline underline-offset-2"
-                          onClick={() => handleFieldChange("email", suggestEmailCorrection(formData.email)!)}
-                        >
-                          {suggestEmailCorrection(formData.email)}
-                        </button>
-                        {" ?"}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Phone with Country Selector */}
-                  <div id="q-phone">
-                    <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
-                      <PhoneIcon className="h-4 w-4 text-primary" />
-                      {tq("steps.contact.fields.phone.label")}
-                    </Label>
-                    <div className="flex">
-                      <Select
-                        value={formData.phoneCountry}
-                        onValueChange={(value) => handleFieldChange("phoneCountry", value)}
-                      >
-                        <SelectTrigger className="w-28 rounded-r-none border-r-0 text-sm font-normal" data-testid="select-phoneCountry">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {phoneCountries.map((country) => (
-                            <SelectItem key={country.code} value={country.code}>
-                              <span className="flex items-center gap-2">
-                                <span>{countryFlag(country.code)}</span>
-                                <span>{country.dialCode}</span>
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => {
-                          const dialCode = phoneCountries.find((c) => c.code === formData.phoneCountry)?.dialCode ?? "";
-                          let phone = e.target.value.trim();
-                          const compact = phone.replace(/[\s\-]/g, "");
-                          if (compact.startsWith(dialCode)) {
-                            phone = compact.slice(dialCode.length).trimStart();
-                          } else if (compact.startsWith("00" + dialCode.slice(1))) {
-                            phone = compact.slice(2 + dialCode.length - 1).trimStart();
-                          }
-                          handleFieldChange("phone", phone);
-                        }}
-                        className="flex-1 rounded-l-none text-sm"
-                        data-testid="input-phone"
-                      />
-                    </div>
-                    {formData.phone && !isPhoneValid && (
-                      <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.phone.error")}</p>
-                    )}
-                  </div>
-
                   {/* Address */}
                   <div id="q-address">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
@@ -1549,6 +1437,119 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                       </>
                     )}
                   </div>
+
+                  {/* First Name & Last Name */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div id="q-firstName">
+                      <Label htmlFor="firstName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
+                        <User className="h-4 w-4 text-primary" />
+                        {tq("steps.contact.fields.firstName.label")}
+                      </Label>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        value={formData.firstName}
+                        onChange={(e) => handleFieldChange("firstName", e.target.value)}
+                        onBlur={(e) => handleFieldChange("firstName", normalizeName(e.target.value))}
+                        data-testid="input-firstName"
+                      />
+                    </div>
+                    <div id="q-lastName">
+                      <Label htmlFor="lastName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
+                        <Users className="h-4 w-4 text-primary" />
+                        {tq("steps.contact.fields.lastName.label")}
+                      </Label>
+                      <Input
+                        id="lastName"
+                        type="text"
+                        value={formData.lastName}
+                        onChange={(e) => handleFieldChange("lastName", e.target.value)}
+                        onBlur={(e) => handleFieldChange("lastName", normalizeName(e.target.value))}
+                        data-testid="input-lastName"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div id="q-email">
+                    <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
+                      <Mail className="h-4 w-4 text-primary" />
+                      {tq("steps.contact.fields.email.label")}
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleFieldChange("email", e.target.value)}
+                      data-testid="input-email"
+                    />
+                    {formData.email && !isEmailValid && (
+                      <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.email.error")}</p>
+                    )}
+                    {isEmailValid && suggestEmailCorrection(formData.email) && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {tqOpt("steps.contact.fields.email.suggestion") ?? (lang === "de" ? "Meinten Sie" : "Vouliez-vous dire")}{" "}
+                        <button
+                          type="button"
+                          className="font-medium text-primary underline underline-offset-2"
+                          onClick={() => handleFieldChange("email", suggestEmailCorrection(formData.email)!)}
+                        >
+                          {suggestEmailCorrection(formData.email)}
+                        </button>
+                        {" ?"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Phone with Country Selector */}
+                  <div id="q-phone">
+                    <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
+                      <PhoneIcon className="h-4 w-4 text-primary" />
+                      {tq("steps.contact.fields.phone.label")}
+                    </Label>
+                    <div className="flex">
+                      <Select
+                        value={formData.phoneCountry}
+                        onValueChange={(value) => handleFieldChange("phoneCountry", value)}
+                      >
+                        <SelectTrigger className="w-28 rounded-r-none border-r-0 text-sm font-normal" data-testid="select-phoneCountry">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {phoneCountries.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              <span className="flex items-center gap-2">
+                                <span>{countryFlag(country.code)}</span>
+                                <span>{country.dialCode}</span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => {
+                          const dialCode = phoneCountries.find((c) => c.code === formData.phoneCountry)?.dialCode ?? "";
+                          let phone = e.target.value.trim();
+                          const compact = phone.replace(/[\s\-]/g, "");
+                          if (compact.startsWith(dialCode)) {
+                            phone = compact.slice(dialCode.length).trimStart();
+                          } else if (compact.startsWith("00" + dialCode.slice(1))) {
+                            phone = compact.slice(2 + dialCode.length - 1).trimStart();
+                          }
+                          handleFieldChange("phone", phone);
+                        }}
+                        className="flex-1 rounded-l-none text-sm"
+                        data-testid="input-phone"
+                      />
+                    </div>
+                    {formData.phone && !isPhoneValid && (
+                      <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.phone.error")}</p>
+                    )}
+                  </div>
+
                 </div>
               )}
 
