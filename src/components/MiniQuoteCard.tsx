@@ -203,7 +203,11 @@ export function MiniQuoteCard({
       <div className="px-6 pb-4 flex-1 flex flex-col space-y-3 overflow-visible">
         <div className="space-y-2" ref={statusSectionRef}>
           {housingStatus && !isEditingHousingStatus ? (
-            <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10" data-testid="card-selected-status">
+            <div
+              className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10 cursor-pointer"
+              data-testid="card-selected-status"
+              onClick={() => setIsEditingHousingStatus(true)}
+            >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/15">
                   {housingStatus === "owner" && <Home className="h-4 w-4 text-primary" />}
@@ -244,7 +248,11 @@ export function MiniQuoteCard({
           <div className="space-y-2 animate-in slide-in-from-top-2 duration-300" ref={localitySectionRef}>
             {selectedLocality && !isEditingLocation ? (
               <>
-                <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10" data-testid="card-selected-location">
+                <div
+                  className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10 cursor-pointer"
+                  data-testid="card-selected-location"
+                  onClick={() => { setIsEditingLocation(true); setSearchValue(`${selectedLocality.postalCode} ${selectedLocality.locality}`); setSelectedLocality(null); }}
+                >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/15">
                       <MapPin className="h-4 w-4 text-primary" />
@@ -279,6 +287,7 @@ export function MiniQuoteCard({
                   setIsEditingLocation(false);
                 }}
                 placeholder={d(`${mqp}.form.fields.location.placeholder`)}
+                autoFocusOnFine
                 limit={5}
                 locale={lang === "de" ? "de-DE" : "fr-FR"}
                 dataTestId="input-locality-search"

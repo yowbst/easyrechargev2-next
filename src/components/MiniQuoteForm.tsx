@@ -246,8 +246,9 @@ export function MiniQuoteForm({
       <div className="space-y-3" ref={statusSectionRef}>
         {housingStatus && !isEditingHousingStatus ? (
           <div
-            className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur"
+            className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur cursor-pointer"
             data-testid="card-selected-status"
+            onClick={() => setIsEditingHousingStatus(true)}
           >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-md bg-white/20">
@@ -272,7 +273,11 @@ export function MiniQuoteForm({
               <button
                 key={status}
                 type="button"
-                className="flex flex-col items-center justify-center gap-2 h-20 rounded-lg border border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50 transition-all"
+                className={`flex flex-col items-center justify-center gap-2 h-20 rounded-lg border transition-all ${
+                  housingStatus === status
+                    ? "border-white bg-white/25 ring-1 ring-white/40"
+                    : "border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50"
+                }`}
                 onClick={() => handleHousingStatusSelect(status)}
                 data-testid={`card-${status}`}
               >
@@ -292,8 +297,13 @@ export function MiniQuoteForm({
           {selectedLocality && !isEditingLocation ? (
             <>
               <div
-                className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur"
+                className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur cursor-pointer"
                 data-testid="card-selected-location"
+                onClick={() => {
+                  setIsEditingLocation(true);
+                  setSearchValue(`${selectedLocality.postalCode} ${selectedLocality.locality}`);
+                  setSelectedLocality(null);
+                }}
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-white/20">
@@ -332,6 +342,7 @@ export function MiniQuoteForm({
               }}
               onSelect={handleSelectLocality}
               placeholder={locationPlaceholder.startsWith("[") ? "NPA ou localité" : locationPlaceholder}
+              autoFocusOnFine
               limit={8}
               locale={lang === "de" ? "de-DE" : "fr-FR"}
               dataTestId="input-postal-code"
