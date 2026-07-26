@@ -68,13 +68,16 @@ export function RangeButtonGroup({
         })}
       </div>
 
+      {/* Same visual grammar as the bucket buttons (bordered, centered,
+          selected = primary tint + ring) so it reads as a tappable option —
+          the earlier muted left-aligned style looked like an empty input. */}
       <button
         type="button"
         aria-pressed={isNA}
-        className={`w-full mt-2 py-2 px-3 rounded-lg border text-sm text-left transition-all ${
+        className={`w-full mt-2 py-2.5 px-3 rounded-lg border text-sm font-medium text-center transition-all ${
           isNA
-            ? "border-primary/30 bg-primary/10 text-primary"
-            : "border-border/60 bg-muted/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+            ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/30"
+            : "border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
         }`}
         onClick={() => onChange("na")}
         data-testid={testId ? `bucket-${testId}-na` : undefined}
