@@ -10,6 +10,8 @@ const HOUSING_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 import { Button } from "@/components/ui/button";
 import { LocalityAutocomplete } from "@/components/LocalityAutocomplete";
 import { t } from "@/lib/i18n/dictionaries";
+import { useFormTelemetry } from "@/hooks/use-form-telemetry";
+import { usePostHog } from "@/components/PostHogProvider";
 import type { LocalityResponse } from "@/lib/localities";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
@@ -37,6 +39,27 @@ export function MiniQuoteForm({
 }: MiniQuoteFormProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const ph = usePostHog();
+  const telemetry = useFormTelemetry({ formType: "mini-quote-form", locale: lang });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hasTrackedView = useRef(false);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || hasTrackedView.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedView.current) {
+          hasTrackedView.current = true;
+          ph?.capture("mini_quote_viewed", { form_type: "mini-quote-form", page_id: pageId, locale: lang });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ph, pageId, lang]);
 
   const bp = `pages.${pageId || "default"}.blocks.mini-quote`;
 
@@ -109,11 +132,13 @@ export function MiniQuoteForm({
   }, [housingStatus]);
 
   const handleHousingStatusSelect = (status: string) => {
+    telemetry.trackChange("housingStatus", status);
     setHousingStatus(status);
     setIsEditingHousingStatus(false);
   };
 
   const handleSelectLocality = (item: LocalityResponse) => {
+    telemetry.trackChange("postalCode", item.postalCode);
     setSelectedLocality(item);
     setSearchValue(`${item.postalCode} ${item.locality}`);
     setIsEditingLocation(false);
@@ -126,6 +151,8 @@ export function MiniQuoteForm({
     if (!housingStatus || !selectedLocality || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(false);
+    telemetry.trackSubmit(true, { housingStatus, postalCode: selectedLocality.postalCode });
+    ph?.capture("mini_quote_submitted", { form_type: "mini-quote-form", page_id: pageId, locale: lang, housing_status: getHousingStatusValue(housingStatus) });
 
     const params = new URLSearchParams({
       postalCode: selectedLocality.postalCode,
@@ -146,6 +173,10 @@ export function MiniQuoteForm({
           formType: "mini-quote-form",
           pageId: pageId ?? null,
           locale: lang,
+          posthog: {
+            phDistinctId: ph?.get_distinct_id?.() ?? null,
+            phSessionId: ph?.get_session_id?.() ?? null,
+          },
         }),
       });
       if (!res.ok) {
@@ -168,6 +199,7 @@ export function MiniQuoteForm({
 
   return (
     <div
+      ref={containerRef}
       className={`bg-white/10 backdrop-blur-md border border-white/25 rounded-2xl p-6 flex flex-col space-y-4 shadow-lg ${className}`}
       data-testid="mini-quote-form"
     >
