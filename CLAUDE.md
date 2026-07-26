@@ -27,7 +27,7 @@ Pushing to `staging` triggers a Vercel preview deploy; pushing to `main` trigger
 ## Tech Stack
 
 - **Framework:** Next.js 16 (App Router), React 19, TypeScript 5
-- **Styling:** Tailwind CSS 4, shadcn/ui (new-york style), Radix UI
+- **Styling:** Tailwind CSS 4, shadcn/ui (new-york style), Base UI (`@base-ui/react` — most `ui/` primitives; radios/checkboxes render spans, NOT native inputs or Radix buttons)
 - **CMS:** Directus (content, routing, i18n, form storage) — no local DB
 - **Analytics:** PostHog (`@posthog/next` + `posthog-js`) — client-side events only
 - **Forms:** react-hook-form + Zod 4 validation

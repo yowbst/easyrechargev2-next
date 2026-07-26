@@ -21,15 +21,8 @@ describe("adsSendTo", () => {
     expect(adsSendTo(nested, "contact_submit")).toBeNull();
   });
 
-  it("falls back to the legacy flat labels map (lead_submit alias)", () => {
-    const legacy: GoogleAdsConfig = { tag_id: "AW-1", labels: { lead_submit: "OLD" } };
-    expect(adsSendTo(legacy, "quote_submit")).toBe("AW-1/OLD");
-  });
-
-  it("falls back to the oldest single-label field for quote_submit only", () => {
-    const oldest: GoogleAdsConfig = { tag_id: "AW-1", lead_conversion_label: "OLDEST" };
-    expect(adsSendTo(oldest, "quote_submit")).toBe("AW-1/OLDEST");
-    expect(adsSendTo(oldest, "quote_start")).toBeNull();
+  it("returns null for a product with no config block", () => {
+    expect(adsSendTo(nested, "quote_submit", "solar" as never)).toBeNull();
   });
 
   it("returns null without a tag_id", () => {

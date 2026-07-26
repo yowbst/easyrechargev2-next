@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 // Fires a Google Ads conversion event once per submission (quote success
-// page). Renders nothing; inert unless the Directus google_ads config has
-// both tag_id and lead_conversion_label. The transaction_id lets Google
-// dedupe this browser signal against the offline Data Manager upload for
-// the same lead.
+// page). Renders nothing; inert unless the resolved `sendTo` is set (i.e.
+// the Directus google_ads config has tag_id + the product's quote_submit
+// label). The transaction_id lets Google dedupe this browser signal against
+// the offline Data Manager upload for the same lead.
 //
 // Waits for window.gtag: this child effect runs before the layout-level
 // GoogleAdsTag effect, and events queued before the consent defaults

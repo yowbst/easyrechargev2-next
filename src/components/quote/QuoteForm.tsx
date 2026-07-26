@@ -21,7 +21,8 @@ import {
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { ProgressBar } from "@/components/quote/ProgressBar";
 import { IconButtonGroup, type IconButtonOption } from "@/components/quote/IconButtonGroup";
-import { SliderWithCheckbox } from "@/components/quote/SliderWithCheckbox";
+import { RangeButtonGroup } from "@/components/quote/RangeButtonGroup";
+import { resolveBuckets } from "@/lib/quoteBuckets";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,8 @@ import { SUPPORTED_COUNTRIES, validatePhone, formatPhoneE164 } from "@/lib/phone
 import { adsSendTo, fireAdsConversion, type GoogleAdsConfig } from "@/lib/googleAds";
 import { normalizeProduct } from "@/lib/products";
 import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
+import { NAV_BAR_CLEARANCE } from "@/lib/dropdownPlacement";
+import { QUOTE_DRAFT_KEY, serializeQuoteDraft, parseQuoteDraft } from "@/lib/quoteDraft";
 import dynamic from "next/dynamic";
 
 const LazyPlaceAutocomplete = dynamic(
@@ -50,6 +53,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CountryCode } from "libphonenumber-js";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
+import { firstUnansweredField, VALID_PARKING_LOCATIONS } from "@/components/quote/stepValidation";
 
 interface QuoteFormProps {
   lang: string;
@@ -76,19 +80,31 @@ interface QuoteFormProps {
   pageRegistry?: PageRegistryEntry[];
 }
 
+// Shared guard: when one answer reveals several fields at once, only the
+// topmost (first effect to fire) scrolls — competing smooth-scrolls cancel
+// each other and land nowhere.
+const lastRevealScroll = { at: 0 };
+
 /** Progressive-reveal wrapper: renders children hidden until `visible` is true, with a slide-down animation. */
 function RevealField({ visible, children }: { visible: boolean; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const hasBeenVisible = useRef(false);
+  // Mounted-already-visible (filled step re-entered) must NOT scroll — only user-triggered reveals.
+  const hasBeenVisible = useRef(visible);
 
-  // Once visible, scroll into view
+  // Once visible, scroll into view — AFTER the 300ms height transition, so
+  // the element's final geometry is what gets centered. block:"center"
+  // keeps it clear of the fixed bottom nav bar (which scrollIntoView
+  // doesn't know about).
   useEffect(() => {
     if (visible && !hasBeenVisible.current) {
       hasBeenVisible.current = true;
-      // Small delay so the transition starts before scrolling
       const timer = setTimeout(() => {
-        ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }, 150);
+        const now = Date.now();
+        if (now - lastRevealScroll.at < 400) return;
+        lastRevealScroll.at = now;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        ref.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+      }, 320);
       return () => clearTimeout(timer);
     }
     if (!visible) hasBeenVisible.current = false;
@@ -97,6 +113,7 @@ function RevealField({ visible, children }: { visible: boolean; children: React.
   return (
     <div
       ref={ref}
+      inert={!visible}
       className={`transition-all duration-300 ease-out ${
         visible
           ? "opacity-100 max-h-[2000px] translate-y-0"
@@ -106,6 +123,19 @@ function RevealField({ visible, children }: { visible: boolean; children: React.
       {children}
     </div>
   );
+}
+
+// The radio option cards style their entire surface as clickable, but the
+// actual control is a Base UI radio — a <span role="radio">, NOT a native
+// input or button — so label/`htmlFor` coverage is partial and clicks on
+// the card's own padding (near the borders) used to die. Forward them to
+// the radio; skip clicks on the radio itself (its native click already
+// fired) and real links. Re-clicking an already-selected radio is a no-op,
+// so the occasional double activation is harmless.
+function forwardCardClick(e: React.MouseEvent<HTMLDivElement>) {
+  const target = e.target as HTMLElement;
+  if (target.closest('a, [role="radio"]')) return;
+  e.currentTarget.querySelector<HTMLElement>('[role="radio"]')?.click();
 }
 
 interface FormData {
@@ -241,6 +271,11 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   // Pre-fill from hero form if coming from home page
   useEffect(() => {
+    try {
+      const draft = parseQuoteDraft(sessionStorage.getItem(QUOTE_DRAFT_KEY), Date.now());
+      if (draft) setFormData((prev) => ({ ...prev, ...draft }));
+    } catch { /* storage unavailable (private mode) — start fresh */ }
+
     const params = new URLSearchParams(window.location.search);
     const locality = params.get("locality");
     const postalCode = params.get("postalCode");
@@ -276,7 +311,19 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     locale: lang,
   });
 
+  // Persist a draft so refresh / back-navigation resumes instead of
+  // dead-ending on a later step with empty state.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      try {
+        sessionStorage.setItem(QUOTE_DRAFT_KEY, serializeQuoteDraft(formData as unknown as Record<string, unknown>, Date.now()));
+      } catch { /* quota/private mode — non-fatal */ }
+    }, 400);
+    return () => clearTimeout(id);
+  }, [formData]);
+
   const handleFieldChange = (fieldName: keyof FormData, value: string | number | boolean | "na" | null) => {
+    if (showMissingHint) setShowMissingHint(false);
     telemetry.trackChange(fieldName, String(value));
 
     // Auto-clear dependent fields when they become invalid
@@ -327,54 +374,13 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     (formData.housingStatus === "co-owner" && ["apartment", "house"].includes(formData.housingType)) ||
     (formData.housingStatus === "tenant" && formData.housingType === "apartment");
 
-  // Validation for each step
-  const isStep1Valid =
-    formData.housingStatus &&
-    formData.housingType &&
-    formData.solarEquipment &&
-    formData.electricalBoardType &&
-    (!shouldShowNeighborhoodEquipment || formData.neighborhoodEquipment) &&
-    (["exists", "in-progress"].includes(formData.solarEquipment) ? formData.homeBattery : true);
-
-  // Valid final parking spot locations (sub-options or underground)
-  const validParkingLocations = [
-    "exterior-adjacent", "exterior-standalone",
-    "garage-adjacent", "garage-standalone",
-    "covered-adjacent", "covered-standalone",
-    "underground",
-  ];
-
-  const isStep2Valid =
-    formData.parkingSpotLocation &&
-    validParkingLocations.includes(formData.parkingSpotLocation) &&
-    formData.electricalLineDistance !== null &&
-    formData.electricalLineHoleCount !== null;
-
-  const isStep3Valid =
-    formData.parkingSpotCount &&
-    formData.ecpProvided &&
-    formData.deadline;
-
-  const isStep4Valid =
-    formData.vehicleStatus &&
-    formData.vehicleTripDistance !== null &&
-    formData.vehicleChargingHours !== null;
-
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
-
-  const isStep6Valid = formData.acceptTerms;
   const isPhoneValid = formData.phone && validatePhone(formData.phone, formData.phoneCountry as CountryCode);
 
-  const isStep5Valid =
-    formData.firstName.trim() &&
-    formData.lastName.trim() &&
-    isEmailValid &&
-    isPhoneValid &&
-    (formData.addressMode === "google"
-      ? (formData.address && formData.postalCode && formData.locality && formData.canton)
-      : (formData.postalCode && formData.locality && formData.streetName && formData.streetNb && formData.canton));
-
-  const canProceed = step === 1 ? isStep1Valid : step === 2 ? isStep2Valid : step === 3 ? isStep3Valid : step === 4 ? isStep4Valid : step === 5 ? isStep5Valid : step === 6 ? isStep6Valid : false;
+  // Single source of truth for step completeness / what's missing lives in
+  // stepValidation.ts (mirrors the former per-step "is<N>Valid" booleans).
+  const missingField = firstUnansweredField(step, formData);
+  const canProceed = missingField === null;
 
   // Sync step with URL param; handle browser back/forward
   useEffect(() => {
@@ -406,6 +412,36 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
     history.pushState({}, "", url.toString());
     setStep(nextStep);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const [showMissingHint, setShowMissingHint] = useState(false);
+
+  // Point the user at the first unanswered question: scroll it to center
+  // (a no-op on tall desktop viewports where the whole step fits) AND pulse
+  // a ring around it (.er-field-nudge in globals.css) so there is a visual
+  // cue even when nothing scrolls.
+  const nudgeField = (field: string) => {
+    setShowMissingHint(true);
+    ph?.capture("quote_missing_answer_nudge", { step, field });
+    const el = document.getElementById(`q-${field}`);
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+    el.classList.remove("er-field-nudge");
+    void el.offsetWidth; // restart the animation when the same field is nudged again
+    el.classList.add("er-field-nudge");
+    window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+  };
+
+  // Continue pressed on an incomplete step: nudge the missing question and
+  // show a hint instead of a silently disabled button.
+  const tryGoToStep = (nextStep: number) => {
+    if (nextStep > step && missingField) {
+      nudgeField(missingField);
+      return;
+    }
+    setShowMissingHint(false);
+    goToStep(nextStep);
   };
 
   // Handle place selection from Google Places Autocomplete
@@ -596,7 +632,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
               <ProgressBar
                 currentStep={step}
                 totalSteps={totalSteps}
-                onStepClick={goToStep}
+                onStepClick={(s) => (s < step ? goToStep(s) : tryGoToStep(s))}
                 className="mb-4"
               />
             )}
@@ -717,7 +753,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Housing Status — always visible (first question) */}
-                  <div>
+                  <div id="q-housingStatus">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <User className="h-4 w-4 text-primary" />
                       {tq("steps.housing.fields.housingStatus.label")}
@@ -731,7 +767,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Housing Type */}
                   <RevealField visible={!!formData.housingStatus}>
-                    <div>
+                    <div id="q-housingType">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                         <Home className="h-4 w-4 text-primary" />
                         {tq("steps.housing.fields.housingType.label")}
@@ -747,7 +783,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Solar Equipment */}
                   <RevealField visible={!!formData.housingStatus && !!formData.housingType}>
-                    <div>
+                    <div id="q-solarEquipment">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.solarEquipment.tooltip")} image={tooltipImage("housing", "solarEquipment")}>
                           <Sun className="h-4 w-4 text-primary" />
@@ -759,15 +795,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("solarEquipment", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="exists" id="solar-exists" data-testid="radio-solar-exists" />
                           <Label htmlFor="solar-exists" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.solarEquipment.options.exists")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="in-progress" id="solar-progress" data-testid="radio-solar-progress" />
                           <Label htmlFor="solar-progress" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.solarEquipment.options.in-progress")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="none" id="solar-none" data-testid="radio-solar-none" />
                           <Label htmlFor="solar-none" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.solarEquipment.options.none")}</Label>
                         </div>
@@ -777,7 +813,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Home Battery (conditional on solar) */}
                   <RevealField visible={["exists", "in-progress"].includes(formData.solarEquipment)}>
-                    <div className="pl-4 border-l-2 border-primary/20">
+                    <div id="q-homeBattery" className="pl-4 border-l-2 border-primary/20">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.homeBattery.tooltip")} image={tooltipImage("housing", "homeBattery")}>
                           <BatteryCharging className="h-4 w-4 text-primary" />
@@ -789,15 +825,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("homeBattery", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="exists" id="battery-exists" data-testid="radio-battery-exists" />
                           <Label htmlFor="battery-exists" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.homeBattery.options.exists")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="in-progress" id="battery-progress" data-testid="radio-battery-progress" />
                           <Label htmlFor="battery-progress" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.homeBattery.options.in-progress")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="none" id="battery-none" data-testid="radio-battery-none" />
                           <Label htmlFor="battery-none" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.homeBattery.options.none")}</Label>
                         </div>
@@ -807,7 +843,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Neighborhood Equipment (conditional on status + type) */}
                   <RevealField visible={shouldShowNeighborhoodEquipment && !!formData.solarEquipment}>
-                    <div className="pl-4 border-l-2 border-primary/20">
+                    <div id="q-neighborhoodEquipment" className="pl-4 border-l-2 border-primary/20">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.neighborhoodEquipment.tooltip")} image={tooltipImage("housing", "neighborhoodEquipment")}>
                           <Users className="h-4 w-4 text-primary" />
@@ -819,15 +855,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("neighborhoodEquipment", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="exists" id="neighbor-exists" data-testid="radio-neighbor-exists" />
                           <Label htmlFor="neighbor-exists" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.neighborhoodEquipment.options.exists")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="in-progress" id="neighbor-progress" data-testid="radio-neighbor-progress" />
                           <Label htmlFor="neighbor-progress" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.neighborhoodEquipment.options.in-progress")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="none" id="neighbor-none" data-testid="radio-neighbor-none" />
                           <Label htmlFor="neighbor-none" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.neighborhoodEquipment.options.none")}</Label>
                         </div>
@@ -837,7 +873,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Electrical Board Type */}
                   <RevealField visible={!!formData.solarEquipment}>
-                    <div>
+                    <div id="q-electricalBoardType">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.electricalBoardType.tooltip")} image={tooltipImage("housing", "electricalBoardType")}>
                           <Plug className="h-4 w-4 text-primary" />
@@ -849,15 +885,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("electricalBoardType", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="old" id="board-old" data-testid="radio-board-old" />
                           <Label htmlFor="board-old" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.electricalBoardType.options.old")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="recent" id="board-recent" data-testid="radio-board-recent" />
                           <Label htmlFor="board-recent" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.electricalBoardType.options.recent")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="na" id="board-na" data-testid="radio-board-na" />
                           <Label htmlFor="board-na" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.electricalBoardType.options.na")}</Label>
                         </div>
@@ -876,7 +912,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Parking Spot Location (Hierarchical) */}
-                  <div>
+                  <div id="q-parkingSpotLocation">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <MapPin className="h-4 w-4 text-primary" />
                       {tq("steps.parking.fields.parkingSpotLocation.label")}
@@ -920,26 +956,28 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                           </div>
 
                           {/* Sub-options */}
-                          {parkingSubOptions[option.value] && getParkingMainValue() === option.value && (
-                            <div className="ml-8 mt-2 space-y-2 pl-4 border-l-2 border-primary/20">
-                              {parkingSubOptions[option.value].map((subOption) => (
-                                <div key={subOption.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
-                                  <RadioGroupItem
-                                    value={subOption.value}
-                                    id={`parking-${subOption.value}`}
-                                    data-testid={`radio-parking-${subOption.value}`}
-                                  />
-                                  <Label htmlFor={`parking-${subOption.value}`} className="cursor-pointer flex-1 text-sm">
-                                    <InfoTooltip
-                                      content={tqOpt(`steps.parking.fields.parkingSpotLocation.optionTooltips.${subOption.value}`)}
-                                      image={optionTooltipImage("parking", "parkingSpotLocation", subOption.value)}
-                                    >
-                                      {subOption.label}
-                                    </InfoTooltip>
-                                  </Label>
-                                </div>
-                              ))}
-                            </div>
+                          {parkingSubOptions[option.value] && (
+                            <RevealField visible={getParkingMainValue() === option.value}>
+                              <div className="ml-8 mt-2 space-y-2 pl-4 border-l-2 border-primary/20">
+                                {parkingSubOptions[option.value].map((subOption) => (
+                                  <div key={subOption.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
+                                    <RadioGroupItem
+                                      value={subOption.value}
+                                      id={`parking-${subOption.value}`}
+                                      data-testid={`radio-parking-${subOption.value}`}
+                                    />
+                                    <Label htmlFor={`parking-${subOption.value}`} className="cursor-pointer flex-1 text-sm">
+                                      <InfoTooltip
+                                        content={tqOpt(`steps.parking.fields.parkingSpotLocation.optionTooltips.${subOption.value}`)}
+                                        image={optionTooltipImage("parking", "parkingSpotLocation", subOption.value)}
+                                      >
+                                        {subOption.label}
+                                      </InfoTooltip>
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </RevealField>
                           )}
                         </div>
                       ))}
@@ -947,37 +985,37 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Electrical Line Distance */}
-                  <RevealField visible={validParkingLocations.includes(formData.parkingSpotLocation)}>
-                    <SliderWithCheckbox
-                      value={formData.electricalLineDistance}
-                      onChange={(value) => handleFieldChange("electricalLineDistance", value)}
-                      min={getFieldConfig("parking", "electricalLineDistance").min ?? 5}
-                      max={getFieldConfig("parking", "electricalLineDistance").max ?? 50}
-                      step={getFieldConfig("parking", "electricalLineDistance").step ?? 5}
-                      label={tq("steps.parking.fields.electricalLineDistance.label")}
-                      unit={tq("steps.parking.fields.electricalLineDistance.unit")}
-                      checkboxLabel={tq("steps.parking.fields.electricalLineDistance.checkboxLabel")}
-                      icon={Cable}
-                      tooltip={tqOpt("steps.parking.fields.electricalLineDistance.tooltip")}
-                      tooltipImage={tooltipImage("parking", "electricalLineDistance")}
-                    />
+                  <RevealField visible={VALID_PARKING_LOCATIONS.includes(formData.parkingSpotLocation)}>
+                    <div id="q-electricalLineDistance">
+                      <RangeButtonGroup
+                        value={formData.electricalLineDistance}
+                        onChange={(value) => handleFieldChange("electricalLineDistance", value)}
+                        options={resolveBuckets("electricalLineDistance", getFieldConfig("parking", "electricalLineDistance").buckets, tq("steps.parking.fields.electricalLineDistance.unit"))}
+                        label={tq("steps.parking.fields.electricalLineDistance.label")}
+                        naLabel={tq("steps.parking.fields.electricalLineDistance.checkboxLabel")}
+                        icon={Cable}
+                        tooltip={tqOpt("steps.parking.fields.electricalLineDistance.tooltip")}
+                        tooltipImage={tooltipImage("parking", "electricalLineDistance")}
+                        testId="electricalLineDistance"
+                      />
+                    </div>
                   </RevealField>
 
                   {/* Walls to Cross */}
-                  <RevealField visible={validParkingLocations.includes(formData.parkingSpotLocation) && formData.electricalLineDistance !== null}>
-                    <SliderWithCheckbox
-                      value={formData.electricalLineHoleCount}
-                      onChange={(value) => handleFieldChange("electricalLineHoleCount", value)}
-                      min={getFieldConfig("parking", "electricalLineHoleCount").min ?? 0}
-                      max={getFieldConfig("parking", "electricalLineHoleCount").max ?? 5}
-                      step={getFieldConfig("parking", "electricalLineHoleCount").step ?? 1}
-                      label={tq("steps.parking.fields.electricalLineHoleCount.label")}
-                      unit={` ${tq("steps.parking.fields.electricalLineHoleCount.unit")}`}
-                      checkboxLabel={tq("steps.parking.fields.electricalLineHoleCount.checkboxLabel")}
-                      icon={Blocks}
-                      tooltip={tqOpt("steps.parking.fields.electricalLineHoleCount.tooltip")}
-                      tooltipImage={tooltipImage("parking", "electricalLineHoleCount")}
-                    />
+                  <RevealField visible={VALID_PARKING_LOCATIONS.includes(formData.parkingSpotLocation) && formData.electricalLineDistance !== null}>
+                    <div id="q-electricalLineHoleCount">
+                      <RangeButtonGroup
+                        value={formData.electricalLineHoleCount}
+                        onChange={(value) => handleFieldChange("electricalLineHoleCount", value)}
+                        options={resolveBuckets("electricalLineHoleCount", getFieldConfig("parking", "electricalLineHoleCount").buckets, "")}
+                        label={tq("steps.parking.fields.electricalLineHoleCount.label")}
+                        naLabel={tq("steps.parking.fields.electricalLineHoleCount.checkboxLabel")}
+                        icon={Blocks}
+                        tooltip={tqOpt("steps.parking.fields.electricalLineHoleCount.tooltip")}
+                        tooltipImage={tooltipImage("parking", "electricalLineHoleCount")}
+                        testId="electricalLineHoleCount"
+                      />
+                    </div>
                   </RevealField>
                 </div>
               )}
@@ -991,7 +1029,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Parking Spot Count */}
-                  <div>
+                  <div id="q-parkingSpotCount">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <Grid3x3 className="h-4 w-4 text-primary" />
                       {tq("steps.charger.fields.parkingSpotCount.label")}
@@ -1026,7 +1064,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* ECP Provided (Supplies) */}
                   <RevealField visible={!!formData.parkingSpotCount}>
-                    <div>
+                    <div id="q-ecpProvided">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.charger.fields.ecpProvided.tooltip")} image={tooltipImage("charger", "ecpProvided")}>
                           <Package className="h-4 w-4 text-primary" />
@@ -1038,13 +1076,13 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("ecpProvided", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="include" id="provided-include" data-testid="radio-provided-include" />
                           <Label htmlFor="provided-include" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.ecpProvided.options.include")}
                           </Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="exclude" id="provided-exclude" data-testid="radio-provided-exclude" />
                           <Label htmlFor="provided-exclude" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.ecpProvided.options.exclude")}
@@ -1056,7 +1094,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Deadline (Timeline) */}
                   <RevealField visible={!!formData.parkingSpotCount && !!formData.ecpProvided}>
-                    <div>
+                    <div id="q-deadline">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.charger.fields.deadline.tooltip")} image={tooltipImage("charger", "deadline")}>
                           <Clock className="h-4 w-4 text-primary" />
@@ -1068,25 +1106,25 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("deadline", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="asap" id="deadline-asap" data-testid="radio-deadline-asap" />
                           <Label htmlFor="deadline-asap" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.deadline.options.asap")}
                           </Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="2-3mo" id="deadline-2-3mo" data-testid="radio-deadline-2-3mo" />
                           <Label htmlFor="deadline-2-3mo" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.deadline.options.2-3mo")}
                           </Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="3-6mo" id="deadline-3-6mo" data-testid="radio-deadline-3-6mo" />
                           <Label htmlFor="deadline-3-6mo" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.deadline.options.3-6mo")}
                           </Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="6+mo" id="deadline-6+mo" data-testid="radio-deadline-6+mo" />
                           <Label htmlFor="deadline-6+mo" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.deadline.options.6+mo")}
@@ -1107,7 +1145,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Vehicle Status */}
-                  <div>
+                  <div id="q-vehicleStatus">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <Key className="h-4 w-4 text-primary" />
                       {tq("steps.vehicle.fields.vehicleStatus.label")}
@@ -1117,25 +1155,25 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                       onValueChange={(value) => handleFieldChange("vehicleStatus", value)}
                       className="grid gap-2 pl-1"
                     >
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                         <RadioGroupItem value="own" id="vehicle-own" data-testid="radio-vehicle-own" />
                         <Label htmlFor="vehicle-own" className="cursor-pointer flex-1 text-sm">
                           {tq("steps.vehicle.fields.vehicleStatus.options.own")}
                         </Label>
                       </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                         <RadioGroupItem value="ordered" id="vehicle-ordered" data-testid="radio-vehicle-ordered" />
                         <Label htmlFor="vehicle-ordered" className="cursor-pointer flex-1 text-sm">
                           {tq("steps.vehicle.fields.vehicleStatus.options.ordered")}
                         </Label>
                       </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                         <RadioGroupItem value="want-to-order" id="vehicle-want" data-testid="radio-vehicle-want" />
                         <Label htmlFor="vehicle-want" className="cursor-pointer flex-1 text-sm">
                           {tq("steps.vehicle.fields.vehicleStatus.options.want-to-order")}
                         </Label>
                       </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                         <RadioGroupItem value="unknown" id="vehicle-unknown" data-testid="radio-vehicle-unknown" />
                         <Label htmlFor="vehicle-unknown" className="cursor-pointer flex-1 text-sm">
                           {tq("steps.vehicle.fields.vehicleStatus.options.unknown")}
@@ -1148,39 +1186,36 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
                   {/* Trip Distance Slider */}
                   <RevealField visible={!!formData.vehicleStatus}>
-                    <SliderWithCheckbox
-                      value={formData.vehicleTripDistance}
-                      onChange={(value) => handleFieldChange("vehicleTripDistance", value)}
-                      min={getFieldConfig("vehicle", "vehicleTripDistance").min ?? 5}
-                      max={getFieldConfig("vehicle", "vehicleTripDistance").max ?? 180}
-                      step={getFieldConfig("vehicle", "vehicleTripDistance").step ?? 5}
-                      label={tq("steps.vehicle.fields.vehicleTripDistance.label")}
-                      unit={tq("steps.vehicle.fields.vehicleTripDistance.unit")}
-                      checkboxLabel={tq("steps.vehicle.fields.vehicleTripDistance.na")}
-                      showEdgeLabels={true}
-                      icon={Navigation}
-                      tickInterval={getFieldConfig("vehicle", "vehicleTripDistance").tickInterval ?? 25}
-                      tooltip={tqOpt("steps.vehicle.fields.vehicleTripDistance.tooltip")}
-                      tooltipImage={tooltipImage("vehicle", "vehicleTripDistance")}
-                    />
+                    <div id="q-vehicleTripDistance">
+                      <RangeButtonGroup
+                        value={formData.vehicleTripDistance}
+                        onChange={(value) => handleFieldChange("vehicleTripDistance", value)}
+                        options={resolveBuckets("vehicleTripDistance", getFieldConfig("vehicle", "vehicleTripDistance").buckets, tq("steps.vehicle.fields.vehicleTripDistance.unit"))}
+                        label={tq("steps.vehicle.fields.vehicleTripDistance.label")}
+                        naLabel={tq("steps.vehicle.fields.vehicleTripDistance.na")}
+                        icon={Navigation}
+                        tooltip={tqOpt("steps.vehicle.fields.vehicleTripDistance.tooltip")}
+                        tooltipImage={tooltipImage("vehicle", "vehicleTripDistance")}
+                        testId="vehicleTripDistance"
+                      />
+                    </div>
                   </RevealField>
 
                   {/* Charging Hours Slider */}
                   <RevealField visible={!!formData.vehicleStatus && formData.vehicleTripDistance !== null}>
-                    <SliderWithCheckbox
-                      value={formData.vehicleChargingHours}
-                      onChange={(value) => handleFieldChange("vehicleChargingHours", value)}
-                      min={getFieldConfig("vehicle", "vehicleChargingHours").min ?? 5}
-                      max={getFieldConfig("vehicle", "vehicleChargingHours").max ?? 10}
-                      step={getFieldConfig("vehicle", "vehicleChargingHours").step ?? 1}
-                      label={tq("steps.vehicle.fields.vehicleChargingHours.label")}
-                      unit={tq("steps.vehicle.fields.vehicleChargingHours.unit")}
-                      checkboxLabel={tq("steps.vehicle.fields.vehicleChargingHours.na")}
-                      showEdgeLabels={true}
-                      icon={Gauge}
-                      tooltip={tqOpt("steps.vehicle.fields.vehicleChargingHours.tooltip")}
-                      tooltipImage={tooltipImage("vehicle", "vehicleChargingHours")}
-                    />
+                    <div id="q-vehicleChargingHours">
+                      <RangeButtonGroup
+                        value={formData.vehicleChargingHours}
+                        onChange={(value) => handleFieldChange("vehicleChargingHours", value)}
+                        options={resolveBuckets("vehicleChargingHours", getFieldConfig("vehicle", "vehicleChargingHours").buckets, tq("steps.vehicle.fields.vehicleChargingHours.unit"))}
+                        label={tq("steps.vehicle.fields.vehicleChargingHours.label")}
+                        naLabel={tq("steps.vehicle.fields.vehicleChargingHours.na")}
+                        icon={Gauge}
+                        tooltip={tqOpt("steps.vehicle.fields.vehicleChargingHours.tooltip")}
+                        tooltipImage={tooltipImage("vehicle", "vehicleChargingHours")}
+                        testId="vehicleChargingHours"
+                      />
+                    </div>
                   </RevealField>
                 </div>
               )}
@@ -1193,120 +1228,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     <h2 className="text-2xl font-heading font-bold">{tq("steps.contact.title")}</h2>
                   </div>
 
-                  {/* First Name & Last Name */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="firstName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
-                        <User className="h-4 w-4 text-primary" />
-                        {tq("steps.contact.fields.firstName.label")}
-                      </Label>
-                      <Input
-                        id="firstName"
-                        type="text"
-                        value={formData.firstName}
-                        onChange={(e) => handleFieldChange("firstName", e.target.value)}
-                        onBlur={(e) => handleFieldChange("firstName", normalizeName(e.target.value))}
-                        data-testid="input-firstName"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
-                        <Users className="h-4 w-4 text-primary" />
-                        {tq("steps.contact.fields.lastName.label")}
-                      </Label>
-                      <Input
-                        id="lastName"
-                        type="text"
-                        value={formData.lastName}
-                        onChange={(e) => handleFieldChange("lastName", e.target.value)}
-                        onBlur={(e) => handleFieldChange("lastName", normalizeName(e.target.value))}
-                        data-testid="input-lastName"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
-                      <Mail className="h-4 w-4 text-primary" />
-                      {tq("steps.contact.fields.email.label")}
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleFieldChange("email", e.target.value)}
-                      data-testid="input-email"
-                    />
-                    {formData.email && !isEmailValid && (
-                      <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.email.error")}</p>
-                    )}
-                    {isEmailValid && suggestEmailCorrection(formData.email) && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {tqOpt("steps.contact.fields.email.suggestion") ?? (lang === "de" ? "Meinten Sie" : "Vouliez-vous dire")}{" "}
-                        <button
-                          type="button"
-                          className="font-medium text-primary underline underline-offset-2"
-                          onClick={() => handleFieldChange("email", suggestEmailCorrection(formData.email)!)}
-                        >
-                          {suggestEmailCorrection(formData.email)}
-                        </button>
-                        {" ?"}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Phone with Country Selector */}
-                  <div>
-                    <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
-                      <PhoneIcon className="h-4 w-4 text-primary" />
-                      {tq("steps.contact.fields.phone.label")}
-                    </Label>
-                    <div className="flex">
-                      <Select
-                        value={formData.phoneCountry}
-                        onValueChange={(value) => handleFieldChange("phoneCountry", value)}
-                      >
-                        <SelectTrigger className="w-28 rounded-r-none border-r-0 text-sm font-normal" data-testid="select-phoneCountry">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {phoneCountries.map((country) => (
-                            <SelectItem key={country.code} value={country.code}>
-                              <span className="flex items-center gap-2">
-                                <span>{countryFlag(country.code)}</span>
-                                <span>{country.dialCode}</span>
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => {
-                          const dialCode = phoneCountries.find((c) => c.code === formData.phoneCountry)?.dialCode ?? "";
-                          let phone = e.target.value.trim();
-                          const compact = phone.replace(/[\s\-]/g, "");
-                          if (compact.startsWith(dialCode)) {
-                            phone = compact.slice(dialCode.length).trimStart();
-                          } else if (compact.startsWith("00" + dialCode.slice(1))) {
-                            phone = compact.slice(2 + dialCode.length - 1).trimStart();
-                          }
-                          handleFieldChange("phone", phone);
-                        }}
-                        className="flex-1 rounded-l-none text-sm"
-                        data-testid="input-phone"
-                      />
-                    </div>
-                    {formData.phone && !isPhoneValid && (
-                      <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.phone.error")}</p>
-                    )}
-                  </div>
-
                   {/* Address */}
-                  <div>
+                  <div id="q-address">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
                       <MapPin className="h-4 w-4 text-primary" />
                       {tq("steps.contact.fields.address.label")}
@@ -1323,12 +1246,13 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                               onChange={(value) => handleFieldChange("address", value)}
                               onPlaceSelect={handlePlaceSelect}
                               placeholder={tq("steps.contact.fields.address.placeholder") || undefined}
+                              bottomClearance={NAV_BAR_CLEARANCE}
                             />
                           </LazyAPIProvider>
                         </div>
 
                         {/* Display editable address component fields */}
-                        {(formData.streetName || formData.locality) && (
+                        <RevealField visible={!!(formData.streetName || formData.locality)}>
                           <div className="space-y-3">
                             {/* Street Name and Number */}
                             <div className="grid grid-cols-4 gap-2">
@@ -1421,7 +1345,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                               </div>
                             </div>
                           </div>
-                        )}
+                        </RevealField>
 
                         <button
                           type="button"
@@ -1539,6 +1463,119 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                       </>
                     )}
                   </div>
+
+                  {/* First Name & Last Name */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div id="q-firstName">
+                      <Label htmlFor="firstName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
+                        <User className="h-4 w-4 text-primary" />
+                        {tq("steps.contact.fields.firstName.label")}
+                      </Label>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        value={formData.firstName}
+                        onChange={(e) => handleFieldChange("firstName", e.target.value)}
+                        onBlur={(e) => handleFieldChange("firstName", normalizeName(e.target.value))}
+                        data-testid="input-firstName"
+                      />
+                    </div>
+                    <div id="q-lastName">
+                      <Label htmlFor="lastName" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
+                        <Users className="h-4 w-4 text-primary" />
+                        {tq("steps.contact.fields.lastName.label")}
+                      </Label>
+                      <Input
+                        id="lastName"
+                        type="text"
+                        value={formData.lastName}
+                        onChange={(e) => handleFieldChange("lastName", e.target.value)}
+                        onBlur={(e) => handleFieldChange("lastName", normalizeName(e.target.value))}
+                        data-testid="input-lastName"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div id="q-email">
+                    <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
+                      <Mail className="h-4 w-4 text-primary" />
+                      {tq("steps.contact.fields.email.label")}
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleFieldChange("email", e.target.value)}
+                      data-testid="input-email"
+                    />
+                    {formData.email && !isEmailValid && (
+                      <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.email.error")}</p>
+                    )}
+                    {isEmailValid && suggestEmailCorrection(formData.email) && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {tqOpt("steps.contact.fields.email.suggestion") ?? (lang === "de" ? "Meinten Sie" : "Vouliez-vous dire")}{" "}
+                        <button
+                          type="button"
+                          className="font-medium text-primary underline underline-offset-2"
+                          onClick={() => handleFieldChange("email", suggestEmailCorrection(formData.email)!)}
+                        >
+                          {suggestEmailCorrection(formData.email)}
+                        </button>
+                        {" ?"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Phone with Country Selector */}
+                  <div id="q-phone">
+                    <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-1.5">
+                      <PhoneIcon className="h-4 w-4 text-primary" />
+                      {tq("steps.contact.fields.phone.label")}
+                    </Label>
+                    <div className="flex">
+                      <Select
+                        value={formData.phoneCountry}
+                        onValueChange={(value) => handleFieldChange("phoneCountry", value)}
+                      >
+                        <SelectTrigger className="w-28 rounded-r-none border-r-0 text-sm font-normal" data-testid="select-phoneCountry">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {phoneCountries.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              <span className="flex items-center gap-2">
+                                <span>{countryFlag(country.code)}</span>
+                                <span>{country.dialCode}</span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => {
+                          const dialCode = phoneCountries.find((c) => c.code === formData.phoneCountry)?.dialCode ?? "";
+                          let phone = e.target.value.trim();
+                          const compact = phone.replace(/[\s\-]/g, "");
+                          if (compact.startsWith(dialCode)) {
+                            phone = compact.slice(dialCode.length).trimStart();
+                          } else if (compact.startsWith("00" + dialCode.slice(1))) {
+                            phone = compact.slice(2 + dialCode.length - 1).trimStart();
+                          }
+                          handleFieldChange("phone", phone);
+                        }}
+                        className="flex-1 rounded-l-none text-sm"
+                        data-testid="input-phone"
+                      />
+                    </div>
+                    {formData.phone && !isPhoneValid && (
+                      <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.phone.error")}</p>
+                    )}
+                  </div>
+
                 </div>
               )}
 
@@ -1565,7 +1602,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         className="space-y-0.5"
                       >
                         {approvalConfig.options.map((opt) => (
-                          <div key={opt.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                          <div key={opt.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                             <RadioGroupItem value={opt.value} id={`approval-${opt.value}`} data-testid={`radio-approval-${opt.value}`} />
                             <Label htmlFor={`approval-${opt.value}`} className="cursor-pointer flex-1 text-sm">
                               {tq(opt.label)}
@@ -1594,7 +1631,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Terms and Conditions */}
-                  <div className="space-y-2">
+                  <div id="q-acceptTerms" className="space-y-2">
                     <label
                       htmlFor="acceptTerms"
                       className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
@@ -1632,9 +1669,17 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
         <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 shadow-lg z-50 py-3">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
+              {showMissingHint && missingField && (
+                <p className="text-xs text-destructive text-center mb-2" role="status">
+                  {tqOpt("navigation.missingAnswer") ??
+                    (lang === "de"
+                      ? "Oben fehlt noch eine Antwort — wir haben sie für Sie markiert."
+                      : "Il manque une réponse ci-dessus — nous vous y avons amené.")}
+                </p>
+              )}
               {step === 0 && (
                 <Button
-                  onClick={() => goToStep(1)}
+                  onClick={() => tryGoToStep(1)}
                   className="w-full h-10 text-sm font-semibold rounded-lg"
                   data-testid="button-start-quote"
                 >
@@ -1645,9 +1690,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
               {step === 1 && (
                 <Button
-                  onClick={() => goToStep(2)}
-                  className="w-full h-10 text-sm font-semibold rounded-lg"
-                  disabled={!isStep1Valid}
+                  onClick={() => tryGoToStep(2)}
+                  className={`w-full h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                   data-testid="button-next-step-1"
                 >
                   {tq("navigation.next")}
@@ -1667,9 +1711,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     {tq("navigation.back")}
                   </Button>
                   <Button
-                    onClick={() => goToStep(3)}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep2Valid}
+                    onClick={() => tryGoToStep(3)}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                     data-testid="button-next-step-2"
                   >
                     {tq("navigation.next")}
@@ -1690,9 +1733,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     {tq("navigation.back")}
                   </Button>
                   <Button
-                    onClick={() => goToStep(4)}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep3Valid}
+                    onClick={() => tryGoToStep(4)}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                     data-testid="button-next-step-3"
                   >
                     {tq("navigation.next")}
@@ -1713,9 +1755,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     {tq("navigation.back")}
                   </Button>
                   <Button
-                    onClick={() => goToStep(5)}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep4Valid}
+                    onClick={() => tryGoToStep(5)}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                     data-testid="button-next-step-4"
                   >
                     {tq("navigation.next")}
@@ -1736,9 +1777,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                     {tq("navigation.back")}
                   </Button>
                   <Button
-                    onClick={() => goToStep(6)}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep5Valid}
+                    onClick={() => tryGoToStep(6)}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
                     data-testid="button-next-step-5"
                   >
                     {tq("navigation.next")}
@@ -1760,6 +1800,10 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </Button>
                   <Button
                     onClick={async () => {
+                      if (missingField) {
+                        nudgeField(missingField);
+                        return;
+                      }
                       setIsSubmitting(true);
                       setSubmitError(false);
                       try {
@@ -1776,6 +1820,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         if (!res.ok) throw new Error("Submit failed");
                         const result = await res.json();
                         telemetry.trackSubmit(true, { submissionId: result.submissionId });
+                        try { sessionStorage.removeItem(QUOTE_DRAFT_KEY); } catch { /* ignore */ }
                         try { ph?.capture("quote_submitted", { form_type: "quote", locale: lang }); } catch { /* noop */ }
                         try { ph?.identify(formData.email, { first_name: formData.firstName, last_name: formData.lastName, locale: lang }); } catch { /* noop */ }
 
@@ -1844,8 +1889,8 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         setIsSubmitting(false);
                       }
                     }}
-                    className="flex-1 h-10 text-sm font-semibold rounded-lg"
-                    disabled={!isStep6Valid || isSubmitting}
+                    className={`flex-1 h-10 text-sm font-semibold rounded-lg${canProceed ? "" : " opacity-60"}`}
+                    disabled={isSubmitting}
                     data-testid="button-submit"
                   >
                     {isSubmitting

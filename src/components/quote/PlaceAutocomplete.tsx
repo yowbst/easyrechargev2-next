@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { Input } from "@/components/ui/input";
+import { dropdownPlacement } from "@/lib/dropdownPlacement";
 
 interface Suggestion {
   placeId: string;
@@ -18,6 +19,8 @@ interface PlaceAutocompleteProps {
   onPlaceSelect?: (place: google.maps.places.PlaceResult) => void;
   placeholder?: string;
   id?: string;
+  /** Space (px) reserved for a fixed bottom bar, e.g. the quote form nav. */
+  bottomClearance?: number;
 }
 
 export function PlaceAutocomplete({
@@ -26,14 +29,48 @@ export function PlaceAutocomplete({
   onPlaceSelect,
   placeholder = "Rue et numéro, NPA Localité",
   id,
+  bottomClearance = 0,
 }: PlaceAutocompleteProps) {
   const places = useMapsLibrary("places");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [placement, setPlacement] = useState<"down" | "up">("down");
+  const [maxHeight, setMaxHeight] = useState(240);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isSelectingRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Placement from the input's LIVE rect against the visual viewport (the
+  // window viewport lies when the mobile keyboard is open). Re-run while
+  // open: the on-focus smooth centering keeps moving the input for a few
+  // hundred ms, and a rect captured mid-scroll under-sizes the dropdown.
+  const updatePlacement = useCallback(() => {
+    if (!inputRef.current) return;
+    const r = inputRef.current.getBoundingClientRect();
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const result = dropdownPlacement({ top: r.top, bottom: r.bottom }, viewportHeight, bottomClearance);
+    setPlacement(result.placement);
+    setMaxHeight(result.maxHeight);
+  }, [bottomClearance]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let raf = 0;
+    const onGeometryChange = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(updatePlacement);
+    };
+    window.addEventListener("scroll", onGeometryChange, { capture: true, passive: true });
+    window.addEventListener("resize", onGeometryChange);
+    window.visualViewport?.addEventListener("resize", onGeometryChange);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onGeometryChange, { capture: true });
+      window.removeEventListener("resize", onGeometryChange);
+      window.visualViewport?.removeEventListener("resize", onGeometryChange);
+    };
+  }, [isOpen, updatePlacement]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -68,6 +105,7 @@ export function PlaceAutocomplete({
           });
 
         setSuggestions(mapped);
+        if (mapped.length > 0) updatePlacement();
         setIsOpen(mapped.length > 0);
       } catch {
         setSuggestions([]);
@@ -78,7 +116,7 @@ export function PlaceAutocomplete({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [places, value]);
+  }, [places, value, updatePlacement]);
 
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
@@ -155,12 +193,19 @@ export function PlaceAutocomplete({
         }}
         placeholder={placeholder}
         autoComplete="off"
+        onFocus={() => {
+          const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          inputRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+        }}
       />
 
       {isOpen && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+          className={`absolute z-[60] w-full bg-popover border border-border rounded-md shadow-lg overflow-auto ${
+            placement === "up" ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
+          style={{ maxHeight }}
         >
           {suggestions.map((suggestion) => (
             <div
