@@ -125,6 +125,17 @@ function RevealField({ visible, children }: { visible: boolean; children: React.
   );
 }
 
+// The radio option cards style their entire surface as clickable, but the
+// actual control is the inner Radix radio + label — clicks landing on the
+// card's own padding (near the border) used to die. Forward them to the
+// radio; clicks on the label/radio keep their native path (guard avoids
+// double activation).
+function forwardCardClick(e: React.MouseEvent<HTMLDivElement>) {
+  const target = e.target as HTMLElement;
+  if (target.closest("label, button, a")) return;
+  e.currentTarget.querySelector<HTMLButtonElement>('button[role="radio"]')?.click();
+}
+
 interface FormData {
   // From hero form
   housingStatus?: string;
@@ -782,15 +793,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("solarEquipment", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="exists" id="solar-exists" data-testid="radio-solar-exists" />
                           <Label htmlFor="solar-exists" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.solarEquipment.options.exists")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="in-progress" id="solar-progress" data-testid="radio-solar-progress" />
                           <Label htmlFor="solar-progress" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.solarEquipment.options.in-progress")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="none" id="solar-none" data-testid="radio-solar-none" />
                           <Label htmlFor="solar-none" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.solarEquipment.options.none")}</Label>
                         </div>
@@ -812,15 +823,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("homeBattery", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="exists" id="battery-exists" data-testid="radio-battery-exists" />
                           <Label htmlFor="battery-exists" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.homeBattery.options.exists")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="in-progress" id="battery-progress" data-testid="radio-battery-progress" />
                           <Label htmlFor="battery-progress" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.homeBattery.options.in-progress")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="none" id="battery-none" data-testid="radio-battery-none" />
                           <Label htmlFor="battery-none" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.homeBattery.options.none")}</Label>
                         </div>
@@ -842,15 +853,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("neighborhoodEquipment", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="exists" id="neighbor-exists" data-testid="radio-neighbor-exists" />
                           <Label htmlFor="neighbor-exists" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.neighborhoodEquipment.options.exists")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="in-progress" id="neighbor-progress" data-testid="radio-neighbor-progress" />
                           <Label htmlFor="neighbor-progress" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.neighborhoodEquipment.options.in-progress")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="none" id="neighbor-none" data-testid="radio-neighbor-none" />
                           <Label htmlFor="neighbor-none" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.neighborhoodEquipment.options.none")}</Label>
                         </div>
@@ -872,15 +883,15 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("electricalBoardType", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="old" id="board-old" data-testid="radio-board-old" />
                           <Label htmlFor="board-old" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.electricalBoardType.options.old")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="recent" id="board-recent" data-testid="radio-board-recent" />
                           <Label htmlFor="board-recent" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.electricalBoardType.options.recent")}</Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="na" id="board-na" data-testid="radio-board-na" />
                           <Label htmlFor="board-na" className="cursor-pointer flex-1 text-sm">{tq("steps.housing.fields.electricalBoardType.options.na")}</Label>
                         </div>
@@ -947,7 +958,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                             <RevealField visible={getParkingMainValue() === option.value}>
                               <div className="ml-8 mt-2 space-y-2 pl-4 border-l-2 border-primary/20">
                                 {parkingSubOptions[option.value].map((subOption) => (
-                                  <div key={subOption.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                                  <div key={subOption.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                                     <RadioGroupItem
                                       value={subOption.value}
                                       id={`parking-${subOption.value}`}
@@ -1063,13 +1074,13 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("ecpProvided", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="include" id="provided-include" data-testid="radio-provided-include" />
                           <Label htmlFor="provided-include" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.ecpProvided.options.include")}
                           </Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="exclude" id="provided-exclude" data-testid="radio-provided-exclude" />
                           <Label htmlFor="provided-exclude" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.ecpProvided.options.exclude")}
@@ -1093,25 +1104,25 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         onValueChange={(value) => handleFieldChange("deadline", value)}
                         className="space-y-0.5"
                       >
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="asap" id="deadline-asap" data-testid="radio-deadline-asap" />
                           <Label htmlFor="deadline-asap" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.deadline.options.asap")}
                           </Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="2-3mo" id="deadline-2-3mo" data-testid="radio-deadline-2-3mo" />
                           <Label htmlFor="deadline-2-3mo" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.deadline.options.2-3mo")}
                           </Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="3-6mo" id="deadline-3-6mo" data-testid="radio-deadline-3-6mo" />
                           <Label htmlFor="deadline-3-6mo" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.deadline.options.3-6mo")}
                           </Label>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                           <RadioGroupItem value="6+mo" id="deadline-6+mo" data-testid="radio-deadline-6+mo" />
                           <Label htmlFor="deadline-6+mo" className="cursor-pointer flex-1 text-sm">
                             {tq("steps.charger.fields.deadline.options.6+mo")}
@@ -1142,25 +1153,25 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                       onValueChange={(value) => handleFieldChange("vehicleStatus", value)}
                       className="grid gap-2 pl-1"
                     >
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                         <RadioGroupItem value="own" id="vehicle-own" data-testid="radio-vehicle-own" />
                         <Label htmlFor="vehicle-own" className="cursor-pointer flex-1 text-sm">
                           {tq("steps.vehicle.fields.vehicleStatus.options.own")}
                         </Label>
                       </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                         <RadioGroupItem value="ordered" id="vehicle-ordered" data-testid="radio-vehicle-ordered" />
                         <Label htmlFor="vehicle-ordered" className="cursor-pointer flex-1 text-sm">
                           {tq("steps.vehicle.fields.vehicleStatus.options.ordered")}
                         </Label>
                       </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                         <RadioGroupItem value="want-to-order" id="vehicle-want" data-testid="radio-vehicle-want" />
                         <Label htmlFor="vehicle-want" className="cursor-pointer flex-1 text-sm">
                           {tq("steps.vehicle.fields.vehicleStatus.options.want-to-order")}
                         </Label>
                       </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                         <RadioGroupItem value="unknown" id="vehicle-unknown" data-testid="radio-vehicle-unknown" />
                         <Label htmlFor="vehicle-unknown" className="cursor-pointer flex-1 text-sm">
                           {tq("steps.vehicle.fields.vehicleStatus.options.unknown")}
@@ -1589,7 +1600,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         className="space-y-0.5"
                       >
                         {approvalConfig.options.map((opt) => (
-                          <div key={opt.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
+                          <div key={opt.value} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all" onClick={forwardCardClick}>
                             <RadioGroupItem value={opt.value} id={`approval-${opt.value}`} data-testid={`radio-approval-${opt.value}`} />
                             <Label htmlFor={`approval-${opt.value}`} className="cursor-pointer flex-1 text-sm">
                               {tq(opt.label)}
