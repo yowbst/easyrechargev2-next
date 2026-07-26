@@ -144,7 +144,7 @@ export function MiniQuoteForm({
   }, [housingStatus]);
 
   const handleHousingStatusSelect = (status: string) => {
-    telemetry.trackChange("housingStatus", status);
+    telemetry.trackChange("housingStatus", getHousingStatusValue(status));
     setHousingStatus(status);
     setIsEditingHousingStatus(false);
   };
@@ -168,13 +168,14 @@ export function MiniQuoteForm({
     }
     if (!selectedLocality) {
       ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", field: "locality" });
-      pulse(localitySectionRef.current);
+      const target = localitySectionRef.current ?? statusSectionRef.current;
+      pulse(target);
       localitySectionRef.current?.querySelector("input")?.focus();
       return;
     }
     setIsSubmitting(true);
     setSubmitError(false);
-    telemetry.trackSubmit(true, { housingStatus, postalCode: selectedLocality.postalCode });
+    telemetry.trackSubmit(true, { housingStatus: getHousingStatusValue(housingStatus), postalCode: selectedLocality.postalCode });
     ph?.capture("mini_quote_submitted", { form_type: "mini-quote-form", page_id: pageId, locale: lang, housing_status: getHousingStatusValue(housingStatus) });
 
     const params = new URLSearchParams({
@@ -348,7 +349,6 @@ export function MiniQuoteForm({
               dataTestId="input-postal-code"
               iconClassName="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/70 z-10 pointer-events-none"
               inputClassName="h-12 pl-12 text-base rounded-md bg-white/10 border-white/30 focus:border-white hover:border-white/50 text-white placeholder:text-white/60"
-              dropdownClassName="bg-popover border border-border rounded-lg shadow-lg"
             />
           )}
         </div>

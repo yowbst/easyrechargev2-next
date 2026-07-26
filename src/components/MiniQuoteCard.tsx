@@ -115,7 +115,8 @@ export function MiniQuoteCard({
     }
     if (!selectedLocality) {
       ph?.capture("mini_quote_nudge", { form_type: "mini-quote-card", field: "locality" });
-      pulse(localitySectionRef.current);
+      const target = localitySectionRef.current ?? statusSectionRef.current;
+      pulse(target);
       localitySectionRef.current?.querySelector("input")?.focus();
       return;
     }

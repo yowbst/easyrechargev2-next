@@ -25,6 +25,7 @@ export function LocalityAutocomplete(props: {
 }) {
   const { value, onValueChange, onSelect } = props;
   const [open, setOpen] = useState(false);
+  const [hasEdited, setHasEdited] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [geometry, setGeometry] = useState<{ dir: "down" | "up"; maxHeight: number }>({ dir: "down", maxHeight: 220 });
 
@@ -46,7 +47,11 @@ export function LocalityAutocomplete(props: {
   useEffect(() => {
     if (!props.autoFocusOnFine) return;
     const raf = requestAnimationFrame(() => {
-      if (window.matchMedia("(pointer: fine)").matches) inputRef.current?.focus();
+      if (window.matchMedia("(pointer: fine)").matches) {
+        inputRef.current?.focus();
+        // Prefilled "NPA Locality" labels should be replaced, not appended to.
+        inputRef.current?.select();
+      }
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally mount-only
@@ -62,6 +67,7 @@ export function LocalityAutocomplete(props: {
         ref={inputRef}
         value={value}
         onChange={(e) => {
+          setHasEdited(true);
           onValueChange(e.target.value);
           const shouldOpen = e.target.value.trim().length >= 2;
           if (shouldOpen) updateGeometry();
@@ -88,6 +94,7 @@ export function LocalityAutocomplete(props: {
               onMouseDown={() => {
                 onSelect(item);
                 setOpen(false);
+                setHasEdited(false);
               }}
             >
               <MapPin className="mr-3 h-4 w-4 text-muted-foreground" />
@@ -102,7 +109,7 @@ export function LocalityAutocomplete(props: {
         </div>
       )}
 
-      {open && !loading && value.trim().length >= 2 && items.length === 0 && (
+      {open && !loading && hasEdited && value.trim().length >= 2 && items.length === 0 && (
         <div className={`${positioned} p-3 text-sm text-muted-foreground`}>
           Aucun résultat
         </div>
