@@ -10,11 +10,23 @@ const HOUSING_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 import { Button } from "@/components/ui/button";
 import { LocalityAutocomplete } from "@/components/LocalityAutocomplete";
 import { t } from "@/lib/i18n/dictionaries";
+import { useFormTelemetry } from "@/hooks/use-form-telemetry";
+import { usePostHog } from "@/components/PostHogProvider";
 import type { LocalityResponse } from "@/lib/localities";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
+
+// Pulse the missing section when the CTA is pressed too early — reuses the
+// big form's .er-field-nudge ring (globals.css).
+function pulse(el: HTMLElement | null) {
+  if (!el) return;
+  el.classList.remove("er-field-nudge");
+  void el.offsetWidth;
+  el.classList.add("er-field-nudge");
+  window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+}
 
 interface MiniQuoteFormProps {
   miniQuoteContent?: AnyRecord;
@@ -37,6 +49,29 @@ export function MiniQuoteForm({
 }: MiniQuoteFormProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const ph = usePostHog();
+  const telemetry = useFormTelemetry({ formType: "mini-quote-form", locale: lang });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const statusSectionRef = useRef<HTMLDivElement>(null);
+  const localitySectionRef = useRef<HTMLDivElement>(null);
+  const hasTrackedView = useRef(false);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || hasTrackedView.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && ph && !hasTrackedView.current) {
+          hasTrackedView.current = true;
+          ph.capture("mini_quote_viewed", { form_type: "mini-quote-form", page_id: pageId, locale: lang });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ph, pageId, lang]);
 
   const bp = `pages.${pageId || "default"}.blocks.mini-quote`;
 
@@ -109,11 +144,13 @@ export function MiniQuoteForm({
   }, [housingStatus]);
 
   const handleHousingStatusSelect = (status: string) => {
+    telemetry.trackChange("housingStatus", getHousingStatusValue(status));
     setHousingStatus(status);
     setIsEditingHousingStatus(false);
   };
 
   const handleSelectLocality = (item: LocalityResponse) => {
+    telemetry.trackChange("postalCode", item.postalCode);
     setSelectedLocality(item);
     setSearchValue(`${item.postalCode} ${item.locality}`);
     setIsEditingLocation(false);
@@ -123,9 +160,23 @@ export function MiniQuoteForm({
   const [submitError, setSubmitError] = useState(false);
 
   const handleQuoteClick = async () => {
-    if (!housingStatus || !selectedLocality || isSubmitting) return;
+    if (isSubmitting) return;
+    if (!housingStatus) {
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", field: "housingStatus" });
+      pulse(statusSectionRef.current);
+      return;
+    }
+    if (!selectedLocality) {
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-form", field: "locality" });
+      const target = localitySectionRef.current ?? statusSectionRef.current;
+      pulse(target);
+      localitySectionRef.current?.querySelector("input")?.focus();
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(false);
+    telemetry.trackSubmit(true, { housingStatus: getHousingStatusValue(housingStatus), postalCode: selectedLocality.postalCode });
+    ph?.capture("mini_quote_submitted", { form_type: "mini-quote-form", page_id: pageId, locale: lang, housing_status: getHousingStatusValue(housingStatus) });
 
     const params = new URLSearchParams({
       postalCode: selectedLocality.postalCode,
@@ -146,6 +197,10 @@ export function MiniQuoteForm({
           formType: "mini-quote-form",
           pageId: pageId ?? null,
           locale: lang,
+          posthog: {
+            phDistinctId: ph?.get_distinct_id?.() ?? null,
+            phSessionId: ph?.get_session_id?.() ?? null,
+          },
         }),
       });
       if (!res.ok) {
@@ -168,6 +223,7 @@ export function MiniQuoteForm({
 
   return (
     <div
+      ref={containerRef}
       className={`bg-white/10 backdrop-blur-md border border-white/25 rounded-2xl p-6 flex flex-col space-y-4 shadow-lg ${className}`}
       data-testid="mini-quote-form"
     >
@@ -188,11 +244,12 @@ export function MiniQuoteForm({
       </div>
 
       {/* Housing Status Selection */}
-      <div className="space-y-3">
+      <div className="space-y-3" ref={statusSectionRef}>
         {housingStatus && !isEditingHousingStatus ? (
           <div
-            className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur"
+            className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur cursor-pointer"
             data-testid="card-selected-status"
+            onClick={() => setIsEditingHousingStatus(true)}
           >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-md bg-white/20">
@@ -217,7 +274,11 @@ export function MiniQuoteForm({
               <button
                 key={status}
                 type="button"
-                className="flex flex-col items-center justify-center gap-2 h-20 rounded-lg border border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50 transition-all"
+                className={`flex flex-col items-center justify-center gap-2 h-20 rounded-lg border transition-all ${
+                  housingStatus === status
+                    ? "border-white bg-white/25 ring-1 ring-white/40"
+                    : "border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50"
+                }`}
                 onClick={() => handleHousingStatusSelect(status)}
                 data-testid={`card-${status}`}
               >
@@ -233,12 +294,17 @@ export function MiniQuoteForm({
 
       {/* Locality Field */}
       {housingStatus && !isEditingHousingStatus && (
-        <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+        <div className="space-y-3 animate-in slide-in-from-top-2 duration-300" ref={localitySectionRef}>
           {selectedLocality && !isEditingLocation ? (
             <>
               <div
-                className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur"
+                className="flex items-center justify-between gap-3 h-20 px-4 rounded-lg border border-white bg-white/20 backdrop-blur cursor-pointer"
                 data-testid="card-selected-location"
+                onClick={() => {
+                  setIsEditingLocation(true);
+                  setSearchValue(`${selectedLocality.postalCode} ${selectedLocality.locality}`);
+                  setSelectedLocality(null);
+                }}
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-white/20">
@@ -277,12 +343,12 @@ export function MiniQuoteForm({
               }}
               onSelect={handleSelectLocality}
               placeholder={locationPlaceholder.startsWith("[") ? "NPA ou localité" : locationPlaceholder}
+              autoFocusOnFine
               limit={8}
               locale={lang === "de" ? "de-DE" : "fr-FR"}
               dataTestId="input-postal-code"
               iconClassName="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/70 z-10 pointer-events-none"
               inputClassName="h-12 pl-12 text-base rounded-md bg-white/10 border-white/30 focus:border-white hover:border-white/50 text-white placeholder:text-white/60"
-              dropdownClassName="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-[200px] overflow-auto"
             />
           )}
         </div>
@@ -296,8 +362,8 @@ export function MiniQuoteForm({
           </p>
         )}
         <Button
-          className="w-full h-12 font-semibold rounded-lg text-[14px]"
-          disabled={!housingStatus || !selectedLocality || isSubmitting}
+          className={`w-full h-12 font-semibold rounded-lg text-[14px]${housingStatus && selectedLocality ? "" : " opacity-70"}`}
+          disabled={isSubmitting}
           data-testid="button-mini-quote"
           onClick={handleQuoteClick}
         >

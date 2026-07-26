@@ -12,6 +12,16 @@ import { usePostHog } from "@/components/PostHogProvider";
 import type { LocalityResponse } from "@/lib/localities";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
+// Pulse the missing section when the CTA is pressed too early — reuses the
+// big form's .er-field-nudge ring (globals.css).
+function pulse(el: HTMLElement | null) {
+  if (!el) return;
+  el.classList.remove("er-field-nudge");
+  void el.offsetWidth;
+  el.classList.add("er-field-nudge");
+  window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+}
+
 interface MiniQuoteCardProps {
   className?: string;
   pageId?: string;
@@ -39,6 +49,8 @@ export function MiniQuoteCard({
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, { ...interpolationValues, ...vars });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const statusSectionRef = useRef<HTMLDivElement>(null);
+  const localitySectionRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
 
   useEffect(() => {
@@ -46,9 +58,9 @@ export function MiniQuoteCard({
     if (!el || hasTrackedView.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasTrackedView.current) {
+        if (entry.isIntersecting && ph && !hasTrackedView.current) {
           hasTrackedView.current = true;
-          ph?.capture("mini_quote_viewed", { form_type: "mini-quote-card", page_id: pageId, locale: lang });
+          ph.capture("mini_quote_viewed", { form_type: "mini-quote-card", page_id: pageId, locale: lang });
           observer.disconnect();
         }
       },
@@ -95,7 +107,19 @@ export function MiniQuoteCard({
   const [submitError, setSubmitError] = useState(false);
 
   const handleQuoteSubmit = async () => {
-    if (!housingStatus || !selectedLocality || isSubmitting) return;
+    if (isSubmitting) return;
+    if (!housingStatus) {
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-card", field: "housingStatus" });
+      pulse(statusSectionRef.current);
+      return;
+    }
+    if (!selectedLocality) {
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-card", field: "locality" });
+      const target = localitySectionRef.current ?? statusSectionRef.current;
+      pulse(target);
+      localitySectionRef.current?.querySelector("input")?.focus();
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(false);
     telemetry.trackSubmit(true, { housingStatus, postalCode: selectedLocality.postalCode });
@@ -150,10 +174,10 @@ export function MiniQuoteCard({
   return (
     <Card
       ref={containerRef}
-      className={`group relative flex flex-col rounded-2xl border border-border bg-card text-card-foreground shadow-md overflow-hidden transition-shadow duration-300 hover:shadow-lg ${className}`}
+      className={`group relative flex flex-col rounded-2xl border border-border bg-card text-card-foreground shadow-md transition-shadow duration-300 hover:shadow-lg ${className}`}
       data-testid="card-mini-quote"
     >
-      <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/70 to-primary/40" />
+      <div className="h-1 w-full rounded-t-2xl bg-gradient-to-r from-primary via-primary/70 to-primary/40" />
 
       <div className="p-6 pb-3 space-y-1.5">
         <h3 className="text-xl font-heading font-bold leading-tight text-foreground tracking-tight">
@@ -178,9 +202,13 @@ export function MiniQuoteCard({
       </div>
 
       <div className="px-6 pb-4 flex-1 flex flex-col space-y-3 overflow-visible">
-        <div className="space-y-2">
+        <div className="space-y-2" ref={statusSectionRef}>
           {housingStatus && !isEditingHousingStatus ? (
-            <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10" data-testid="card-selected-status">
+            <div
+              className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10 cursor-pointer"
+              data-testid="card-selected-status"
+              onClick={() => setIsEditingHousingStatus(true)}
+            >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/15">
                   {housingStatus === "owner" && <Home className="h-4 w-4 text-primary" />}
@@ -218,10 +246,14 @@ export function MiniQuoteCard({
         </div>
 
         {housingStatus && !isEditingHousingStatus && (
-          <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+          <div className="space-y-2 animate-in slide-in-from-top-2 duration-300" ref={localitySectionRef}>
             {selectedLocality && !isEditingLocation ? (
               <>
-                <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10" data-testid="card-selected-location">
+                <div
+                  className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/25 bg-primary/5 dark:bg-primary/10 cursor-pointer"
+                  data-testid="card-selected-location"
+                  onClick={() => { setIsEditingLocation(true); setSearchValue(`${selectedLocality.postalCode} ${selectedLocality.locality}`); setSelectedLocality(null); }}
+                >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/15">
                       <MapPin className="h-4 w-4 text-primary" />
@@ -256,6 +288,7 @@ export function MiniQuoteCard({
                   setIsEditingLocation(false);
                 }}
                 placeholder={d(`${mqp}.form.fields.location.placeholder`)}
+                autoFocusOnFine
                 limit={5}
                 locale={lang === "de" ? "de-DE" : "fr-FR"}
                 dataTestId="input-locality-search"
@@ -273,8 +306,8 @@ export function MiniQuoteCard({
           </p>
         )}
         <Button
-          className="w-full h-11 font-semibold rounded-xl text-sm tracking-wide"
-          disabled={!housingStatus || !selectedLocality || isSubmitting}
+          className={`w-full h-11 font-semibold rounded-xl text-sm tracking-wide${housingStatus && selectedLocality ? "" : " opacity-70"}`}
+          disabled={isSubmitting}
           data-testid="button-submit-quote"
           onClick={handleQuoteSubmit}
         >
