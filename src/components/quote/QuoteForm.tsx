@@ -126,14 +126,16 @@ function RevealField({ visible, children }: { visible: boolean; children: React.
 }
 
 // The radio option cards style their entire surface as clickable, but the
-// actual control is the inner Radix radio + label — clicks landing on the
-// card's own padding (near the border) used to die. Forward them to the
-// radio; clicks on the label/radio keep their native path (guard avoids
-// double activation).
+// actual control is a Base UI radio — a <span role="radio">, NOT a native
+// input or button — so label/`htmlFor` coverage is partial and clicks on
+// the card's own padding (near the borders) used to die. Forward them to
+// the radio; skip clicks on the radio itself (its native click already
+// fired) and real links. Re-clicking an already-selected radio is a no-op,
+// so the occasional double activation is harmless.
 function forwardCardClick(e: React.MouseEvent<HTMLDivElement>) {
   const target = e.target as HTMLElement;
-  if (target.closest("label, button, a")) return;
-  e.currentTarget.querySelector<HTMLButtonElement>('button[role="radio"]')?.click();
+  if (target.closest('a, [role="radio"]')) return;
+  e.currentTarget.querySelector<HTMLElement>('[role="radio"]')?.click();
 }
 
 interface FormData {
