@@ -403,15 +403,28 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   const [showMissingHint, setShowMissingHint] = useState(false);
 
-  // Continue pressed on an incomplete step: scroll to the first unanswered
-  // question and show a hint instead of a silently disabled button.
+  // Point the user at the first unanswered question: scroll it to center
+  // (a no-op on tall desktop viewports where the whole step fits) AND pulse
+  // a ring around it (.er-field-nudge in globals.css) so there is a visual
+  // cue even when nothing scrolls.
+  const nudgeField = (field: string) => {
+    setShowMissingHint(true);
+    ph?.capture("quote_missing_answer_nudge", { step, field });
+    const el = document.getElementById(`q-${field}`);
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+    el.classList.remove("er-field-nudge");
+    void el.offsetWidth; // restart the animation when the same field is nudged again
+    el.classList.add("er-field-nudge");
+    window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+  };
+
+  // Continue pressed on an incomplete step: nudge the missing question and
+  // show a hint instead of a silently disabled button.
   const tryGoToStep = (nextStep: number) => {
     if (nextStep > step && missingField) {
-      setShowMissingHint(true);
-      ph?.capture("quote_missing_answer_nudge", { step, field: missingField });
-      const el = document.getElementById(`q-${missingField}`);
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      el?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+      nudgeField(missingField);
       return;
     }
     setShowMissingHint(false);
@@ -1775,11 +1788,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   <Button
                     onClick={async () => {
                       if (missingField) {
-                        setShowMissingHint(true);
-                        ph?.capture("quote_missing_answer_nudge", { step, field: missingField });
-                        const el = document.getElementById(`q-${missingField}`);
-                        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-                        el?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+                        nudgeField(missingField);
                         return;
                       }
                       setIsSubmitting(true);
