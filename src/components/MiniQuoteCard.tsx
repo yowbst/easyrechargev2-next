@@ -11,6 +11,7 @@ import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { usePostHog } from "@/components/PostHogProvider";
 import type { LocalityResponse } from "@/lib/localities";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
+import { DEFAULT_PRODUCT } from "@/lib/products";
 
 // Pulse the missing section when the CTA is pressed too early — reuses the
 // big form's .er-field-nudge ring (globals.css).
@@ -60,7 +61,7 @@ export function MiniQuoteCard({
       ([entry]) => {
         if (entry.isIntersecting && ph && !hasTrackedView.current) {
           hasTrackedView.current = true;
-          ph.capture("mini_quote_viewed", { form_type: "mini-quote-card", page_id: pageId, locale: lang });
+          ph.capture("mini_quote_viewed", { form_type: "mini-quote-card", product: DEFAULT_PRODUCT, page_id: pageId, locale: lang });
           observer.disconnect();
         }
       },
@@ -109,12 +110,12 @@ export function MiniQuoteCard({
   const handleQuoteSubmit = async () => {
     if (isSubmitting) return;
     if (!housingStatus) {
-      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-card", field: "housingStatus" });
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-card", product: DEFAULT_PRODUCT, field: "housingStatus" });
       pulse(statusSectionRef.current);
       return;
     }
     if (!selectedLocality) {
-      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-card", field: "locality" });
+      ph?.capture("mini_quote_nudge", { form_type: "mini-quote-card", product: DEFAULT_PRODUCT, field: "locality" });
       const target = localitySectionRef.current ?? statusSectionRef.current;
       pulse(target);
       localitySectionRef.current?.querySelector("input")?.focus();
@@ -123,7 +124,7 @@ export function MiniQuoteCard({
     setIsSubmitting(true);
     setSubmitError(false);
     telemetry.trackSubmit(true, { housingStatus, postalCode: selectedLocality.postalCode });
-    ph?.capture("mini_quote_submitted", { form_type: "mini-quote-card", page_id: pageId, locale: lang, housing_status: housingStatus });
+    ph?.capture("mini_quote_submitted", { form_type: "mini-quote-card", product: DEFAULT_PRODUCT, page_id: pageId, locale: lang, housing_status: housingStatus });
 
     const params = new URLSearchParams({
       housingStatus,
@@ -143,6 +144,7 @@ export function MiniQuoteCard({
           locality: selectedLocality.locality,
           canton: selectedLocality.canton,
           formType: "mini-quote-card",
+          product: DEFAULT_PRODUCT,
           pageId: pageId ?? null,
           locale: lang,
           posthog: {

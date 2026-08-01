@@ -20,6 +20,7 @@ export async function POST(req: Request) {
         event: "server_form_validation_failed",
         properties: {
           form_type: "quote",
+          product: normalizeProduct(body.product),
           missing_fields: [!firstName && "firstName", !lastName && "lastName", !email && "email"].filter(Boolean),
         },
       });

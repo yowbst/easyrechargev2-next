@@ -54,6 +54,7 @@ import Link from "next/link";
 import type { CountryCode } from "libphonenumber-js";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 import { firstUnansweredField, VALID_PARKING_LOCATIONS } from "@/components/quote/stepValidation";
+import { hiddenFieldsFor, LEAN_HIDDEN_FIELDS, type QuoteVariant } from "./leanVariant";
 
 interface QuoteFormProps {
   lang: string;
@@ -205,12 +206,40 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   const [step, setStep] = useState(0);
   const ph = usePostHog();
+  const [variant, setVariant] = useState<QuoteVariant>("control");
+  const variantResolved = useRef(false);
+  const hiddenFields = hiddenFieldsFor(variant);
+  const showField = (field: string) => !hiddenFields.has(field);
 
   // Sync initial step from URL after hydration (avoids server/client mismatch)
   useEffect(() => {
     const s = parseInt(new URLSearchParams(window.location.search).get("step") ?? "0", 10);
     if (!isNaN(s) && s >= 0 && s <= 6 && s !== 0) setStep(s);
   }, []);
+
+  // Resolve the A/B variant exactly once, when the user first reaches a
+  // question step. Defaults to "control" and never flips mid-session. The
+  // six lean-hidden fields are all progressive-reveal fields (hidden on
+  // fresh step entry), so resolving here — before the user answers the
+  // preceding question — is flicker-free in practice.
+  useEffect(() => {
+    if (variantResolved.current || step < 1) return;
+
+    const qv = new URLSearchParams(window.location.search).get("qv");
+    if (qv === "lean" || qv === "control") {
+      variantResolved.current = true;
+      setVariant(qv);
+      return;
+    }
+    if (!ph) return; // wait for PostHog; stay "control" until it loads
+
+    const unsub = ph.onFeatureFlags(() => {
+      if (variantResolved.current) return;
+      variantResolved.current = true;
+      setVariant(ph.getFeatureFlag("quote-lean-funnel") === "lean" ? "lean" : "control");
+    });
+    return unsub;
+  }, [step, ph]);
 
   const tooltipImage = (stepId: string, field: string) => {
     const fc = getFieldConfig(stepId, field);
@@ -298,13 +327,14 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   // Apply page-config defaults for fields with configurable defaults
   useEffect(() => {
+    if (LEAN_HIDDEN_FIELDS.has("ecpProvided") && variant === "lean") return;
     const ecpProvidedDefault = getFieldConfig("charger", "ecpProvided").default as string | undefined;
     setFormData((prev) => ({
       ...prev,
       ecpProvided: prev.ecpProvided || ecpProvidedDefault || "",
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageConfig]);
+  }, [pageConfig, variant]);
 
   const telemetry = useFormTelemetry({
     formType: "quote",
@@ -379,7 +409,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   // Single source of truth for step completeness / what's missing lives in
   // stepValidation.ts (mirrors the former per-step "is<N>Valid" booleans).
-  const missingField = firstUnansweredField(step, formData);
+  const missingField = firstUnansweredField(step, formData, hiddenFields);
   const canProceed = missingField === null;
 
   // Sync step with URL param; handle browser back/forward
@@ -394,10 +424,21 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
 
   const stepNames = ["welcome", "housing", "parking", "charger", "vehicle", "contact", "finalize"] as const;
 
+  // Common dimensions on every quote_* PostHog event. A function (not a
+  // constant) because miniQuoteSessionTokenRef is only populated once the
+  // mount effect has read the URL params.
+  const quoteEventProps = () => ({
+    form_type: "quote",
+    product,
+    locale: lang,
+    entry_point: miniQuoteSessionTokenRef.current ? "mini-quote" : "direct",
+    variant,
+  });
+
   // Helper function to navigate to next step with scroll to top
   const goToStep = (nextStep: number) => {
     if (nextStep > step) {
-      ph?.capture("quote_step_completed", { step, step_name: stepNames[step] });
+      ph?.capture("quote_step_completed", { ...quoteEventProps(), step, step_name: stepNames[step] });
       // Micro-conversion: quote started (first forward step). Secondary/
       // observation signal in Google Ads; inert without the label.
       if (step === 0) {
@@ -405,7 +446,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
         if (startSendTo) fireAdsConversion(startSendTo);
       }
     }
-    ph?.capture("quote_step_viewed", { step: nextStep, step_name: stepNames[nextStep] });
+    ph?.capture("quote_step_viewed", { ...quoteEventProps(), step: nextStep, step_name: stepNames[nextStep] });
 
     const url = new URL(window.location.href);
     url.searchParams.set("step", String(nextStep));
@@ -422,7 +463,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
   // cue even when nothing scrolls.
   const nudgeField = (field: string) => {
     setShowMissingHint(true);
-    ph?.capture("quote_missing_answer_nudge", { step, field });
+    ph?.capture("quote_missing_answer_nudge", { ...quoteEventProps(), step, field });
     const el = document.getElementById(`q-${field}`);
     if (!el) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -872,7 +913,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </RevealField>
 
                   {/* Electrical Board Type */}
-                  <RevealField visible={!!formData.solarEquipment}>
+                  <RevealField visible={!!formData.solarEquipment && showField("electricalBoardType")}>
                     <div id="q-electricalBoardType">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.housing.fields.electricalBoardType.tooltip")} image={tooltipImage("housing", "electricalBoardType")}>
@@ -985,7 +1026,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </div>
 
                   {/* Electrical Line Distance */}
-                  <RevealField visible={VALID_PARKING_LOCATIONS.includes(formData.parkingSpotLocation)}>
+                  <RevealField visible={VALID_PARKING_LOCATIONS.includes(formData.parkingSpotLocation) && showField("electricalLineDistance")}>
                     <div id="q-electricalLineDistance">
                       <RangeButtonGroup
                         value={formData.electricalLineDistance}
@@ -1002,7 +1043,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </RevealField>
 
                   {/* Walls to Cross */}
-                  <RevealField visible={VALID_PARKING_LOCATIONS.includes(formData.parkingSpotLocation) && formData.electricalLineDistance !== null}>
+                  <RevealField visible={VALID_PARKING_LOCATIONS.includes(formData.parkingSpotLocation) && formData.electricalLineDistance !== null && showField("electricalLineHoleCount")}>
                     <div id="q-electricalLineHoleCount">
                       <RangeButtonGroup
                         value={formData.electricalLineHoleCount}
@@ -1063,7 +1104,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   {/* ECP Status — hidden: only one default value ("get-advice") */}
 
                   {/* ECP Provided (Supplies) */}
-                  <RevealField visible={!!formData.parkingSpotCount}>
+                  <RevealField visible={!!formData.parkingSpotCount && showField("ecpProvided")}>
                     <div id="q-ecpProvided">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.charger.fields.ecpProvided.tooltip")} image={tooltipImage("charger", "ecpProvided")}>
@@ -1093,7 +1134,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </RevealField>
 
                   {/* Deadline (Timeline) */}
-                  <RevealField visible={!!formData.parkingSpotCount && !!formData.ecpProvided}>
+                  <RevealField visible={!!formData.parkingSpotCount && (!!formData.ecpProvided || !showField("ecpProvided"))}>
                     <div id="q-deadline">
                       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
                         <InfoTooltip className="flex items-center gap-1.5" content={tqOpt("steps.charger.fields.deadline.tooltip")} image={tooltipImage("charger", "deadline")}>
@@ -1185,7 +1226,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   {/* Vehicle Brand & Model — hidden: not actionable yet */}
 
                   {/* Trip Distance Slider */}
-                  <RevealField visible={!!formData.vehicleStatus}>
+                  <RevealField visible={!!formData.vehicleStatus && showField("vehicleTripDistance")}>
                     <div id="q-vehicleTripDistance">
                       <RangeButtonGroup
                         value={formData.vehicleTripDistance}
@@ -1202,7 +1243,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                   </RevealField>
 
                   {/* Charging Hours Slider */}
-                  <RevealField visible={!!formData.vehicleStatus && formData.vehicleTripDistance !== null}>
+                  <RevealField visible={!!formData.vehicleStatus && formData.vehicleTripDistance !== null && showField("vehicleChargingHours")}>
                     <div id="q-vehicleChargingHours">
                       <RangeButtonGroup
                         value={formData.vehicleChargingHours}
@@ -1821,7 +1862,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         const result = await res.json();
                         telemetry.trackSubmit(true, { submissionId: result.submissionId });
                         try { sessionStorage.removeItem(QUOTE_DRAFT_KEY); } catch { /* ignore */ }
-                        try { ph?.capture("quote_submitted", { form_type: "quote", locale: lang }); } catch { /* noop */ }
+                        try { ph?.capture("quote_submitted", quoteEventProps()); } catch { /* noop */ }
                         try { ph?.identify(formData.email, { first_name: formData.firstName, last_name: formData.lastName, locale: lang }); } catch { /* noop */ }
 
                         // Post to form-submissions for session tracking (non-blocking)
@@ -1884,7 +1925,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
                         }
                       } catch (err) {
                         telemetry.trackSubmit(false, { error: String(err) });
-                        ph?.capture("quote_form_error", { error_message: String(err) });
+                        ph?.capture("quote_form_error", { ...quoteEventProps(), error_message: String(err) });
                         setSubmitError(true);
                         setIsSubmitting(false);
                       }

@@ -54,7 +54,11 @@ function shouldShowNeighborhoodEquipment(f: StepFields): boolean {
   );
 }
 
-export function firstUnansweredField(step: number, f: StepFields): string | null {
+export function firstUnansweredField(
+  step: number,
+  f: StepFields,
+  hidden: ReadonlySet<string> = new Set(),
+): string | null {
   switch (step) {
     case 1: {
       if (!f.housingStatus) return "housingStatus";
@@ -62,25 +66,25 @@ export function firstUnansweredField(step: number, f: StepFields): string | null
       if (!f.solarEquipment) return "solarEquipment";
       if (["exists", "in-progress"].includes(f.solarEquipment) && !f.homeBattery) return "homeBattery";
       if (shouldShowNeighborhoodEquipment(f) && !f.neighborhoodEquipment) return "neighborhoodEquipment";
-      if (!f.electricalBoardType) return "electricalBoardType";
+      if (!hidden.has("electricalBoardType") && !f.electricalBoardType) return "electricalBoardType";
       return null;
     }
     case 2: {
       if (!f.parkingSpotLocation || !VALID_PARKING_LOCATIONS.includes(f.parkingSpotLocation)) return "parkingSpotLocation";
-      if (f.electricalLineDistance === null) return "electricalLineDistance";
-      if (f.electricalLineHoleCount === null) return "electricalLineHoleCount";
+      if (!hidden.has("electricalLineDistance") && f.electricalLineDistance === null) return "electricalLineDistance";
+      if (!hidden.has("electricalLineHoleCount") && f.electricalLineHoleCount === null) return "electricalLineHoleCount";
       return null;
     }
     case 3: {
       if (!f.parkingSpotCount) return "parkingSpotCount";
-      if (!f.ecpProvided) return "ecpProvided";
+      if (!hidden.has("ecpProvided") && !f.ecpProvided) return "ecpProvided";
       if (!f.deadline) return "deadline";
       return null;
     }
     case 4: {
       if (!f.vehicleStatus) return "vehicleStatus";
-      if (f.vehicleTripDistance === null) return "vehicleTripDistance";
-      if (f.vehicleChargingHours === null) return "vehicleChargingHours";
+      if (!hidden.has("vehicleTripDistance") && f.vehicleTripDistance === null) return "vehicleTripDistance";
+      if (!hidden.has("vehicleChargingHours") && f.vehicleChargingHours === null) return "vehicleChargingHours";
       return null;
     }
     case 5: {

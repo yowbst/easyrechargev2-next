@@ -19,6 +19,7 @@ export async function POST(req: Request) {
         event: "server_form_validation_failed",
         properties: {
           form_type: "mini-quote",
+          product,
           missing_fields: missing,
         },
       });
