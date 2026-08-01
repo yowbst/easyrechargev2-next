@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { firstUnansweredField, type StepFields } from "./stepValidation";
+import { hiddenFieldsFor } from "./leanVariant";
 
 const complete: StepFields = {
   housingStatus: "owner",
@@ -71,5 +72,43 @@ describe("firstUnansweredField", () => {
 
   it("step 6: terms", () => {
     expect(firstUnansweredField(6, { ...complete, acceptTerms: false })).toBe("acceptTerms");
+  });
+});
+
+describe("firstUnansweredField — lean variant hides gated fields", () => {
+  const lean = hiddenFieldsFor("lean");
+
+  it("step 1: electricalBoardType not required when hidden", () => {
+    expect(firstUnansweredField(1, { ...complete, electricalBoardType: "" }, lean)).toBeNull();
+    // still enforces earlier, non-hidden fields
+    expect(firstUnansweredField(1, { ...complete, electricalBoardType: "", solarEquipment: "" }, lean)).toBe("solarEquipment");
+  });
+
+  it("step 2: line distance & hole count not required when hidden; location still is", () => {
+    expect(
+      firstUnansweredField(2, { ...complete, electricalLineDistance: null, electricalLineHoleCount: null }, lean),
+    ).toBeNull();
+    expect(
+      firstUnansweredField(2, { ...complete, parkingSpotLocation: "exterior", electricalLineDistance: null }, lean),
+    ).toBe("parkingSpotLocation");
+  });
+
+  it("step 3: ecpProvided not required when hidden; deadline still is", () => {
+    expect(firstUnansweredField(3, { ...complete, ecpProvided: "" }, lean)).toBeNull();
+    expect(firstUnansweredField(3, { ...complete, ecpProvided: "", deadline: "" }, lean)).toBe("deadline");
+  });
+
+  it("step 4: trip distance & charging hours not required when hidden; status still is", () => {
+    expect(
+      firstUnansweredField(4, { ...complete, vehicleTripDistance: null, vehicleChargingHours: null }, lean),
+    ).toBeNull();
+    expect(
+      firstUnansweredField(4, { ...complete, vehicleStatus: "", vehicleTripDistance: null }, lean),
+    ).toBe("vehicleStatus");
+  });
+
+  it("control (no hidden set) is unchanged: gated fields still required", () => {
+    expect(firstUnansweredField(1, { ...complete, electricalBoardType: "" })).toBe("electricalBoardType");
+    expect(firstUnansweredField(3, { ...complete, ecpProvided: "" })).toBe("ecpProvided");
   });
 });
