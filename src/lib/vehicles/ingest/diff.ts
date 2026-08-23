@@ -20,6 +20,18 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (a === null || b === null || a === undefined || b === undefined) return false;
   if (typeof a !== typeof b) return false;
+
+  if (typeof a === "number" && typeof b === "number") {
+    // Directus round-trips numbers through JSON, which introduces float
+    // noise (e.g. 1.7 becoming 1.7000000000000002) that is not a real data
+    // change. Compare with a relative epsilon instead of `===` so this
+    // noise doesn't register as a diff, while genuinely different
+    // measurements (1.7 vs 1.8, 225 vs 230) still do. NaN correctly stays
+    // unequal to itself: `Math.abs(NaN - NaN)` is NaN, and any comparison
+    // against NaN is false.
+    return Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b));
+  }
+
   if (typeof a !== "object") return false;
 
   if (Array.isArray(a) || Array.isArray(b)) {
@@ -33,6 +45,23 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   for (const k of keys) if (!deepEqual(ao[k], bo[k])) return false;
   return true;
 }
+
+/**
+ * Fields that must never, by themselves, cause a record to classify as
+ * UPDATE. These are Directus columns holding scrape metadata rather than
+ * vehicle data, so they legitimately differ on every single run:
+ *
+ * - `evdb_time_fetched` (from `metadata.parsed_at`) is the moment the
+ *   scraper parsed the page. Even with perfect timestamp-format
+ *   normalization it changes on every scrape by definition — treating it
+ *   as an ordinary field would make every vehicle a permanent UPDATE and
+ *   trip the change-ratio guard at 100% on every run.
+ *
+ * When a record IS being updated for some other, real reason, these
+ * fields still appear in `changes` (and thus the PATCH body) so the value
+ * stays current — they just can't be the *reason* a record is updated.
+ */
+export const NON_TRIGGERING_FIELDS: ReadonlySet<string> = new Set(["evdb_time_fetched"]);
 
 export function buildPlan(
   scraped: ScrapedVehicle[],
@@ -62,15 +91,24 @@ export function buildPlan(
     }
 
     const candidate = buildPayload(row, { isCreate: false, brandId });
-    const changes: PlanEntry["changes"] = {};
+    const allChanges: PlanEntry["changes"] = {};
     for (const [key, next] of Object.entries(candidate)) {
       if (!deepEqual(existing[key], next)) {
-        changes[key] = { from: existing[key], to: next };
+        allChanges[key] = { from: existing[key], to: next };
       }
     }
 
+    // A diff limited to non-triggering fields (scrape metadata) is not a
+    // real change — classify as UNCHANGED and report no changes at all.
+    // But if there IS a real reason to update, non-triggering fields ride
+    // along in `changes` so the PATCH refreshes them too.
+    const hasTriggeringChange = Object.keys(allChanges).some(
+      (key) => !NON_TRIGGERING_FIELDS.has(key),
+    );
+    const changes = hasTriggeringChange ? allChanges : {};
+
     entries.push({
-      bucket: Object.keys(changes).length ? "UPDATE" : "UNCHANGED",
+      bucket: hasTriggeringChange ? "UPDATE" : "UNCHANGED",
       evdbId,
       slug: existing.slug,
       cmsId: existing.id,

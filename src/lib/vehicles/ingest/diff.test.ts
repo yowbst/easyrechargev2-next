@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPlan, assertPlanSane, summarize, deepEqual } from "./diff";
+import { buildPlan, assertPlanSane, summarize, deepEqual, NON_TRIGGERING_FIELDS } from "./diff";
 import type { ScrapedVehicle, CmsVehicle } from "./types";
 
 const scrapedRow = (over: Partial<ScrapedVehicle> = {}) =>
@@ -82,6 +82,51 @@ describe("buildPlan", () => {
     expect(plan.entries[0].bucket).toBe("GONE");
     expect(plan.entries[0].changes).toEqual({});
   });
+
+  it("classifies a record differing ONLY in evdb_time_fetched as UNCHANGED with empty changes", () => {
+    const plan = buildPlan(
+      [
+        scrapedRow({
+          metadata: { parsed_at: "2026-08-23T00:00:00.000Z" },
+        } as Partial<ScrapedVehicle>),
+      ],
+      [cmsRow({ evdb_time_fetched: "2026-01-01T00:00:00" })],
+    );
+    expect(plan.entries[0].bucket).toBe("UNCHANGED");
+    expect(plan.entries[0].changes).toEqual({});
+  });
+
+  it("classifies as UPDATE when evdb_time_fetched differs alongside a real field change, with BOTH fields carried in changes", () => {
+    const plan = buildPlan(
+      [
+        scrapedRow({
+          metadata: { parsed_at: "2026-08-23T00:00:00.000Z" },
+          range: { value: 230, unit: "km" },
+        } as Partial<ScrapedVehicle>),
+      ],
+      [cmsRow({ evdb_time_fetched: "2026-01-01T00:00:00" })],
+    );
+    const entry = plan.entries[0];
+    expect(entry.bucket).toBe("UPDATE");
+    // The real change must be present...
+    expect(entry.changes.range).toEqual({
+      from: { value: 225, unit: "km" },
+      to: { value: 230, unit: "km" },
+    });
+    // ...and so must the non-triggering field, so the PATCH refreshes it —
+    // this is the half that's easy to get wrong (dropping it entirely
+    // instead of merely excluding it from the UPDATE-vs-UNCHANGED decision).
+    expect(entry.changes.evdb_time_fetched).toEqual({
+      from: "2026-01-01T00:00:00",
+      to: "2026-08-23T00:00:00.000Z",
+    });
+  });
+});
+
+describe("NON_TRIGGERING_FIELDS", () => {
+  it("contains evdb_time_fetched", () => {
+    expect(NON_TRIGGERING_FIELDS.has("evdb_time_fetched")).toBe(true);
+  });
 });
 
 describe("assertPlanSane", () => {
@@ -146,6 +191,25 @@ describe("deepEqual", () => {
 
   it("treats a key present with value undefined the same as the key being absent", () => {
     expect(deepEqual({ a: 1, b: undefined }, { a: 1 })).toBe(true);
+  });
+
+  it("treats JSON round-trip float noise as equal", () => {
+    expect(deepEqual(1.7000000000000002, 1.7)).toBe(true);
+  });
+
+  it("treats a genuinely different measurement as not equal (1.7 vs 1.8)", () => {
+    expect(deepEqual(1.7, 1.8)).toBe(false);
+  });
+
+  it("treats a genuinely different measurement as not equal (225 vs 230)", () => {
+    expect(deepEqual(225, 230)).toBe(false);
+  });
+
+  it("treats 0 and a float-epsilon-scale value (1e-15) as equal", () => {
+    // 1e-15 is far below any real-world measurement's precision floor and
+    // on the order of float rounding noise itself, so it's judged noise,
+    // not a genuine change from zero.
+    expect(deepEqual(0, 1e-15)).toBe(true);
   });
 });
 
