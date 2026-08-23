@@ -24,11 +24,21 @@ import {
 } from "@/lib/vehicles/ingest/brightdata";
 import { unwrapDetails, mergeListAndDetails } from "@/lib/vehicles/ingest/merge";
 import { generateSlug, buildTitle, cleanModel } from "@/lib/vehicles/ingest/clean";
-import { fetchAllCmsVehicles, fetchBrandIdBySlug } from "@/lib/vehicles/ingest/queries";
+import {
+  fetchAllCmsVehicles,
+  fetchBrandIdBySlug,
+  fetchBrandRowBySlug,
+} from "@/lib/vehicles/ingest/queries";
 import { buildPlan, assertPlanSane, summarize } from "@/lib/vehicles/ingest/diff";
-import { applyPlan } from "@/lib/vehicles/ingest/upsert";
+import { applyPlanAndPersist } from "@/lib/vehicles/ingest/upsert";
 import { deriveBrands, buildBrandPayload } from "@/lib/vehicles/ingest/brands";
-import { parseArgs, truncateList, diffBrandFields } from "@/lib/vehicles/ingest/cli-helpers";
+import {
+  parseArgs,
+  truncateList,
+  diffBrandFields,
+  validateFlags,
+  parseMaxChangeRatio,
+} from "@/lib/vehicles/ingest/cli-helpers";
 import type { ScrapedVehicle, IngestPlan } from "@/lib/vehicles/ingest/types";
 
 const HELP = `
@@ -143,20 +153,6 @@ async function cmdClean() {
   console.log(`   next: npm run ingest -- brands --in ${path}`);
 }
 
-/** Fetches the fields of a vehicle_brands row that brands actually compares/updates. */
-async function fetchBrandRowBySlug(
-  slug: string,
-): Promise<{ id: string; name: string; active_models: number } | null> {
-  const res = await directusFetch<{
-    data: Array<{ id: string; name: string; active_models: number | null }>;
-  }>(
-    `/items/vehicle_brands?filter[slug][_eq]=${encodeURIComponent(slug)}&fields=id,name,active_models&limit=1`,
-    { next: { revalidate: 0 } },
-  );
-  const row = res.data?.[0];
-  return row ? { id: row.id, name: row.name, active_models: row.active_models ?? 0 } : null;
-}
-
 async function cmdBrands() {
   const input = flag("in");
   if (!input) throw new Error("brands requires --in <file>");
@@ -219,6 +215,15 @@ async function cmdPlan() {
   const input = flag("in");
   if (!input) throw new Error("plan requires --in <file>");
 
+  // Validate before doing any network work — a typo'd ratio should fail
+  // immediately, not after fetching the whole CMS catalogue.
+  const maxChangeRatio = parseMaxChangeRatio(flag("max-change-ratio"));
+  if (maxChangeRatio !== undefined) {
+    console.log(
+      `  --max-change-ratio override: ${maxChangeRatio} (ceiling ${(maxChangeRatio * 100).toFixed(0)}%)`,
+    );
+  }
+
   const scraped = readRows(input);
   console.log(`Reading CMS…`);
   const cms = await fetchAllCmsVehicles();
@@ -233,9 +238,7 @@ async function cmdPlan() {
   }
 
   const plan = buildPlan(scraped, cms, { sourceFile: input, brandIds });
-  assertPlanSane(plan, {
-    maxChangeRatio: flag("max-change-ratio") ? Number(flag("max-change-ratio")) : undefined,
-  });
+  assertPlanSane(plan, { maxChangeRatio });
 
   const s = summarize(plan);
   console.log(
@@ -281,17 +284,17 @@ async function cmdApply() {
   const dryRun = has("dry-run");
 
   console.log(`${dryRun ? "[DRY RUN] " : ""}Applying ${planPath}…`);
-  const res = await applyPlan(plan, {
+  // Persists `plan.completed` back to `planPath` in a `finally`, so a throw
+  // partway through (a Directus request exhausting its retries, say) still
+  // leaves a resumable checkpoint on disk instead of only in memory. Dry
+  // runs never mutate `plan.completed`, so nothing is persisted for those —
+  // it would just rewrite the file with itself.
+  const res = await applyPlanAndPersist(plan, planPath, {
     dryRun,
     onProgress: (e, i, total) => {
       if (i % 25 === 0) console.log(`  ${i}/${total} …`);
     },
   });
-
-  // Persist checkpoints so an interrupted run resumes instead of restarting.
-  // Dry runs never mutate `plan.completed`, so there is nothing to persist —
-  // and persisting here would just rewrite the file with itself.
-  if (!dryRun) writeFileSync(planPath, JSON.stringify(plan, null, 1));
 
   console.log(`✅ created ${res.created}, updated ${res.updated}, skipped ${res.skipped}`);
   if (res.created > 0) {
@@ -326,6 +329,7 @@ async function main() {
     return;
   }
 
+  validateFlags(command, process.argv.slice(2));
   await fn();
 }
 

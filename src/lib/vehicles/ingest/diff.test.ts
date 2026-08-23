@@ -162,6 +162,74 @@ describe("assertPlanSane", () => {
       assertPlanSane(planWith(562, 562, 400), { maxChangeRatio: 1 }),
     ).not.toThrow();
   });
+
+  it("rejects a non-finite maxChangeRatio instead of silently disabling the breaker", () => {
+    // This is the safety chokepoint itself — it must not trust a caller
+    // that passes through an unvalidated Number(...) (e.g. from a CLI flag
+    // that failed to parse). `NaN > x` is always false, so without this
+    // guard a bad ratio would silently pass every plan, however large.
+    expect(() =>
+      assertPlanSane(planWith(562, 562, 400), { maxChangeRatio: NaN }),
+    ).toThrow(/finite number/i);
+  });
+
+  it("rejects an infinite maxChangeRatio too", () => {
+    expect(() =>
+      assertPlanSane(planWith(562, 562, 400), { maxChangeRatio: Infinity }),
+    ).toThrow(/finite number/i);
+  });
+
+  const createPlanWith = (payloads: Array<Record<string, unknown> | undefined>) => ({
+    createdAt: "2026-08-23T00:00:00Z",
+    sourceFile: "x.json",
+    cmsCount: 562,
+    scrapeCount: 562,
+    completed: [],
+    entries: payloads.map((payload, i) => ({
+      bucket: "CREATE" as const,
+      evdbId: String(i),
+      slug: `slug-${i}`,
+      changes: {},
+      payload,
+    })),
+  });
+
+  const validCreatePayload = () => ({
+    name: "Abarth 500e",
+    slug: "abarth-500e",
+    brand: "brand-uuid",
+  });
+  const missingName = () => ({ slug: "abarth-500e", brand: "brand-uuid" });
+  const missingSlug = () => ({ name: "Abarth 500e", brand: "brand-uuid" });
+  const missingBrand = () => ({ name: "Abarth 500e", slug: "abarth-500e" });
+
+  it("passes a plan whose CREATE entries have name, slug, and brand", () => {
+    expect(() => assertPlanSane(createPlanWith([validCreatePayload()]))).not.toThrow();
+  });
+
+  it("rejects a CREATE entry missing name (e.g. --in pointed at a raw, not cleaned, snapshot)", () => {
+    expect(() => assertPlanSane(createPlanWith([missingName()]))).toThrow(/missing/i);
+  });
+
+  it("rejects a CREATE entry missing slug", () => {
+    expect(() => assertPlanSane(createPlanWith([missingSlug()]))).toThrow(/missing/i);
+  });
+
+  it("rejects a CREATE entry missing brand (unresolved brand lookup)", () => {
+    expect(() => assertPlanSane(createPlanWith([missingBrand()]))).toThrow(/missing/i);
+  });
+
+  it("reports the count and names examples in the error", () => {
+    expect(() =>
+      assertPlanSane(createPlanWith([missingName(), missingName(), validCreatePayload()])),
+    ).toThrow(/2 of 3 CREATE entries/);
+  });
+
+  it("hints at the likely cause (raw snapshot or missing brands step)", () => {
+    expect(() => assertPlanSane(createPlanWith([missingBrand()]))).toThrow(
+      /raw scrape|brands.*step/i,
+    );
+  });
 });
 
 describe("deepEqual", () => {

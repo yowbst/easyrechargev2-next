@@ -70,4 +70,32 @@ describe("pollSnapshot", () => {
       pollSnapshot("j_abc", { maxAttempts: 3, sleep: noSleep }),
     ).rejects.toThrow(/still building/i);
   });
+
+  it("fails immediately on a non-array body with no status, instead of polling to exhaustion then misreporting 'still building'", async () => {
+    const fn = mockFetch({ body: {} });
+    await expect(pollSnapshot("j_abc", { maxAttempts: 120, sleep: noSleep })).rejects.toThrow(
+      /unrecognised response shape/i,
+    );
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("fails immediately when status is present but empty", async () => {
+    const fn = mockFetch({ body: { status: "" } });
+    await expect(pollSnapshot("j_abc", { maxAttempts: 120, sleep: noSleep })).rejects.toThrow(
+      /unrecognised response shape/i,
+    );
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("truncates a large unexpected body instead of dumping it whole into the error", async () => {
+    mockFetch({ body: { blob: "x".repeat(5000) } });
+    await expect(pollSnapshot("j_abc", { sleep: noSleep })).rejects.toThrow(/…$/);
+  });
+
+  it("redacts the API token if it were ever echoed back in an unexpected body", async () => {
+    mockFetch({ body: { message: "auth used test-token for this request" } });
+    await expect(pollSnapshot("j_abc", { sleep: noSleep })).rejects.toThrow(
+      /\[REDACTED\]/,
+    );
+  });
 });

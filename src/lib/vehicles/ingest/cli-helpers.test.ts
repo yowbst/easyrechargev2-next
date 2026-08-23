@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseArgs, truncateList, diffBrandFields } from "./cli-helpers";
+import { parseArgs, truncateList, diffBrandFields, validateFlags, parseMaxChangeRatio } from "./cli-helpers";
 
 describe("parseArgs", () => {
   it("reads the command as the first positional arg", () => {
@@ -82,5 +82,93 @@ describe("diffBrandFields", () => {
     const existing = { id: "1", name: "Abarth", active_models: 2, slug: "abarth" };
     const candidate = { name: "Abarth", active_models: 2 };
     expect(diffBrandFields(existing, candidate)).toEqual({});
+  });
+});
+
+describe("validateFlags", () => {
+  it("accepts known flags for a command", () => {
+    expect(() => validateFlags("plan", ["plan", "--in", "foo.json"])).not.toThrow();
+    expect(() =>
+      validateFlags("apply", ["apply", "--plan", "x.json", "--dry-run"]),
+    ).not.toThrow();
+  });
+
+  it("accepts flags in either order", () => {
+    expect(() =>
+      validateFlags("apply", ["apply", "--dry-run", "--plan", "x.json"]),
+    ).not.toThrow();
+  });
+
+  it("rejects a typo'd flag instead of silently ignoring it (the --dryrun case)", () => {
+    // Missing hyphen: brands would otherwise run for real instead of previewing,
+    // and the runbook calls --dry-run "the only chance to catch a bad create/update".
+    expect(() =>
+      validateFlags("brands", ["brands", "--in", "foo.json", "--dryrun"]),
+    ).toThrow(/unknown flag "--dryrun"/i);
+  });
+
+  it("names the valid flags for the command in the error", () => {
+    expect(() => validateFlags("brands", ["brands", "--bogus"])).toThrow(/--in|--dry-run/);
+  });
+
+  it("rejects a flag that isn't valid for this command even if valid for another", () => {
+    // --limit only exists for scrape.
+    expect(() => validateFlags("plan", ["plan", "--in", "foo.json", "--limit", "5"])).toThrow(
+      /unknown flag "--limit"/i,
+    );
+  });
+
+  it("always allows --help regardless of command", () => {
+    expect(() => validateFlags("plan", ["plan", "--in", "foo.json", "--help"])).not.toThrow();
+  });
+
+  it("rejects a value-taking flag with no value at the end of argv", () => {
+    expect(() => validateFlags("plan", ["plan", "--in"])).toThrow(/--in requires a value/i);
+  });
+
+  it("rejects a value-taking flag whose value is actually another flag, rather than silently accepting it", () => {
+    // --in --dry-run must be reported as a missing value for --in, not as
+    // --in="--dry-run" (a nonsense filename) silently accepted.
+    expect(() => validateFlags("brands", ["brands", "--in", "--dry-run"])).toThrow(
+      /--in requires a value/i,
+    );
+  });
+
+  it("does not consume a boolean flag's own token as if it were a value", () => {
+    // --dry-run --plan x.json: --dry-run takes no value, so --plan must still
+    // be recognised as its own flag, not skipped over.
+    expect(() =>
+      validateFlags("apply", ["apply", "--dry-run", "--plan", "x.json"]),
+    ).not.toThrow();
+  });
+});
+
+describe("parseMaxChangeRatio", () => {
+  it("returns undefined when the flag was not passed", () => {
+    expect(parseMaxChangeRatio(undefined)).toBeUndefined();
+  });
+
+  it("parses a valid fraction", () => {
+    expect(parseMaxChangeRatio("0.5")).toBe(0.5);
+  });
+
+  it("accepts the upper boundary of 1", () => {
+    expect(parseMaxChangeRatio("1")).toBe(1);
+  });
+
+  it("rejects non-numeric input instead of silently disarming the breaker", () => {
+    expect(() => parseMaxChangeRatio("abc")).toThrow(/finite number/i);
+  });
+
+  it("rejects a value typed as a percentage instead of a fraction (30 meaning 30%)", () => {
+    expect(() => parseMaxChangeRatio("30")).toThrow(/\(0, 1\]/);
+  });
+
+  it("rejects zero", () => {
+    expect(() => parseMaxChangeRatio("0")).toThrow(/\(0, 1\]/);
+  });
+
+  it("rejects a negative ratio", () => {
+    expect(() => parseMaxChangeRatio("-0.5")).toThrow(/\(0, 1\]/);
   });
 });

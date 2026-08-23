@@ -172,13 +172,58 @@ export function summarize(plan: IngestPlan): Record<PlanBucket, number> {
   return out;
 }
 
+/**
+ * Fields a CREATE payload cannot be missing without producing a broken or
+ * invisible vehicle: `name`/`slug` come from `title_v2`/`slug` on the
+ * scraped row, which are only present after the `clean` step — feeding
+ * `plan` a raw snapshot silently drops both. `brand` comes from resolving
+ * the make against an existing `vehicle_brands` row — if that lookup failed
+ * (brands step skipped, or a genuinely new manufacturer), the vehicle would
+ * be created with a null brand relation, which `transformDirectusVehicle`
+ * treats as reason to drop the vehicle from the site entirely.
+ */
+const REQUIRED_CREATE_FIELDS = ["name", "slug", "brand"] as const;
+
+function missingCreateFields(payload: Record<string, unknown>): string[] {
+  return REQUIRED_CREATE_FIELDS.filter((f) => payload[f] === undefined || payload[f] === null || payload[f] === "");
+}
+
 /** Refuses plans that look like a broken scrape rather than a real change. */
 export function assertPlanSane(
   plan: IngestPlan,
   opts: { minScrapeRatio?: number; maxChangeRatio?: number } = {},
 ): void {
   const minScrapeRatio = opts.minScrapeRatio ?? 0.8;
+
+  // The change-ratio ceiling is the safety chokepoint that gates every
+  // apply — it must not silently disarm itself on bad input. `??` alone
+  // does not catch NaN (`NaN > x` is always false), so a caller passing
+  // through an unvalidated `Number(...)` (e.g. from a CLI flag) could
+  // otherwise turn the breaker off with no error at all.
+  if (opts.maxChangeRatio !== undefined && !Number.isFinite(opts.maxChangeRatio)) {
+    throw new Error(
+      `assertPlanSane: maxChangeRatio must be a finite number, got ${opts.maxChangeRatio}. ` +
+        `This is the change-ratio safety breaker — refusing to silently disable it.`,
+    );
+  }
   const maxChangeRatio = opts.maxChangeRatio ?? 0.3;
+
+  const creates = plan.entries.filter((e) => e.bucket === "CREATE");
+  const invalid = creates
+    .map((e) => ({ entry: e, missing: missingCreateFields(e.payload ?? {}) }))
+    .filter((x) => x.missing.length > 0);
+  if (invalid.length > 0) {
+    const examples = invalid
+      .slice(0, 3)
+      .map((x) => `${x.entry.slug || x.entry.evdbId} (missing ${x.missing.join(", ")})`)
+      .join("; ");
+    throw new Error(
+      `${invalid.length} of ${creates.length} CREATE entries would write a vehicle missing ` +
+        `name, slug, or brand — e.g. ${examples}. This usually means "plan" was pointed at a ` +
+        `raw scrape (data/raw/) instead of a cleaned one (data/clean/), or the affected ` +
+        `makes haven't been through the "brands" step yet.`,
+    );
+  }
 
   if (plan.cmsCount > 0) {
     const ratio = plan.scrapeCount / plan.cmsCount;

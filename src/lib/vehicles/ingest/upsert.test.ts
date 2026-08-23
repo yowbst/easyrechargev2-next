@@ -1,5 +1,8 @@
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, it, expect, vi } from "vitest";
-import { applyPlan } from "./upsert";
+import { applyPlan, applyPlanAndPersist } from "./upsert";
 import type { IngestPlan } from "./types";
 
 const plan = (): IngestPlan => ({
@@ -109,5 +112,77 @@ describe("applyPlan", () => {
     expect(write).toHaveBeenCalledWith("PATCH", "/items/vehicles/u2", { range: 2 });
     expect(realRes).toMatchObject({ created: 1, updated: 1 });
     expect(p.completed.sort()).toEqual(["1", "2"]);
+  });
+});
+
+describe("applyPlanAndPersist", () => {
+  // Real temp files, not mocked fs — this is the seam that matters here: no
+  // Directus calls happen (the `write` function is stubbed), but the file
+  // persistence itself is exercised for real so the test actually proves
+  // the plan file lands on disk.
+  function tempPlanPath(): string {
+    const dir = mkdtempSync(path.join(tmpdir(), "vehicles-ingest-"));
+    return path.join(dir, "plan.json");
+  }
+
+  it("persists plan.completed to the plan file when applyPlan throws partway through", async () => {
+    const write = vi
+      .fn()
+      .mockResolvedValueOnce(undefined) // CREATE "1" succeeds
+      .mockRejectedValueOnce(new Error("Directus 502")); // UPDATE "2" fails
+    const p = plan();
+    const planPath = tempPlanPath();
+
+    await expect(applyPlanAndPersist(p, planPath, { dryRun: false, write })).rejects.toThrow(
+      "Directus 502",
+    );
+
+    // In-memory state (already proven by applyPlan's own tests) ...
+    expect(p.completed).toEqual(["1"]);
+    // ... must have actually reached disk, which is the whole point of the fix:
+    // a re-run reads the plan file, not the dead process's memory.
+    const onDisk = JSON.parse(readFileSync(planPath, "utf8")) as IngestPlan;
+    expect(onDisk.completed).toEqual(["1"]);
+  });
+
+  it("re-throws the original error after persisting, rather than swallowing it", async () => {
+    const write = vi.fn().mockRejectedValueOnce(new Error("boom"));
+    const planPath = tempPlanPath();
+
+    await expect(
+      applyPlanAndPersist(plan(), planPath, { dryRun: false, write }),
+    ).rejects.toThrow("boom");
+  });
+
+  it("persists on a fully successful run too", async () => {
+    const write = vi.fn().mockResolvedValue(undefined);
+    const planPath = tempPlanPath();
+
+    const res = await applyPlanAndPersist(plan(), planPath, { dryRun: false, write });
+
+    expect(res).toMatchObject({ created: 1, updated: 1 });
+    const onDisk = JSON.parse(readFileSync(planPath, "utf8")) as IngestPlan;
+    expect(onDisk.completed.sort()).toEqual(["1", "2"]);
+  });
+
+  it("never writes the plan file on a dry run", async () => {
+    const write = vi.fn().mockResolvedValue(undefined);
+    const planPath = tempPlanPath();
+
+    await applyPlanAndPersist(plan(), planPath, { dryRun: true, write });
+
+    expect(() => readFileSync(planPath, "utf8")).toThrow(); // file was never created
+  });
+
+  it("uses an injected persist function instead of touching the filesystem, when provided", async () => {
+    const write = vi.fn().mockResolvedValue(undefined);
+    const persist = vi.fn();
+
+    await applyPlanAndPersist(plan(), "unused-path.json", { dryRun: false, write, persist });
+
+    expect(persist).toHaveBeenCalledWith(
+      "unused-path.json",
+      expect.objectContaining({ completed: expect.arrayContaining(["1", "2"]) }),
+    );
   });
 });

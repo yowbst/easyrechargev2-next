@@ -43,7 +43,10 @@ npm run ingest -- help
 ```
 
 Options: `--dry-run` (brands/apply — print intent, zero writes), `--max-change-ratio <n>`
-(plan — override the change-ratio guard), `--limit <n>` (scrape — cap DETAILS URLs fetched).
+(plan — override the change-ratio guard; `n` is a 0–1 fraction of the CMS count, not a
+percentage — e.g. `0.5`, not `50`), `--limit <n>` (scrape — cap DETAILS URLs fetched).
+Any flag not valid for the command being run (including a typo like `--dryrun`) is
+rejected with an error.
 
 ## Sequence
 
@@ -89,7 +92,13 @@ Directus. Add a thumbnail and publish by hand.
   after you've confirmed the change is real.
 - `apply` never writes `status` or `slug` to an existing record.
 - Vehicles missing from a scrape are reported as `GONE`, never unpublished or deleted.
-- Interrupted `apply` runs resume — the plan file records completed ids in `plan.completed`.
+- Interrupted `apply` runs resume — `applyPlan` accumulates `plan.completed` in memory as
+  each write lands, and the CLI persists it back to the `--plan <file>` in a `finally`
+  block, so it's written even when the run throws partway through (e.g. a Directus
+  request exhausting its retries). Re-run `apply` with the same plan file and already-
+  completed entries are skipped. (A hard kill of the process, e.g. Ctrl-C, bypasses the
+  `finally` and is not covered — anything mid-flight at that instant may need manual
+  reconciliation.)
 - `brands` only creates/updates; it never deletes a brand row.
 
 ## Gotchas

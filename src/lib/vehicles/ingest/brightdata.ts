@@ -19,6 +19,23 @@ function token(): string {
 
 const defaultSleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Stringifies and truncates an unexpected API body for an error message.
+ * Bounded so a huge or malformed blob never floods the log, and redacts the
+ * live API token if it were ever somehow echoed back in a response body.
+ */
+function describeUnexpectedBody(body: unknown, max = 300): string {
+  let text: string;
+  try {
+    text = JSON.stringify(body);
+  } catch {
+    text = String(body);
+  }
+  const t = process.env.BRIGHTDATA_API_TOKEN;
+  if (t) text = text.split(t).join("[REDACTED]");
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
 export async function triggerCollection(
   collectorId: string,
   inputs: unknown[],
@@ -63,12 +80,24 @@ export async function pollSnapshot(
     // Ready: a JSON array. In progress: an object with status "building".
     if (Array.isArray(body)) return body;
 
-    const status = (body as { status?: string })?.status;
-    if (status && status !== "building") {
+    const status = (body as { status?: string } | null)?.status;
+    if (status === "building") {
+      await sleep(delayMs);
+      continue;
+    }
+    if (status) {
       throw new Error(`Bright Data snapshot ${snapshotId} status: ${status}`);
     }
 
-    await sleep(delayMs);
+    // Non-array body with no recognisable status at all — this is not "still
+    // building", it's a response shape we've never seen. Treating it as
+    // in-progress would poll to exhaustion (120 x 5s by default) and then
+    // report a misleading "still building" timeout instead of the real
+    // problem. Fail immediately instead.
+    throw new Error(
+      `Bright Data snapshot ${snapshotId} returned an unrecognised response shape: ` +
+        describeUnexpectedBody(body),
+    );
   }
 
   throw new Error(

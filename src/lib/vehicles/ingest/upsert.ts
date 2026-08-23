@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { directusFetch } from "@/lib/directus";
 import type { IngestPlan, PlanEntry } from "./types";
 
@@ -76,4 +77,50 @@ export async function applyPlan(
   }
 
   return { created, updated, skipped, completed: [...done] };
+}
+
+/** File-persistence seam for {@link applyPlanAndPersist}. Defaults to a real write. */
+export type PersistFn = (path: string, plan: IngestPlan) => void;
+
+const defaultPersist: PersistFn = (path, plan) => {
+  writeFileSync(path, JSON.stringify(plan, null, 1));
+};
+
+/**
+ * Wraps {@link applyPlan} so `plan.completed` is written back to `planPath`
+ * even when the run throws partway through — a Directus 502 surviving its
+ * retries, for example. Without this, `applyPlan` still accumulates
+ * `plan.completed` in memory (proven by its own tests), but the CLI never
+ * got a chance to flush it to disk, so a resumed run had no record of what
+ * had already succeeded and would re-POST/re-PATCH entries that landed
+ * before the failure.
+ *
+ * The `finally` persists on the way out either way; `try/finally` lets the
+ * original error keep propagating unmodified after the write.
+ *
+ * A dry run never mutates `plan.completed`, so persisting one would just
+ * rewrite the file with itself — skipped entirely, matching `applyPlan`'s
+ * own dry-run contract.
+ */
+export async function applyPlanAndPersist(
+  plan: IngestPlan,
+  planPath: string,
+  opts: {
+    dryRun: boolean;
+    onProgress?: (entry: PlanEntry, index: number, total: number) => void;
+    write?: WriteFn;
+    persist?: PersistFn;
+  },
+): Promise<{ created: number; updated: number; skipped: number; completed: string[] }> {
+  try {
+    return await applyPlan(plan, {
+      dryRun: opts.dryRun,
+      onProgress: opts.onProgress,
+      write: opts.write,
+    });
+  } finally {
+    if (!opts.dryRun) {
+      (opts.persist ?? defaultPersist)(planPath, plan);
+    }
+  }
 }

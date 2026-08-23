@@ -21,15 +21,39 @@ export function indexByEvdbId(rows: CmsVehicle[]): Map<string, CmsVehicle> {
   const idx = new Map<string, CmsVehicle>();
   for (const row of rows) {
     if (row.evdb_id === null || row.evdb_id === undefined || row.evdb_id === "") continue;
-    idx.set(String(row.evdb_id), row);
+    const key = String(row.evdb_id);
+    const existing = idx.get(key);
+    if (existing) {
+      // Last-wins is preserved (unchanged behaviour), but a shadowed row
+      // would otherwise vanish with zero trace — it's not even reported as
+      // GONE, since `seen` already has its evdb_id from the surviving row.
+      // This can't happen today (562 distinct ids, confirmed at the
+      // acceptance gate), but it's exactly the residue a botched write
+      // would leave, and it hides itself without this warning.
+      console.warn(
+        `[vehicles-ingest] duplicate evdb_id "${key}" in CMS: item ${existing.id} is shadowed by item ${row.id} (keeping the latter).`,
+      );
+    }
+    idx.set(key, row);
   }
   return idx;
 }
 
-export async function fetchBrandIdBySlug(slug: string): Promise<string | null> {
-  const res = await directusFetch<{ data: Array<{ id: string }> }>(
-    `/items/vehicle_brands?filter[slug][_eq]=${encodeURIComponent(slug)}&fields=id&limit=1`,
+/** Fetches the fields of a vehicle_brands row that `brands` actually compares/updates. */
+export async function fetchBrandRowBySlug(
+  slug: string,
+): Promise<{ id: string; name: string; active_models: number } | null> {
+  const res = await directusFetch<{
+    data: Array<{ id: string; name: string; active_models: number | null }>;
+  }>(
+    `/items/vehicle_brands?filter[slug][_eq]=${encodeURIComponent(slug)}&fields=id,name,active_models&limit=1`,
     { next: { revalidate: 0 } },
   );
-  return res.data?.[0]?.id ?? null;
+  const row = res.data?.[0];
+  return row ? { id: row.id, name: row.name, active_models: row.active_models ?? 0 } : null;
+}
+
+export async function fetchBrandIdBySlug(slug: string): Promise<string | null> {
+  const row = await fetchBrandRowBySlug(slug);
+  return row?.id ?? null;
 }
