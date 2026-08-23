@@ -70,6 +70,8 @@ export function mergeListAndDetails(
   const byUrl = new Map<string, Row>();
   for (const d of details) {
     const url = typeof d.car_url === "string" ? d.car_url : null;
+    // If DETAILS ever contains two records for the same car_url (shouldn't
+    // happen in practice), the last one silently wins here.
     if (url) byUrl.set(url, d);
   }
 
@@ -87,13 +89,22 @@ export function mergeListAndDetails(
       continue;
     }
 
+    const makeStr = String(row.make ?? "").trim();
+    if (!makeStr) {
+      // A missing/blank make would otherwise fall through slugify's fallback
+      // to the literal "brand", silently creating a bogus Directus brand row
+      // with no error surfaced anywhere. Treat it like an unmatched row.
+      unmatched.push(url);
+      continue;
+    }
+
     const combined: Row = { ...detail };
     for (const key of LIST_WINS) {
       if (row[key] !== undefined) combined[key] = row[key];
     }
 
     combined.available = classifyAvailability(row.availability);
-    combined.make_slug = slugify(String(row.make ?? ""), "brand");
+    combined.make_slug = slugify(makeStr, "brand");
 
     merged.push(combined as unknown as ScrapedVehicle);
   }

@@ -75,9 +75,47 @@ describe("mergeListAndDetails", () => {
   });
 
   it("never lets DETAILS overwrite LIST identity fields", () => {
-    const hostile = { ...detailObj, make: "WRONG", model: "WRONG", evdb_id: 1 };
+    const hostile = {
+      ...detailObj,
+      make: "WRONG",
+      model: "WRONG",
+      evdb_id: 1,
+      year: { from: 1, to: 1 },
+      range: { value: 999, unit: "mi" },
+    };
     const { merged } = mergeListAndDetails([listRow], [hostile]);
     expect(merged[0].make).toBe("Abarth");
+    expect(merged[0].model).toBe("500e Hatchback");
     expect(merged[0].evdb_id).toBe(1903);
+    expect(merged[0].year).toEqual({ from: 2023, to: null });
+    expect(merged[0].range).toEqual({ value: 225, unit: "km" });
+  });
+
+  it("lets a legitimately-null LIST value override a stale DETAILS value", () => {
+    const rowWithNullTowing = { ...listRow, towing_weight: null };
+    const staleDetail = { ...detailObj, towing_weight: { value: 1500, unit: "kg" } };
+    const { merged } = mergeListAndDetails([rowWithNullTowing], [staleDetail]);
+    // JSON never yields `undefined`, so the `row[key] !== undefined` guard
+    // must let this explicit null through rather than falling back to the
+    // stale DETAILS value.
+    expect(merged[0].towing_weight).toBeNull();
+  });
+
+  it("drops a LIST row with a missing or blank make and reports it, instead of emitting a bogus make_slug", () => {
+    const blankMake = {
+      ...listRow,
+      make: "",
+      evdb_id: 111,
+      car_url: "https://ev-database.org/car/111",
+    };
+    const detailForBlankMake = { ...detailObj, car_url: blankMake.car_url };
+    const { merged, unmatched } = mergeListAndDetails(
+      [listRow, blankMake],
+      [detailObj, detailForBlankMake],
+    );
+    expect(merged).toHaveLength(1);
+    expect(merged[0].evdb_id).toBe(1903);
+    expect(merged[0].make_slug).toBe("abarth");
+    expect(unmatched).toEqual([blankMake.car_url]);
   });
 });
