@@ -4,7 +4,7 @@ The EV Database scrape runs on two **custom** Bright Data collectors (Scraper St
 formerly "Data Collectors"). Their code lives in the Bright Data UI, not in any repo, so
 this file is the version-controlled copy.
 
-| Collector | Purpose | ID (original account `hl_9ec746bc`) |
+| Collector | Purpose | ID (from the notebook — verify against the live dashboard) |
 |---|---|---|
 | EVDB \| List vehicles | Identity + summary specs, one request for the whole catalogue | `c_mipqo2it4a63h5g0k` |
 | EVDB \| Get vehicle | Deep spec blocks, one input per `car_url` | `c_misied485yd5jpx0u` |
@@ -23,28 +23,38 @@ The pipeline reads collector IDs from the environment
 `src/lib/vehicles/ingest/brightdata.ts`), so recreating the collectors under a different
 Bright Data account needs **no code change** — only new IDs in `.env.local`.
 
-That matters because the account situation is currently split:
+## Current account status (verified 2026-08-23)
 
-- The collectors above belong to customer `hl_9ec746bc`.
-- The API token most recently supplied authenticates as customer `hl_27b6d7ae`, which
-  does not own them — every trigger 404s.
-- That second account also reports `can_make_requests: false` with
-  `auth_fail_reason: "zone_not_found"`, so it has **no scraping zone configured**.
+The IDs in the table above were read from the notebook's dashboard links, which pointed at
+account `hl_9ec746bc`. The scrapers are now reachable at
+`https://brightdata.com/cp/scrapers?id=hl_27b6d7ae`, which is the same account the current
+API token authenticates as — so **collector ownership is probably fine**, and the IDs above
+may or may not still be current. Read the live IDs off that page.
 
-So there are two independent routes to a working `scrape`:
-
-1. **Get a token from `hl_9ec746bc`** — nothing else changes; the IDs above stay valid.
-2. **Recreate both collectors under `hl_27b6d7ae`** using the sources below, *and*
-   configure a scraping zone on that account. Recreating alone is not sufficient — the
-   `zone_not_found` error is separate from collector ownership.
-
-Check which account a token belongs to with:
+**The verified blocker is that the account has no scraping zone.** Both checks are free:
 
 ```bash
 curl -s -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" https://api.brightdata.com/status
+# → {"status":"active","customer":"hl_27b6d7ae",
+#    "can_make_requests":false,"auth_fail_reason":"zone_not_found", …}
+
+curl -s -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" \
+  https://api.brightdata.com/zone/get_active_zones
+# → []
 ```
 
-Compare its `customer` value against the `id=hl_...` in the collector's dashboard URL.
+`can_make_requests: false` with zero active zones means no trigger can succeed, whichever
+collector it targets. Create a scraping zone in the Bright Data dashboard, then re-run both
+checks — `can_make_requests` must be `true` before `scrape` is worth attempting.
+
+Once a zone exists, confirm the two collector IDs on the scrapers page and put them in
+`.env.local` as `BRIGHTDATA_LIST_COLLECTOR` / `BRIGHTDATA_DETAILS_COLLECTOR`. If they
+differ from the table above, only those env values change — no code edit is needed.
+
+**A note on diagnosing collector access:** `GET /dca/dataset?id=<collector_id>` is *not* a
+valid ownership test — that endpoint expects a *snapshot* id, so it returns 404 for a
+perfectly good collector. Nor is `GET /dca/get_collectors`, which does not exist. The only
+definitive check is an actual `POST /dca/trigger`, which starts a billable job.
 
 ## Output contract the pipeline depends on
 

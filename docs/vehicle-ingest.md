@@ -20,16 +20,26 @@ BRIGHTDATA_LIST_COLLECTOR=c_mipqo2it4a63h5g0k
 BRIGHTDATA_DETAILS_COLLECTOR=c_misied485yd5jpx0u
 ```
 
-**The Bright Data token must belong to the account that owns the collectors.** A token
-from a different account authenticates fine and then 404s on every trigger — it looks
-like a broken collector ID, not an auth problem. Before troubleshooting anything else,
-compare:
+**Check the account can actually make requests before blaming the collector ID.** A token
+can be `"status":"active"` and still be unable to run anything. Run:
 
-- `customer` from `GET https://api.brightdata.com/status` (with your token), against
-- the `id=hl_...` in the collector's dashboard URL (Bright Data → Scraper Studio → the
-  collector's settings page).
+```bash
+curl -s -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" https://api.brightdata.com/status
+```
 
-If they don't match, you have the wrong token for these collectors.
+Two fields matter more than `status`:
+
+- `can_make_requests` — if `false`, no trigger will work regardless of collector.
+- `auth_fail_reason` — `zone_not_found` means the account has **no scraping zone**.
+  Confirm with `GET https://api.brightdata.com/zone/get_active_zones`; an empty array
+  `[]` means there is nothing to run jobs on. Create a zone in the Bright Data dashboard.
+
+**Also check the token belongs to the account that owns the collectors.** Compare
+`customer` from `/status` against the `id=hl_...` in the collector's dashboard URL. A
+mismatch means a trigger will 404 and look like a bad collector ID rather than an auth
+problem. Note that `GET /dca/dataset?id=<collector_id>` is **not** a valid test of this —
+that endpoint expects a *snapshot* id, so it 404s for a perfectly good collector. The only
+definitive check is an actual `POST /dca/trigger`, which starts a billable job.
 
 ## Commands
 
