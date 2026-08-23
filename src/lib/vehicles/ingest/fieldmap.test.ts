@@ -59,4 +59,29 @@ describe("buildPayload", () => {
     expect("evdb_url" in p).toBe(false);
     expect("battery" in p).toBe(false);
   });
+
+  it("never emits an 'availability' key — no such column exists on vehicles", () => {
+    expect("availability" in buildPayload(row, { isCreate: true })).toBe(false);
+    expect("availability" in buildPayload(row, { isCreate: false })).toBe(false);
+  });
+
+  describe("is_available tri-state handling", () => {
+    it("writes true when available is exactly true", () => {
+      const r = { ...row, available: true } as unknown as ScrapedVehicle;
+      expect(buildPayload(r, { isCreate: true }).is_available).toBe(true);
+      expect(buildPayload(r, { isCreate: false }).is_available).toBe(true);
+    });
+
+    it("writes false when available is exactly false", () => {
+      const r = { ...row, available: false } as unknown as ScrapedVehicle;
+      expect(buildPayload(r, { isCreate: true }).is_available).toBe(false);
+      expect(buildPayload(r, { isCreate: false }).is_available).toBe(false);
+    });
+
+    it("omits is_available entirely when available is \"unknown\" — refuses to guess", () => {
+      const r = { ...row, available: "unknown" } as unknown as ScrapedVehicle;
+      expect("is_available" in buildPayload(r, { isCreate: true })).toBe(false);
+      expect("is_available" in buildPayload(r, { isCreate: false })).toBe(false);
+    });
+  });
 });

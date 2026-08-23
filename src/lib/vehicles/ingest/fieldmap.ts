@@ -3,7 +3,27 @@ import type { ScrapedVehicle } from "./types";
 type Caster = (v: unknown) => unknown;
 const asString: Caster = (v) => String(v);
 const asIs: Caster = (v) => v;
-const asBool: Caster = (v) => Boolean(v);
+
+/**
+ * Sentinel returned by a caster to mean "write nothing for this field."
+ * Only casters that need to refuse a guess should return it — module-private
+ * so no source value can ever equal it by accident.
+ */
+const SKIP: unique symbol = Symbol("fieldmap:skip");
+
+/**
+ * `available` is a tri-state upstream (`classifyAvailability` returns
+ * `boolean | "unknown"`). `Boolean("unknown")` is `true`, which would
+ * silently assert "available" for vehicles we actually know nothing about.
+ * Only write true/false when the source is exactly that; otherwise omit the
+ * key so the payload makes no claim (leaves existing CMS value untouched on
+ * update, leaves the field unset on create).
+ */
+const asAvailability: Caster = (v) => {
+  if (v === true) return true;
+  if (v === false) return false;
+  return SKIP;
+};
 
 export interface FieldMapping {
   /** Source key, dot-notation supported. */
@@ -21,8 +41,12 @@ export const VEHICLE_MAP: FieldMapping[] = [
   { from: "slug", to: "slug", cast: asString, createOnly: true },
   { from: "model", to: "model", cast: asString },
   { from: "id", to: "short_id", cast: asString },
-  { from: "availability", to: "availability", cast: asString },
-  { from: "available", to: "is_available", cast: asBool },
+  // No "availability" column exists on the live `vehicles` collection — do not
+  // add one back. The only availability-like columns are `is_available`
+  // (mapped below) and `pricing_availability` (mapped separately, a distinct
+  // structured object from the DETAILS scraper). The scraped `availability`
+  // string is consumed upstream by `classifyAvailability`, not written as-is.
+  { from: "available", to: "is_available", cast: asAvailability },
 
   { from: "car_url", to: "evdb_url", cast: asString },
   { from: "metadata.parsed_at", to: "evdb_time_fetched", cast: asString },
@@ -87,7 +111,9 @@ export function buildPayload(
     if (raw === null || raw === undefined) continue;
     if (typeof raw === "string" && !raw.trim()) continue;
 
-    payload[m.to] = m.cast(raw);
+    const cast = m.cast(raw);
+    if (cast === SKIP) continue;
+    payload[m.to] = cast;
   }
 
   if (opts.brandId) payload.brand = opts.brandId;
