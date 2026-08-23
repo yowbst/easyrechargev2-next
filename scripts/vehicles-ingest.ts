@@ -22,7 +22,11 @@ import {
   LIST_COLLECTOR,
   DETAILS_COLLECTOR,
 } from "@/lib/vehicles/ingest/brightdata";
-import { unwrapDetails, mergeListAndDetails } from "@/lib/vehicles/ingest/merge";
+import {
+  unwrapDetails,
+  mergeListAndDetails,
+  classifyAvailability,
+} from "@/lib/vehicles/ingest/merge";
 import { generateSlug, buildTitle, cleanModel } from "@/lib/vehicles/ingest/clean";
 import {
   fetchAllCmsVehicles,
@@ -96,7 +100,18 @@ async function cmdScrape() {
   const list = (await pollSnapshot(listId)) as Record<string, unknown>[];
   console.log(`  ${list.length} vehicles listed`);
 
-  const urls = list
+  // Only "Available to order" vehicles are ever ingested — `clean` drops the
+  // rest — so running DETAILS over discontinued models is pure cost. The LIST
+  // collector returns the whole historical catalogue: the first live run
+  // returned 1,405 rows of which 645 were available, so filtering here avoids
+  // ~760 billable page scrapes per refresh.
+  const available = list.filter((r) => classifyAvailability(r.availability) === true);
+  console.log(
+    `  ${available.length} available to order (of ${list.length} listed) — ` +
+      `DETAILS runs for the available ones only`,
+  );
+
+  const urls = available
     .map((r) => (typeof r.car_url === "string" ? r.car_url : null))
     .filter((u): u is string => Boolean(u));
 
@@ -117,7 +132,9 @@ async function cmdScrape() {
   }
 
   // ---- Join. DETAILS has no evdb_id/make/model/year, so this is not optional.
-  const { merged, unmatched } = mergeListAndDetails(list, details);
+  // Join against the AVAILABLE subset, not the full list — otherwise every
+  // discontinued row would land in `unmatched` as a spurious drop warning.
+  const { merged, unmatched } = mergeListAndDetails(available, details);
   if (unmatched.length) {
     printTruncated(
       "⚠️  dropped — could not be merged or had no usable make",

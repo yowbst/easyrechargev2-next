@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { triggerCollection, pollSnapshot } from "./brightdata";
+import { triggerCollection, pollSnapshot, parseSnapshotBody } from "./brightdata";
 
 const noSleep = async () => {};
 
@@ -97,5 +97,83 @@ describe("pollSnapshot", () => {
     await expect(pollSnapshot("j_abc", { sleep: noSleep })).rejects.toThrow(
       /\[REDACTED\]/,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression tests from the first LIVE Bright Data run (2026-08-23).
+// Every shape below is a verbatim capture from the real API. All three broke
+// the original implementation: "collecting" threw, and a ready snapshot is
+// NDJSON (1,405 lines) which res.json() cannot parse.
+// ---------------------------------------------------------------------------
+describe("parseSnapshotBody — real API shapes", () => {
+  it('treats "collecting" as in progress (the original code threw here)', () => {
+    const r = parseSnapshotBody('{"status":"collecting","message":"Job is not finished"}');
+    expect(r).toEqual({ kind: "status", status: "collecting", message: "Job is not finished" });
+  });
+
+  it('treats "building" as in progress even with a message key alongside', () => {
+    const r = parseSnapshotBody(
+      '{"status":"building","message":"Dataset is not ready yet, try again in 30s"}',
+    );
+    expect(r.kind).toBe("status");
+    expect((r as { status: string }).status).toBe("building");
+  });
+
+  it("parses a ready snapshot delivered as NDJSON, not a JSON array", () => {
+    const ndjson = '{"evdb_id":3403,"car_url":"https://x/1"}\n{"evdb_id":3404,"car_url":"https://x/2"}';
+    const r = parseSnapshotBody(ndjson);
+    expect(r.kind).toBe("rows");
+    expect((r as { rows: unknown[] }).rows).toHaveLength(2);
+  });
+
+  it("tolerates a blank trailing line in NDJSON", () => {
+    const r = parseSnapshotBody('{"evdb_id":1,"car_url":"https://x/1"}\n\n');
+    expect((r as { rows: unknown[] }).rows).toHaveLength(1);
+  });
+
+  it("treats a lone DETAILS row as data, not as a status envelope", () => {
+    const r = parseSnapshotBody('{"vehicle":"{\\"car_url\\":\\"https://x/1\\"}","input":{}}');
+    expect(r.kind).toBe("rows");
+    expect((r as { rows: unknown[] }).rows).toHaveLength(1);
+  });
+
+  it("still accepts a plain JSON array", () => {
+    const r = parseSnapshotBody('[{"evdb_id":1}]');
+    expect((r as { rows: unknown[] }).rows).toHaveLength(1);
+  });
+
+  it("reports an unrecognised body rather than guessing", () => {
+    expect(parseSnapshotBody("").kind).toBe("unrecognised");
+    expect(parseSnapshotBody("<html>nope</html>").kind).toBe("unrecognised");
+  });
+});
+
+describe("pollSnapshot — live shapes end to end", () => {
+  it('polls through "collecting" then "building" then returns NDJSON rows', async () => {
+    const fn = vi.fn();
+    for (const body of [
+      '{"status":"collecting","message":"Job is not finished"}',
+      '{"status":"building","message":"Dataset is not ready yet, try again in 30s"}',
+      '{"evdb_id":3403,"car_url":"https://x/1"}\n{"evdb_id":3404,"car_url":"https://x/2"}',
+    ]) {
+      fn.mockResolvedValueOnce({ ok: true, status: 200, text: async () => body });
+    }
+    vi.stubGlobal("fetch", fn);
+
+    const rows = await pollSnapshot("j_live", { sleep: async () => {} });
+    expect(rows).toHaveLength(2);
+    expect(fn).toHaveBeenCalledTimes(3);
+  });
+
+  it("throws on a terminal status instead of polling to exhaustion", async () => {
+    const fn = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '{"status":"failed","message":"boom"}',
+    });
+    vi.stubGlobal("fetch", fn);
+    await expect(pollSnapshot("j_bad", { sleep: async () => {} })).rejects.toThrow(/failed.*boom/);
+    expect(fn).toHaveBeenCalledTimes(1);
   });
 });

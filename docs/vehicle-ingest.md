@@ -20,26 +20,18 @@ BRIGHTDATA_LIST_COLLECTOR=c_mipqo2it4a63h5g0k
 BRIGHTDATA_DETAILS_COLLECTOR=c_misied485yd5jpx0u
 ```
 
-**Check the account can actually make requests before blaming the collector ID.** A token
-can be `"status":"active"` and still be unable to run anything. Run:
+**If a trigger 404s, suspect a stale collector ID first.** `{"error":"Collector not found"}`
+is returned for an outdated ID and for a completely made-up one alike, so the error gives no
+hint which it is. The IDs move when scrapers are recreated. Re-read them from the Bright
+Data scrapers dashboard and update `BRIGHTDATA_LIST_COLLECTOR` /
+`BRIGHTDATA_DETAILS_COLLECTOR` — no code change is needed.
 
-```bash
-curl -s -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" https://api.brightdata.com/status
-```
+**Ignore `can_make_requests: false` / `zone_not_found`.** Verified live: the account reports
+no active scraping zones and collector triggers still succeed. That flag governs proxy
+zones, not Scraper Studio.
 
-Two fields matter more than `status`:
-
-- `can_make_requests` — if `false`, no trigger will work regardless of collector.
-- `auth_fail_reason` — `zone_not_found` means the account has **no scraping zone**.
-  Confirm with `GET https://api.brightdata.com/zone/get_active_zones`; an empty array
-  `[]` means there is nothing to run jobs on. Create a zone in the Bright Data dashboard.
-
-**Also check the token belongs to the account that owns the collectors.** Compare
-`customer` from `/status` against the `id=hl_...` in the collector's dashboard URL. A
-mismatch means a trigger will 404 and look like a bad collector ID rather than an auth
-problem. Note that `GET /dca/dataset?id=<collector_id>` is **not** a valid test of this —
-that endpoint expects a *snapshot* id, so it 404s for a perfectly good collector. The only
-definitive check is an actual `POST /dca/trigger`, which starts a billable job.
+See `docs/bright-data-collectors.md` for the current IDs, the collectors' source code, and
+the snapshot wire format (NDJSON, plus the `collecting` / `building` in-progress states).
 
 ## Commands
 

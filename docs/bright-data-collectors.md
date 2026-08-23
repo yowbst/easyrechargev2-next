@@ -4,10 +4,10 @@ The EV Database scrape runs on two **custom** Bright Data collectors (Scraper St
 formerly "Data Collectors"). Their code lives in the Bright Data UI, not in any repo, so
 this file is the version-controlled copy.
 
-| Collector | Purpose | ID (from the notebook — verify against the live dashboard) |
+| Collector | Purpose | ID (verified live 2026-08-23) |
 |---|---|---|
-| EVDB \| List vehicles | Identity + summary specs, one request for the whole catalogue | `c_mipqo2it4a63h5g0k` |
-| EVDB \| Get vehicle | Deep spec blocks, one input per `car_url` | `c_misied485yd5jpx0u` |
+| EVDB \| List vehicles | Identity + summary specs, one request for the whole catalogue | `c_mt5fn06415t3hneeuk` |
+| EVDB \| Get vehicle | Deep spec blocks, one input per `car_url` | `c_mt5fkkem28oxnkkme0` |
 
 Both are **BROWSER** worker type. Each has an *interaction* script and a *parser* script.
 
@@ -23,38 +23,58 @@ The pipeline reads collector IDs from the environment
 `src/lib/vehicles/ingest/brightdata.ts`), so recreating the collectors under a different
 Bright Data account needs **no code change** — only new IDs in `.env.local`.
 
-## Current account status (verified 2026-08-23)
+## Verified live 2026-08-23 — read this before debugging anything
 
-The IDs in the table above were read from the notebook's dashboard links, which pointed at
-account `hl_9ec746bc`. The scrapers are now reachable at
-`https://brightdata.com/cp/scrapers?id=hl_27b6d7ae`, which is the same account the current
-API token authenticates as — so **collector ownership is probably fine**, and the IDs above
-may or may not still be current. Read the live IDs off that page.
+Both collectors were triggered successfully on this date. The current IDs are in the table
+above. Two things that look alarming but are **not** blockers, both established by an actual
+run:
 
-**The verified blocker is that the account has no scraping zone.** Both checks are free:
+**`can_make_requests: false` / `zone_not_found` does NOT block Scraper Studio.** The account
+reports zero active zones, and triggers still return HTTP 200 with a `collection_id`:
 
 ```bash
 curl -s -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" https://api.brightdata.com/status
-# → {"status":"active","customer":"hl_27b6d7ae",
-#    "can_make_requests":false,"auth_fail_reason":"zone_not_found", …}
-
-curl -s -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" \
-  https://api.brightdata.com/zone/get_active_zones
-# → []
+# → {"status":"active","customer":"hl_27b6d7ae","can_make_requests":false,
+#    "auth_fail_reason":"zone_not_found", …}   ← collectors still work
 ```
 
-`can_make_requests: false` with zero active zones means no trigger can succeed, whichever
-collector it targets. Create a scraping zone in the Bright Data dashboard, then re-run both
-checks — `can_make_requests` must be `true` before `scrape` is worth attempting.
+That flag governs proxy zones, not collector runs. Ignore it here.
 
-Once a zone exists, confirm the two collector IDs on the scrapers page and put them in
-`.env.local` as `BRIGHTDATA_LIST_COLLECTOR` / `BRIGHTDATA_DETAILS_COLLECTOR`. If they
-differ from the table above, only those env values change — no code edit is needed.
+**Stale collector IDs are the thing that actually bites.** A wrong ID returns
+`404 {"error":"Collector not found"}` — byte-identical to what a made-up ID returns, so it
+gives no hint that the ID is merely outdated. The IDs originally carried in the notebook
+(`c_mipqo2it4a63h5g0k`, `c_misied485yd5jpx0u`) are dead. If a trigger 404s, re-read the IDs
+from the scrapers dashboard before assuming anything about accounts or permissions.
 
-**A note on diagnosing collector access:** `GET /dca/dataset?id=<collector_id>` is *not* a
-valid ownership test — that endpoint expects a *snapshot* id, so it returns 404 for a
-perfectly good collector. Nor is `GET /dca/get_collectors`, which does not exist. The only
-definitive check is an actual `POST /dca/trigger`, which starts a billable job.
+Note also that these are *not* valid ways to check a collector:
+`GET /dca/dataset?id=<collector_id>` expects a *snapshot* id and 404s for a perfectly good
+collector, and `GET /dca/get_collectors` does not exist at all. The only definitive check is
+a real `POST /dca/trigger`, which starts a billable job.
+
+## Snapshot wire format — the part that broke the first implementation
+
+`GET /dca/dataset?id=<snapshot_id>` returns **newline-delimited JSON**, one object per line
+— *not* a JSON array. A 1,405-vehicle LIST snapshot is 1,405 lines. Calling `res.json()` on
+it throws on line 2. `parseSnapshotBody` in `src/lib/vehicles/ingest/brightdata.ts` handles
+NDJSON, a plain array, and a single bare object (a one-row snapshot).
+
+Observed in-progress responses, in order:
+
+```json
+{"status":"collecting","message":"Job is not finished"}
+{"status":"building","message":"Dataset is not ready yet, try again in 30s"}
+```
+
+Both must be polled through. `collecting` in particular was missing from the first
+implementation, which threw on the very first poll. Note both carry a `message` alongside
+`status`, so a status envelope cannot be detected by key count.
+
+## Cost note: LIST returns the whole historical catalogue
+
+With default filters the LIST collector returned **1,405** vehicles, of which **645** were
+"Available to order". Only available vehicles are ever ingested, so `scrape` filters to
+those *before* running DETAILS — otherwise roughly 760 billable page scrapes are wasted on
+discontinued models every refresh.
 
 ## Output contract the pipeline depends on
 
