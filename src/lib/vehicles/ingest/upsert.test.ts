@@ -79,6 +79,35 @@ describe("applyPlan", () => {
       .fn()
       .mockResolvedValueOnce(undefined)
       .mockRejectedValueOnce(new Error("boom"));
-    await expect(applyPlan(plan(), { dryRun: false, write })).rejects.toThrow("boom");
+    const p = plan();
+    await expect(applyPlan(p, { dryRun: false, write })).rejects.toThrow("boom");
+
+    // The CREATE (evdbId "1") succeeded before the UPDATE (evdbId "2") threw,
+    // so only "1" may be marked done — "2" must not be, since its write
+    // never actually landed. Getting this wrong means a resumed run either
+    // silently skips a vehicle that was never written, or re-applies one
+    // that already succeeded.
+    expect(p.completed).toEqual(["1"]);
+    expect(p.completed).not.toContain("2");
+  });
+
+  it("does not mark entries completed on a dry run, so a real run afterward still writes", async () => {
+    const write = vi.fn().mockResolvedValue(undefined);
+    const p = plan();
+
+    const dryRes = await applyPlan(p, { dryRun: true, write });
+    expect(write).not.toHaveBeenCalled();
+    expect(p.completed).toEqual([]);
+    expect(dryRes).toMatchObject({ created: 1, updated: 1 });
+
+    // Re-run the same plan object for real, as a preview-then-apply caller
+    // would. If the dry run had wrongly marked entries done, this would
+    // skip everything and report success with zero writes.
+    const realRes = await applyPlan(p, { dryRun: false, write });
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(write).toHaveBeenCalledWith("POST", "/items/vehicles", { name: "A", status: "draft" });
+    expect(write).toHaveBeenCalledWith("PATCH", "/items/vehicles/u2", { range: 2 });
+    expect(realRes).toMatchObject({ created: 1, updated: 1 });
+    expect(p.completed.sort()).toEqual(["1", "2"]);
   });
 });

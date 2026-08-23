@@ -55,6 +55,9 @@ export async function applyPlan(
         body[key] = change.to;
       }
       if (Object.keys(body).length === 0) {
+        // Nothing left to write after stripping frozen keys — never wrote,
+        // so intentionally not marked done. Harmless: it will simply be
+        // re-evaluated (and again produce no write) on a resumed run.
         skipped += 1;
         continue;
       }
@@ -62,8 +65,14 @@ export async function applyPlan(
       updated += 1;
     }
 
-    done.add(entry.evdbId);
-    plan.completed = [...done];
+    // Only record as completed once a write has genuinely happened. A dry
+    // run applies nothing, so it must never populate `plan.completed` —
+    // doing so would make a subsequent real run skip everything as
+    // already-done.
+    if (!opts.dryRun) {
+      done.add(entry.evdbId);
+      plan.completed = [...done];
+    }
   }
 
   return { created, updated, skipped, completed: [...done] };
