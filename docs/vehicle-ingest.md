@@ -1,8 +1,10 @@
 # Vehicle Ingest Runbook
 
 Refreshes the `vehicles` and `vehicle_brands` Directus collections from EV Database (via
-Bright Data). Run a few times a year. Every write is human-reviewed — nothing in this
-pipeline ever unpublishes or deletes.
+Bright Data). Run a few times a year. Nothing in this pipeline ever unpublishes or
+deletes — but review is asymmetric: vehicle writes are gated behind `plan` → review →
+`apply`, while `brands` writes immediately with no plan/apply gate, so always run it
+with `--dry-run` first and read the output before the live run (see Sequence below).
 
 Implementation: `scripts/vehicles-ingest.ts` (CLI entry) + `src/lib/vehicles/ingest/`.
 
@@ -48,12 +50,21 @@ Options: `--dry-run` (brands/apply — print intent, zero writes), `--max-change
 ```bash
 npm run ingest -- scrape
 npm run ingest -- clean  --in data/raw/<date>.json
+
+npm run ingest -- brands --in data/clean/<date>.json --dry-run
+# read the printed CREATE/UPDATE/unchanged lines — brands has no plan/apply gate,
+# this dry run is the only review step it gets before writing to Directus
 npm run ingest -- brands --in data/clean/<date>.json
-# review the printed CREATE/UPDATE/unchanged brand summary
+
 npm run ingest -- plan   --in data/clean/<date>.json
 # review the printed bucket summary and data/plans/<date>.json
 npm run ingest -- apply  --plan data/plans/<date>.json
 ```
+
+**`brands` writes immediately — it is not gated by a plan/apply step the way vehicles
+are.** The `--dry-run` above is not optional busywork; it is the only chance to catch a
+bad create/update (see "A brand's `name` always comes from the scraped `make` field"
+under Known Limitations) before it lands in Directus.
 
 **Run `brands` before `plan`/`apply`, every time — this is not optional.** `plan` resolves
 each scraped vehicle's brand relation by looking up an existing `vehicle_brands` row by
@@ -143,9 +154,12 @@ identity matching or field comparison broke.
   in Directus without a logo. Add one manually after `brands` creates the row.
 - **A brand's `name` always comes from the scraped `make` field.** If someone corrects a
   brand's display name by hand in Directus, the next `brands` run overwrites it back to
-  whatever EV Database has. There's no protection against this — don't hand-edit brand
-  names unless you also intend to keep re-applying the correction, or plan to patch
-  `buildBrandPayload` to leave `name` alone on update.
+  whatever EV Database has, and it does so immediately — `brands` has no plan/apply
+  review gate (see Sequence above). There's no protection against this — don't hand-edit
+  brand names unless you also intend to keep re-applying the correction, or plan to patch
+  `buildBrandPayload` to leave `name` alone on update. Always run `brands --dry-run`
+  first and check its UPDATE lines for a name change you didn't expect before running it
+  live.
 - **There is no `images` command.** The original design considered scraping/uploading
   thumbnails automatically; that was never implemented. Thumbnails for newly created
   vehicles are a manual step in Directus today.
