@@ -49,6 +49,12 @@ describe("cleanModel", () => {
   it("keeps hyphens inside tokens", () => {
     expect(cleanModel("Ariya e-4ORCE", "Nissan")).toBe("Ariya e-4ORCE");
   });
+
+  it("keeps accented letters — they must survive to slugify's transliteration", () => {
+    // Python's `\w` is Unicode-aware, so accented letters are never stripped
+    // here; slugify (NFKD) is what turns "ë" into "e" later in the pipeline.
+    expect(cleanModel("ë-C4", "Citroën")).toBe("ë-C4");
+  });
 });
 
 describe("buildTitle", () => {
@@ -76,6 +82,23 @@ describe("buildTitle", () => {
     const row = { ...abarth, model: "500e 42 kWh Hatchback" } as ScrapedVehicle;
     expect(buildTitle(row)).toBe("Abarth 500e Hatchback 42kWh 225km [2023-]");
   });
+
+  it("rounds nominal battery half-to-even, matching Python's round() — 42.5 → 42, not 43", () => {
+    const row = {
+      ...abarth,
+      battery_details: { nominal_capacity: { value: 42.5, unit: "kWh" } },
+    } as ScrapedVehicle;
+    expect(buildTitle(row)).toContain("42kWh");
+    expect(buildTitle(row)).not.toContain("43kWh");
+  });
+
+  it("rounds half-to-even to an odd target too — 41.5 → 42 (both round modes agree here)", () => {
+    const row = {
+      ...abarth,
+      battery_details: { nominal_capacity: { value: 41.5, unit: "kWh" } },
+    } as ScrapedVehicle;
+    expect(buildTitle(row)).toContain("42kWh");
+  });
 });
 
 describe("generateSlug", () => {
@@ -87,5 +110,21 @@ describe("generateSlug", () => {
     const done = { ...abarth, year: { from: 2023, to: 2026 } } as ScrapedVehicle;
     expect(generateSlug(done)).toBe("abarth-500e-hatchback-42kwh-225km-2023-2026");
     expect(generateSlug(done)).not.toBe(generateSlug(abarth));
+  });
+
+  it("transliterates an accented model letter that survives cleanModel — Citroën ë-C4", () => {
+    const citroenEC4 = {
+      evdb_id: 9001,
+      make: "Citroën",
+      make_slug: "citroen",
+      model: "ë-C4",
+      title_v2: "",
+      slug: "",
+      year: { from: 2024, to: null },
+      available: true,
+      battery_details: { nominal_capacity: { value: 50, unit: "kWh" } },
+      range: { value: 285, unit: "km" },
+    } as unknown as ScrapedVehicle;
+    expect(generateSlug(citroenEC4)).toBe("citroen-e-c4-50kwh-285km-2024");
   });
 });

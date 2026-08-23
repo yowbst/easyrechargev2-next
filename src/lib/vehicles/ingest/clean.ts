@@ -27,8 +27,10 @@ export function slugify(s: string, fallback = "vehicle", maxLen = 120): string {
 export function cleanModel(model: string, make: string): string {
   let out = String(model ?? "").trim();
   out = out.replace(/\s+/g, " ");
-  // Keep word chars, whitespace, hyphen, parentheses
-  out = out.replace(/[^\w\s\-()]/g, "");
+  // Keep letters/digits/underscore (Unicode-aware, matching Python's \w),
+  // whitespace, hyphen, parentheses. Must NOT strip accented letters like
+  // "ë" before slugify's NFKD transliteration ever sees them.
+  out = out.replace(/[^\p{L}\p{N}_\s\-()]/gu, "");
   const escaped = String(make ?? "").trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   if (escaped) out = out.replace(new RegExp(`^${escaped}\\s+`, "i"), "");
   return out.trim();
@@ -52,21 +54,39 @@ function removeBatteryMention(text: string): string {
   return s.replace(/^[\s-]+|[\s-]+$/g, "");
 }
 
+/**
+ * Python 3's `round()` uses round-half-to-even (banker's rounding):
+ * round(42.5) === 42, round(41.5) === 42. JS's `Math.round` is round-half-up
+ * (round(42.5) === 43), which diverges from the source data's rounding for
+ * any value with an exact .5 fraction. Match Python exactly since these
+ * numbers land in public slugs.
+ */
+function roundHalfToEven(n: number): number {
+  const floor = Math.floor(n);
+  const diff = n - floor;
+  if (diff < 0.5) return floor;
+  if (diff > 0.5) return floor + 1;
+  return floor % 2 === 0 ? floor : floor + 1;
+}
+
 function getBatteryStr(details: unknown): string | null {
   if (typeof details !== "object" || details === null) return null;
   const cap = (details as Record<string, unknown>).nominal_capacity;
   if (!isNumericField(cap) || !Number.isFinite(cap.value)) return null;
-  return `${Math.round(cap.value)}${cap.unit}`;
+  return `${roundHalfToEven(cap.value)}${cap.unit}`;
 }
 
 function getRangeKm(r: unknown): number | null {
   if (isNumericField(r)) {
+    // Math.round(NaN) is NaN, which is falsy, so buildTitle's `if (rangeKm)`
+    // already excludes it — this Number.isFinite check is not load-bearing,
+    // just an early-exit for clarity.
     if (!Number.isFinite(r.value)) return null;
-    if (!r.unit || r.unit.toLowerCase().includes("km")) return Math.round(r.value);
+    if (!r.unit || r.unit.toLowerCase().includes("km")) return roundHalfToEven(r.value);
     return null;
   }
   const n = Number(r);
-  return Number.isFinite(n) ? Math.round(n) : null;
+  return Number.isFinite(n) ? roundHalfToEven(n) : null;
 }
 
 function getYearsStr(year: unknown): string | null {
