@@ -42,3 +42,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Vehicle ingest scrape artifacts (multi-MB, not source)
+/data/
