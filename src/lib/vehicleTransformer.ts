@@ -1,4 +1,5 @@
 import { DIRECTUS_URL } from "@/lib/directus";
+import type { NumericField } from "@/lib/vehicles/ingest/types";
 
 export interface Vehicle {
   id: string;
@@ -38,13 +39,8 @@ export interface Vehicle {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
 
-interface VehicleNumericField {
-  value: number;
-  unit: string;
-}
-
 function extractNumericField(
-  field: number | VehicleNumericField | undefined,
+  field: number | NumericField | undefined,
   defaultUnit: string,
 ): { value: number; unit: string } {
   if (field === undefined || field === null) {

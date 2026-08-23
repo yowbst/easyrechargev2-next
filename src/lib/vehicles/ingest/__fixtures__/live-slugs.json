@@ -1,0 +1,11242 @@
+[
+ {
+  "evdb_id": 1903,
+  "make": "Abarth",
+  "model": "500e Hatchback",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 225,
+   "unit": "km"
+  },
+  "liveSlug": "abarth-500e-hatchback-42kwh-225km-2023"
+ },
+ {
+  "evdb_id": 3056,
+  "make": "Abarth",
+  "model": "600e Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 280,
+   "unit": "km"
+  },
+  "liveSlug": "abarth-600e-turismo-54kwh-280km-2024"
+ },
+ {
+  "evdb_id": 1904,
+  "make": "Abarth",
+  "model": "500e Convertible",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 225,
+   "unit": "km"
+  },
+  "liveSlug": "abarth-500e-convertible-42kwh-225km-2023"
+ },
+ {
+  "evdb_id": 3057,
+  "make": "Abarth",
+  "model": "600e Scorpionissima",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 280,
+   "unit": "km"
+  },
+  "liveSlug": "abarth-600e-scorpionissima-54kwh-280km-2024"
+ },
+ {
+  "evdb_id": 2185,
+  "make": "Alfa Romeo",
+  "model": "Junior Elettrica 54 kWh Veloce",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "alfa-romeo-junior-elettrica-veloce-54kwh-310km-2024"
+ },
+ {
+  "evdb_id": 2184,
+  "make": "Alfa Romeo",
+  "model": "Junior Elettrica 54 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "alfa-romeo-junior-elettrica-54kwh-320km-2024"
+ },
+ {
+  "evdb_id": 2268,
+  "make": "Alpine",
+  "model": "A290 Electric 180 hp",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "alpine-a290-electric-180hp-55kwh-310km-2024"
+ },
+ {
+  "evdb_id": 3390,
+  "make": "Alpine",
+  "model": "A390 GT",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 94,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "alpine-a390-gt-94kwh-470km-2025"
+ },
+ {
+  "evdb_id": 2269,
+  "make": "Alpine",
+  "model": "A290 Electric 220 hp",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 305,
+   "unit": "km"
+  },
+  "liveSlug": "alpine-a290-electric-220hp-55kwh-305km-2024"
+ },
+ {
+  "evdb_id": 3391,
+  "make": "Alpine",
+  "model": "A390 GTS",
+  "year": {
+   "from": 2026,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 94,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "alpine-a390-gts-94kwh-470km-2026"
+ },
+ {
+  "evdb_id": 2016,
+  "make": "Audi",
+  "model": "Q4 Sportback e-tron 45",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q4-sportback-e-tron-45-82kwh-435km-2023"
+ },
+ {
+  "evdb_id": 2215,
+  "make": "Audi",
+  "model": "Q6 SUV e-tron performance",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q6-suv-e-tron-performance-100kwh-490km-2024"
+ },
+ {
+  "evdb_id": 3182,
+  "make": "Audi",
+  "model": "e-tron GT quattro",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 540,
+   "unit": "km"
+  },
+  "liveSlug": "audi-e-tron-gt-quattro-105kwh-540km-2025"
+ },
+ {
+  "evdb_id": 2013,
+  "make": "Audi",
+  "model": "Q4 e-tron 45",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 420,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q4-e-tron-45-82kwh-420km-2023"
+ },
+ {
+  "evdb_id": 2221,
+  "make": "Audi",
+  "model": "e-tron GT RS performance",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 525,
+   "unit": "km"
+  },
+  "liveSlug": "audi-e-tron-gt-rs-performance-105kwh-525km-2024"
+ },
+ {
+  "evdb_id": 2219,
+  "make": "Audi",
+  "model": "e-tron GT S",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 540,
+   "unit": "km"
+  },
+  "liveSlug": "audi-e-tron-gt-s-105kwh-540km-2024"
+ },
+ {
+  "evdb_id": 2015,
+  "make": "Audi",
+  "model": "Q4 e-tron 55 quattro",
+  "year": {
+   "from": 2023,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q4-e-tron-55-quattro-82kwh-395km-2023-2025"
+ },
+ {
+  "evdb_id": 3054,
+  "make": "Audi",
+  "model": "A6 Avant e-tron quattro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 560,
+   "unit": "km"
+  },
+  "liveSlug": "audi-a6-avant-e-tron-quattro-100kwh-560km-2024"
+ },
+ {
+  "evdb_id": 3148,
+  "make": "Audi",
+  "model": "Q4 e-tron 40",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q4-e-tron-40-63kwh-325km-2025"
+ },
+ {
+  "evdb_id": 3055,
+  "make": "Audi",
+  "model": "A6 Avant e-tron",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "audi-a6-avant-e-tron-83kwh-465km-2024"
+ },
+ {
+  "evdb_id": 2146,
+  "make": "Audi",
+  "model": "Q6 SUV e-tron quattro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q6-suv-e-tron-quattro-100kwh-480km-2024"
+ },
+ {
+  "evdb_id": 2270,
+  "make": "Audi",
+  "model": "A6 Sportback e-tron performance",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 600,
+   "unit": "km"
+  },
+  "liveSlug": "audi-a6-sportback-e-tron-performance-100kwh-600km-2024"
+ },
+ {
+  "evdb_id": 2272,
+  "make": "Audi",
+  "model": "A6 Avant e-tron performance",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 575,
+   "unit": "km"
+  },
+  "liveSlug": "audi-a6-avant-e-tron-performance-100kwh-575km-2024"
+ },
+ {
+  "evdb_id": 2281,
+  "make": "Audi",
+  "model": "Q6 SUV e-tron",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q6-suv-e-tron-83kwh-395km-2024"
+ },
+ {
+  "evdb_id": 3053,
+  "make": "Audi",
+  "model": "A6 Sportback e-tron",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 485,
+   "unit": "km"
+  },
+  "liveSlug": "audi-a6-sportback-e-tron-83kwh-485km-2024"
+ },
+ {
+  "evdb_id": 2220,
+  "make": "Audi",
+  "model": "e-tron GT RS",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 525,
+   "unit": "km"
+  },
+  "liveSlug": "audi-e-tron-gt-rs-105kwh-525km-2024"
+ },
+ {
+  "evdb_id": 2017,
+  "make": "Audi",
+  "model": "Q4 Sportback e-tron 45 quattro",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 410,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q4-sportback-e-tron-45-quattro-82kwh-410km-2023"
+ },
+ {
+  "evdb_id": 3041,
+  "make": "Audi",
+  "model": "Q6 Sportback e-tron",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 410,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q6-sportback-e-tron-83kwh-410km-2024"
+ },
+ {
+  "evdb_id": 3044,
+  "make": "Audi",
+  "model": "SQ6 Sportback e-tron",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "audi-sq6-sportback-e-tron-100kwh-495km-2024"
+ },
+ {
+  "evdb_id": 3052,
+  "make": "Audi",
+  "model": "A6 Sportback e-tron quattro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 570,
+   "unit": "km"
+  },
+  "liveSlug": "audi-a6-sportback-e-tron-quattro-100kwh-570km-2024"
+ },
+ {
+  "evdb_id": 3042,
+  "make": "Audi",
+  "model": "Q6 Sportback e-tron performance",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 510,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q6-sportback-e-tron-performance-100kwh-510km-2024"
+ },
+ {
+  "evdb_id": 2273,
+  "make": "Audi",
+  "model": "S6 Avant e-tron",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "audi-s6-avant-e-tron-100kwh-530km-2024"
+ },
+ {
+  "evdb_id": 2014,
+  "make": "Audi",
+  "model": "Q4 e-tron 45 quattro",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q4-e-tron-45-quattro-82kwh-395km-2023"
+ },
+ {
+  "evdb_id": 3043,
+  "make": "Audi",
+  "model": "Q6 Sportback e-tron quattro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 500,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q6-sportback-e-tron-quattro-100kwh-500km-2024"
+ },
+ {
+  "evdb_id": 3149,
+  "make": "Audi",
+  "model": "Q4 Sportback e-tron 40",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 340,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q4-sportback-e-tron-40-63kwh-340km-2025"
+ },
+ {
+  "evdb_id": 2147,
+  "make": "Audi",
+  "model": "SQ6 SUV e-tron",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "audi-sq6-suv-e-tron-100kwh-470km-2024"
+ },
+ {
+  "evdb_id": 2271,
+  "make": "Audi",
+  "model": "S6 Sportback e-tron",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 555,
+   "unit": "km"
+  },
+  "liveSlug": "audi-s6-sportback-e-tron-100kwh-555km-2024"
+ },
+ {
+  "evdb_id": 2018,
+  "make": "Audi",
+  "model": "Q4 Sportback e-tron 55 quattro",
+  "year": {
+   "from": 2023,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 415,
+   "unit": "km"
+  },
+  "liveSlug": "audi-q4-sportback-e-tron-55-quattro-82kwh-415km-2023-2025"
+ },
+ {
+  "evdb_id": 3117,
+  "make": "BMW",
+  "model": "i5 M60 xDrive Touring (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i5-m60-xdrive-touring-my25-84kwh-425km-2025"
+ },
+ {
+  "evdb_id": 3109,
+  "make": "BMW",
+  "model": "iX xDrive45",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-ix-xdrive45-100kwh-470km-2025"
+ },
+ {
+  "evdb_id": 1996,
+  "make": "BMW",
+  "model": "iX1 eDrive20",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 390,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-ix1-edrive20-66kwh-390km-2023"
+ },
+ {
+  "evdb_id": 1676,
+  "make": "BMW",
+  "model": "i7 xDrive60",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 510,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i7-xdrive60-106kwh-510km-2022"
+ },
+ {
+  "evdb_id": 3110,
+  "make": "BMW",
+  "model": "iX xDrive60",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 115,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 525,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-ix-xdrive60-115kwh-525km-2025"
+ },
+ {
+  "evdb_id": 3205,
+  "make": "BMW",
+  "model": "i4 eDrive40",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 525,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i4-edrive40-84kwh-525km-2025"
+ },
+ {
+  "evdb_id": 3290,
+  "make": "BMW",
+  "model": "iX3 50 xDrive (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 115,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 610,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-ix3-50-xdrive-my26-115kwh-610km-2025"
+ },
+ {
+  "evdb_id": 3113,
+  "make": "BMW",
+  "model": "i5 xDrive40 Sedan (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i5-xdrive40-sedan-my25-84kwh-465km-2025"
+ },
+ {
+  "evdb_id": 3111,
+  "make": "BMW",
+  "model": "iX M70 xDrive",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 115,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 500,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-ix-m70-xdrive-115kwh-500km-2025"
+ },
+ {
+  "evdb_id": 3112,
+  "make": "BMW",
+  "model": "i5 eDrive40 Sedan (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i5-edrive40-sedan-my25-84kwh-480km-2025"
+ },
+ {
+  "evdb_id": 2097,
+  "make": "BMW",
+  "model": "iX2 eDrive20",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-ix2-edrive20-66kwh-395km-2024"
+ },
+ {
+  "evdb_id": 1701,
+  "make": "BMW",
+  "model": "iX1 xDrive30",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-ix1-xdrive30-66kwh-380km-2022"
+ },
+ {
+  "evdb_id": 3115,
+  "make": "BMW",
+  "model": "i5 eDrive40 Touring (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i5-edrive40-touring-my25-84kwh-465km-2025"
+ },
+ {
+  "evdb_id": 1905,
+  "make": "BMW",
+  "model": "i7 eDrive50",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 520,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i7-edrive50-106kwh-520km-2023"
+ },
+ {
+  "evdb_id": 1838,
+  "make": "BMW",
+  "model": "i7 M70 xDrive",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i7-m70-xdrive-106kwh-490km-2023"
+ },
+ {
+  "evdb_id": 3206,
+  "make": "BMW",
+  "model": "i4 xDrive40",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i4-xdrive40-84kwh-490km-2025"
+ },
+ {
+  "evdb_id": 3114,
+  "make": "BMW",
+  "model": "i5 M60 xDrive Sedan (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 430,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i5-m60-xdrive-sedan-my25-84kwh-430km-2025"
+ },
+ {
+  "evdb_id": 3204,
+  "make": "BMW",
+  "model": "i4 eDrive35",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 70.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i4-edrive35-70kwh-435km-2025"
+ },
+ {
+  "evdb_id": 3116,
+  "make": "BMW",
+  "model": "i5 xDrive40 Touring (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i5-xdrive40-touring-my25-84kwh-450km-2025"
+ },
+ {
+  "evdb_id": 3207,
+  "make": "BMW",
+  "model": "i4 M60 xDrive",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-i4-m60-xdrive-84kwh-465km-2025"
+ },
+ {
+  "evdb_id": 2040,
+  "make": "BMW",
+  "model": "iX2 xDrive30",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "bmw-ix2-xdrive30-66kwh-385km-2023"
+ },
+ {
+  "evdb_id": 3268,
+  "make": "BYD",
+  "model": "ATTO 2 648 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 64.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "byd-atto-2-648-65kwh-310km-2025"
+ },
+ {
+  "evdb_id": 3297,
+  "make": "BYD",
+  "model": "DOLPHIN 604 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 62,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "byd-dolphin-604-my25-62kwh-350km-2025"
+ },
+ {
+  "evdb_id": 3193,
+  "make": "BYD",
+  "model": "DOLPHIN SURF 30 kWh Active",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 32,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 190,
+   "unit": "km"
+  },
+  "liveSlug": "byd-dolphin-surf-active-32kwh-190km-2025"
+ },
+ {
+  "evdb_id": 3071,
+  "make": "BYD",
+  "model": "SEALION 7 825 kWh AWD Design",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 405,
+   "unit": "km"
+  },
+  "liveSlug": "byd-sealion-7-825-awd-design-84kwh-405km-2024"
+ },
+ {
+  "evdb_id": 2094,
+  "make": "BYD",
+  "model": "SEAL U 718 kWh Comfort",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 73,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "byd-seal-u-718-comfort-73kwh-360km-2024"
+ },
+ {
+  "evdb_id": 3194,
+  "make": "BYD",
+  "model": "DOLPHIN SURF 432 kWh Boost",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 46,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 270,
+   "unit": "km"
+  },
+  "liveSlug": "byd-dolphin-surf-432-boost-46kwh-270km-2025"
+ },
+ {
+  "evdb_id": 2001,
+  "make": "BYD",
+  "model": "SEAL 825 kWh RWD Design",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "byd-seal-825-rwd-design-84kwh-480km-2023"
+ },
+ {
+  "evdb_id": 2067,
+  "make": "BYD",
+  "model": "SEAL U 87 kWh Design",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 89,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "byd-seal-u-design-89kwh-425km-2024"
+ },
+ {
+  "evdb_id": 3102,
+  "make": "BYD",
+  "model": "SEAL 614 kWh RWD Comfort",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "byd-seal-614-rwd-comfort-63kwh-365km-2025"
+ },
+ {
+  "evdb_id": 3195,
+  "make": "BYD",
+  "model": "DOLPHIN SURF 432 kWh Comfort",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 46,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "byd-dolphin-surf-432-comfort-46kwh-265km-2025"
+ },
+ {
+  "evdb_id": 3192,
+  "make": "BYD",
+  "model": "ATTO 3 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 62,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 340,
+   "unit": "km"
+  },
+  "liveSlug": "byd-atto-3-my25-62kwh-340km-2025"
+ },
+ {
+  "evdb_id": 3070,
+  "make": "BYD",
+  "model": "SEALION 7 825 kWh RWD Comfort",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 420,
+   "unit": "km"
+  },
+  "liveSlug": "byd-sealion-7-825-rwd-comfort-84kwh-420km-2024"
+ },
+ {
+  "evdb_id": 2002,
+  "make": "BYD",
+  "model": "SEAL 825 kWh AWD Excellence",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 445,
+   "unit": "km"
+  },
+  "liveSlug": "byd-seal-825-awd-excellence-84kwh-445km-2023"
+ },
+ {
+  "evdb_id": 3072,
+  "make": "BYD",
+  "model": "SEALION 7 913 kWh AWD Excellence",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 93,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "byd-sealion-7-913-awd-excellence-93kwh-440km-2024"
+ },
+ {
+  "evdb_id": 3125,
+  "make": "BYD",
+  "model": "ATTO 2",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 51.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 245,
+   "unit": "km"
+  },
+  "liveSlug": "byd-atto-2-51kwh-245km-2025"
+ },
+ {
+  "evdb_id": 2095,
+  "make": "BYD",
+  "model": "TANG Flagship",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "byd-tang-flagship-111kwh-460km-2024"
+ },
+ {
+  "evdb_id": 1972,
+  "make": "CUPRA",
+  "model": "Tavascan VZ",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "cupra-tavascan-vz-82kwh-425km-2024"
+ },
+ {
+  "evdb_id": 3262,
+  "make": "CUPRA",
+  "model": "Born 150 kW - 59 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "cupra-born-150kw-63kwh-360km-2025"
+ },
+ {
+  "evdb_id": 3263,
+  "make": "CUPRA",
+  "model": "Born 170 kW - 79 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "cupra-born-170kw-84kwh-470km-2025"
+ },
+ {
+  "evdb_id": 1971,
+  "make": "CUPRA",
+  "model": "Tavascan Endurance",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 445,
+   "unit": "km"
+  },
+  "liveSlug": "cupra-tavascan-endurance-82kwh-445km-2024"
+ },
+ {
+  "evdb_id": 2233,
+  "make": "CUPRA",
+  "model": "Born 170 kW - 59 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "cupra-born-170kw-63kwh-360km-2024"
+ },
+ {
+  "evdb_id": 2128,
+  "make": "CUPRA",
+  "model": "Born VZ",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "cupra-born-vz-84kwh-465km-2024"
+ },
+ {
+  "evdb_id": 3371,
+  "make": "Cadillac",
+  "model": "OPTIQ 500 E4 (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 79,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "cadillac-optiq-500-e4-my26-79kwh-365km-2025"
+ },
+ {
+  "evdb_id": 2243,
+  "make": "Cadillac",
+  "model": "LYRIQ 600 E4 (MY24)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 106.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "cadillac-lyriq-600-e4-my24-107kwh-460km-2024"
+ },
+ {
+  "evdb_id": 3267,
+  "make": "Cadillac",
+  "model": "VISTIQ 900 E4 (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 95,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 375,
+   "unit": "km"
+  },
+  "liveSlug": "cadillac-vistiq-900-e4-my26-95kwh-375km-2025"
+ },
+ {
+  "evdb_id": 3266,
+  "make": "Cadillac",
+  "model": "LYRIQ-V (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 95,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "cadillac-lyriq-v-my26-95kwh-400km-2025"
+ },
+ {
+  "evdb_id": 3369,
+  "make": "Changan",
+  "model": "Deepal S07 Standard",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 80,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 410,
+   "unit": "km"
+  },
+  "liveSlug": "changan-deepal-s07-standard-80kwh-410km-2025"
+ },
+ {
+  "evdb_id": 3368,
+  "make": "Changan",
+  "model": "Deepal S05 4WD Max",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "changan-deepal-s05-4wd-max-69kwh-365km-2025"
+ },
+ {
+  "evdb_id": 3367,
+  "make": "Changan",
+  "model": "Deepal S05 RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "changan-deepal-s05-rwd-69kwh-385km-2025"
+ },
+ {
+  "evdb_id": 3230,
+  "make": "Citroën",
+  "model": "C5 Aircross Comfort Range",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 79.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 375,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-c5-aircross-comfort-range-80kwh-375km-2025"
+ },
+ {
+  "evdb_id": 2039,
+  "make": "Citroën",
+  "model": "ë-C3 Standard Range 44 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 44,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 255,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-c3-standard-range-44kwh-255km-2024"
+ },
+ {
+  "evdb_id": 2160,
+  "make": "Citroën",
+  "model": "ë-Berlingo XL 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 230,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-berlingo-xl-52kwh-230km-2024"
+ },
+ {
+  "evdb_id": 2254,
+  "make": "Citroën",
+  "model": "ë-SpaceTourer M 75 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-spacetourer-m-75kwh-265km-2024"
+ },
+ {
+  "evdb_id": 3047,
+  "make": "Citroën",
+  "model": "ë-C4",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 285,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-c4-50kwh-285km-2024"
+ },
+ {
+  "evdb_id": 3049,
+  "make": "Citroën",
+  "model": "ë-C4 X",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 290,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-c4-x-50kwh-290km-2024"
+ },
+ {
+  "evdb_id": 2159,
+  "make": "Citroën",
+  "model": "ë-Berlingo M 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-berlingo-m-52kwh-235km-2024"
+ },
+ {
+  "evdb_id": 3048,
+  "make": "Citroën",
+  "model": "ë-C4 54 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-c4-54kwh-325km-2024"
+ },
+ {
+  "evdb_id": 3228,
+  "make": "Citroën",
+  "model": "ë-C3 Aircross Extended Range 54 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 290,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-c3-aircross-extended-range-54kwh-290km-2025"
+ },
+ {
+  "evdb_id": 2253,
+  "make": "Citroën",
+  "model": "ë-SpaceTourer XL 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 180,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-spacetourer-xl-50kwh-180km-2024"
+ },
+ {
+  "evdb_id": 2252,
+  "make": "Citroën",
+  "model": "ë-SpaceTourer M 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 180,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-spacetourer-m-50kwh-180km-2024"
+ },
+ {
+  "evdb_id": 2255,
+  "make": "Citroën",
+  "model": "ë-SpaceTourer XL 75 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-spacetourer-xl-75kwh-265km-2024"
+ },
+ {
+  "evdb_id": 2224,
+  "make": "Citroën",
+  "model": "ë-C3 Aircross Comfort Range 44 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 44,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 240,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-c3-aircross-comfort-range-44kwh-240km-2024"
+ },
+ {
+  "evdb_id": 3280,
+  "make": "Citroën",
+  "model": "ë-C3 Urban Range 30 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 30,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 175,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-c3-urban-range-30kwh-175km-2025"
+ },
+ {
+  "evdb_id": 3050,
+  "make": "Citroën",
+  "model": "ë-C4 X 54 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-e-c4-x-54kwh-335km-2024"
+ },
+ {
+  "evdb_id": 3231,
+  "make": "Citroën",
+  "model": "C5 Aircross Long Range",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 101,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 485,
+   "unit": "km"
+  },
+  "liveSlug": "citroen-c5-aircross-long-range-101kwh-485km-2025"
+ },
+ {
+  "evdb_id": 1791,
+  "make": "DS Automobiles",
+  "model": "DS 3 E-Tense",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 300,
+   "unit": "km"
+  },
+  "liveSlug": "ds-automobiles-ds-3-e-tense-54kwh-300km-2022"
+ },
+ {
+  "evdb_id": 3077,
+  "make": "DS Automobiles",
+  "model": "N8 FWD Long Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 101,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 545,
+   "unit": "km"
+  },
+  "liveSlug": "ds-automobiles-n8-fwd-long-range-101kwh-545km-2024"
+ },
+ {
+  "evdb_id": 3200,
+  "make": "DS Automobiles",
+  "model": "N4 E-Tense",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 61,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "ds-automobiles-n4-e-tense-61kwh-370km-2025"
+ },
+ {
+  "evdb_id": 3076,
+  "make": "DS Automobiles",
+  "model": "N8 FWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 79.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 415,
+   "unit": "km"
+  },
+  "liveSlug": "ds-automobiles-n8-fwd-80kwh-415km-2024"
+ },
+ {
+  "evdb_id": 3078,
+  "make": "DS Automobiles",
+  "model": "N8 AWD Long Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 101,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "ds-automobiles-n8-awd-long-range-101kwh-530km-2024"
+ },
+ {
+  "evdb_id": 3409,
+  "make": "Dacia",
+  "model": "Spring Electric 100",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 24.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 160,
+   "unit": "km"
+  },
+  "liveSlug": "dacia-spring-electric-100-24kwh-160km-2025"
+ },
+ {
+  "evdb_id": 3408,
+  "make": "Dacia",
+  "model": "Spring Electric 70",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 24.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 165,
+   "unit": "km"
+  },
+  "liveSlug": "dacia-spring-electric-70-24kwh-165km-2025"
+ },
+ {
+  "evdb_id": 3036,
+  "make": "Dongfeng",
+  "model": "Box 423 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 255,
+   "unit": "km"
+  },
+  "liveSlug": "dongfeng-box-423-42kwh-255km-2024"
+ },
+ {
+  "evdb_id": 3035,
+  "make": "Dongfeng",
+  "model": "Box 314 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 31.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 190,
+   "unit": "km"
+  },
+  "liveSlug": "dongfeng-box-314-31kwh-190km-2025"
+ },
+ {
+  "evdb_id": 1975,
+  "make": "Elaris",
+  "model": "BEO 86 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 86,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 390,
+   "unit": "km"
+  },
+  "liveSlug": "elaris-beo-86kwh-390km-2023"
+ },
+ {
+  "evdb_id": 1275,
+  "make": "Fiat",
+  "model": "500e Cabrio 42 kWh",
+  "year": {
+   "from": 2020,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 230,
+   "unit": "km"
+  },
+  "liveSlug": "fiat-500e-cabrio-42kwh-230km-2020"
+ },
+ {
+  "evdb_id": 1727,
+  "make": "Fiat",
+  "model": "500e Cabrio 24 kWh",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 23.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 135,
+   "unit": "km"
+  },
+  "liveSlug": "fiat-500e-cabrio-24kwh-135km-2022"
+ },
+ {
+  "evdb_id": 2251,
+  "make": "Fiat",
+  "model": "Grande Panda",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 44,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 260,
+   "unit": "km"
+  },
+  "liveSlug": "fiat-grande-panda-44kwh-260km-2024"
+ },
+ {
+  "evdb_id": 1327,
+  "make": "Fiat",
+  "model": "500e Hatchback 24 kWh",
+  "year": {
+   "from": 2020,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 23.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 135,
+   "unit": "km"
+  },
+  "liveSlug": "fiat-500e-hatchback-24kwh-135km-2020"
+ },
+ {
+  "evdb_id": 1285,
+  "make": "Fiat",
+  "model": "500e Hatchback 42 kWh",
+  "year": {
+   "from": 2020,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "fiat-500e-hatchback-42kwh-235km-2020"
+ },
+ {
+  "evdb_id": 1328,
+  "make": "Fiat",
+  "model": "500e 31 42 kWh",
+  "year": {
+   "from": 2020,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "fiat-500e-31-42kwh-235km-2020"
+ },
+ {
+  "evdb_id": 1726,
+  "make": "Fiat",
+  "model": "500e 31 24 kWh",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 23.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 135,
+   "unit": "km"
+  },
+  "liveSlug": "fiat-500e-31-24kwh-135km-2022"
+ },
+ {
+  "evdb_id": 1945,
+  "make": "Fiat",
+  "model": "600e",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "fiat-600e-54kwh-310km-2023"
+ },
+ {
+  "evdb_id": 2240,
+  "make": "Ford",
+  "model": "Capri Standard Range RWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "ford-capri-standard-range-rwd-55kwh-320km-2024"
+ },
+ {
+  "evdb_id": 3187,
+  "make": "Ford",
+  "model": "Mustang Mach-E SR RWD (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 78,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-sr-rwd-my25-78kwh-380km-2025"
+ },
+ {
+  "evdb_id": 2242,
+  "make": "Ford",
+  "model": "Capri Extended Range AWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "ford-capri-extended-range-awd-84kwh-455km-2024"
+ },
+ {
+  "evdb_id": 3165,
+  "make": "Ford",
+  "model": "e-Tourneo Custom L2 210 kW",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "ford-e-tourneo-custom-l2-210kw-68kwh-235km-2023"
+ },
+ {
+  "evdb_id": 3162,
+  "make": "Ford",
+  "model": "e-Tourneo Custom L1 160 kW",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "ford-e-tourneo-custom-l1-160kw-68kwh-235km-2023"
+ },
+ {
+  "evdb_id": 2168,
+  "make": "Ford",
+  "model": "Explorer Extended Range RWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "ford-explorer-extended-range-rwd-82kwh-435km-2024"
+ },
+ {
+  "evdb_id": 2169,
+  "make": "Ford",
+  "model": "Explorer Extended Range AWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "ford-explorer-extended-range-awd-84kwh-440km-2024"
+ },
+ {
+  "evdb_id": 3163,
+  "make": "Ford",
+  "model": "e-Tourneo Custom L1 210 kW",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "ford-e-tourneo-custom-l1-210kw-68kwh-235km-2023"
+ },
+ {
+  "evdb_id": 2279,
+  "make": "Ford",
+  "model": "Mustang Mach-E ER AWD (MY24)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 445,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-er-awd-my24-99kwh-445km-2024-2025"
+ },
+ {
+  "evdb_id": 2241,
+  "make": "Ford",
+  "model": "Capri Extended Range RWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "ford-capri-extended-range-rwd-82kwh-455km-2024"
+ },
+ {
+  "evdb_id": 3190,
+  "make": "Ford",
+  "model": "Mustang Mach-E GT (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-gt-my25-99kwh-435km-2025"
+ },
+ {
+  "evdb_id": 2167,
+  "make": "Ford",
+  "model": "Explorer Standard Range RWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 305,
+   "unit": "km"
+  },
+  "liveSlug": "ford-explorer-standard-range-rwd-55kwh-305km-2024"
+ },
+ {
+  "evdb_id": 3166,
+  "make": "Ford",
+  "model": "e-Tourneo Courier",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 200,
+   "unit": "km"
+  },
+  "liveSlug": "ford-e-tourneo-courier-54kwh-200km-2024"
+ },
+ {
+  "evdb_id": 3073,
+  "make": "Ford",
+  "model": "Puma Gen-E",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 53,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 275,
+   "unit": "km"
+  },
+  "liveSlug": "ford-puma-gen-e-53kwh-275km-2024"
+ },
+ {
+  "evdb_id": 3188,
+  "make": "Ford",
+  "model": "Mustang Mach-E ER RWD (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-er-rwd-my25-99kwh-475km-2025"
+ },
+ {
+  "evdb_id": 3189,
+  "make": "Ford",
+  "model": "Mustang Mach-E ER AWD (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-er-awd-my25-99kwh-435km-2025"
+ },
+ {
+  "evdb_id": 3191,
+  "make": "Ford",
+  "model": "Mustang Mach-E Rally (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 415,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-rally-my25-99kwh-415km-2025"
+ },
+ {
+  "evdb_id": 3164,
+  "make": "Ford",
+  "model": "e-Tourneo Custom L2 160 kW",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "ford-e-tourneo-custom-l2-160kw-68kwh-235km-2023"
+ },
+ {
+  "evdb_id": 2278,
+  "make": "Ford",
+  "model": "Mustang Mach-E ER RWD (MY24)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-er-rwd-my24-99kwh-480km-2024-2025"
+ },
+ {
+  "evdb_id": 2275,
+  "make": "Ford",
+  "model": "Mustang Mach-E Rally (MY24)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 410,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-rally-my24-99kwh-410km-2024-2025"
+ },
+ {
+  "evdb_id": 2277,
+  "make": "Ford",
+  "model": "Mustang Mach-E SR RWD (MY24)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 78,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-sr-rwd-my24-78kwh-385km-2024-2025"
+ },
+ {
+  "evdb_id": 2280,
+  "make": "Ford",
+  "model": "Mustang Mach-E GT (MY24)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "ford-mustang-mach-e-gt-my24-99kwh-425km-2024-2025"
+ },
+ {
+  "evdb_id": 2247,
+  "make": "GWM",
+  "model": "ORA 07 GT",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 86,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 430,
+   "unit": "km"
+  },
+  "liveSlug": "gwm-ora-07-gt-86kwh-430km-2024"
+ },
+ {
+  "evdb_id": 2091,
+  "make": "GWM",
+  "model": "ORA 03 48 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 47.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 260,
+   "unit": "km"
+  },
+  "liveSlug": "gwm-ora-03-48kwh-260km-2024"
+ },
+ {
+  "evdb_id": 2092,
+  "make": "GWM",
+  "model": "ORA 03 63 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 340,
+   "unit": "km"
+  },
+  "liveSlug": "gwm-ora-03-63kwh-340km-2024"
+ },
+ {
+  "evdb_id": 2093,
+  "make": "GWM",
+  "model": "ORA 03 GT",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "gwm-ora-03-gt-63kwh-325km-2024"
+ },
+ {
+  "evdb_id": 2246,
+  "make": "GWM",
+  "model": "ORA 07 Pro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 67,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "gwm-ora-07-pro-67kwh-350km-2024"
+ },
+ {
+  "evdb_id": 2245,
+  "make": "GWM",
+  "model": "ORA 07 Pure",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 67,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "gwm-ora-07-pure-67kwh-350km-2024"
+ },
+ {
+  "evdb_id": 3308,
+  "make": "Geely",
+  "model": "EX5",
+  "year": {
+   "from": 2026,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 62,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 330,
+   "unit": "km"
+  },
+  "liveSlug": "geely-ex5-62kwh-330km-2026"
+ },
+ {
+  "evdb_id": 3235,
+  "make": "Genesis",
+  "model": "GV60 Sport (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 410,
+   "unit": "km"
+  },
+  "liveSlug": "genesis-gv60-sport-my25-84kwh-410km-2025"
+ },
+ {
+  "evdb_id": 3236,
+  "make": "Genesis",
+  "model": "GV60 Performance (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "genesis-gv60-performance-my25-84kwh-395km-2025"
+ },
+ {
+  "evdb_id": 3234,
+  "make": "Genesis",
+  "model": "GV60 Pure (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "genesis-gv60-pure-my25-84kwh-425km-2025"
+ },
+ {
+  "evdb_id": 3237,
+  "make": "Genesis",
+  "model": "GV70 Electrified (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "genesis-gv70-electrified-my25-84kwh-385km-2025"
+ },
+ {
+  "evdb_id": 3238,
+  "make": "Genesis",
+  "model": "G80 Electrified (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 94.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "genesis-g80-electrified-my25-94kwh-450km-2025"
+ },
+ {
+  "evdb_id": 1940,
+  "make": "Honda",
+  "model": "eNy1",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "honda-eny1-69kwh-335km-2023"
+ },
+ {
+  "evdb_id": 3265,
+  "make": "Hongqi",
+  "model": "E-HS7 111 kWh AWD Pro",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "hongqi-e-hs7-awd-pro-111kwh-435km-2025"
+ },
+ {
+  "evdb_id": 3138,
+  "make": "Hongqi",
+  "model": "EH7 111 kWh Long Range",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 550,
+   "unit": "km"
+  },
+  "liveSlug": "hongqi-eh7-long-range-111kwh-550km-2025"
+ },
+ {
+  "evdb_id": 1746,
+  "make": "Hongqi",
+  "model": "E-HS9 84 kWh",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "hongqi-e-hs9-84kwh-320km-2022"
+ },
+ {
+  "evdb_id": 3264,
+  "make": "Hongqi",
+  "model": "E-HS7 111 kWh Long Range",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "hongqi-e-hs7-long-range-111kwh-455km-2025"
+ },
+ {
+  "evdb_id": 1747,
+  "make": "Hongqi",
+  "model": "E-HS9 99 kWh",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 99,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "hongqi-e-hs9-99kwh-370km-2022"
+ },
+ {
+  "evdb_id": 2050,
+  "make": "Hongqi",
+  "model": "E-HS9 120 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 120,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "hongqi-e-hs9-120kwh-455km-2023"
+ },
+ {
+  "evdb_id": 2231,
+  "make": "Hyundai",
+  "model": "INSTER Long Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 49,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 300,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-inster-long-range-49kwh-300km-2024"
+ },
+ {
+  "evdb_id": 3067,
+  "make": "Hyundai",
+  "model": "IONIQ 9 Long Range RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 110.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 505,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-9-long-range-rwd-110kwh-505km-2025"
+ },
+ {
+  "evdb_id": 2236,
+  "make": "Hyundai",
+  "model": "IONIQ 5 84 kWh RWD (MY24)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-5-rwd-my24-84kwh-450km-2024"
+ },
+ {
+  "evdb_id": 1717,
+  "make": "Hyundai",
+  "model": "IONIQ 6 Standard Range 2WD",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 53,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-6-standard-range-2wd-53kwh-335km-2023"
+ },
+ {
+  "evdb_id": 3068,
+  "make": "Hyundai",
+  "model": "IONIQ 9 Long Range AWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 110.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-9-long-range-awd-110kwh-495km-2025"
+ },
+ {
+  "evdb_id": 1718,
+  "make": "Hyundai",
+  "model": "IONIQ 6 Long Range 2WD",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-6-long-range-2wd-77kwh-495km-2022"
+ },
+ {
+  "evdb_id": 3069,
+  "make": "Hyundai",
+  "model": "IONIQ 9 Performance AWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 110.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 485,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-9-performance-awd-110kwh-485km-2025"
+ },
+ {
+  "evdb_id": 2235,
+  "make": "Hyundai",
+  "model": "IONIQ 5 63 kWh RWD (MY24)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 345,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-5-rwd-my24-63kwh-345km-2024"
+ },
+ {
+  "evdb_id": 1830,
+  "make": "Hyundai",
+  "model": "Kona Electric 65 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 390,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-kona-electric-68kwh-390km-2023"
+ },
+ {
+  "evdb_id": 2044,
+  "make": "Hyundai",
+  "model": "IONIQ 5 N (MY24)",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 390,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-5-n-my24-84kwh-390km-2023"
+ },
+ {
+  "evdb_id": 1719,
+  "make": "Hyundai",
+  "model": "IONIQ 6 Long Range AWD",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-6-long-range-awd-77kwh-440km-2022"
+ },
+ {
+  "evdb_id": 2237,
+  "make": "Hyundai",
+  "model": "IONIQ 5 84 kWh AWD (MY24)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 445,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-ioniq-5-awd-my24-84kwh-445km-2024"
+ },
+ {
+  "evdb_id": 1829,
+  "make": "Hyundai",
+  "model": "Kona Electric 48 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 51,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 295,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-kona-electric-51kwh-295km-2023"
+ },
+ {
+  "evdb_id": 2230,
+  "make": "Hyundai",
+  "model": "INSTER Standard Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 255,
+   "unit": "km"
+  },
+  "liveSlug": "hyundai-inster-standard-range-42kwh-255km-2024"
+ },
+ {
+  "evdb_id": 3336,
+  "make": "Jaecoo",
+  "model": "5 EV",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 60.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "jaecoo-5-ev-61kwh-325km-2025"
+ },
+ {
+  "evdb_id": 3181,
+  "make": "Jeep",
+  "model": "Compass Electric 74 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 80,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "jeep-compass-electric-80kwh-370km-2025"
+ },
+ {
+  "evdb_id": 1816,
+  "make": "Jeep",
+  "model": "Avenger Electric",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "jeep-avenger-electric-54kwh-310km-2023"
+ },
+ {
+  "evdb_id": 3226,
+  "make": "KGM",
+  "model": "Musso EV 2WD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "kgm-musso-ev-2wd-83kwh-365km-2025"
+ },
+ {
+  "evdb_id": 3389,
+  "make": "KGM",
+  "model": "Torres EVX 806 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 80.6,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "kgm-torres-evx-806-my26-81kwh-400km-2025"
+ },
+ {
+  "evdb_id": 2189,
+  "make": "KGM",
+  "model": "Torres EVX (MY24-25)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 73.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "kgm-torres-evx-my24-25-73kwh-370km-2024-2025"
+ },
+ {
+  "evdb_id": 3227,
+  "make": "KGM",
+  "model": "Musso EV 4WD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 83,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "kgm-musso-ev-4wd-83kwh-360km-2025"
+ },
+ {
+  "evdb_id": 3079,
+  "make": "Kia",
+  "model": "EV6 GT",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev6-gt-84kwh-395km-2025"
+ },
+ {
+  "evdb_id": 1833,
+  "make": "Kia",
+  "model": "EV9 761 kWh RWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 76.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev9-761-rwd-76kwh-350km-2024"
+ },
+ {
+  "evdb_id": 3124,
+  "make": "Kia",
+  "model": "EV4 Hatchback 814 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 81.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev4-hatchback-814-81kwh-475km-2025"
+ },
+ {
+  "evdb_id": 1666,
+  "make": "Kia",
+  "model": "Niro EV",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "kia-niro-ev-68kwh-385km-2022"
+ },
+ {
+  "evdb_id": 3288,
+  "make": "Kia",
+  "model": "PV5 Passenger 515 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 51.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 230,
+   "unit": "km"
+  },
+  "liveSlug": "kia-pv5-passenger-515-my26-52kwh-230km-2025"
+ },
+ {
+  "evdb_id": 3123,
+  "make": "Kia",
+  "model": "EV4 Hatchback 583 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 58.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 340,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev4-hatchback-583-58kwh-340km-2025"
+ },
+ {
+  "evdb_id": 1993,
+  "make": "Kia",
+  "model": "EV9 998 kWh AWD GT-Line",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 99.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev9-998-awd-gt-line-100kwh-425km-2023"
+ },
+ {
+  "evdb_id": 2211,
+  "make": "Kia",
+  "model": "EV3 Standard Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 58.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev3-standard-range-58kwh-325km-2024"
+ },
+ {
+  "evdb_id": 3196,
+  "make": "Kia",
+  "model": "EV9 998 kWh AWD GT",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 99.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 420,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev9-998-awd-gt-100kwh-420km-2025"
+ },
+ {
+  "evdb_id": 3030,
+  "make": "Kia",
+  "model": "EV6 Standard Range 2WD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 345,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev6-standard-range-2wd-63kwh-345km-2024"
+ },
+ {
+  "evdb_id": 2212,
+  "make": "Kia",
+  "model": "EV3 Long Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 81.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev3-long-range-81kwh-455km-2024"
+ },
+ {
+  "evdb_id": 3029,
+  "make": "Kia",
+  "model": "EV6 Long Range AWD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev6-long-range-awd-84kwh-440km-2024"
+ },
+ {
+  "evdb_id": 3300,
+  "make": "Kia",
+  "model": "EV5 814 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 81.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev5-814-my26-81kwh-400km-2025"
+ },
+ {
+  "evdb_id": 3122,
+  "make": "Kia",
+  "model": "EV4 Fastback 814 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 81.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev4-fastback-814-81kwh-495km-2025"
+ },
+ {
+  "evdb_id": 3028,
+  "make": "Kia",
+  "model": "EV6 Long Range 2WD",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev6-long-range-2wd-84kwh-455km-2024"
+ },
+ {
+  "evdb_id": 3289,
+  "make": "Kia",
+  "model": "PV5 Passenger 712 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 71.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 315,
+   "unit": "km"
+  },
+  "liveSlug": "kia-pv5-passenger-712-my26-71kwh-315km-2025"
+ },
+ {
+  "evdb_id": 1834,
+  "make": "Kia",
+  "model": "EV9 998 kWh RWD",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 99.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev9-998-rwd-100kwh-450km-2023"
+ },
+ {
+  "evdb_id": 1835,
+  "make": "Kia",
+  "model": "EV9 998 kWh AWD",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 99.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "kia-ev9-998-awd-100kwh-435km-2023"
+ },
+ {
+  "evdb_id": 3225,
+  "make": "Lancia",
+  "model": "Ypsilon 54 kWh HF (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 305,
+   "unit": "km"
+  },
+  "liveSlug": "lancia-ypsilon-hf-my25-54kwh-305km-2025"
+ },
+ {
+  "evdb_id": 3224,
+  "make": "Lancia",
+  "model": "Ypsilon 54 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "lancia-ypsilon-my25-54kwh-325km-2025"
+ },
+ {
+  "evdb_id": 3039,
+  "make": "Leapmotor",
+  "model": "T03",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 37.3,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 225,
+   "unit": "km"
+  },
+  "liveSlug": "leapmotor-t03-37kwh-225km-2024"
+ },
+ {
+  "evdb_id": 3232,
+  "make": "Leapmotor",
+  "model": "B10 562 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 56.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 305,
+   "unit": "km"
+  },
+  "liveSlug": "leapmotor-b10-562-56kwh-305km-2025"
+ },
+ {
+  "evdb_id": 3040,
+  "make": "Leapmotor",
+  "model": "C10 RWD 699 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 72,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 355,
+   "unit": "km"
+  },
+  "liveSlug": "leapmotor-c10-rwd-699-72kwh-355km-2024"
+ },
+ {
+  "evdb_id": 3387,
+  "make": "Leapmotor",
+  "model": "C10 RWD 819 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 410,
+   "unit": "km"
+  },
+  "liveSlug": "leapmotor-c10-rwd-819-84kwh-410km-2025"
+ },
+ {
+  "evdb_id": 3233,
+  "make": "Leapmotor",
+  "model": "B10 671 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 67.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "leapmotor-b10-671-67kwh-360km-2025"
+ },
+ {
+  "evdb_id": 3388,
+  "make": "Leapmotor",
+  "model": "C10 AWD 819 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "leapmotor-c10-awd-819-84kwh-380km-2025"
+ },
+ {
+  "evdb_id": 3294,
+  "make": "Lexus",
+  "model": "RZ 500e (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "lexus-rz-500e-my26-77kwh-395km-2025"
+ },
+ {
+  "evdb_id": 3295,
+  "make": "Lexus",
+  "model": "RZ 550e F SPORT (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 390,
+   "unit": "km"
+  },
+  "liveSlug": "lexus-rz-550e-f-sport-my26-77kwh-390km-2025"
+ },
+ {
+  "evdb_id": 1943,
+  "make": "Lexus",
+  "model": "UX 300e",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 72.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 340,
+   "unit": "km"
+  },
+  "liveSlug": "lexus-ux-300e-73kwh-340km-2023"
+ },
+ {
+  "evdb_id": 3293,
+  "make": "Lexus",
+  "model": "RZ 350e (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "lexus-rz-350e-my26-77kwh-400km-2025"
+ },
+ {
+  "evdb_id": 3214,
+  "make": "Lotus",
+  "model": "Emeya 600",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 102,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 520,
+   "unit": "km"
+  },
+  "liveSlug": "lotus-emeya-600-102kwh-520km-2025"
+ },
+ {
+  "evdb_id": 3217,
+  "make": "Lotus",
+  "model": "Eletre 900",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "lotus-eletre-900-112kwh-455km-2025"
+ },
+ {
+  "evdb_id": 3215,
+  "make": "Lotus",
+  "model": "Emeya 900",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 102,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "lotus-emeya-900-102kwh-465km-2025"
+ },
+ {
+  "evdb_id": 3216,
+  "make": "Lotus",
+  "model": "Eletre 600",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "lotus-eletre-600-112kwh-495km-2025"
+ },
+ {
+  "evdb_id": 3273,
+  "make": "Lucid",
+  "model": "Air Grand Touring (MY25-26)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 117,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 720,
+   "unit": "km"
+  },
+  "liveSlug": "lucid-air-grand-touring-my25-26-117kwh-720km-2024"
+ },
+ {
+  "evdb_id": 3272,
+  "make": "Lucid",
+  "model": "Air Touring (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 96,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 600,
+   "unit": "km"
+  },
+  "liveSlug": "lucid-air-touring-my26-96kwh-600km-2025"
+ },
+ {
+  "evdb_id": 3292,
+  "make": "Lucid",
+  "model": "Gravity Grand Touring (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 123,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 625,
+   "unit": "km"
+  },
+  "liveSlug": "lucid-gravity-grand-touring-my26-123kwh-625km-2025"
+ },
+ {
+  "evdb_id": 3274,
+  "make": "Lucid",
+  "model": "Air Sapphire (MY25-26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 118,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 610,
+   "unit": "km"
+  },
+  "liveSlug": "lucid-air-sapphire-my25-26-118kwh-610km-2025"
+ },
+ {
+  "evdb_id": 3291,
+  "make": "Lucid",
+  "model": "Gravity Touring (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 89,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "lucid-gravity-touring-my26-89kwh-465km-2025"
+ },
+ {
+  "evdb_id": 3271,
+  "make": "Lucid",
+  "model": "Air Pure RWD (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 88,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 580,
+   "unit": "km"
+  },
+  "liveSlug": "lucid-air-pure-rwd-my26-88kwh-580km-2025"
+ },
+ {
+  "evdb_id": 3045,
+  "make": "Lynk&Co",
+  "model": "02",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "lynk-and-co-02-69kwh-370km-2024"
+ },
+ {
+  "evdb_id": 1944,
+  "make": "MG",
+  "model": "MG4 Electric XPOWER",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 64,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "mg-mg4-electric-xpower-64kwh-320km-2023"
+ },
+ {
+  "evdb_id": 3247,
+  "make": "MG",
+  "model": "IM6 Long Range",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 500,
+   "unit": "km"
+  },
+  "liveSlug": "mg-im6-long-range-100kwh-500km-2025"
+ },
+ {
+  "evdb_id": 3245,
+  "make": "MG",
+  "model": "IM5 Long Range",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "mg-im5-long-range-100kwh-530km-2025"
+ },
+ {
+  "evdb_id": 1973,
+  "make": "MG",
+  "model": "MG4 Electric 77 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "mg-mg4-electric-77kwh-425km-2023"
+ },
+ {
+  "evdb_id": 1708,
+  "make": "MG",
+  "model": "MG4 Electric 64 kWh",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 64,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "mg-mg4-electric-64kwh-360km-2022"
+ },
+ {
+  "evdb_id": 3248,
+  "make": "MG",
+  "model": "IM6 Performance",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "mg-im6-performance-100kwh-440km-2025"
+ },
+ {
+  "evdb_id": 1707,
+  "make": "MG",
+  "model": "MG4 Electric 51 kWh",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 51,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 300,
+   "unit": "km"
+  },
+  "liveSlug": "mg-mg4-electric-51kwh-300km-2022"
+ },
+ {
+  "evdb_id": 3246,
+  "make": "MG",
+  "model": "IM5 Performance",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "mg-im5-performance-100kwh-490km-2025"
+ },
+ {
+  "evdb_id": 2202,
+  "make": "MG",
+  "model": "Cyberster Trophy",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "mg-cyberster-trophy-77kwh-425km-2024"
+ },
+ {
+  "evdb_id": 3147,
+  "make": "MG",
+  "model": "MGS5 EV 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 64,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "mg-mgs5-ev-64kwh-365km-2025"
+ },
+ {
+  "evdb_id": 3244,
+  "make": "MG",
+  "model": "IM5 Standard Range",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 405,
+   "unit": "km"
+  },
+  "liveSlug": "mg-im5-standard-range-75kwh-405km-2025"
+ },
+ {
+  "evdb_id": 3146,
+  "make": "MG",
+  "model": "MGS5 EV 49 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 49,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 275,
+   "unit": "km"
+  },
+  "liveSlug": "mg-mgs5-ev-49kwh-275km-2025"
+ },
+ {
+  "evdb_id": 2203,
+  "make": "MG",
+  "model": "Cyberster GT",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "mg-cyberster-gt-77kwh-395km-2024"
+ },
+ {
+  "evdb_id": 2187,
+  "make": "Maserati",
+  "model": "GranCabrio Folgore",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 92.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "maserati-grancabrio-folgore-92kwh-395km-2024"
+ },
+ {
+  "evdb_id": 1843,
+  "make": "Maserati",
+  "model": "Grecale Folgore",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "maserati-grecale-folgore-105kwh-400km-2024"
+ },
+ {
+  "evdb_id": 1803,
+  "make": "Maserati",
+  "model": "GranTurismo Folgore",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 92.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 420,
+   "unit": "km"
+  },
+  "liveSlug": "maserati-granturismo-folgore-92kwh-420km-2024"
+ },
+ {
+  "evdb_id": 1837,
+  "make": "Maxus",
+  "model": "MIFA 9",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "maxus-mifa-9-90kwh-360km-2023"
+ },
+ {
+  "evdb_id": 3107,
+  "make": "Mazda",
+  "model": "6e 688 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "mazda-6e-688-69kwh-385km-2025"
+ },
+ {
+  "evdb_id": 3108,
+  "make": "Mazda",
+  "model": "6e Long Range 80 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 80,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "mazda-6e-long-range-80kwh-440km-2025"
+ },
+ {
+  "evdb_id": 3243,
+  "make": "Mercedes-Benz",
+  "model": "EQE AMG 53 4MATIC (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-amg-53-4matic-my25-100kwh-450km-2025"
+ },
+ {
+  "evdb_id": 1986,
+  "make": "Mercedes-Benz",
+  "model": "EQA 300 4MATIC",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqa-300-4matic-70kwh-350km-2023"
+ },
+ {
+  "evdb_id": 3140,
+  "make": "Mercedes-Benz",
+  "model": "CLA 350 4MATIC",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 575,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-cla-350-4matic-90kwh-575km-2025"
+ },
+ {
+  "evdb_id": 2139,
+  "make": "Mercedes-Benz",
+  "model": "eVito Tourer Extra-Long 60 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 215,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-evito-tourer-extra-long-66kwh-215km-2024"
+ },
+ {
+  "evdb_id": 2140,
+  "make": "Mercedes-Benz",
+  "model": "eVito Tourer Long 90 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-evito-tourer-long-100kwh-325km-2024"
+ },
+ {
+  "evdb_id": 3240,
+  "make": "Mercedes-Benz",
+  "model": "EQE 350 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 555,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-350-my25-105kwh-555km-2025"
+ },
+ {
+  "evdb_id": 3285,
+  "make": "Mercedes-Benz",
+  "model": "EQE SUV 350 4MATIC (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-suv-350-4matic-my25-100kwh-435km-2025"
+ },
+ {
+  "evdb_id": 2196,
+  "make": "Mercedes-Benz",
+  "model": "EQS 580 4MATIC",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 640,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-580-4matic-125kwh-640km-2024"
+ },
+ {
+  "evdb_id": 2129,
+  "make": "Mercedes-Benz",
+  "model": "EQV 250 Long",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 215,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqv-250-long-66kwh-215km-2024"
+ },
+ {
+  "evdb_id": 1988,
+  "make": "Mercedes-Benz",
+  "model": "EQB 250",
+  "year": {
+   "from": 2023,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 73.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 415,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqb-250-74kwh-415km-2023-2025"
+ },
+ {
+  "evdb_id": 2192,
+  "make": "Mercedes-Benz",
+  "model": "G 580",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 124,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-g-580-124kwh-395km-2024"
+ },
+ {
+  "evdb_id": 3406,
+  "make": "Mercedes-Benz",
+  "model": "GLB 250",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-glb-250-90kwh-465km-2025"
+ },
+ {
+  "evdb_id": 1990,
+  "make": "Mercedes-Benz",
+  "model": "EQB 350 4MATIC",
+  "year": {
+   "from": 2023,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 345,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqb-350-4matic-70kwh-345km-2023-2025"
+ },
+ {
+  "evdb_id": 2130,
+  "make": "Mercedes-Benz",
+  "model": "EQV 250 Extra-Long",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 210,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqv-250-extra-long-66kwh-210km-2024"
+ },
+ {
+  "evdb_id": 1984,
+  "make": "Mercedes-Benz",
+  "model": "EQA 250",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqa-250-70kwh-395km-2023"
+ },
+ {
+  "evdb_id": 3287,
+  "make": "Mercedes-Benz",
+  "model": "EQE SUV AMG 53 4MATIC (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 420,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-suv-amg-53-4matic-my25-100kwh-420km-2025"
+ },
+ {
+  "evdb_id": 3407,
+  "make": "Mercedes-Benz",
+  "model": "GLB 350 4MATIC",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-glb-350-4matic-90kwh-460km-2025"
+ },
+ {
+  "evdb_id": 2090,
+  "make": "Mercedes-Benz",
+  "model": "EQS SUV 580 4MATIC",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-suv-580-4matic-125kwh-530km-2023"
+ },
+ {
+  "evdb_id": 3241,
+  "make": "Mercedes-Benz",
+  "model": "EQE 350 4MATIC (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 515,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-350-4matic-my25-100kwh-515km-2025"
+ },
+ {
+  "evdb_id": 3283,
+  "make": "Mercedes-Benz",
+  "model": "EQE SUV 300 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-suv-300-my25-100kwh-450km-2025"
+ },
+ {
+  "evdb_id": 3242,
+  "make": "Mercedes-Benz",
+  "model": "EQE 500 4MATIC (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 505,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-500-4matic-my25-100kwh-505km-2025"
+ },
+ {
+  "evdb_id": 2138,
+  "make": "Mercedes-Benz",
+  "model": "eVito Tourer Long 60 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 220,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-evito-tourer-long-66kwh-220km-2024"
+ },
+ {
+  "evdb_id": 2195,
+  "make": "Mercedes-Benz",
+  "model": "EQS 500 4MATIC",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 640,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-500-4matic-125kwh-640km-2024"
+ },
+ {
+  "evdb_id": 1989,
+  "make": "Mercedes-Benz",
+  "model": "EQB 300 4MATIC",
+  "year": {
+   "from": 2023,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 345,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqb-300-4matic-70kwh-345km-2023-2025"
+ },
+ {
+  "evdb_id": 2086,
+  "make": "Mercedes-Benz",
+  "model": "EQS SUV Maybach 680",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-suv-maybach-680-125kwh-490km-2024"
+ },
+ {
+  "evdb_id": 1987,
+  "make": "Mercedes-Benz",
+  "model": "EQA 350 4MATIC",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqa-350-4matic-70kwh-350km-2023"
+ },
+ {
+  "evdb_id": 2087,
+  "make": "Mercedes-Benz",
+  "model": "EQS SUV 450",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 540,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-suv-450-125kwh-540km-2023"
+ },
+ {
+  "evdb_id": 2194,
+  "make": "Mercedes-Benz",
+  "model": "EQS 450 4MATIC",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 655,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-450-4matic-125kwh-655km-2024"
+ },
+ {
+  "evdb_id": 3239,
+  "make": "Mercedes-Benz",
+  "model": "EQE 300 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 98,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 525,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-300-my25-98kwh-525km-2025"
+ },
+ {
+  "evdb_id": 2239,
+  "make": "Mercedes-Benz",
+  "model": "EQT 200 Long",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 48,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 220,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqt-200-long-48kwh-220km-2024"
+ },
+ {
+  "evdb_id": 2131,
+  "make": "Mercedes-Benz",
+  "model": "EQV 300 Long",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqv-300-long-100kwh-320km-2024"
+ },
+ {
+  "evdb_id": 2155,
+  "make": "Mercedes-Benz",
+  "model": "EQS 350",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 570,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-350-105kwh-570km-2024"
+ },
+ {
+  "evdb_id": 3284,
+  "make": "Mercedes-Benz",
+  "model": "EQE SUV 350 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-suv-350-my25-105kwh-475km-2025"
+ },
+ {
+  "evdb_id": 2274,
+  "make": "Mercedes-Benz",
+  "model": "EQV 300 Extra-Long",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 315,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqv-300-extra-long-100kwh-315km-2024"
+ },
+ {
+  "evdb_id": 3139,
+  "make": "Mercedes-Benz",
+  "model": "CLA 250",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 585,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-cla-250-90kwh-585km-2025"
+ },
+ {
+  "evdb_id": 2088,
+  "make": "Mercedes-Benz",
+  "model": "EQS SUV 450 4MATIC",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-suv-450-4matic-125kwh-530km-2023"
+ },
+ {
+  "evdb_id": 3396,
+  "make": "Mercedes-Benz",
+  "model": "CLA Shooting Brake 250",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 565,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-cla-shooting-brake-250-90kwh-565km-2025"
+ },
+ {
+  "evdb_id": 1985,
+  "make": "Mercedes-Benz",
+  "model": "EQA 250",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 73.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 420,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqa-250-74kwh-420km-2023"
+ },
+ {
+  "evdb_id": 3370,
+  "make": "Mercedes-Benz",
+  "model": "CLA 200",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 60,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-cla-200-60kwh-400km-2025"
+ },
+ {
+  "evdb_id": 3296,
+  "make": "Mercedes-Benz",
+  "model": "GLC 400 4MATIC",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 500,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-glc-400-4matic-100kwh-500km-2025"
+ },
+ {
+  "evdb_id": 3397,
+  "make": "Mercedes-Benz",
+  "model": "CLA Shooting Brake 350 4MATIC",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 555,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-cla-shooting-brake-350-4matic-90kwh-555km-2025"
+ },
+ {
+  "evdb_id": 2089,
+  "make": "Mercedes-Benz",
+  "model": "EQS SUV 500 4MATIC",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-suv-500-4matic-125kwh-530km-2023"
+ },
+ {
+  "evdb_id": 3286,
+  "make": "Mercedes-Benz",
+  "model": "EQE SUV 500 4MATIC (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqe-suv-500-4matic-my25-105kwh-455km-2025"
+ },
+ {
+  "evdb_id": 2193,
+  "make": "Mercedes-Benz",
+  "model": "EQS 450",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 125,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 685,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqs-450-125kwh-685km-2024"
+ },
+ {
+  "evdb_id": 1908,
+  "make": "Mercedes-Benz",
+  "model": "EQT 200 Standard",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 48,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 225,
+   "unit": "km"
+  },
+  "liveSlug": "mercedes-benz-eqt-200-standard-48kwh-225km-2023"
+ },
+ {
+  "evdb_id": 1994,
+  "make": "Mini",
+  "model": "Countryman E",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "mini-countryman-e-66kwh-380km-2024"
+ },
+ {
+  "evdb_id": 3059,
+  "make": "Mini",
+  "model": "Aceman JCW",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 280,
+   "unit": "km"
+  },
+  "liveSlug": "mini-aceman-jcw-54kwh-280km-2024"
+ },
+ {
+  "evdb_id": 2191,
+  "make": "Mini",
+  "model": "Aceman SE",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 290,
+   "unit": "km"
+  },
+  "liveSlug": "mini-aceman-se-54kwh-290km-2024"
+ },
+ {
+  "evdb_id": 3058,
+  "make": "Mini",
+  "model": "Cooper JCW",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 290,
+   "unit": "km"
+  },
+  "liveSlug": "mini-cooper-jcw-54kwh-290km-2024"
+ },
+ {
+  "evdb_id": 2190,
+  "make": "Mini",
+  "model": "Aceman E",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 230,
+   "unit": "km"
+  },
+  "liveSlug": "mini-aceman-e-42kwh-230km-2024"
+ },
+ {
+  "evdb_id": 1998,
+  "make": "Mini",
+  "model": "Cooper SE",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 330,
+   "unit": "km"
+  },
+  "liveSlug": "mini-cooper-se-54kwh-330km-2023"
+ },
+ {
+  "evdb_id": 1995,
+  "make": "Mini",
+  "model": "Countryman SE ALL4",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "mini-countryman-se-all4-66kwh-365km-2024"
+ },
+ {
+  "evdb_id": 1997,
+  "make": "Mini",
+  "model": "Cooper E",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 40.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 250,
+   "unit": "km"
+  },
+  "liveSlug": "mini-cooper-e-41kwh-250km-2023"
+ },
+ {
+  "evdb_id": 3335,
+  "make": "Mitsubishi",
+  "model": "Eclipse Cross 87 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 92,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "mitsubishi-eclipse-cross-my26-92kwh-480km-2025"
+ },
+ {
+  "evdb_id": 1921,
+  "make": "NIO",
+  "model": "EL6 Standard Range",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "nio-el6-standard-range-75kwh-365km-2023"
+ },
+ {
+  "evdb_id": 2223,
+  "make": "NIO",
+  "model": "EL8 Long Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "nio-el8-long-range-100kwh-440km-2024"
+ },
+ {
+  "evdb_id": 1915,
+  "make": "NIO",
+  "model": "ET5 Touring Standard Range",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "nio-et5-touring-standard-range-75kwh-400km-2023"
+ },
+ {
+  "evdb_id": 2222,
+  "make": "NIO",
+  "model": "EL8 Standard Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "nio-el8-standard-range-75kwh-360km-2024"
+ },
+ {
+  "evdb_id": 1916,
+  "make": "NIO",
+  "model": "ET5 Touring Long Range",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 485,
+   "unit": "km"
+  },
+  "liveSlug": "nio-et5-touring-long-range-100kwh-485km-2023"
+ },
+ {
+  "evdb_id": 1922,
+  "make": "NIO",
+  "model": "EL6 Long Range",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "nio-el6-long-range-100kwh-435km-2023"
+ },
+ {
+  "evdb_id": 3084,
+  "make": "Nissan",
+  "model": "Townstar EV Passenger L2",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 48,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 220,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-townstar-ev-passenger-l2-48kwh-220km-2024"
+ },
+ {
+  "evdb_id": 1304,
+  "make": "Nissan",
+  "model": "Ariya e-4ORCE 87kWh - 225 kW",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 405,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-ariya-e-4orce-225kw-91kwh-405km-2022"
+ },
+ {
+  "evdb_id": 3074,
+  "make": "Nissan",
+  "model": "Ariya e-4ORCE 87kWh - 320 kW Nismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-ariya-e-4orce-320kw-nismo-91kwh-385km-2024"
+ },
+ {
+  "evdb_id": 3202,
+  "make": "Nissan",
+  "model": "Micra Standard Range 40 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 43,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 260,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-micra-standard-range-43kwh-260km-2023"
+ },
+ {
+  "evdb_id": 2042,
+  "make": "Nissan",
+  "model": "Townstar EV Passenger",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 48,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 225,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-townstar-ev-passenger-48kwh-225km-2023"
+ },
+ {
+  "evdb_id": 3365,
+  "make": "Nissan",
+  "model": "LEAF Standard Range 52 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-leaf-standard-range-my26-55kwh-320km-2025"
+ },
+ {
+  "evdb_id": 1302,
+  "make": "Nissan",
+  "model": "Ariya 87kWh",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-ariya-91kwh-450km-2022"
+ },
+ {
+  "evdb_id": 3203,
+  "make": "Nissan",
+  "model": "Micra Extended Range 52 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 330,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-micra-extended-range-55kwh-330km-2025"
+ },
+ {
+  "evdb_id": 3366,
+  "make": "Nissan",
+  "model": "LEAF Extended Range 75 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 79,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-leaf-extended-range-my26-79kwh-455km-2025"
+ },
+ {
+  "evdb_id": 1301,
+  "make": "Nissan",
+  "model": "Ariya 63kWh",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "nissan-ariya-66kwh-335km-2022"
+ },
+ {
+  "evdb_id": 3046,
+  "make": "Omoda",
+  "model": "E5",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 60.9,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 330,
+   "unit": "km"
+  },
+  "liveSlug": "omoda-e5-61kwh-330km-2024"
+ },
+ {
+  "evdb_id": 1792,
+  "make": "Opel",
+  "model": "Astra Electric",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "opel-astra-electric-54kwh-320km-2023"
+ },
+ {
+  "evdb_id": 2262,
+  "make": "Opel",
+  "model": "Zafira Electric 75 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "opel-zafira-electric-75kwh-265km-2024"
+ },
+ {
+  "evdb_id": 3037,
+  "make": "Opel",
+  "model": "Grandland Electric 73 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "opel-grandland-electric-77kwh-370km-2024"
+ },
+ {
+  "evdb_id": 2260,
+  "make": "Opel",
+  "model": "Zafira Electric 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 180,
+   "unit": "km"
+  },
+  "liveSlug": "opel-zafira-electric-50kwh-180km-2024"
+ },
+ {
+  "evdb_id": 2162,
+  "make": "Opel",
+  "model": "Combo Electric XL 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 230,
+   "unit": "km"
+  },
+  "liveSlug": "opel-combo-electric-xl-52kwh-230km-2024"
+ },
+ {
+  "evdb_id": 3051,
+  "make": "Opel",
+  "model": "Mokka Electric",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 285,
+   "unit": "km"
+  },
+  "liveSlug": "opel-mokka-electric-54kwh-285km-2024"
+ },
+ {
+  "evdb_id": 3229,
+  "make": "Opel",
+  "model": "Frontera Electric 54 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 290,
+   "unit": "km"
+  },
+  "liveSlug": "opel-frontera-electric-54kwh-290km-2025"
+ },
+ {
+  "evdb_id": 3201,
+  "make": "Opel",
+  "model": "Grandland Electric 73 kWh AWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 355,
+   "unit": "km"
+  },
+  "liveSlug": "opel-grandland-electric-awd-77kwh-355km-2025"
+ },
+ {
+  "evdb_id": 2161,
+  "make": "Opel",
+  "model": "Combo Electric 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "opel-combo-electric-52kwh-235km-2024"
+ },
+ {
+  "evdb_id": 2238,
+  "make": "Opel",
+  "model": "Frontera Electric 44 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 44,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 240,
+   "unit": "km"
+  },
+  "liveSlug": "opel-frontera-electric-44kwh-240km-2024"
+ },
+ {
+  "evdb_id": 2261,
+  "make": "Opel",
+  "model": "Zafira Electric XL 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 180,
+   "unit": "km"
+  },
+  "liveSlug": "opel-zafira-electric-xl-50kwh-180km-2024"
+ },
+ {
+  "evdb_id": 3221,
+  "make": "Opel",
+  "model": "Corsa Electric 54 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "opel-corsa-electric-my25-54kwh-335km-2025"
+ },
+ {
+  "evdb_id": 3307,
+  "make": "Opel",
+  "model": "Mokka Electric GSE",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 280,
+   "unit": "km"
+  },
+  "liveSlug": "opel-mokka-electric-gse-54kwh-280km-2025"
+ },
+ {
+  "evdb_id": 1793,
+  "make": "Opel",
+  "model": "Astra Sports Tourer Electric",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "opel-astra-sports-tourer-electric-54kwh-310km-2023"
+ },
+ {
+  "evdb_id": 3220,
+  "make": "Opel",
+  "model": "Corsa Electric 50 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 290,
+   "unit": "km"
+  },
+  "liveSlug": "opel-corsa-electric-my25-50kwh-290km-2025"
+ },
+ {
+  "evdb_id": 2263,
+  "make": "Opel",
+  "model": "Zafira Electric XL 75 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "opel-zafira-electric-xl-75kwh-265km-2024"
+ },
+ {
+  "evdb_id": 3364,
+  "make": "Opel",
+  "model": "Grandland Electric 97 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 101,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "opel-grandland-electric-101kwh-490km-2025"
+ },
+ {
+  "evdb_id": 2259,
+  "make": "Peugeot",
+  "model": "e-Traveller L3 75 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-traveller-l3-75kwh-265km-2024"
+ },
+ {
+  "evdb_id": 2151,
+  "make": "Peugeot",
+  "model": "e-5008 97 kWh Long Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 101,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 485,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-5008-long-range-101kwh-485km-2024"
+ },
+ {
+  "evdb_id": 2150,
+  "make": "Peugeot",
+  "model": "e-5008 73 kWh Dual Motor",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 355,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-5008-dual-motor-77kwh-355km-2025"
+ },
+ {
+  "evdb_id": 3222,
+  "make": "Peugeot",
+  "model": "e-208 50 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 295,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-208-my25-50kwh-295km-2025"
+ },
+ {
+  "evdb_id": 2003,
+  "make": "Peugeot",
+  "model": "e-3008 73 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-3008-77kwh-380km-2023"
+ },
+ {
+  "evdb_id": 3322,
+  "make": "Peugeot",
+  "model": "e-308 SW 58 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 58.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 340,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-308-sw-my26-58kwh-340km-2025"
+ },
+ {
+  "evdb_id": 2164,
+  "make": "Peugeot",
+  "model": "e-Rifter XL 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 230,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-rifter-xl-52kwh-230km-2024"
+ },
+ {
+  "evdb_id": 2005,
+  "make": "Peugeot",
+  "model": "e-3008 97 kWh Long Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 101,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 500,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-3008-long-range-101kwh-500km-2024"
+ },
+ {
+  "evdb_id": 2004,
+  "make": "Peugeot",
+  "model": "e-3008 73 kWh Dual Motor",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-3008-dual-motor-77kwh-365km-2025"
+ },
+ {
+  "evdb_id": 3066,
+  "make": "Peugeot",
+  "model": "e-408 58 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 61,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-408-61kwh-350km-2024"
+ },
+ {
+  "evdb_id": 3223,
+  "make": "Peugeot",
+  "model": "e-208 54 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-208-my25-54kwh-335km-2025"
+ },
+ {
+  "evdb_id": 2163,
+  "make": "Peugeot",
+  "model": "e-Rifter M 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-rifter-m-52kwh-235km-2024"
+ },
+ {
+  "evdb_id": 3321,
+  "make": "Peugeot",
+  "model": "e-308 58 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 58.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 345,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-308-my26-58kwh-345km-2025"
+ },
+ {
+  "evdb_id": 2149,
+  "make": "Peugeot",
+  "model": "e-5008 73 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-5008-77kwh-370km-2024"
+ },
+ {
+  "evdb_id": 2257,
+  "make": "Peugeot",
+  "model": "e-Traveller L3 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 180,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-traveller-l3-50kwh-180km-2024"
+ },
+ {
+  "evdb_id": 2258,
+  "make": "Peugeot",
+  "model": "e-Traveller L2 75 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-traveller-l2-75kwh-265km-2024"
+ },
+ {
+  "evdb_id": 1947,
+  "make": "Peugeot",
+  "model": "e-2008 54 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 54,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 300,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-2008-54kwh-300km-2023"
+ },
+ {
+  "evdb_id": 2256,
+  "make": "Peugeot",
+  "model": "e-Traveller L2 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 180,
+   "unit": "km"
+  },
+  "liveSlug": "peugeot-e-traveller-l2-50kwh-180km-2024"
+ },
+ {
+  "evdb_id": 1758,
+  "make": "Polestar",
+  "model": "3 Long Range Dual motor (MY23-25)",
+  "year": {
+   "from": 2022,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 515,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-3-long-range-dual-motor-my23-25-111kwh-515km-2022-2025"
+ },
+ {
+  "evdb_id": 3152,
+  "make": "Polestar",
+  "model": "2 Long Range Dual Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-2-long-range-dual-motor-my26-82kwh-455km-2025"
+ },
+ {
+  "evdb_id": 3328,
+  "make": "Polestar",
+  "model": "3 Performance (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 106,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-3-performance-my26-106kwh-460km-2025"
+ },
+ {
+  "evdb_id": 3298,
+  "make": "Polestar",
+  "model": "5 Dual Motor",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 112,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 580,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-5-dual-motor-112kwh-580km-2025"
+ },
+ {
+  "evdb_id": 1841,
+  "make": "Polestar",
+  "model": "4 Long Range Single Motor",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-4-long-range-single-motor-100kwh-495km-2024"
+ },
+ {
+  "evdb_id": 3153,
+  "make": "Polestar",
+  "model": "2 Long Range Performance (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-2-long-range-performance-my26-82kwh-450km-2025"
+ },
+ {
+  "evdb_id": 3151,
+  "make": "Polestar",
+  "model": "2 Long Range Single Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-2-long-range-single-motor-my26-82kwh-475km-2025"
+ },
+ {
+  "evdb_id": 3150,
+  "make": "Polestar",
+  "model": "2 Standard Range Single Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 70,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 405,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-2-standard-range-single-motor-my26-70kwh-405km-2025"
+ },
+ {
+  "evdb_id": 3326,
+  "make": "Polestar",
+  "model": "3 Rear Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 92,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-3-rear-motor-my26-92kwh-440km-2025"
+ },
+ {
+  "evdb_id": 2229,
+  "make": "Polestar",
+  "model": "3 Long Range Single motor (MY23-25)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-3-long-range-single-motor-my23-25-111kwh-530km-2024-2025"
+ },
+ {
+  "evdb_id": 1759,
+  "make": "Polestar",
+  "model": "3 Long Range Performance (MY23-25)",
+  "year": {
+   "from": 2022,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 111,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-3-long-range-performance-my23-25-111kwh-480km-2022-2025"
+ },
+ {
+  "evdb_id": 3299,
+  "make": "Polestar",
+  "model": "5 Performance",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 112,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-5-performance-112kwh-530km-2025"
+ },
+ {
+  "evdb_id": 1842,
+  "make": "Polestar",
+  "model": "4 Long Range Dual Motor",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 485,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-4-long-range-dual-motor-100kwh-485km-2024"
+ },
+ {
+  "evdb_id": 3327,
+  "make": "Polestar",
+  "model": "3 Dual Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 106,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 500,
+   "unit": "km"
+  },
+  "liveSlug": "polestar-3-dual-motor-my26-106kwh-500km-2025"
+ },
+ {
+  "evdb_id": 3378,
+  "make": "Porsche",
+  "model": "Macan Electric (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-macan-electric-my26-100kwh-495km-2025"
+ },
+ {
+  "evdb_id": 2101,
+  "make": "Porsche",
+  "model": "Taycan 4S Plus",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 565,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-4s-plus-105kwh-565km-2024"
+ },
+ {
+  "evdb_id": 2104,
+  "make": "Porsche",
+  "model": "Taycan Sport Turismo",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 89,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-sport-turismo-89kwh-460km-2024-2025"
+ },
+ {
+  "evdb_id": 2111,
+  "make": "Porsche",
+  "model": "Taycan 4S Cross Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 510,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-4s-cross-turismo-105kwh-510km-2024"
+ },
+ {
+  "evdb_id": 2099,
+  "make": "Porsche",
+  "model": "Taycan Plus",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 575,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-plus-105kwh-575km-2024"
+ },
+ {
+  "evdb_id": 3399,
+  "make": "Porsche",
+  "model": "Cayenne Turbo Electric (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 113,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-cayenne-turbo-electric-my26-113kwh-495km-2025"
+ },
+ {
+  "evdb_id": 3380,
+  "make": "Porsche",
+  "model": "Macan 4S Electric (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-macan-4s-electric-my26-100kwh-470km-2025"
+ },
+ {
+  "evdb_id": 3060,
+  "make": "Porsche",
+  "model": "Taycan 4",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 89,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-4-89kwh-490km-2024"
+ },
+ {
+  "evdb_id": 2105,
+  "make": "Porsche",
+  "model": "Taycan Plus Sport Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 530,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-plus-sport-turismo-105kwh-530km-2024"
+ },
+ {
+  "evdb_id": 2098,
+  "make": "Porsche",
+  "model": "Taycan",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 89,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-89kwh-495km-2024-2025"
+ },
+ {
+  "evdb_id": 2108,
+  "make": "Porsche",
+  "model": "Taycan Turbo Sport Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 505,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-turbo-sport-turismo-105kwh-505km-2024"
+ },
+ {
+  "evdb_id": 2109,
+  "make": "Porsche",
+  "model": "Taycan Turbo S Sport Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 505,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-turbo-s-sport-turismo-105kwh-505km-2024"
+ },
+ {
+  "evdb_id": 3062,
+  "make": "Porsche",
+  "model": "Taycan GTS",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 535,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-gts-105kwh-535km-2024"
+ },
+ {
+  "evdb_id": 2106,
+  "make": "Porsche",
+  "model": "Taycan 4S Sport Turismo",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 89,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-4s-sport-turismo-89kwh-440km-2024-2025"
+ },
+ {
+  "evdb_id": 2107,
+  "make": "Porsche",
+  "model": "Taycan 4S Plus Sport Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 510,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-4s-plus-sport-turismo-105kwh-510km-2024"
+ },
+ {
+  "evdb_id": 2102,
+  "make": "Porsche",
+  "model": "Taycan Turbo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 535,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-turbo-105kwh-535km-2024"
+ },
+ {
+  "evdb_id": 3381,
+  "make": "Porsche",
+  "model": "Macan GTS Electric (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-macan-gts-electric-my26-100kwh-465km-2025"
+ },
+ {
+  "evdb_id": 3382,
+  "make": "Porsche",
+  "model": "Macan Turbo Electric (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-macan-turbo-electric-my26-100kwh-465km-2025"
+ },
+ {
+  "evdb_id": 3063,
+  "make": "Porsche",
+  "model": "Taycan GTS Sport Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 505,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-gts-sport-turismo-105kwh-505km-2024"
+ },
+ {
+  "evdb_id": 3061,
+  "make": "Porsche",
+  "model": "Taycan 4 Plus",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 565,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-4-plus-105kwh-565km-2024"
+ },
+ {
+  "evdb_id": 2144,
+  "make": "Porsche",
+  "model": "Taycan Turbo GT",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-turbo-gt-105kwh-475km-2024"
+ },
+ {
+  "evdb_id": 2112,
+  "make": "Porsche",
+  "model": "Taycan Turbo Cross Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-turbo-cross-turismo-105kwh-495km-2024"
+ },
+ {
+  "evdb_id": 2103,
+  "make": "Porsche",
+  "model": "Taycan Turbo S",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 525,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-turbo-s-105kwh-525km-2024"
+ },
+ {
+  "evdb_id": 2110,
+  "make": "Porsche",
+  "model": "Taycan 4 Cross Turismo",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 510,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-4-cross-turismo-105kwh-510km-2024-2025"
+ },
+ {
+  "evdb_id": 3398,
+  "make": "Porsche",
+  "model": "Cayenne Electric (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 113,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 520,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-cayenne-electric-my26-113kwh-520km-2025"
+ },
+ {
+  "evdb_id": 2145,
+  "make": "Porsche",
+  "model": "Taycan Turbo GT Weissach",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-turbo-gt-weissach-105kwh-475km-2024"
+ },
+ {
+  "evdb_id": 2100,
+  "make": "Porsche",
+  "model": "Taycan 4S",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 89,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-4s-89kwh-490km-2024-2025"
+ },
+ {
+  "evdb_id": 2113,
+  "make": "Porsche",
+  "model": "Taycan Turbo S Cross Turismo",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 105,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 485,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-taycan-turbo-s-cross-turismo-105kwh-485km-2024"
+ },
+ {
+  "evdb_id": 3379,
+  "make": "Porsche",
+  "model": "Macan 4 Electric (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "porsche-macan-4-electric-my26-100kwh-470km-2025"
+ },
+ {
+  "evdb_id": 2133,
+  "make": "Renault",
+  "model": "5 E-Tech 40kWh 95hp",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 43,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 260,
+   "unit": "km"
+  },
+  "liveSlug": "renault-5-e-tech-95hp-43kwh-260km-2025"
+ },
+ {
+  "evdb_id": 2134,
+  "make": "Renault",
+  "model": "5 E-Tech 40kWh 120hp",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 43,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 260,
+   "unit": "km"
+  },
+  "liveSlug": "renault-5-e-tech-120hp-43kwh-260km-2024"
+ },
+ {
+  "evdb_id": 3127,
+  "make": "Renault",
+  "model": "4 E-Tech 52kWh 150hp",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 315,
+   "unit": "km"
+  },
+  "liveSlug": "renault-4-e-tech-150hp-55kwh-315km-2025"
+ },
+ {
+  "evdb_id": 3218,
+  "make": "Renault",
+  "model": "Scenic E-Tech EV60 170hp (TU2025)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 65,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 340,
+   "unit": "km"
+  },
+  "liveSlug": "renault-scenic-e-tech-ev60-170hp-tu2025-65kwh-340km-2025"
+ },
+ {
+  "evdb_id": 3131,
+  "make": "Renault",
+  "model": "Megane E-Tech EV60 130hp (TU2025)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 65,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "renault-megane-e-tech-ev60-130hp-tu2025-65kwh-380km-2025"
+ },
+ {
+  "evdb_id": 2135,
+  "make": "Renault",
+  "model": "5 E-Tech 52kWh 150hp",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "renault-5-e-tech-150hp-55kwh-335km-2024"
+ },
+ {
+  "evdb_id": 3132,
+  "make": "Renault",
+  "model": "Megane E-Tech EV60 220hp (TU2025)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 65,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "renault-megane-e-tech-ev60-220hp-tu2025-65kwh-380km-2025"
+ },
+ {
+  "evdb_id": 3219,
+  "make": "Renault",
+  "model": "Scenic E-Tech EV87 220hp (TU2025)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 92,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "renault-scenic-e-tech-ev87-220hp-tu2025-92kwh-480km-2025"
+ },
+ {
+  "evdb_id": 3392,
+  "make": "Renault",
+  "model": "Twingo E-Tech 275 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 29,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 185,
+   "unit": "km"
+  },
+  "liveSlug": "renault-twingo-e-tech-29kwh-185km-2025"
+ },
+ {
+  "evdb_id": 3126,
+  "make": "Renault",
+  "model": "4 E-Tech 40kWh 120hp",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 43,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 245,
+   "unit": "km"
+  },
+  "liveSlug": "renault-4-e-tech-120hp-43kwh-245km-2025"
+ },
+ {
+  "evdb_id": 1765,
+  "make": "Rolls-Royce",
+  "model": "Spectre",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 107,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "rolls-royce-spectre-107kwh-465km-2023"
+ },
+ {
+  "evdb_id": 3065,
+  "make": "Skywell",
+  "model": "BE11 Long Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 86,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "skywell-be11-long-range-86kwh-385km-2024"
+ },
+ {
+  "evdb_id": 3064,
+  "make": "Skywell",
+  "model": "BE11 Standard Range",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 72,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "skywell-be11-standard-range-72kwh-325km-2024"
+ },
+ {
+  "evdb_id": 2053,
+  "make": "Smart",
+  "model": "1 Premium",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "smart-1-premium-66kwh-335km-2023"
+ },
+ {
+  "evdb_id": 2041,
+  "make": "Smart",
+  "model": "1 Pro",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 49,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 250,
+   "unit": "km"
+  },
+  "liveSlug": "smart-1-pro-49kwh-250km-2023"
+ },
+ {
+  "evdb_id": 1999,
+  "make": "Smart",
+  "model": "3 Pro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 355,
+   "unit": "km"
+  },
+  "liveSlug": "smart-3-pro-66kwh-355km-2024"
+ },
+ {
+  "evdb_id": 3144,
+  "make": "Smart",
+  "model": "5 Pulse (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "smart-5-pulse-my25-100kwh-455km-2025"
+ },
+ {
+  "evdb_id": 3145,
+  "make": "Smart",
+  "model": "5 Summit Edition (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "smart-5-summit-edition-my25-100kwh-450km-2025"
+ },
+ {
+  "evdb_id": 2052,
+  "make": "Smart",
+  "model": "3 Pro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 49,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "smart-3-pro-49kwh-265km-2024"
+ },
+ {
+  "evdb_id": 3142,
+  "make": "Smart",
+  "model": "5 Pro (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "smart-5-pro-my25-100kwh-465km-2025"
+ },
+ {
+  "evdb_id": 1667,
+  "make": "Smart",
+  "model": "1 Pro",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "smart-1-pro-66kwh-335km-2023"
+ },
+ {
+  "evdb_id": 3143,
+  "make": "Smart",
+  "model": "5 Premium (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "smart-5-premium-my25-100kwh-465km-2025"
+ },
+ {
+  "evdb_id": 2218,
+  "make": "Smart",
+  "model": "1 Pure",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 335,
+   "unit": "km"
+  },
+  "liveSlug": "smart-1-pure-66kwh-335km-2024"
+ },
+ {
+  "evdb_id": 2217,
+  "make": "Smart",
+  "model": "1 Pure",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 49,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 250,
+   "unit": "km"
+  },
+  "liveSlug": "smart-1-pure-49kwh-250km-2024"
+ },
+ {
+  "evdb_id": 3179,
+  "make": "Smart",
+  "model": "5 Brabus (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "smart-5-brabus-my25-100kwh-450km-2025"
+ },
+ {
+  "evdb_id": 2054,
+  "make": "Smart",
+  "model": "3 Premium",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 355,
+   "unit": "km"
+  },
+  "liveSlug": "smart-3-premium-66kwh-355km-2024"
+ },
+ {
+  "evdb_id": 1920,
+  "make": "Smart",
+  "model": "1 Pulse",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "smart-1-pulse-66kwh-325km-2023"
+ },
+ {
+  "evdb_id": 2000,
+  "make": "Smart",
+  "model": "3 Brabus",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "smart-3-brabus-66kwh-350km-2024"
+ },
+ {
+  "evdb_id": 1748,
+  "make": "Smart",
+  "model": "1 Brabus",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "smart-1-brabus-66kwh-325km-2023"
+ },
+ {
+  "evdb_id": 3141,
+  "make": "Smart",
+  "model": "5 Pro (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 76,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "smart-5-pro-my25-76kwh-370km-2025"
+ },
+ {
+  "evdb_id": 1567,
+  "make": "Subaru",
+  "model": "Solterra AWD",
+  "year": {
+   "from": 2022,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 71.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "subaru-solterra-awd-71kwh-320km-2022"
+ },
+ {
+  "evdb_id": 3212,
+  "make": "Suzuki",
+  "model": "e VITARA 61 kWh 2WD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 61.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 330,
+   "unit": "km"
+  },
+  "liveSlug": "suzuki-e-vitara-2wd-61kwh-330km-2025"
+ },
+ {
+  "evdb_id": 3213,
+  "make": "Suzuki",
+  "model": "e VITARA 61 kWh 4WD AllGrip",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 61.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "suzuki-e-vitara-4wd-allgrip-61kwh-310km-2025"
+ },
+ {
+  "evdb_id": 3211,
+  "make": "Suzuki",
+  "model": "e VITARA 49 kWh 2WD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 48.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 270,
+   "unit": "km"
+  },
+  "liveSlug": "suzuki-e-vitara-2wd-49kwh-270km-2025"
+ },
+ {
+  "evdb_id": 3301,
+  "make": "TOGG",
+  "model": "T10X Standard Range RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "togg-t10x-standard-range-rwd-52kwh-265km-2025"
+ },
+ {
+  "evdb_id": 3302,
+  "make": "TOGG",
+  "model": "T10X Long Range RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 88.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "togg-t10x-long-range-rwd-88kwh-440km-2025"
+ },
+ {
+  "evdb_id": 3304,
+  "make": "TOGG",
+  "model": "T10F Standard Range RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52.4,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 295,
+   "unit": "km"
+  },
+  "liveSlug": "togg-t10f-standard-range-rwd-52kwh-295km-2025"
+ },
+ {
+  "evdb_id": 3306,
+  "make": "TOGG",
+  "model": "T10F Long Range AWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 88.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "togg-t10f-long-range-awd-88kwh-465km-2025"
+ },
+ {
+  "evdb_id": 3303,
+  "make": "TOGG",
+  "model": "T10X Long Range AWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 88.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "togg-t10x-long-range-awd-88kwh-425km-2025"
+ },
+ {
+  "evdb_id": 3305,
+  "make": "TOGG",
+  "model": "T10F Long Range RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 88.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "togg-t10f-long-range-rwd-88kwh-490km-2025"
+ },
+ {
+  "evdb_id": 3385,
+  "make": "Tesla",
+  "model": "Model X AWD (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-x-awd-my26-100kwh-490km-2025"
+ },
+ {
+  "evdb_id": 3404,
+  "make": "Tesla",
+  "model": "Model 3 Premium RWD (Highland)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 580,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-3-premium-rwd-highland-82kwh-580km-2025"
+ },
+ {
+  "evdb_id": 3383,
+  "make": "Tesla",
+  "model": "Model S AWD (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 590,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-s-awd-my26-100kwh-590km-2025"
+ },
+ {
+  "evdb_id": 3386,
+  "make": "Tesla",
+  "model": "Model X Plaid (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-x-plaid-my26-100kwh-475km-2025"
+ },
+ {
+  "evdb_id": 3403,
+  "make": "Tesla",
+  "model": "Model 3 Standard RWD (Highland)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 64,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 445,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-3-standard-rwd-highland-64kwh-445km-2025"
+ },
+ {
+  "evdb_id": 3269,
+  "make": "Tesla",
+  "model": "Model Y Performance (Juniper)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-y-performance-juniper-82kwh-460km-2025"
+ },
+ {
+  "evdb_id": 3186,
+  "make": "Tesla",
+  "model": "Model 3 RWD (Highland CATL LFP64)",
+  "year": {
+   "from": 2025,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 64,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 440,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-3-rwd-highland-catl-lfp64-64kwh-440km-2025-2025"
+ },
+ {
+  "evdb_id": 3405,
+  "make": "Tesla",
+  "model": "Model 3 Premium AWD (Highland)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 555,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-3-premium-awd-highland-82kwh-555km-2025"
+ },
+ {
+  "evdb_id": 3362,
+  "make": "Tesla",
+  "model": "Model Y Standard RWD (Juniper)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 64,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-y-standard-rwd-juniper-64kwh-380km-2025"
+ },
+ {
+  "evdb_id": 3332,
+  "make": "Tesla",
+  "model": "Model 3 Performance (Highland)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 515,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-3-performance-highland-82kwh-515km-2025"
+ },
+ {
+  "evdb_id": 3363,
+  "make": "Tesla",
+  "model": "Model Y Premium RWD (Juniper)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 78.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-y-premium-rwd-juniper-78kwh-470km-2025"
+ },
+ {
+  "evdb_id": 3330,
+  "make": "Tesla",
+  "model": "Model 3 Long Range RWD (Highland)",
+  "year": {
+   "from": 2025,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 580,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-3-long-range-rwd-highland-82kwh-580km-2025-2025"
+ },
+ {
+  "evdb_id": 3331,
+  "make": "Tesla",
+  "model": "Model 3 Long Range AWD (Highland)",
+  "year": {
+   "from": 2025,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 555,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-3-long-range-awd-highland-82kwh-555km-2025-2025"
+ },
+ {
+  "evdb_id": 3333,
+  "make": "Tesla",
+  "model": "Model Y Premium AWD (Juniper)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-y-premium-awd-juniper-82kwh-475km-2025"
+ },
+ {
+  "evdb_id": 3384,
+  "make": "Tesla",
+  "model": "Model S Plaid (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 565,
+   "unit": "km"
+  },
+  "liveSlug": "tesla-model-s-plaid-my26-100kwh-565km-2025"
+ },
+ {
+  "evdb_id": 3395,
+  "make": "Toyota",
+  "model": "C-HR 77 kWh AWD (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-c-hr-awd-my26-77kwh-385km-2025"
+ },
+ {
+  "evdb_id": 3400,
+  "make": "Toyota",
+  "model": "bZ4X Touring FWD 747 kWh (MY26)",
+  "year": {
+   "from": 2026,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 74.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-bz4x-touring-fwd-747-my26-75kwh-395km-2026"
+ },
+ {
+  "evdb_id": 3135,
+  "make": "Toyota",
+  "model": "bZ4X AWD 731 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 73.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 375,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-bz4x-awd-731-my25-73kwh-375km-2025"
+ },
+ {
+  "evdb_id": 3133,
+  "make": "Toyota",
+  "model": "bZ4X FWD 577 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 57.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 305,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-bz4x-fwd-577-my25-58kwh-305km-2025"
+ },
+ {
+  "evdb_id": 2267,
+  "make": "Toyota",
+  "model": "Proace Verso L 75 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-proace-verso-l-75kwh-265km-2024"
+ },
+ {
+  "evdb_id": 3394,
+  "make": "Toyota",
+  "model": "C-HR 77 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 77,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 430,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-c-hr-my26-77kwh-430km-2025"
+ },
+ {
+  "evdb_id": 3401,
+  "make": "Toyota",
+  "model": "bZ4X Touring AWD 747 kWh (MY26)",
+  "year": {
+   "from": 2026,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 74.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-bz4x-touring-awd-747-my26-75kwh-385km-2026"
+ },
+ {
+  "evdb_id": 2266,
+  "make": "Toyota",
+  "model": "Proace Verso M 75 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-proace-verso-m-75kwh-265km-2024"
+ },
+ {
+  "evdb_id": 2165,
+  "make": "Toyota",
+  "model": "Proace City Verso L1 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 235,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-proace-city-verso-l1-52kwh-235km-2024"
+ },
+ {
+  "evdb_id": 3210,
+  "make": "Toyota",
+  "model": "Urban Cruiser 611 kWh AWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 61.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-urban-cruiser-611-awd-61kwh-310km-2025"
+ },
+ {
+  "evdb_id": 3208,
+  "make": "Toyota",
+  "model": "Urban Cruiser 488 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 48.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 270,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-urban-cruiser-488-49kwh-270km-2025"
+ },
+ {
+  "evdb_id": 3134,
+  "make": "Toyota",
+  "model": "bZ4X FWD 731 kWh (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 73.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-bz4x-fwd-731-my25-73kwh-385km-2025"
+ },
+ {
+  "evdb_id": 2166,
+  "make": "Toyota",
+  "model": "Proace City Verso L2 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 52,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 230,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-proace-city-verso-l2-52kwh-230km-2024"
+ },
+ {
+  "evdb_id": 3209,
+  "make": "Toyota",
+  "model": "Urban Cruiser 611 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 61.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 330,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-urban-cruiser-611-61kwh-330km-2025"
+ },
+ {
+  "evdb_id": 3393,
+  "make": "Toyota",
+  "model": "C-HR 577 kWh (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 57.7,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 330,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-c-hr-577-my26-58kwh-330km-2025"
+ },
+ {
+  "evdb_id": 2264,
+  "make": "Toyota",
+  "model": "Proace Verso M 50 kWh",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 50,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 180,
+   "unit": "km"
+  },
+  "liveSlug": "toyota-proace-verso-m-50kwh-180km-2024"
+ },
+ {
+  "evdb_id": 1809,
+  "make": "VinFast",
+  "model": "VF 8 Plus Extended Range",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "vinfast-vf-8-plus-extended-range-90kwh-400km-2023"
+ },
+ {
+  "evdb_id": 3281,
+  "make": "VinFast",
+  "model": "VF 6 Eco",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 62,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 315,
+   "unit": "km"
+  },
+  "liveSlug": "vinfast-vf-6-eco-62kwh-315km-2025"
+ },
+ {
+  "evdb_id": 1807,
+  "make": "VinFast",
+  "model": "VF 8 Eco Extended Range",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 90,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 405,
+   "unit": "km"
+  },
+  "liveSlug": "vinfast-vf-8-eco-extended-range-90kwh-405km-2023"
+ },
+ {
+  "evdb_id": 3282,
+  "make": "VinFast",
+  "model": "VF 6 Plus",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 62,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "vinfast-vf-6-plus-62kwh-310km-2025"
+ },
+ {
+  "evdb_id": 3312,
+  "make": "Volkswagen",
+  "model": "e-Transporter Kombi L2 100 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 250,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-transporter-kombi-l2-100kw-68kwh-250km-2025"
+ },
+ {
+  "evdb_id": 3253,
+  "make": "Volkswagen",
+  "model": "ID5 Pure (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 320,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id5-pure-my26-55kwh-320km-2025"
+ },
+ {
+  "evdb_id": 3320,
+  "make": "Volkswagen",
+  "model": "e-Caravelle L2 210 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 245,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-caravelle-l2-210kw-68kwh-245km-2025"
+ },
+ {
+  "evdb_id": 3309,
+  "make": "Volkswagen",
+  "model": "e-Transporter Kombi L1 100 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 255,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-transporter-kombi-l1-100kw-68kwh-255km-2025"
+ },
+ {
+  "evdb_id": 3311,
+  "make": "Volkswagen",
+  "model": "e-Transporter Kombi L1 210 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 255,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-transporter-kombi-l1-210kw-68kwh-255km-2025"
+ },
+ {
+  "evdb_id": 3319,
+  "make": "Volkswagen",
+  "model": "e-Caravelle L2 160 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 245,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-caravelle-l2-160kw-68kwh-245km-2025"
+ },
+ {
+  "evdb_id": 3317,
+  "make": "Volkswagen",
+  "model": "e-Caravelle L1 210 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 245,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-caravelle-l1-210kw-68kwh-245km-2025"
+ },
+ {
+  "evdb_id": 3318,
+  "make": "Volkswagen",
+  "model": "e-Caravelle L2 100 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 245,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-caravelle-l2-100kw-68kwh-245km-2025"
+ },
+ {
+  "evdb_id": 3314,
+  "make": "Volkswagen",
+  "model": "e-Transporter Kombi L2 210 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 250,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-transporter-kombi-l2-210kw-68kwh-250km-2025"
+ },
+ {
+  "evdb_id": 3334,
+  "make": "Volkswagen",
+  "model": "ID3 Pro S (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id3-pro-s-my26-84kwh-475km-2025"
+ },
+ {
+  "evdb_id": 3310,
+  "make": "Volkswagen",
+  "model": "e-Transporter Kombi L1 160 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 255,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-transporter-kombi-l1-160kw-68kwh-255km-2025"
+ },
+ {
+  "evdb_id": 3313,
+  "make": "Volkswagen",
+  "model": "e-Transporter Kombi L2 160 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 250,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-transporter-kombi-l2-160kw-68kwh-250km-2025"
+ },
+ {
+  "evdb_id": 3250,
+  "make": "Volkswagen",
+  "model": "ID4 Pro (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 445,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id4-pro-my26-82kwh-445km-2025"
+ },
+ {
+  "evdb_id": 2157,
+  "make": "Volkswagen",
+  "model": "ID Buzz LWB GTX",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id-buzz-lwb-gtx-91kwh-380km-2024"
+ },
+ {
+  "evdb_id": 3316,
+  "make": "Volkswagen",
+  "model": "e-Caravelle L1 160 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 245,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-caravelle-l1-160kw-68kwh-245km-2025"
+ },
+ {
+  "evdb_id": 2232,
+  "make": "Volkswagen",
+  "model": "ID Buzz NWB Pro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id-buzz-nwb-pro-84kwh-370km-2024"
+ },
+ {
+  "evdb_id": 2213,
+  "make": "Volkswagen",
+  "model": "ID3 Pro (MY24-26)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id3-pro-my24-26-63kwh-365km-2024"
+ },
+ {
+  "evdb_id": 3257,
+  "make": "Volkswagen",
+  "model": "ID7 Pro S (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 525,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id7-pro-s-my26-91kwh-525km-2025"
+ },
+ {
+  "evdb_id": 3119,
+  "make": "Volkswagen",
+  "model": "ID Buzz NWB Pure",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 265,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id-buzz-nwb-pure-63kwh-265km-2024"
+ },
+ {
+  "evdb_id": 3258,
+  "make": "Volkswagen",
+  "model": "ID7 GTX (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 500,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id7-gtx-my26-91kwh-500km-2025"
+ },
+ {
+  "evdb_id": 2152,
+  "make": "Volkswagen",
+  "model": "ID3 GTX (MY24-26)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id3-gtx-my24-26-84kwh-470km-2024-2025"
+ },
+ {
+  "evdb_id": 2153,
+  "make": "Volkswagen",
+  "model": "ID3 GTX Performance (MY24-26)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id3-gtx-performance-my24-26-84kwh-465km-2024"
+ },
+ {
+  "evdb_id": 3252,
+  "make": "Volkswagen",
+  "model": "ID4 GTX (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id4-gtx-my26-84kwh-435km-2025"
+ },
+ {
+  "evdb_id": 3261,
+  "make": "Volkswagen",
+  "model": "ID7 Tourer GTX (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 500,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id7-tourer-gtx-my26-91kwh-500km-2025"
+ },
+ {
+  "evdb_id": 3255,
+  "make": "Volkswagen",
+  "model": "ID5 GTX (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 445,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id5-gtx-my26-84kwh-445km-2025"
+ },
+ {
+  "evdb_id": 2214,
+  "make": "Volkswagen",
+  "model": "ID3 Pure (MY24-26)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 325,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id3-pure-my24-26-55kwh-325km-2024"
+ },
+ {
+  "evdb_id": 2156,
+  "make": "Volkswagen",
+  "model": "ID Buzz NWB GTX",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id-buzz-nwb-gtx-84kwh-360km-2024"
+ },
+ {
+  "evdb_id": 3260,
+  "make": "Volkswagen",
+  "model": "ID7 Tourer Pro S (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 520,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id7-tourer-pro-s-my26-91kwh-520km-2025"
+ },
+ {
+  "evdb_id": 3256,
+  "make": "Volkswagen",
+  "model": "ID7 Pro (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id7-pro-my26-82kwh-475km-2025"
+ },
+ {
+  "evdb_id": 3251,
+  "make": "Volkswagen",
+  "model": "ID4 Pro 4MOTION (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id4-pro-4motion-my26-82kwh-435km-2025"
+ },
+ {
+  "evdb_id": 3259,
+  "make": "Volkswagen",
+  "model": "ID7 Tourer Pro (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id7-tourer-pro-my26-82kwh-470km-2025"
+ },
+ {
+  "evdb_id": 2154,
+  "make": "Volkswagen",
+  "model": "ID Buzz LWB Pro",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 91,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 390,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id-buzz-lwb-pro-91kwh-390km-2024"
+ },
+ {
+  "evdb_id": 3254,
+  "make": "Volkswagen",
+  "model": "ID5 Pro (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id5-pro-my26-82kwh-455km-2025"
+ },
+ {
+  "evdb_id": 3249,
+  "make": "Volkswagen",
+  "model": "ID4 Pure (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 285,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-id4-pure-my26-55kwh-285km-2025"
+ },
+ {
+  "evdb_id": 3315,
+  "make": "Volkswagen",
+  "model": "e-Caravelle L1 100 kW 64 kWh",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 245,
+   "unit": "km"
+  },
+  "liveSlug": "volkswagen-e-caravelle-l1-100kw-68kwh-245km-2025"
+ },
+ {
+  "evdb_id": 3157,
+  "make": "Volvo",
+  "model": "EC40 Twin Motor Performance (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ec40-twin-motor-performance-my26-82kwh-400km-2025"
+ },
+ {
+  "evdb_id": 3325,
+  "make": "Volvo",
+  "model": "EX90 Twin Motor Performance (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 106,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex90-twin-motor-performance-my26-106kwh-465km-2025"
+ },
+ {
+  "evdb_id": 3130,
+  "make": "Volvo",
+  "model": "ES90 Twin Motor Performance (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 106,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 535,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-es90-twin-motor-performance-my26-106kwh-535km-2025"
+ },
+ {
+  "evdb_id": 3129,
+  "make": "Volvo",
+  "model": "ES90 Twin Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 106,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 535,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-es90-twin-motor-my26-106kwh-535km-2025"
+ },
+ {
+  "evdb_id": 1909,
+  "make": "Volvo",
+  "model": "EX30 Single Motor (MY24-26)",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 51,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 275,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex30-single-motor-my24-26-51kwh-275km-2023"
+ },
+ {
+  "evdb_id": 3324,
+  "make": "Volvo",
+  "model": "EX90 Twin Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 106,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex90-twin-motor-my26-106kwh-480km-2025"
+ },
+ {
+  "evdb_id": 1910,
+  "make": "Volvo",
+  "model": "EX30 Single Motor ER (MY24-26)",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex30-single-motor-er-my24-26-69kwh-365km-2023"
+ },
+ {
+  "evdb_id": 3128,
+  "make": "Volvo",
+  "model": "ES90 Single Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 92,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 485,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-es90-single-motor-my26-92kwh-485km-2025"
+ },
+ {
+  "evdb_id": 3118,
+  "make": "Volvo",
+  "model": "EX30 Cross Country (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 330,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex30-cross-country-my26-69kwh-330km-2025"
+ },
+ {
+  "evdb_id": 3154,
+  "make": "Volvo",
+  "model": "EC40 Single Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 70,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ec40-single-motor-my26-70kwh-360km-2025"
+ },
+ {
+  "evdb_id": 3160,
+  "make": "Volvo",
+  "model": "EX40 Twin Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex40-twin-motor-my26-82kwh-385km-2025"
+ },
+ {
+  "evdb_id": 3159,
+  "make": "Volvo",
+  "model": "EX40 Single Motor ER (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex40-single-motor-er-my26-82kwh-400km-2025"
+ },
+ {
+  "evdb_id": 3155,
+  "make": "Volvo",
+  "model": "EC40 Single Motor ER (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 420,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ec40-single-motor-er-my26-82kwh-420km-2025"
+ },
+ {
+  "evdb_id": 1911,
+  "make": "Volvo",
+  "model": "EX30 Twin Motor Performance (MY24-26)",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 340,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex30-twin-motor-performance-my24-26-69kwh-340km-2023"
+ },
+ {
+  "evdb_id": 3158,
+  "make": "Volvo",
+  "model": "EX40 Single Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 70,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 345,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex40-single-motor-my26-70kwh-345km-2025"
+ },
+ {
+  "evdb_id": 3156,
+  "make": "Volvo",
+  "model": "EC40 Twin Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 400,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ec40-twin-motor-my26-82kwh-400km-2025"
+ },
+ {
+  "evdb_id": 3161,
+  "make": "Volvo",
+  "model": "EX40 Twin Motor Performance (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 385,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex40-twin-motor-performance-my26-82kwh-385km-2025"
+ },
+ {
+  "evdb_id": 3323,
+  "make": "Volvo",
+  "model": "EX90 Single Motor (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 92,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "volvo-ex90-single-motor-my26-92kwh-425km-2025"
+ },
+ {
+  "evdb_id": 3137,
+  "make": "Voyah",
+  "model": "Courage 80 kWh AWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 80,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 390,
+   "unit": "km"
+  },
+  "liveSlug": "voyah-courage-awd-80kwh-390km-2025"
+ },
+ {
+  "evdb_id": 3136,
+  "make": "Voyah",
+  "model": "Courage 80 kWh RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 80,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 395,
+   "unit": "km"
+  },
+  "liveSlug": "voyah-courage-rwd-80kwh-395km-2025"
+ },
+ {
+  "evdb_id": 2049,
+  "make": "Voyah",
+  "model": "Free 106 kWh",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 106,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "voyah-free-106kwh-480km-2023"
+ },
+ {
+  "evdb_id": 1822,
+  "make": "XPENG",
+  "model": "P7 AWD Performance",
+  "year": {
+   "from": 2023,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 86.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-p7-awd-performance-86kwh-460km-2023-2025"
+ },
+ {
+  "evdb_id": 3402,
+  "make": "XPENG",
+  "model": "G6 RWD Standard Range (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 68.5,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 380,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-g6-rwd-standard-range-my25-68kwh-380km-2025"
+ },
+ {
+  "evdb_id": 2182,
+  "make": "XPENG",
+  "model": "G6 RWD Long Range (MY24)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 92,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-g6-rwd-long-range-my24-92kwh-480km-2024-2025"
+ },
+ {
+  "evdb_id": 3277,
+  "make": "XPENG",
+  "model": "G9 RWD Standard Range (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 79,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 410,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-g9-rwd-standard-range-my25-79kwh-410km-2025"
+ },
+ {
+  "evdb_id": 3279,
+  "make": "XPENG",
+  "model": "G9 AWD Performance (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 93.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 465,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-g9-awd-performance-my25-93kwh-465km-2025"
+ },
+ {
+  "evdb_id": 1821,
+  "make": "XPENG",
+  "model": "P7 RWD Long Range",
+  "year": {
+   "from": 2023,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 86.2,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 495,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-p7-rwd-long-range-86kwh-495km-2023-2025"
+ },
+ {
+  "evdb_id": 3278,
+  "make": "XPENG",
+  "model": "G9 RWD Long Range (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 93.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-g9-rwd-long-range-my25-93kwh-480km-2025"
+ },
+ {
+  "evdb_id": 3276,
+  "make": "XPENG",
+  "model": "G6 AWD Performance (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 80.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 425,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-g6-awd-performance-my25-81kwh-425km-2025"
+ },
+ {
+  "evdb_id": 2181,
+  "make": "XPENG",
+  "model": "G6 RWD Standard Range (MY24)",
+  "year": {
+   "from": 2024,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 66,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 365,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-g6-rwd-standard-range-my24-66kwh-365km-2024-2025"
+ },
+ {
+  "evdb_id": 3275,
+  "make": "XPENG",
+  "model": "G6 RWD Long Range (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 80.8,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 435,
+   "unit": "km"
+  },
+  "liveSlug": "xpeng-g6-rwd-long-range-my25-81kwh-435km-2025"
+ },
+ {
+  "evdb_id": 3197,
+  "make": "Zeekr",
+  "model": "X Core RWD (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 51,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 270,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-x-core-rwd-my25-51kwh-270km-2025"
+ },
+ {
+  "evdb_id": 1933,
+  "make": "Zeekr",
+  "model": "001 Long Range RWD",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 505,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-001-long-range-rwd-100kwh-505km-2023"
+ },
+ {
+  "evdb_id": 3198,
+  "make": "Zeekr",
+  "model": "X Long Range RWD (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-x-long-range-rwd-my25-69kwh-360km-2025"
+ },
+ {
+  "evdb_id": 3083,
+  "make": "Zeekr",
+  "model": "7X Performance AWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 475,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-7x-performance-awd-100kwh-475km-2025"
+ },
+ {
+  "evdb_id": 3082,
+  "make": "Zeekr",
+  "model": "7X Long Range RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 490,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-7x-long-range-rwd-100kwh-490km-2025"
+ },
+ {
+  "evdb_id": 3081,
+  "make": "Zeekr",
+  "model": "7X Premium RWD",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 75,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 375,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-7x-premium-rwd-75kwh-375km-2025"
+ },
+ {
+  "evdb_id": 1935,
+  "make": "Zeekr",
+  "model": "001 Privilege AWD",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-001-privilege-awd-100kwh-480km-2023"
+ },
+ {
+  "evdb_id": 1934,
+  "make": "Zeekr",
+  "model": "001 Performance AWD",
+  "year": {
+   "from": 2023,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 100,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 480,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-001-performance-awd-100kwh-480km-2023"
+ },
+ {
+  "evdb_id": 3199,
+  "make": "Zeekr",
+  "model": "X Privilege AWD (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 69,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "zeekr-x-privilege-awd-my25-69kwh-350km-2025"
+ },
+ {
+  "evdb_id": 3178,
+  "make": "firefly",
+  "model": "firefly",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 42.1,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 240,
+   "unit": "km"
+  },
+  "liveSlug": "firefly-firefly-42kwh-240km-2025"
+ },
+ {
+  "evdb_id": 3374,
+  "make": "Škoda",
+  "model": "Enyaq 85x (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-85x-my26-82kwh-455km-2025"
+ },
+ {
+  "evdb_id": 3372,
+  "make": "Škoda",
+  "model": "Elroq 85x (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 445,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-elroq-85x-my26-82kwh-445km-2025"
+ },
+ {
+  "evdb_id": 3184,
+  "make": "Škoda",
+  "model": "Enyaq RS (MY25)",
+  "year": {
+   "from": 2025,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-rs-my25-84kwh-460km-2025-2025"
+ },
+ {
+  "evdb_id": 3373,
+  "make": "Škoda",
+  "model": "Elroq RS (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-elroq-rs-my26-84kwh-455km-2025"
+ },
+ {
+  "evdb_id": 3377,
+  "make": "Škoda",
+  "model": "Enyaq Coupe RS (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-coupe-rs-my26-84kwh-470km-2025"
+ },
+ {
+  "evdb_id": 3098,
+  "make": "Škoda",
+  "model": "Enyaq 85x (MY25)",
+  "year": {
+   "from": 2025,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-85x-my25-82kwh-450km-2025-2025"
+ },
+ {
+  "evdb_id": 3183,
+  "make": "Škoda",
+  "model": "Elroq RS (MY25)",
+  "year": {
+   "from": 2025,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-elroq-rs-my25-84kwh-450km-2025-2025"
+ },
+ {
+  "evdb_id": 3097,
+  "make": "Škoda",
+  "model": "Enyaq 85 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 455,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-85-my25-82kwh-455km-2025"
+ },
+ {
+  "evdb_id": 3101,
+  "make": "Škoda",
+  "model": "Enyaq Coupe 85x (MY25)",
+  "year": {
+   "from": 2025,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-coupe-85x-my25-82kwh-460km-2025-2025"
+ },
+ {
+  "evdb_id": 3100,
+  "make": "Škoda",
+  "model": "Enyaq Coupe 85 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-coupe-85-my25-82kwh-470km-2025"
+ },
+ {
+  "evdb_id": 3033,
+  "make": "Škoda",
+  "model": "Elroq 85 (MY25)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 450,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-elroq-85-my25-82kwh-450km-2024"
+ },
+ {
+  "evdb_id": 3096,
+  "make": "Škoda",
+  "model": "Enyaq 60 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 360,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-60-my25-63kwh-360km-2025"
+ },
+ {
+  "evdb_id": 3185,
+  "make": "Škoda",
+  "model": "Enyaq Coupe RS (MY25)",
+  "year": {
+   "from": 2025,
+   "to": 2025
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 470,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-coupe-rs-my25-84kwh-470km-2025-2025"
+ },
+ {
+  "evdb_id": 3032,
+  "make": "Škoda",
+  "model": "Elroq 60 (MY25)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 350,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-elroq-60-my25-63kwh-350km-2024"
+ },
+ {
+  "evdb_id": 3375,
+  "make": "Škoda",
+  "model": "Enyaq RS (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 84,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-rs-my26-84kwh-460km-2025"
+ },
+ {
+  "evdb_id": 3031,
+  "make": "Škoda",
+  "model": "Elroq 50 (MY25)",
+  "year": {
+   "from": 2024,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 55,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 310,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-elroq-50-my25-55kwh-310km-2024"
+ },
+ {
+  "evdb_id": 3376,
+  "make": "Škoda",
+  "model": "Enyaq Coupe 85x (MY26)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 82,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 460,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-coupe-85x-my26-82kwh-460km-2025"
+ },
+ {
+  "evdb_id": 3099,
+  "make": "Škoda",
+  "model": "Enyaq Coupe 60 (MY25)",
+  "year": {
+   "from": 2025,
+   "to": null
+  },
+  "battery_details": {
+   "nominal_capacity": {
+    "value": 63,
+    "unit": "kWh"
+   }
+  },
+  "range": {
+   "value": 370,
+   "unit": "km"
+  },
+  "liveSlug": "skoda-enyaq-coupe-60-my25-63kwh-370km-2025"
+ }
+]

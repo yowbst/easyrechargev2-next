@@ -215,6 +215,21 @@ Step 3 is the real acceptance test for the identity fix and must not be skipped.
 - **Golden slug test may not pass cleanly.** The December dataset may not reproduce every live
   slug if records were hand-edited in Directus since January. Mismatches need triage: a
   hand-edit is fine to accept, a logic divergence is not.
+  **RESOLVED (2026-08-23, Task 11 acceptance gate):** `plan` against the Dec 2025 snapshot
+  gave `CREATE 0, SLUG_DRIFT 0, GONE 0` — the identity fix (`evdb_id` matching) is correct
+  and slugs did not drift. `UNCHANGED 0 / UPDATE 562` tripped `assertPlanSane`'s 30% change
+  ceiling, but this is not the hand-edit/slug-divergence risk described above: 562/562 (100%)
+  of the UPDATE entries differ only in `evdb_time_fetched`, a scrape-metadata timestamp that
+  Directus round-trips at second precision (e.g. CMS `"2025-12-21T18:44:00"` vs. freshly
+  mapped `"2025-12-21T18:44:00.896Z"`) — a genuine field-mapping/comparison bug in
+  `diff.ts`/`fieldmap.ts` (Task 6), not an identity or slug problem. It will falsely flag every
+  vehicle as changed on every future `plan` run until the comparison normalizes precision (or
+  the field is excluded from the diff). Excluding that field, only 25/562 records (4.4%) show
+  a real difference, all in `energy_consumption` (22) or `cargo_capacity` (3), and all of the
+  same shape: floating-point serialization noise (e.g. `1.7000000000000002` vs `1.7`), not
+  content edits. No CMS writes occurred (`plan` is read-only); published count confirmed
+  unchanged at 562 before and after. Follow-up: fix the `evdb_time_fetched` comparison before
+  relying on `assertPlanSane`'s ceiling in a real run.
 - **`year` source field.** `clean_title_v2` reads `row["year"]`, distinct from the
   `date_range_active` stored in Directus. The scrape shape needs confirming against a fresh
   snapshot before the port is trusted.

@@ -12,7 +12,14 @@ npm run build        # Production build (generates ~800 static pages)
 npm run start        # Run production build
 npm run lint         # ESLint
 npm test             # Vitest unit tests
+
+npm run ingest -- plan  --in <file>   # Diff EVDB snapshot vs CMS (read-only)
+npm run ingest -- apply --plan <file> # Apply a reviewed plan (writes)
 ```
+
+`ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
+before `plan`/`apply` — see `docs/vehicle-ingest.md` for the full runbook, sequence, and
+gotchas.
 
 ## Deploy
 
