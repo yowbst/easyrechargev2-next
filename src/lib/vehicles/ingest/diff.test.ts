@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPlan, assertPlanSane, summarize } from "./diff";
+import { buildPlan, assertPlanSane, summarize, deepEqual } from "./diff";
 import type { ScrapedVehicle, CmsVehicle } from "./types";
 
 const scrapedRow = (over: Partial<ScrapedVehicle> = {}) =>
@@ -116,6 +116,36 @@ describe("assertPlanSane", () => {
     expect(() =>
       assertPlanSane(planWith(562, 562, 400), { maxChangeRatio: 1 }),
     ).not.toThrow();
+  });
+});
+
+describe("deepEqual", () => {
+  it("treats nested {value, unit} objects with differing key order as equal", () => {
+    expect(deepEqual({ value: 225, unit: "km" }, { unit: "km", value: 225 })).toBe(true);
+  });
+
+  it("treats arrays in the same order as equal", () => {
+    expect(deepEqual(["a", "b", "c"], ["a", "b", "c"])).toBe(true);
+  });
+
+  it("treats reordered arrays as NOT equal (order is meaningful, e.g. primary image first)", () => {
+    expect(deepEqual(["a", "b", "c"], ["c", "b", "a"])).toBe(false);
+  });
+
+  it("treats arrays of differing length as not equal", () => {
+    expect(deepEqual(["a", "b"], ["a", "b", "c"])).toBe(false);
+  });
+
+  it("treats null and undefined as not equal", () => {
+    expect(deepEqual(null, undefined)).toBe(false);
+  });
+
+  it("treats 0 and \"0\" as not equal", () => {
+    expect(deepEqual(0, "0")).toBe(false);
+  });
+
+  it("treats a key present with value undefined the same as the key being absent", () => {
+    expect(deepEqual({ a: 1, b: undefined }, { a: 1 })).toBe(true);
   });
 });
 

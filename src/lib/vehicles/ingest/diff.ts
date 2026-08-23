@@ -9,8 +9,14 @@ import type {
   ScrapedVehicle,
 } from "./types";
 
-/** Order-insensitive structural equality for Directus JSON columns. */
-function deepEqual(a: unknown, b: unknown): boolean {
+/**
+ * Structural equality for Directus JSON columns. Object keys are compared
+ * unordered, but arrays are compared element-by-element in order — a
+ * reorder counts as a change. This matters for `images_urls`, where the
+ * first element is the primary/thumbnail image, so a reordering is a real
+ * change worth writing, not noise to ignore.
+ */
+export function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (a === null || b === null || a === undefined || b === undefined) return false;
   if (typeof a !== typeof b) return false;
@@ -109,6 +115,13 @@ export function buildPlan(
   };
 }
 
+/**
+ * Bucket counts are per-entry, not per-vehicle: because the slug embeds
+ * range/battery/model, most UPDATEs also emit a sibling SLUG_DRIFT entry
+ * for the same evdb_id. Totals can therefore sum to more than
+ * `plan.scrapeCount` — do not render them to a human as mutually exclusive
+ * per-vehicle counts.
+ */
 export function summarize(plan: IngestPlan): Record<PlanBucket, number> {
   const out: Record<PlanBucket, number> = {
     CREATE: 0,
