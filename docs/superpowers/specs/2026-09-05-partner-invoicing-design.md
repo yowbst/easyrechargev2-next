@@ -97,7 +97,8 @@ edited by hand.
 
 ## Numbering
 
-`<PARTNER_SLUG_UPPER>-<YYYYMM>` — e.g. `EME-202607`. `version` is a separate integer field,
+`<PARTNER_INVOICE_CODE>-<YYYYMM>` — e.g. `EME-202607`, where the code is the new
+`partners.invoice_code` field (never derived from the slug). `version` is a separate integer field,
 rendered on the Doc as `EME-202607 | v2`, matching the June invoice's `B789CB54-202606 | v1`
 shape without its opaque prefix.
 
@@ -357,6 +358,9 @@ generate the Doc, check every placeholder resolved, verify the partner view.
 
 ## Open items
 
+- `partners.invoice_code` (String, max 8) — added during planning: the spec's `EME-202607`
+  needed a source for `EME`, and deriving it from the slug is fragile. Set to `EME`.
+- An adjustment endpoint is missing from the Surfaces table — see the plan's Task 14.
 - E-ME street number: `2` or `4`
 - easyRecharge IBAN for `global_config.company`
 - Whether `{{dashboard_url}}` may carry the `dashboard_token`
