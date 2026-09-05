@@ -349,7 +349,8 @@ generate the Doc, check every placeholder resolved, verify the partner view.
    - the three pre-go-live leads (Papeil 04.07, Chaillet 07.07, Golay 07.07 — dispatched
      before the ledger went live on 12.07.2026 at 15:25) added as `lead` lines with
      `dispatch = null`. A fourth quote of that period, Shabani (5325 Leibstadt, **AG**), is
-     **not** billable: E-ME covers VD/GE/FR/VS only.
+     **not** billable: AG is in no E-ME coverage area (the production partner row
+     547c103f covers VD/GE/FR/VS/NE).
    - the QA test lead of 12.07 (`lead.dispatch.qa@proton.me`) marked `disqualified` in the
      ledger before issuing, otherwise the scope rule includes it — its row carries
      `status='dispatched'`, not `skipped_test`.
