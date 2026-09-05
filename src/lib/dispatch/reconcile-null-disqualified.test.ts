@@ -37,6 +37,26 @@ vi.mock("@/lib/directus", () => ({
   }),
 }));
 
+describe("getMonthlyBilling filter semantics", () => {
+  beforeEach(() => {
+    calls.length = 0;
+    vi.resetModules();
+  });
+
+  it("uses _eq:true for billable, _neq:true for gift and disqualified", async () => {
+    const { getMonthlyBilling } = await import("./admin");
+    await getMonthlyBilling("2020-01");
+
+    const get = calls.find((c) => c.path.startsWith("/items/partner_dispatches") && c.method === "GET");
+    expect(get).toBeDefined();
+    const query = decodeURIComponent(get!.path);
+    expect(query).toContain("filter[billable][_eq]=true");
+    expect(query).toContain("filter[gift][_neq]=true");
+    expect(query).toContain("filter[disqualified][_neq]=true");
+    expect(query).not.toContain("filter[billable][_neq]");
+  });
+});
+
 describe("reconcileBilling with null booleans (production shape)", () => {
   beforeEach(() => {
     calls.length = 0;

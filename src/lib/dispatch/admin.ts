@@ -13,6 +13,12 @@ interface BillingRow {
  * Monthly billing report — sums `price_chf` per partner where billable=true
  * and the dispatch is neither a gift nor disqualified.
  *
+ * Uses `_eq: true` for billable (explicit inclusion of true only), and `_neq: true`
+ * for gift and disqualified (explicit exclusion of true, includes false and null).
+ * This asymmetry is intentional: billable defaults to false/null and must be
+ * explicitly set true to bill; gift/disqualified default to false/null and are
+ * only meaningful when explicitly true.
+ *
  * NOTE: intentionally has no environment filter in the aggregate query —
  * matches today's route behavior (do not add one).
  */
@@ -28,7 +34,7 @@ export async function getMonthlyBilling(month: string): Promise<{
   params.set("aggregate[sum]", "price_chf");
   params.set("groupBy", "partner");
   params.set("filter[month_bucket][_eq]", month);
-  params.set("filter[billable][_neq]", "true");
+  params.set("filter[billable][_eq]", "true");
   params.set("filter[gift][_neq]", "true");
   params.set("filter[disqualified][_neq]", "true");
   params.set("limit", "500");
