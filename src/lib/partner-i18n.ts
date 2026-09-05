@@ -14,7 +14,11 @@ export type PartnerDict = Record<string, string>;
 // Order matters: the Leads page owns the shared chrome (sidebar, filter, card,
 // modals…) and stats-specific strings live on partner-stats. A key is looked
 // up in each prefix and the first hit wins.
-const PREFIXES = ["pages.partner-leads.", "pages.partner-stats."] as const;
+const PREFIXES = [
+  "pages.partner-leads.",
+  "pages.partner-stats.",
+  "pages.partner-invoices.",
+] as const;
 
 export function partnerT(
   dict: PartnerDict,

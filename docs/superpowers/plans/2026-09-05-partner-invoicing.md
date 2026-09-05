@@ -2571,7 +2571,7 @@ P / GOLAY / 1807 Blonay / 2026-07-07
 
 Then update the invoice's `subtotal_chf` and `total_chf` to `680.00`.
 
-Shabani (5325 Leibstadt, AG) is **not** added — E-ME covers VD/GE/FR/VS only.
+Shabani (5325 Leibstadt, AG) is **not** added — AG is in no E-ME coverage area.
 
 - [ ] **Step 4: Generate the document**
 

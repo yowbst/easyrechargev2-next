@@ -182,7 +182,7 @@ export async function fetchDispatchConfig(): Promise<{
   type Resp = { data: SettingsRow | SettingsRow[] | null };
   const billingDefaults: BillingConfig = {
     currency: "CHF",
-    acceptance_window_days: 30,
+    acceptance_window_days: 15,
     dedup_window_days: 30,
   };
   try {
