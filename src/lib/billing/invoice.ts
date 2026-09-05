@@ -4,7 +4,10 @@ import { fetchDispatchConfig } from "@/lib/dispatch/queries";
 import { computePeriod, isPeriodIssuable } from "./period";
 import { buildInvoiceNumber } from "./numbering";
 import { collectBillableDispatches } from "./scope";
-import type { InvoicePeriod, PartySnapshot, ScopeResult } from "./types";
+import type {
+  InvoiceEvent, InvoiceEventActor, InvoiceStatus,
+  InvoicePeriod, PartySnapshot, ScopeResult,
+} from "./types";
 
 export interface InvoicePreview {
   period: InvoicePeriod;
@@ -178,4 +181,106 @@ export async function issueInvoice(
   }
 
   return { id: invoiceId, number, total_chf: total };
+}
+
+const ALLOWED: Record<InvoiceStatus, InvoiceStatus[]> = {
+  issued: ["sent", "cancelled"],
+  sent: ["paid", "disputed", "cancelled"],
+  disputed: ["sent", "paid", "cancelled"],
+  paid: [],
+  cancelled: [],
+};
+
+/** `paid` and `cancelled` are terminal; `issued -> paid` must pass through `sent`. */
+export function canTransition(from: InvoiceStatus, to: InvoiceStatus): boolean {
+  if (from === to) return false;
+  return (ALLOWED[from] ?? []).includes(to);
+}
+
+interface InvoiceStateRow {
+  id: string; status: InvoiceStatus; events: InvoiceEvent[] | null;
+  subtotal_chf: string | number; adjustment_chf: string | number;
+}
+
+async function fetchInvoiceState(invoiceId: string): Promise<InvoiceStateRow> {
+  const res = await directusFetch<{ data: InvoiceStateRow | null }>(
+    `/items/partner_invoices/${invoiceId}?fields=id,status,events,subtotal_chf,adjustment_chf`,
+    { next: { revalidate: 0 } },
+  );
+  const row = res?.data;
+  if (!row) throw new Error("invoice_not_found");
+  return row;
+}
+
+const STATUS_TIMESTAMP: Partial<Record<InvoiceStatus, string>> = {
+  sent: "sent_at", paid: "paid_at",
+};
+
+export async function setInvoiceStatus(
+  invoiceId: string, to: InvoiceStatus, note?: string, now: Date = new Date(),
+): Promise<void> {
+  const row = await fetchInvoiceState(invoiceId);
+  if (!canTransition(row.status, to)) throw new Error("invalid_transition");
+
+  const events = Array.isArray(row.events) ? row.events : [];
+  const event: InvoiceEvent = {
+    at: now.toISOString(),
+    actor: "yoan",
+    type: to === "disputed" ? "revision_requested" : (to as InvoiceEvent["type"]),
+    ...(note ? { note } : {}),
+  };
+  const stamp = STATUS_TIMESTAMP[to];
+
+  await directusFetch(`/items/partner_invoices/${invoiceId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status: to,
+      events: [...events, event],
+      ...(stamp ? { [stamp]: now.toISOString() } : {}),
+    }),
+    next: { revalidate: 0 },
+  });
+}
+
+export async function addInvoiceNote(
+  invoiceId: string, actor: InvoiceEventActor, note: string, now: Date = new Date(),
+): Promise<void> {
+  const row = await fetchInvoiceState(invoiceId);
+  const events = Array.isArray(row.events) ? row.events : [];
+  await directusFetch(`/items/partner_invoices/${invoiceId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      events: [...events, { at: now.toISOString(), actor, type: "comment", note }],
+    }),
+    next: { revalidate: 0 },
+  });
+}
+
+/** A discount or correction. Negative amounts are the normal case. */
+export async function addAdjustmentLine(
+  invoiceId: string, description: string, amountChf: number,
+): Promise<void> {
+  const row = await fetchInvoiceState(invoiceId);
+  if (row.status === "paid" || row.status === "cancelled") throw new Error("invoice_closed");
+
+  await directusFetch("/items/partner_invoice_lines", {
+    method: "POST",
+    body: JSON.stringify({
+      invoice: invoiceId, kind: "adjustment", dispatch: null,
+      label: description, description, quantity: 1,
+      unit_price_chf: amountChf, amount_chf: amountChf, sort: 9999,
+    }),
+    next: { revalidate: 0 },
+  });
+
+  const subtotal = Number(row.subtotal_chf);
+  const adjustment = Number(Number(row.adjustment_chf ?? 0) + amountChf);
+  await directusFetch(`/items/partner_invoices/${invoiceId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      adjustment_chf: Number(adjustment.toFixed(2)),
+      total_chf: Number((subtotal + adjustment).toFixed(2)),
+    }),
+    next: { revalidate: 0 },
+  });
 }
