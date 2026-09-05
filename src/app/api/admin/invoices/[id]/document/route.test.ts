@@ -27,22 +27,28 @@ const post = async (id: string, headers?: Record<string, string>) => {
 
 describe("POST /api/admin/invoices/[id]/document", () => {
   it("returns 401 when x-admin-token header is missing", async () => {
+    const { generateInvoiceDocument } = await import("@/lib/billing/google-docs");
     const res = await post("inv1");
     expect(res.status).toBe(401);
     expect((await res.json()).error).toBe("unauthorized");
+    expect(vi.mocked(generateInvoiceDocument)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when x-admin-token is wrong", async () => {
+    const { generateInvoiceDocument } = await import("@/lib/billing/google-docs");
     const res = await post("inv1", { "x-admin-token": "wrong" });
     expect(res.status).toBe(401);
+    expect(vi.mocked(generateInvoiceDocument)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when DIRECTUS_STATIC_TOKEN is unset, even with a header", async () => {
+    const { generateInvoiceDocument } = await import("@/lib/billing/google-docs");
     const original = process.env.DIRECTUS_STATIC_TOKEN;
     delete process.env.DIRECTUS_STATIC_TOKEN;
     try {
       const res = await post("inv1", { "x-admin-token": "anything" });
       expect(res.status).toBe(401);
+      expect(vi.mocked(generateInvoiceDocument)).not.toHaveBeenCalled();
     } finally {
       process.env.DIRECTUS_STATIC_TOKEN = original;
     }
@@ -71,11 +77,19 @@ describe("POST /api/admin/invoices/[id]/document", () => {
     expect(res.status).toBe(404);
   });
 
-  it("maps an unrecognized library error to 500", async () => {
+  it("maps an unrecognized library error to 500 internal_error, not the raw message", async () => {
     const { generateInvoiceDocument } = await import("@/lib/billing/google-docs");
-    vi.mocked(generateInvoiceDocument).mockRejectedValueOnce(new Error("google_api_down"));
+    vi.mocked(generateInvoiceDocument).mockRejectedValueOnce(
+      new Error("Google API error: insufficient permission on file 1a2b3c"),
+    );
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const res = await post("inv1", { "x-admin-token": TOKEN });
     expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toBe("internal_error");
+    expect(json.error).not.toContain("1a2b3c");
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

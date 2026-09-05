@@ -102,8 +102,14 @@ async function findInvoicesForPeriod(
 export async function previewInvoice(
   partnerSlug: string, month: string, now: Date = new Date(),
 ): Promise<InvoicePreview> {
-  const [partner, config] = await Promise.all([fetchPartner(partnerSlug), fetchDispatchConfig()]);
+  // Validate the month before any other network call: computePeriod throws
+  // `invalid_month` synchronously, and calling it first (right after the one
+  // fetch it depends on) means a malformed month never gets masked by a
+  // partner lookup failure, and is rejected after a single round trip
+  // instead of two. The resulting period is computed once and reused below.
+  const config = await fetchDispatchConfig();
   const period = computePeriod(month, config.billing.acceptance_window_days);
+  const partner = await fetchPartner(partnerSlug);
   const scope = await collectBillableDispatches(partner.id, month);
   const total = Number((scope.subtotalChf).toFixed(2));
 
@@ -128,12 +134,15 @@ export async function issueInvoice(
   partnerSlug: string, month: string, opts: { now?: Date } = {},
 ): Promise<{ id: string; number: string; total_chf: number }> {
   const now = opts.now ?? new Date();
-  const [partner, config, settings] = await Promise.all([
-    fetchPartner(partnerSlug), fetchDispatchConfig(), fetchCompany(),
-  ]);
-
+  // Same ordering rationale as previewInvoice: validate the month (via the
+  // one fetch computePeriod needs) before the partner/company lookups, so a
+  // malformed month can't be masked by one of those failing first, and the
+  // period is computed exactly once and reused below.
+  const config = await fetchDispatchConfig();
   const period = computePeriod(month, config.billing.acceptance_window_days);
   if (!isPeriodIssuable(period, now)) throw new Error("period_not_issuable");
+
+  const [partner, settings] = await Promise.all([fetchPartner(partnerSlug), fetchCompany()]);
 
   const scope = await collectBillableDispatches(partner.id, month);
   if (scope.unsettled.length > 0) throw new Error("unsettled_dispatches");

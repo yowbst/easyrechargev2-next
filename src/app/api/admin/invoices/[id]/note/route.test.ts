@@ -28,21 +28,27 @@ const post = async (id: string, body: unknown, headers?: Record<string, string>)
 
 describe("POST /api/admin/invoices/[id]/note", () => {
   it("returns 401 when x-admin-token header is missing", async () => {
+    const { addInvoiceNote } = await import("@/lib/billing/invoice");
     const res = await post("inv1", { note: "hi" });
     expect(res.status).toBe(401);
+    expect(vi.mocked(addInvoiceNote)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when x-admin-token is wrong", async () => {
+    const { addInvoiceNote } = await import("@/lib/billing/invoice");
     const res = await post("inv1", { note: "hi" }, { "x-admin-token": "wrong" });
     expect(res.status).toBe(401);
+    expect(vi.mocked(addInvoiceNote)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when DIRECTUS_STATIC_TOKEN is unset, even with a header", async () => {
+    const { addInvoiceNote } = await import("@/lib/billing/invoice");
     const original = process.env.DIRECTUS_STATIC_TOKEN;
     delete process.env.DIRECTUS_STATIC_TOKEN;
     try {
       const res = await post("inv1", { note: "hi" }, { "x-admin-token": "anything" });
       expect(res.status).toBe(401);
+      expect(vi.mocked(addInvoiceNote)).not.toHaveBeenCalled();
     } finally {
       process.env.DIRECTUS_STATIC_TOKEN = original;
     }
@@ -80,11 +86,19 @@ describe("POST /api/admin/invoices/[id]/note", () => {
     expect(res.status).toBe(404);
   });
 
-  it("maps an unrecognized library error to 500", async () => {
+  it("maps an unrecognized library error to 500 internal_error, not the raw message", async () => {
     const { addInvoiceNote } = await import("@/lib/billing/invoice");
-    vi.mocked(addInvoiceNote).mockRejectedValueOnce(new Error("boom"));
+    vi.mocked(addInvoiceNote).mockRejectedValueOnce(
+      new Error("Directus 403: forbidden on collection partner_invoices"),
+    );
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const res = await post("inv1", { note: "hi" }, { "x-admin-token": TOKEN });
     expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toBe("internal_error");
+    expect(json.error).not.toContain("partner_invoices");
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

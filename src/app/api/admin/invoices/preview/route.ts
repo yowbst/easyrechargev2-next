@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { previewInvoice } from "@/lib/billing/invoice";
-import { assertAdmin, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Dry-run an invoice for a partner/month: number, period, issuable flag,
@@ -18,9 +18,6 @@ export async function POST(req: Request) {
   try {
     return NextResponse.json(await previewInvoice(partner, month));
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "unknown" },
-      { status: errorStatus(e) },
-    );
+    return NextResponse.json(errorBody(e), { status: errorStatus(e) });
   }
 }

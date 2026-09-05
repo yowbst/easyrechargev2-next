@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { setInvoiceStatus } from "@/lib/billing/invoice";
 import { INVOICE_STATUSES, type InvoiceStatus } from "@/lib/billing/types";
-import { assertAdmin, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Move an invoice through issued -> sent -> paid, or to disputed/cancelled.
@@ -20,9 +20,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     await setInvoiceStatus(id, status as InvoiceStatus, note);
     return NextResponse.json({ ok: true, status });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "unknown" },
-      { status: errorStatus(e) },
-    );
+    return NextResponse.json(errorBody(e), { status: errorStatus(e) });
   }
 }

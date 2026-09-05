@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { addInvoiceNote } from "@/lib/billing/invoice";
-import { assertAdmin, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Append a comment to the invoice's event log. Same admin-token gate as
@@ -18,9 +18,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     await addInvoiceNote(id, who, note);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "unknown" },
-      { status: errorStatus(e) },
-    );
+    return NextResponse.json(errorBody(e), { status: errorStatus(e) });
   }
 }

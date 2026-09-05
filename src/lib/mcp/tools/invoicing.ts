@@ -16,8 +16,8 @@ export function registerInvoicingTools(server: McpServer) {
       description:
         "Dry-run the invoice for a partner and month: number, period bounds, whether it is issuable yet, the billable lines, unsettled dispatches and the total. Writes nothing.",
       inputSchema: {
-        partner: z.string().describe("partner slug, e.g. eme-energies"),
-        month: z.string().describe("YYYY-MM"),
+        partner: z.string().min(1).describe("partner slug, e.g. eme-energies"),
+        month: z.string().min(1).describe("YYYY-MM"),
       },
       annotations: { readOnlyHint: true },
     },
@@ -31,8 +31,8 @@ export function registerInvoicingTools(server: McpServer) {
       description:
         "IRREVERSIBLE. Freezes the period: assigns the number, snapshots issuer and debtor, writes the lines and stamps each dispatch so it can never be billed twice. Refuses if the acceptance window has not closed or any dispatch is unsettled. Run preview_invoice first.",
       inputSchema: {
-        partner: z.string().describe("partner slug"),
-        month: z.string().describe("YYYY-MM"),
+        partner: z.string().min(1).describe("partner slug"),
+        month: z.string().min(1).describe("YYYY-MM"),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     },
@@ -79,7 +79,7 @@ export function registerInvoicingTools(server: McpServer) {
       inputSchema: {
         invoiceId: z.string(),
         actor: z.enum(["yoan", "partner", "system"]).optional(),
-        note: z.string(),
+        note: z.string().min(1),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     },
@@ -97,7 +97,7 @@ export function registerInvoicingTools(server: McpServer) {
         "Append a discount or correction line and recompute the total. Negative amounts are the normal case — this is how an exceptional credit is granted on a later invoice instead of issuing a credit note. Refused on a paid or cancelled invoice.",
       inputSchema: {
         invoiceId: z.string(),
-        description: z.string().describe("shown as the line label on the document"),
+        description: z.string().min(1).describe("shown as the line label on the document"),
         amountChf: z.number().describe("negative for a discount"),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },

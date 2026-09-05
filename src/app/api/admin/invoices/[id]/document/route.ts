@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateInvoiceDocument } from "@/lib/billing/google-docs";
-import { assertAdmin, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Generate (always a NEW) invoice Google Doc from the invoice's current
@@ -14,9 +14,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     return NextResponse.json(await generateInvoiceDocument(id));
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "unknown" },
-      { status: errorStatus(e) },
-    );
+    return NextResponse.json(errorBody(e), { status: errorStatus(e) });
   }
 }

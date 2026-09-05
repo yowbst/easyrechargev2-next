@@ -62,6 +62,25 @@ describe("previewInvoice", () => {
     const p = await previewInvoice("eme-energies", "2026-07", new Date("2026-08-01T00:00:00Z"));
     expect(p.issuable).toBe(false);
   });
+
+  it("rejects a malformed month before ever fetching the partner", async () => {
+    const { previewInvoice } = await import("./invoice");
+    const { directusFetch } = await import("@/lib/directus");
+    // fetchPartner is the only thing in this module that calls directusFetch
+    // directly — clear prior calls from earlier tests so this assertion
+    // reflects only this call.
+    vi.mocked(directusFetch).mockClear();
+    await expect(previewInvoice("eme-energies", "not-a-month")).rejects.toThrow("invalid_month");
+    expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
+  });
+
+  it("rejects an out-of-range month number before ever fetching the partner", async () => {
+    const { previewInvoice } = await import("./invoice");
+    const { directusFetch } = await import("@/lib/directus");
+    vi.mocked(directusFetch).mockClear();
+    await expect(previewInvoice("eme-energies", "2026-13")).rejects.toThrow("invalid_month");
+    expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
+  });
 });
 
 describe("issueInvoice", () => {
@@ -106,5 +125,18 @@ describe("issueInvoice", () => {
     const r = await issueInvoice("eme-energies", "2026-07", { now: new Date("2026-09-05T00:00:00Z") });
     expect(r).toEqual({ id: "inv-1", number: "EME-202607", total_chf: 40 });
     expect(state.patched).toEqual(["d1"]);
+  });
+
+  it("rejects a malformed month before ever fetching the partner", async () => {
+    const { issueInvoice } = await import("./invoice");
+    const { directusFetch } = await import("@/lib/directus");
+    // fetchPartner/fetchCompany are the only things here that call directusFetch
+    // directly — clear prior calls from earlier tests so this assertion
+    // reflects only this call.
+    vi.mocked(directusFetch).mockClear();
+    await expect(
+      issueInvoice("eme-energies", "not-a-month", { now: new Date("2026-09-05T00:00:00Z") }),
+    ).rejects.toThrow("invalid_month");
+    expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
   });
 });

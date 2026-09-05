@@ -35,22 +35,28 @@ const post = async (body: unknown, headers?: Record<string, string>) => {
 
 describe("GET /api/admin/invoices", () => {
   it("returns 401 when x-admin-token header is missing", async () => {
+    const { directusFetch } = await import("@/lib/directus");
     const res = await get();
     expect(res.status).toBe(401);
     expect((await res.json()).error).toBe("unauthorized");
+    expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when x-admin-token is wrong", async () => {
+    const { directusFetch } = await import("@/lib/directus");
     const res = await get({ "x-admin-token": "wrong" });
     expect(res.status).toBe(401);
+    expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when DIRECTUS_STATIC_TOKEN is unset, even with a header", async () => {
+    const { directusFetch } = await import("@/lib/directus");
     const original = process.env.DIRECTUS_STATIC_TOKEN;
     delete process.env.DIRECTUS_STATIC_TOKEN;
     try {
       const res = await get({ "x-admin-token": "anything" });
       expect(res.status).toBe(401);
+      expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
     } finally {
       process.env.DIRECTUS_STATIC_TOKEN = original;
     }
@@ -69,20 +75,57 @@ describe("GET /api/admin/invoices", () => {
       expect.any(Object),
     );
   });
+
+  it("maps an unmapped directusFetch failure to 500 internal_error, not the raw message", async () => {
+    const { directusFetch } = await import("@/lib/directus");
+    vi.mocked(directusFetch).mockRejectedValueOnce(
+      new Error("Directus 403: forbidden on collection partner_invoices, field secret_field"),
+    );
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await get({ "x-admin-token": TOKEN });
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toBe("internal_error");
+    expect(json.error).not.toContain("partner_invoices");
+    expect(json.error).not.toContain("secret_field");
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
 });
 
 describe("POST /api/admin/invoices", () => {
   it("returns 401 when x-admin-token header is missing", async () => {
+    const { issueInvoice } = await import("@/lib/billing/invoice");
     const res = await post({ partner: "eme-energies", month: "2026-07" });
     expect(res.status).toBe(401);
+    expect(vi.mocked(issueInvoice)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when x-admin-token is wrong", async () => {
+    const { issueInvoice } = await import("@/lib/billing/invoice");
     const res = await post(
       { partner: "eme-energies", month: "2026-07" },
       { "x-admin-token": "wrong" },
     );
     expect(res.status).toBe(401);
+    expect(vi.mocked(issueInvoice)).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 when DIRECTUS_STATIC_TOKEN is unset, even with a header", async () => {
+    const { issueInvoice } = await import("@/lib/billing/invoice");
+    const original = process.env.DIRECTUS_STATIC_TOKEN;
+    delete process.env.DIRECTUS_STATIC_TOKEN;
+    try {
+      const res = await post(
+        { partner: "eme-energies", month: "2026-07" },
+        { "x-admin-token": "anything" },
+      );
+      expect(res.status).toBe(401);
+      expect(vi.mocked(issueInvoice)).not.toHaveBeenCalled();
+    } finally {
+      process.env.DIRECTUS_STATIC_TOKEN = original;
+    }
   });
 
   it("returns 400 when partner or month is missing", async () => {
@@ -129,15 +172,22 @@ describe("POST /api/admin/invoices", () => {
     expect((await res.json()).error).toBe("invalid_month");
   });
 
-  it("maps an unrecognized library error to 500", async () => {
+  it("maps an unrecognized library error to 500 internal_error, not the raw message", async () => {
     const { issueInvoice } = await import("@/lib/billing/invoice");
-    vi.mocked(issueInvoice).mockRejectedValueOnce(new Error("something_unexpected"));
+    vi.mocked(issueInvoice).mockRejectedValueOnce(
+      new Error("Directus 403: forbidden on collection partners, field uid"),
+    );
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const res = await post(
       { partner: "eme-energies", month: "2026-07" },
       { "x-admin-token": TOKEN },
     );
     expect(res.status).toBe(500);
-    expect((await res.json()).error).toBe("something_unexpected");
+    const json = await res.json();
+    expect(json.error).toBe("internal_error");
+    expect(json.error).not.toContain("partners");
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

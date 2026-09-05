@@ -17,6 +17,24 @@ const STATUS_BY_ERROR: Record<string, number> = {
   missing_invoice_code: 500,
 };
 
+function isKnownDomainError(e: unknown): e is Error {
+  return e instanceof Error && Object.prototype.hasOwnProperty.call(STATUS_BY_ERROR, e.message);
+}
+
 export function errorStatus(e: unknown): number {
-  return e instanceof Error ? (STATUS_BY_ERROR[e.message] ?? 500) : 500;
+  return isKnownDomainError(e) ? STATUS_BY_ERROR[e.message] : 500;
+}
+
+/**
+ * The message sent back to the caller (HTTP or MCP). Known domain errors are
+ * the contract with callers — their message IS the API, so it's returned
+ * verbatim. Anything else (a raw Directus error, a Google API failure, a
+ * network error, ...) may carry internal details — collection/field names,
+ * stack traces — that must never reach an external caller, so it's logged
+ * server-side and collapsed to a generic message instead.
+ */
+export function errorBody(e: unknown): { error: string } {
+  if (isKnownDomainError(e)) return { error: e.message };
+  console.error("[admin/invoices]", e);
+  return { error: "internal_error" };
 }

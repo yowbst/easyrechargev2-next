@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { directusFetch } from "@/lib/directus";
 import { issueInvoice } from "@/lib/billing/invoice";
-import { assertAdmin, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * List partner invoices (GET) and issue a new one (POST). Same admin-token
@@ -19,10 +19,14 @@ export async function GET(req: Request) {
   params.set("limit", "100");
   const month = searchParams.get("month");
   if (month) params.set("filter[period_month][_eq]", month);
-  const res = await directusFetch<{ data: unknown[] }>(
-    `/items/partner_invoices?${params}`, { next: { revalidate: 0 } },
-  );
-  return NextResponse.json({ rows: res?.data ?? [] });
+  try {
+    const res = await directusFetch<{ data: unknown[] }>(
+      `/items/partner_invoices?${params}`, { next: { revalidate: 0 } },
+    );
+    return NextResponse.json({ rows: res?.data ?? [] });
+  } catch (e) {
+    return NextResponse.json(errorBody(e), { status: errorStatus(e) });
+  }
 }
 
 export async function POST(req: Request) {
@@ -35,9 +39,6 @@ export async function POST(req: Request) {
   try {
     return NextResponse.json(await issueInvoice(partner, month));
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "unknown" },
-      { status: errorStatus(e) },
-    );
+    return NextResponse.json(errorBody(e), { status: errorStatus(e) });
   }
 }
