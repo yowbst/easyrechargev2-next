@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { directusFetch } from "@/lib/directus";
+import { getEnvironment } from "@/lib/directus-storage";
 import { issueInvoice } from "@/lib/billing/invoice";
 import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
@@ -17,6 +18,9 @@ export async function GET(req: Request) {
   params.set("fields", "id,number,version,status,period_month,total_chf,issued_at,due_at,paid_at,doc_url");
   params.set("sort", "-issued_at");
   params.set("limit", "100");
+  // Every invoice row carries `environment`; without this filter a staging-issued
+  // invoice shows up in the production admin list (and vice versa).
+  params.set("filter[environment][_eq]", getEnvironment());
   const month = searchParams.get("month");
   if (month) params.set("filter[period_month][_eq]", month);
   try {

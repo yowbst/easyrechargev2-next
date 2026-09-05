@@ -143,7 +143,7 @@ WordPress 301 redirects (legacy URLs) are in `next.config.ts` `redirects()`.
 ### MCP Server
 
 - Remote MCP server at `/api/mcp` — streamable HTTP via `mcp-handler`, implemented in `src/app/api/[transport]/route.ts`
-- 25 tools: CMS reads, form submission writes, billing/admin, generic Directus CRUD — for LLM clients (claude.ai, Claude Desktop, Claude Code)
+- 33 tools: CMS reads, form submission writes, billing/admin, partner invoicing, generic Directus CRUD — for LLM clients (claude.ai, Claude Desktop, Claude Code)
 - Auth: Google SSO with email allowlist, OR static bearer token (`MCP_STATIC_TOKEN`) for CLI use
 - OAuth AS at `/api/mcp-auth/{register,authorize,callback,token}`; discovery at `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource`
 - Tool implementations in `src/lib/mcp/tools/`, auth/JWT logic in `src/lib/mcp/`
@@ -309,7 +309,7 @@ Dictionary strings can contain `{quote_request_duration}`, `{first_contact}`, `{
 | `/api/docs` | GET | OpenAPI 3.0 spec (JSON) |
 | `/api/debug/urls` | GET | List all generated URLs by type |
 | `/api-docs` | — | Swagger UI (interactive docs page) |
-| `/api/mcp` | GET/POST/DELETE | MCP server (streamable HTTP, 25 tools; OAuth or static bearer auth) — see `docs/mcp-setup.md` |
+| `/api/mcp` | GET/POST/DELETE | MCP server (streamable HTTP, 33 tools; OAuth or static bearer auth) — see `docs/mcp-setup.md` |
 | `/api/mcp-auth/*` | GET/POST | MCP OAuth AS endpoints: `register`, `authorize`, `callback`, `token` |
 | `/.well-known/oauth-*` | GET | MCP OAuth discovery (`oauth-authorization-server`, `oauth-protected-resource`) |
 

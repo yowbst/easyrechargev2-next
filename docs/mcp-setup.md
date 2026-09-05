@@ -11,7 +11,7 @@ A remote [Model Context Protocol](https://modelcontextprotocol.io) server exposi
 
 ## 1. What it is
 
-The server registers 25 tools across five groups:
+The server registers 33 tools across six groups:
 
 | Group | File | Tools |
 |---|---|---|
@@ -19,6 +19,7 @@ The server registers 25 tools across five groups:
 | App / misc | `src/lib/mcp/tools/app.ts` | `get_form_submission`, `list_site_urls`, `get_api_docs` |
 | Form submission (writes) | `src/lib/mcp/tools/forms.ts` | `submit_quote`, `submit_contact`, `submit_mini_quote` |
 | Admin / billing | `src/lib/mcp/tools/admin.ts` | `get_billing`, `reconcile_billing`, `dispatch_submission`, `list_dispatches` |
+| Partner invoicing | `src/lib/mcp/tools/invoicing.ts` | `preview_invoice`, `issue_invoice`, `generate_invoice_document`, `set_invoice_status`, `add_invoice_note`, `add_invoice_adjustment`, `add_invoice_manual_lead`, `list_invoices` |
 | Directus generic | `src/lib/mcp/tools/directus-generic.ts` | `directus_collections`, `directus_fields`, `directus_query`, `directus_get_item`, `directus_create_item`, `directus_update_item` |
 
 Every tool is annotated (`readOnlyHint` / `destructiveHint` / `idempotentHint`) so MCP clients can render appropriate confirmation UI. Read-only tools (`list_*`, `get_*`, `search_*`, `directus_collections|fields|query|get_item`) never mutate data. Everything else is a write:
@@ -112,7 +113,7 @@ Note the `cut -d= -f2-` (not `-f2`) — `openssl rand -base64` output can contai
 The script (`scripts/mcp-smoke.mjs`):
 1. Asserts an unauthenticated request gets `401`.
 2. Runs `initialize` + `notifications/initialized`.
-3. Runs `tools/list` and checks all 25 expected tool names are present.
+3. Runs `tools/list` and checks the expected tool names are present.
 4. Calls the read-only `list_pages` tool and checks it returns data.
 
 To run it against a deployed environment instead of local dev, set `MCP_URL`:

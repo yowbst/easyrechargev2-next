@@ -1,8 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { directusFetch } from "@/lib/directus";
+import { getEnvironment } from "@/lib/directus-storage";
 import {
-  addAdjustmentLine, addInvoiceNote, issueInvoice, previewInvoice, setInvoiceStatus,
+  addAdjustmentLine, addInvoiceNote, addManualLeadLine, issueInvoice, previewInvoice,
+  setInvoiceStatus,
 } from "@/lib/billing/invoice";
 import { generateInvoiceDocument } from "@/lib/billing/google-docs";
 import { INVOICE_STATUSES } from "@/lib/billing/types";
@@ -109,6 +111,32 @@ export function registerInvoicingTools(server: McpServer) {
   );
 
   server.registerTool(
+    "add_invoice_manual_lead",
+    {
+      title: "Add a manual lead line",
+      description:
+        "Append a `lead` line with no dispatch — a lead billed without a ledger row (e.g. the pre-go-live July leads). Counts towards the lead quantity on the document, unlike an adjustment, and recomputes the invoice totals from the actual lines. Refused on a paid or cancelled invoice.",
+      inputSchema: {
+        invoiceId: z.string(),
+        label: z.string().min(1).describe("P / SURNAME / 1052 Locality / 2026-07-04"),
+        unitPriceChf: z.number().describe("the lead price, e.g. 40"),
+        description: z.string().optional(),
+        dispatchedAt: z.string().optional().describe("ISO date of the original dispatch"),
+        canton: z.string().optional(),
+        postalCode: z.string().optional(),
+        locality: z.string().optional(),
+        lastName: z.string().optional(),
+        leadCategory: z.string().optional(),
+        product: z.string().optional(),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+    },
+    async ({ invoiceId, label, unitPriceChf, ...meta }) => run(
+      () => addManualLeadLine(invoiceId, label, unitPriceChf, meta),
+    ),
+  );
+
+  server.registerTool(
     "list_invoices",
     {
       title: "List partner invoices",
@@ -124,6 +152,9 @@ export function registerInvoicingTools(server: McpServer) {
       params.set("fields", "id,number,version,status,period_month,total_chf,issued_at,due_at,paid_at,doc_url");
       params.set("sort", "-issued_at");
       params.set("limit", "100");
+      // Same environment scoping as GET /api/admin/invoices — a staging invoice
+      // must never appear in a production listing.
+      params.set("filter[environment][_eq]", getEnvironment());
       if (month) params.set("filter[period_month][_eq]", month);
       if (status) params.set("filter[status][_eq]", status);
       const res = await directusFetch<{ data: unknown[] }>(
