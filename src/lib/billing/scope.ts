@@ -11,7 +11,7 @@ interface Row {
   id: string;
   dispatched_at: string;
   canton: string | null;
-  price_chf: string | number | null;
+  price_chf: string | number | null | undefined;
   lead_category: string | null;
   product: string | null;
   billable: boolean | null;
@@ -37,9 +37,10 @@ export function buildLeadLabel(
   return `P / ${name} / ${place} / ${dispatchedAt.slice(0, 10)}`;
 }
 
-function toNumber(v: string | number | null): number {
-  if (v === null) return 0;
-  return typeof v === "string" ? Number.parseFloat(v) : v;
+function toNumber(v: string | number | null | undefined): number {
+  if (v === null || v === undefined) return 0;
+  const parsed = typeof v === "string" ? Number.parseFloat(v) : v;
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 /**
