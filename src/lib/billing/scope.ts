@@ -37,6 +37,12 @@ export function buildLeadLabel(
   return `P / ${name} / ${place} / ${dispatchedAt.slice(0, 10)}`;
 }
 
+/**
+ * Directus page size for the scope query. A partner billing more than this in
+ * one month is not something this code silently truncates — see below.
+ */
+const SCOPE_LIMIT = 500;
+
 function toNumber(v: string | number | null | undefined): number {
   if (v === null || v === undefined) return 0;
   const parsed = typeof v === "string" ? Number.parseFloat(v) : v;
@@ -60,18 +66,24 @@ export async function collectBillableDispatches(
   params.set("filter[month_bucket][_eq]", month);
   params.set("filter[status][_eq]", "dispatched");
   params.set("sort", "dispatched_at");
-  params.set("limit", "500");
+  params.set("limit", String(SCOPE_LIMIT));
 
   const res = await directusFetch<{ data: Row[] }>(
     `/items/partner_dispatches?${params}`,
     { next: { revalidate: 0 } },
   );
 
+  const rows = res?.data ?? [];
+  // No pagination: a truncated page would drop real leads from the scope and
+  // the invoice would under-bill with no error and no signal. Fail loud instead
+  // — the fix is pagination, and until then this is the tripwire.
+  if (rows.length >= SCOPE_LIMIT) throw new Error("scope_limit_exceeded");
+
   const lines: ScopeLine[] = [];
   const unsettled: string[] = [];
   const excluded: { id: string; reason: string }[] = [];
 
-  for (const r of res?.data ?? []) {
+  for (const r of rows) {
     if (r.invoice) { excluded.push({ id: r.id, reason: "already_invoiced" }); continue; }
     if (r.gift === true) { excluded.push({ id: r.id, reason: "gift" }); continue; }
     if (r.disqualified === true) { excluded.push({ id: r.id, reason: "disqualified" }); continue; }

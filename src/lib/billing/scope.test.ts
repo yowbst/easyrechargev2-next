@@ -178,3 +178,37 @@ describe("collectBillableDispatches", () => {
     expect(r.subtotalChf).toBe(75);
   });
 });
+
+describe("collectBillableDispatches pagination guard", () => {
+  it("throws scope_limit_exceeded rather than silently under-billing a truncated page", async () => {
+    const { directusFetch } = await import("@/lib/directus");
+    // Exactly the page size: indistinguishable from "there are more".
+    const page = Array.from({ length: 500 }, (_, i) => ({
+      id: `x${i}`, billable: true, gift: false, disqualified: false, invoice: null,
+      dispatched_at: "2026-07-04T09:00:00.000Z", canton: "VD", price_chf: "40.00",
+      lead_category: "owner_solar", product: "ecp",
+      submission: { user: { last_name: "X" }, data: { postalCode: "1000", locality: "Lausanne" } },
+    }));
+    vi.mocked(directusFetch).mockResolvedValueOnce({ data: page });
+
+    const { collectBillableDispatches } = await import("./scope");
+    await expect(collectBillableDispatches("partner-1", "2026-07"))
+      .rejects.toThrow("scope_limit_exceeded");
+  });
+
+  it("does not throw one row below the limit", async () => {
+    const { directusFetch } = await import("@/lib/directus");
+    const page = Array.from({ length: 499 }, (_, i) => ({
+      id: `x${i}`, billable: true, gift: false, disqualified: false, invoice: null,
+      dispatched_at: "2026-07-04T09:00:00.000Z", canton: "VD", price_chf: "40.00",
+      lead_category: "owner_solar", product: "ecp",
+      submission: { user: { last_name: "X" }, data: { postalCode: "1000", locality: "Lausanne" } },
+    }));
+    vi.mocked(directusFetch).mockResolvedValueOnce({ data: page });
+
+    const { collectBillableDispatches } = await import("./scope");
+    const r = await collectBillableDispatches("partner-1", "2026-07");
+    expect(r.lines).toHaveLength(499);
+    expect(r.subtotalChf).toBe(19960);
+  });
+});

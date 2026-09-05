@@ -18,7 +18,13 @@ export interface PartnerInvoice {
   issued_at: string | null;
   due_at: string | null;
   paid_at: string | null;
-  lines: PartnerInvoiceLine[];
+  /**
+   * Optional on purpose: this is a Directus O2M alias, so it is absent from the
+   * response whenever the alias is named something else or the role lacks
+   * nested read permission on partner_invoice_lines. A partner-facing page must
+   * degrade to "no detail rows", never to a 500.
+   */
+  lines?: PartnerInvoiceLine[];
 }
 
 /**

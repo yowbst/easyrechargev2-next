@@ -58,7 +58,7 @@ export function InvoiceList({
               </tr>
             </thead>
             <tbody>
-              {inv.lines.map((line, i) => (
+              {(inv.lines ?? []).map((line, i) => (
                 <tr key={i} className="border-t">
                   <td className="py-1">{frDate(line.dispatched_at)}</td>
                   <td className="py-1">{line.label}</td>
