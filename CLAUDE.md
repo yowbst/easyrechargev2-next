@@ -63,6 +63,7 @@ GOOGLE_OAUTH_CLIENT_SECRET=<secret>
 MCP_JWT_SECRET=<generate with `openssl rand -base64 32`>
 MCP_STATIC_TOKEN=<generate with `openssl rand -base64 32`>
 MCP_ALLOWED_EMAILS=yoan@easyrecharge.ch
+CRON_SECRET=<generate with `openssl rand -base64 32`>
 ```
 
 Optional: `DIRECTUS_LOCALITIES_COLLECTION` (defaults to "localities")
@@ -72,6 +73,9 @@ MCP server env vars (see `docs/mcp-setup.md`):
 - `MCP_JWT_SECRET` — signs/verifies MCP OAuth JWTs (auth codes, access/refresh tokens); rotating it revokes all outstanding tokens
 - `MCP_STATIC_TOKEN` — static bearer token for CLI/CI MCP access (treat like `DIRECTUS_STATIC_TOKEN`)
 - `MCP_ALLOWED_EMAILS` — comma-separated Google SSO allowlist for the MCP server (defaults to `yoan@easyrecharge.ch`)
+
+Vercel Cron env vars:
+- `CRON_SECRET` — bearer token for Vercel Cron authentication at `/api/cron/reconcile-billing`; generate with `openssl rand -base64 32` and set in Vercel project env vars (Production + Preview)
 
 ## Design System
 
