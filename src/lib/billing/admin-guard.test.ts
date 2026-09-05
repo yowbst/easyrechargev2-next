@@ -57,7 +57,11 @@ describe("errorStatus", () => {
     ["duplicate_number", 409],
     ["invalid_transition", 409],
     ["invoice_closed", 409],
+    ["mixed_unit_prices", 409],
+    ["invalid_amount", 400],
     ["missing_invoice_code", 500],
+    ["invoice_create_failed", 500],
+    ["scope_limit_exceeded", 500],
   ])("maps %s -> %d", (message, status) => {
     expect(errorStatus(new Error(message))).toBe(status);
   });
@@ -76,7 +80,8 @@ describe("errorBody", () => {
   it.each([
     "invalid_month", "partner_not_found", "invoice_not_found", "period_not_issuable",
     "unsettled_dispatches", "empty_scope", "duplicate_number", "invalid_transition",
-    "invoice_closed", "missing_invoice_code",
+    "invoice_closed", "mixed_unit_prices", "invalid_amount", "missing_invoice_code",
+    "invoice_create_failed", "scope_limit_exceeded",
   ])("returns the message verbatim for the known domain error %s", (message) => {
     expect(errorBody(new Error(message))).toEqual({ error: message });
   });

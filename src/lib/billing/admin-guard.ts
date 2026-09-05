@@ -14,7 +14,13 @@ const STATUS_BY_ERROR: Record<string, number> = {
   duplicate_number: 409,
   invalid_transition: 409,
   invoice_closed: 409,
+  // The invoice's lead lines carry more than one unit price, so the Doc's single
+  // aggregated line cannot represent them. A state problem, not a server fault.
+  mixed_unit_prices: 409,
+  invalid_amount: 400,
   missing_invoice_code: 500,
+  invoice_create_failed: 500,
+  scope_limit_exceeded: 500,
 };
 
 function isKnownDomainError(e: unknown): e is Error {

@@ -72,6 +72,8 @@ describe("POST /api/admin/invoices/preview", () => {
       period: { month: "2026-07", start: "2026-07-01", end: "2026-07-31", issuableFrom: "2026-08-16" },
       issuable: true,
       number: "EME-202607",
+      issuanceRank: 1,
+      existingLiveInvoice: null,
       scope: { lines: [], subtotalChf: 0, unsettled: [], excluded: [] },
       subtotalChf: 0,
       totalChf: 0,
