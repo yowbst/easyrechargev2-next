@@ -64,6 +64,11 @@ MCP_JWT_SECRET=<generate with `openssl rand -base64 32`>
 MCP_STATIC_TOKEN=<generate with `openssl rand -base64 32`>
 MCP_ALLOWED_EMAILS=yoan@easyrecharge.ch
 CRON_SECRET=<generate with `openssl rand -base64 32`>
+
+GOOGLE_SERVICE_ACCOUNT_EMAIL=<service account address>
+GOOGLE_SERVICE_ACCOUNT_KEY=<PEM private key, \n-escaped>
+GOOGLE_INVOICE_TEMPLATE_DOC_ID=<Doc id of the placeholder template>
+GOOGLE_INVOICE_FOLDER_ID=<destination Drive folder>
 ```
 
 Optional: `DIRECTUS_LOCALITIES_COLLECTION` (defaults to "localities")
@@ -76,6 +81,11 @@ MCP server env vars (see `docs/mcp-setup.md`):
 
 Vercel Cron env vars:
 - `CRON_SECRET` — bearer token for Vercel Cron authentication at `/api/cron/reconcile-billing`; generate with `openssl rand -base64 32` and set in Vercel project env vars (Production + Preview)
+
+Partner invoicing — Google Docs env vars (used by `src/lib/billing/google-docs.ts`):
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` — service account credentials (Drive + Docs API scopes) used to copy the invoice template and substitute placeholders; the key is a PEM private key with literal `\n` escapes
+- `GOOGLE_INVOICE_TEMPLATE_DOC_ID` — Doc id of the placeholder template (`{{invoice_number}}` etc.) that gets copied per invoice
+- `GOOGLE_INVOICE_FOLDER_ID` — destination Drive folder id for generated invoice Docs
 
 ## Design System
 
