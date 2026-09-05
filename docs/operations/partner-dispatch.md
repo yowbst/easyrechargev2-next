@@ -126,19 +126,19 @@ Each dispatch row tracks a `stage` from `new → contacted → appointment → q
 
 ### Billing window
 
-A dispatch becomes `billable=true` when its stage reaches `quote_sent` (or beyond), **or** when the per-stage time window elapses without movement. Windows are read from `site_settings.global_config.dispatch.billing.stage_windows_days`, with per-partner overrides on `partners.disqualification_overrides`. Gifts (`gift=true`) and disqualified rows are never billable.
+A dispatch becomes `billable=true` when its stage reaches `quote_sent` (or beyond),
+**or** when the acceptance window elapses from `dispatched_at` without a
+disqualification. The window is a single global value read from
+`site_settings.global_config.dispatch.billing.acceptance_window_days` (15 days),
+with a per-partner override under `partners.disqualification_overrides.acceptance`.
+Gifts (`gift=true`) and disqualified rows are never billable.
 
-Window defaults: `{ new: 7, contacted: 7, appointment: 14, quote_sent: 0 }` days. Time is counted from `stage_entered_at`, so each stage starts a fresh budget.
+There are no per-stage windows. The May 2026 plan proposed them; the implementation
+in `src/lib/dispatch/billing.ts` uses the single acceptance window above, and
+`stage_windows_days` does not exist in `site_settings`.
 
-Run the reconciliation pass before generating an invoice — it flips `billable=true` on dispatches whose window has elapsed:
-
-```bash
-curl -X POST -H "x-admin-token: $DIRECTUS_STATIC_TOKEN" \
-  "https://easyrecharge.ch/api/admin/reconcile-billing"
-
-curl -H "x-admin-token: $DIRECTUS_STATIC_TOKEN" \
-  "https://easyrecharge.ch/api/admin/billing?month=2026-05"
-```
+Reconciliation runs daily via `/api/cron/reconcile-billing`. The manual endpoint
+`POST /api/admin/reconcile-billing` remains for ad-hoc runs before invoicing.
 
 ### Dedup
 
