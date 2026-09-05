@@ -55,12 +55,25 @@ Allow NULL in the Directus data model.
 Those 15 unsettled dispatches stay unsettled — and July stays un-issuable — until the
 backfill lands and the cron (Step 6) locks them.
 
-## Step 2 — `site_settings.global_config`
+## Step 2 — `site_settings.global_config` — ✅ NOT NEEDED
 
-Add the `company` block (spec §Data model) — it is the source of `issuer_snapshot`, and the
-issuer's address currently exists nowhere but the Google template. **Fill in the IBAN.**
+The issuer block was dropped. The issuer never varies, so **easyRecharge's name, contact and
+address are hardcoded in the template** rather than injected. There is no `company` block to
+create, and no IBAN in Directus — the IBAN lives in the template's QR section, filled by hand.
 
-Add `invoicing: { payment_terms_days: 21 }`.
+`payment_terms_days` also needs nothing: the code defaults to 21, which is what
+`EME-202607` used.
+
+`issuer_snapshot` is still written on each invoice but is now unused by the document.
+Harmless, and it keeps the option of driving the issuer from config later.
+
+> **Security note found while checking this (pre-existing, unrelated to invoicing):**
+> `src/app/[lang]/[slug]/page.tsx` passes the whole `global_config` object as a prop to
+> `QuoteForm`, a client component — so its entire contents are serialised into the page sent
+> to the browser. Verified on production `/fr/demande-devis`: the Make webhook URLs,
+> `test_email_patterns`, the Google Ads account id and the billing config are all readable in
+> the served HTML. The Make webhook URLs are the serious one — anyone can post fabricated
+> quotes into the scenario. Fix is to pass only the keys `QuoteForm` needs. **Not done.**
 
 ## Step 3 — the acceptance window *(gated)*
 
@@ -83,8 +96,9 @@ and both the template and the `1 - Finance` root folder are shared with it (veri
 `edit=true` on the template, `addChildren=true` on the root).
 
 The template Doc `1isW8xAJjvWdHn7jV8kYcynRa2fUKVMML3ssOAVBNDbo` was converted in place from
-the June invoice into a real template: 22 placeholders, no June values left, plus an
-adjustment row (table row 3) and `{{dashboard_url}}` under "Détail des leads".
+the June invoice into a real template: **19 placeholders**, no June values left, plus an
+adjustment row (table row 3) and `{{dashboard_url}}` under "Détail des leads". The issuer
+block (name, contact, street, city) is deliberately **hardcoded**, not templated.
 
 Filing is **dynamic**: the destination is resolved per invoice as
 `<GOOGLE_INVOICE_ROOT_FOLDER_ID>/<year>/Revenus`, the year taken from `period_month`.
