@@ -115,7 +115,7 @@ describe("generateInvoiceDocument", () => {
   beforeEach(() => { resetState(); vi.resetModules(); });
 
   function fakeGateway(...results: { fileId: string; url: string }[]) {
-    const copyTemplate = vi.fn<(name: string) => Promise<{ fileId: string; url: string }>>();
+    const copyTemplate = vi.fn<(name: string, year: string) => Promise<{ fileId: string; url: string }>>();
     results.forEach((r) => copyTemplate.mockResolvedValueOnce(r));
     const replaceText = vi.fn<(fileId: string, map: Record<string, string>) => Promise<void>>(
       async () => {},
@@ -129,7 +129,7 @@ describe("generateInvoiceDocument", () => {
     const r = await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
 
     expect(r).toEqual({ doc_url: "https://docs.google.com/document/d/f1/edit", doc_file_id: "f1", version: 1 });
-    expect(gateway.copyTemplate).toHaveBeenCalledWith("EME-202607 v1");
+    expect(gateway.copyTemplate).toHaveBeenCalledWith("EME-202607 v1", "2026");
 
     const patch = calls.find((c) => c.method === "PATCH");
     expect(patch).toBeDefined();
@@ -140,6 +140,16 @@ describe("generateInvoiceDocument", () => {
     expect(body.doc_versions).toEqual([
       { version: 1, doc_url: "https://docs.google.com/document/d/f1/edit", doc_file_id: "f1", generated_at: "2026-09-05T00:00:00.000Z" },
     ]);
+  });
+
+  it("derives the destination year from the invoice period, not from today", async () => {
+    // A January 2027 invoice must file under 2027 even if it is generated later.
+    state.invoice = { ...state.invoice, period_month: "2027-01", number: "EME-202701" };
+    const gateway = fakeGateway({ fileId: "f9", url: "https://docs.google.com/document/d/f9/edit" });
+    const { generateInvoiceDocument } = await import("./google-docs");
+    await generateInvoiceDocument("inv-1", gateway, new Date("2027-03-01T00:00:00Z"));
+
+    expect(gateway.copyTemplate).toHaveBeenCalledWith("EME-202701 v1", "2027");
   });
 
   it("hands replaceText the quantity and unit price derived from the mocked lead lines", async () => {
@@ -169,7 +179,7 @@ describe("generateInvoiceDocument", () => {
     expect(second).toEqual({ doc_url: "https://docs.google.com/document/d/f2/edit", doc_file_id: "f2", version: 2 });
 
     // The filename and the {{invoice_version}} placeholder both reflect the bump.
-    expect(gateway.copyTemplate).toHaveBeenNthCalledWith(2, "EME-202607 v2");
+    expect(gateway.copyTemplate).toHaveBeenNthCalledWith(2, "EME-202607 v2", "2026");
     const secondMap = gateway.replaceText.mock.calls[1][1] as Record<string, string>;
     expect(secondMap["{{invoice_version}}"]).toBe("v2");
 

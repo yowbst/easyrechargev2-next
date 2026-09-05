@@ -76,24 +76,32 @@ config, the live value of 30 wins and July stays un-issuable until 30 August.
 `partners.street_number` says `2`; the June invoice says `4`. One is wrong, and it prints on
 an accounting document. Verify which.
 
-## Step 5 — Google
+## Step 5 — Google — ✅ MOSTLY DONE 2026-09-05
 
-- Copy the invoice template onto an **easyRecharge** Google account (not neho.ch — it would
-  put client names and addresses in your employer's Drive).
-- Replace its literal values with the English placeholders listed in the spec
-  (`{{invoice_number}}`, `{{issue_date}}`, `{{line_quantity}}`…).
-- **Add an adjustment row** carrying `{{adjustment_label}}` and `{{adjustment_amount}}`.
-  Both render as an empty string when there is no adjustment, so the row collapses on an
-  ordinary invoice. **Until this row exists, do not use a discount** — the total would drop
-  with nothing on the document explaining why.
-- Replace the old spreadsheet-annex link with `{{dashboard_url}}`.
-- Create a service account, share the template and the destination folder with it, and set
-  `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SERVICE_ACCOUNT_KEY`,
-  `GOOGLE_INVOICE_TEMPLATE_DOC_ID`, `GOOGLE_INVOICE_FOLDER_ID`.
+Service account `easyrecharge-invoices@erv2-2026.iam.gserviceaccount.com` authenticates,
+and both the template and the `1 - Finance` root folder are shared with it (verified live:
+`edit=true` on the template, `addChildren=true` on the root).
 
-Open question you still owe an answer to: `{{dashboard_url}}` embeds `dashboard_token`, the
-sole credential for E-ME's leads. An invoice forwarded to an external accountant would grant
-them access. If that bothers you, link to a bare `/partners` URL instead.
+The template Doc `1isW8xAJjvWdHn7jV8kYcynRa2fUKVMML3ssOAVBNDbo` was converted in place from
+the June invoice into a real template: 22 placeholders, no June values left, plus an
+adjustment row (table row 3) and `{{dashboard_url}}` under "Détail des leads".
+
+Filing is **dynamic**: the destination is resolved per invoice as
+`<GOOGLE_INVOICE_ROOT_FOLDER_ID>/<year>/Revenus`, the year taken from `period_month`.
+Confirmed present: `2026/Revenus` and `2025/Revenus`. Generation throws
+`invoice_folder_not_found` (409) rather than creating a folder or filing elsewhere — so a
+missing year folder fails loudly every January instead of silently filing into the old one.
+
+**Still open:**
+
+- **Rotate the service account key.** It was pasted into a chat transcript on 2026-09-05.
+  Delete it under *Keys* and create a new one.
+- Enable **Google Drive API** and **Google Docs API** on project `erv2-2026` if not already.
+- Set the four `GOOGLE_*` variables in **Vercel** (they are set in `.env.local`).
+- Decide whether `{{dashboard_url}}` may carry `dashboard_token`: an invoice forwarded to an
+  external accountant would grant them access to E-ME's leads.
+- The template's adjustment row currently sits **below** the VAT line. Move it above if you
+  prefer the usual ordering — the placeholders work wherever the row lives.
 
 ## Step 6 — Vercel
 

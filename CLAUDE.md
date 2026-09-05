@@ -68,7 +68,7 @@ CRON_SECRET=<generate with `openssl rand -base64 32`>
 GOOGLE_SERVICE_ACCOUNT_EMAIL=<service account address>
 GOOGLE_SERVICE_ACCOUNT_KEY=<PEM private key, \n-escaped>
 GOOGLE_INVOICE_TEMPLATE_DOC_ID=<Doc id of the placeholder template>
-GOOGLE_INVOICE_FOLDER_ID=<destination Drive folder>
+GOOGLE_INVOICE_ROOT_FOLDER_ID=<root Drive folder; <root>/<year>/Revenus is resolved per invoice>
 ```
 
 Optional: `DIRECTUS_LOCALITIES_COLLECTION` (defaults to "localities")
@@ -85,7 +85,7 @@ Vercel Cron env vars:
 Partner invoicing — Google Docs env vars (used by `src/lib/billing/google-docs.ts`):
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` — service account credentials (Drive + Docs API scopes) used to copy the invoice template and substitute placeholders; the key is a PEM private key with literal `\n` escapes
 - `GOOGLE_INVOICE_TEMPLATE_DOC_ID` — Doc id of the placeholder template (`{{invoice_number}}` etc.) that gets copied per invoice
-- `GOOGLE_INVOICE_FOLDER_ID` — destination Drive folder id for generated invoice Docs
+- `GOOGLE_INVOICE_ROOT_FOLDER_ID` — root Drive folder for filing. The destination is resolved per invoice as `<root>/<year>/Revenus`, the year coming from the invoice period; generation throws `invoice_folder_not_found` rather than creating a folder or filing elsewhere
 
 ## Design System
 

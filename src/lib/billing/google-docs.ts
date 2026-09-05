@@ -1,7 +1,13 @@
 import { directusFetch } from "@/lib/directus";
 
 export interface DocGateway {
-  copyTemplate(name: string): Promise<{ fileId: string; url: string }>;
+  /**
+   * `year` selects the destination folder. Filing is year-scoped
+   * (`<root>/<year>/Revenus`), so the year travels with the call rather than
+   * living in a static env var that would silently keep filing into the old
+   * folder every January.
+   */
+  copyTemplate(name: string, year: string): Promise<{ fileId: string; url: string }>;
   replaceText(fileId: string, map: Record<string, string>): Promise<void>;
 }
 
@@ -101,11 +107,34 @@ async function defaultGateway(): Promise<DocGateway> {
   const drive = google.drive({ version: "v3", auth });
   const docs = google.docs({ version: "v1", auth });
 
+  /** Exact name of the revenue subfolder inside each year folder. */
+  const REVENUE_FOLDER = "Revenus";
+
+  async function childFolderId(parentId: string, name: string): Promise<string> {
+    const res = await drive.files.list({
+      q:
+        `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' ` +
+        `and name='${name.replace(/'/g, "\\'")}' and trashed=false`,
+      fields: "files(id,name)",
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
+    const id = res.data.files?.[0]?.id;
+    // Refuse rather than create: a folder appearing on its own would file real
+    // invoices somewhere nobody is looking.
+    if (!id) throw new Error("invoice_folder_not_found");
+    return id;
+  }
+
   return {
-    async copyTemplate(name) {
+    async copyTemplate(name, year) {
+      const root = process.env.GOOGLE_INVOICE_ROOT_FOLDER_ID!;
+      const yearFolder = await childFolderId(root, year);
+      const target = await childFolderId(yearFolder, REVENUE_FOLDER);
       const res = await drive.files.copy({
         fileId: process.env.GOOGLE_INVOICE_TEMPLATE_DOC_ID!,
-        requestBody: { name, parents: [process.env.GOOGLE_INVOICE_FOLDER_ID!] },
+        requestBody: { name, parents: [target] },
+        supportsAllDrives: true,
       });
       const fileId = res.data.id!;
       return { fileId, url: `https://docs.google.com/document/d/${fileId}/edit` };
@@ -185,7 +214,8 @@ export async function generateInvoiceDocument(
   const newVersion = invoice.doc_url ? currentVersion + 1 : currentVersion;
 
   const name = `${invoice.number} v${newVersion}`;
-  const { fileId, url } = await gw.copyTemplate(name);
+  const year = String(invoice.period_month).slice(0, 4);
+  const { fileId, url } = await gw.copyTemplate(name, year);
   await gw.replaceText(
     fileId,
     buildPlaceholders({ ...invoice, version: newVersion }, quantity, unitPrice, dashboardUrl, adjustment),
