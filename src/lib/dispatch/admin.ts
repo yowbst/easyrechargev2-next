@@ -28,9 +28,9 @@ export async function getMonthlyBilling(month: string): Promise<{
   params.set("aggregate[sum]", "price_chf");
   params.set("groupBy", "partner");
   params.set("filter[month_bucket][_eq]", month);
-  params.set("filter[billable][_eq]", "true");
-  params.set("filter[gift][_eq]", "false");
-  params.set("filter[disqualified][_eq]", "false");
+  params.set("filter[billable][_neq]", "true");
+  params.set("filter[gift][_neq]", "true");
+  params.set("filter[disqualified][_neq]", "true");
   params.set("limit", "500");
 
   const res = await directusFetch<{ data: BillingRow[] }>(
@@ -85,9 +85,9 @@ export async function reconcileBilling(
     "id,dispatched_at,disqualified,gift,billable,partner.disqualification_overrides",
   );
   params.set("filter[status][_eq]", "dispatched");
-  params.set("filter[billable][_eq]", "false");
-  params.set("filter[disqualified][_eq]", "false");
-  params.set("filter[gift][_eq]", "false");
+  params.set("filter[billable][_neq]", "true");
+  params.set("filter[disqualified][_neq]", "true");
+  params.set("filter[gift][_neq]", "true");
   params.set("limit", "1000");
 
   const res = await directusFetch<{ data: ReconcileRow[] }>(
