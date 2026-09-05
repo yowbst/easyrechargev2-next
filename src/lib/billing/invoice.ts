@@ -79,12 +79,21 @@ function issuerSnapshot(company: any): PartySnapshot {
   };
 }
 
-async function findByNumber(number: string): Promise<{ id: string }[]> {
+/**
+ * Every invoice ever issued for this partner+period, cancelled included — a
+ * cancelled invoice's number stays taken, it is never freed for reuse. The
+ * count drives the issuance rank: first issuance is un-suffixed, a re-issue
+ * after cancellation is `-R2`, the one after that `-R3`, and so on.
+ */
+async function findInvoicesForPeriod(
+  partnerId: string, month: string,
+): Promise<{ id: string; status: InvoiceStatus }[]> {
   const params = new URLSearchParams();
-  params.set("fields", "id,number");
-  params.set("filter[number][_eq]", number);
-  params.set("limit", "1");
-  const res = await directusFetch<{ data: { id: string }[] }>(
+  params.set("fields", "id,status");
+  params.set("filter[partner][_eq]", partnerId);
+  params.set("filter[period_month][_eq]", month);
+  params.set("limit", "-1");
+  const res = await directusFetch<{ data: { id: string; status: InvoiceStatus }[] }>(
     `/items/partner_invoices?${params}`, { next: { revalidate: 0 } },
   );
   return res?.data ?? [];
@@ -130,8 +139,15 @@ export async function issueInvoice(
   if (scope.unsettled.length > 0) throw new Error("unsettled_dispatches");
   if (scope.lines.length === 0) throw new Error("empty_scope");
 
-  const number = buildInvoiceNumber(partner.invoice_code ?? "", month);
-  if ((await findByNumber(number)).length > 0) throw new Error("duplicate_number");
+  // A cancelled invoice for this period does not block a re-issue, but it does
+  // not free its number either: any other status ("issued", "sent", "disputed",
+  // "paid") is still live and blocks a second issuance outright.
+  const existingForPeriod = await findInvoicesForPeriod(partner.id, month);
+  if (existingForPeriod.some((inv) => inv.status !== "cancelled")) {
+    throw new Error("duplicate_number");
+  }
+  const issuanceRank = existingForPeriod.length + 1;
+  const number = buildInvoiceNumber(partner.invoice_code ?? "", month, issuanceRank);
 
   const due = new Date(now.getTime());
   due.setUTCDate(due.getUTCDate() + settings.paymentTermsDays);
@@ -158,6 +174,12 @@ export async function issueInvoice(
   );
   const invoiceId = created?.data?.id;
 
+  // Not transactional: if this loop dies partway through, the invoice's
+  // total_chf reflects the full intended scope while only some lines exist
+  // and only some dispatches are stamped, and this same run can never be
+  // retried (its number is now taken). Recovery is cancel-then-reissue: set
+  // this invoice to "cancelled" and call issueInvoice again — the next
+  // number for the period is picked up as the next issuance rank (-R2, -R3, ...).
   for (const [i, line] of scope.lines.entries()) {
     await directusFetch("/items/partner_invoice_lines", {
       method: "POST",
@@ -216,6 +238,15 @@ const STATUS_TIMESTAMP: Partial<Record<InvoiceStatus, string>> = {
   sent: "sent_at", paid: "paid_at",
 };
 
+/** Same guard as `scope.ts`'s `toNumber` — a non-finite value must not silently
+ * become 0 via truthiness (0 is a legitimate subtotal/adjustment) nor leak
+ * through as NaN, which `JSON.stringify` would serialise as `null`. */
+function toFiniteNumber(v: string | number | null | undefined): number {
+  if (v === null || v === undefined) return 0;
+  const parsed = typeof v === "string" ? Number.parseFloat(v) : v;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export async function setInvoiceStatus(
   invoiceId: string, to: InvoiceStatus, note?: string, now: Date = new Date(),
 ): Promise<void> {
@@ -273,8 +304,8 @@ export async function addAdjustmentLine(
     next: { revalidate: 0 },
   });
 
-  const subtotal = Number(row.subtotal_chf);
-  const adjustment = Number(Number(row.adjustment_chf ?? 0) + amountChf);
+  const subtotal = toFiniteNumber(row.subtotal_chf);
+  const adjustment = toFiniteNumber(row.adjustment_chf) + amountChf;
   await directusFetch(`/items/partner_invoices/${invoiceId}`, {
     method: "PATCH",
     body: JSON.stringify({

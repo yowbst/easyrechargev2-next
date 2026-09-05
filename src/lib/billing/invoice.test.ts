@@ -87,6 +87,20 @@ describe("issueInvoice", () => {
       .rejects.toThrow("duplicate_number");
   });
 
+  it("still refuses when the existing invoice for the period is live (sent)", async () => {
+    state.existing = [{ id: "inv-0", number: "EME-202607", status: "sent" }];
+    const { issueInvoice } = await import("./invoice");
+    await expect(issueInvoice("eme-energies", "2026-07", { now: new Date("2026-09-05T00:00:00Z") }))
+      .rejects.toThrow("duplicate_number");
+  });
+
+  it("re-issues as -R2 when the only existing invoice for the period is cancelled", async () => {
+    state.existing = [{ id: "inv-0", number: "EME-202607", status: "cancelled" }];
+    const { issueInvoice } = await import("./invoice");
+    const r = await issueInvoice("eme-energies", "2026-07", { now: new Date("2026-09-05T00:00:00Z") });
+    expect(r.number).toBe("EME-202607-R2");
+  });
+
   it("creates the invoice and stamps the dispatches", async () => {
     const { issueInvoice } = await import("./invoice");
     const r = await issueInvoice("eme-energies", "2026-07", { now: new Date("2026-09-05T00:00:00Z") });
