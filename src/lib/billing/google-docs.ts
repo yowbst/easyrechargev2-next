@@ -155,6 +155,20 @@ export async function generateInvoiceDocument(
   const leadLines = lines.filter((l) => l.kind === "lead");
   const adjustmentLines = lines.filter((l) => l.kind === "adjustment");
   const quantity = leadLines.length;
+
+  /*
+   * The Doc carries ONE aggregated lead line (`17 | CHF 40.00 | CHF 680.00`),
+   * which is only truthful while every lead costs the same. `price_chf` is
+   * snapshotted per lead CATEGORY at dispatch (see lib/dispatch/resolver.ts),
+   * so a month can legitimately mix CHF 40 and CHF 60 leads. Taking
+   * leadLines[0] then prints a line that does not add up to the total on the
+   * same page — on a document sent to a client. Refuse instead: the invoice
+   * stays valid, the Doc is simply not generated until the template grows a
+   * per-price row (or the operator splits the invoice).
+   */
+  const unitPrices = new Set(leadLines.map((l) => Number(l.unit_price_chf).toFixed(2)));
+  if (unitPrices.size > 1) throw new Error("mixed_unit_prices");
+
   const unitPrice = quantity > 0 ? Number(leadLines[0].unit_price_chf) : 0;
   const adjustment: DocAdjustment | null = adjustmentLines.length > 0
     ? {

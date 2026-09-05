@@ -202,4 +202,45 @@ describe("generateInvoiceDocument", () => {
     expect(map["{{line_amount}}"]).toBe("CHF 80.00");
     expect(map["{{total_due}}"]).toBe("CHF 60.00");
   });
+  it("throws mixed_unit_prices rather than printing a line that does not add up (Important 3)", async () => {
+    // 12 leads at CHF 40 + 5 at CHF 60 = CHF 780, but a single aggregated line
+    // taking leadLines[0] would print "17 | CHF 40.00 | CHF 680.00".
+    state.lines = [
+      ...Array.from({ length: 12 }, () => ({ kind: "lead", unit_price_chf: "40.00", amount_chf: "40.00" })),
+      ...Array.from({ length: 5 }, () => ({ kind: "lead", unit_price_chf: "60.00", amount_chf: "60.00" })),
+    ];
+    state.invoice.subtotal_chf = "780.00";
+    state.invoice.total_chf = "780.00";
+
+    const gateway = fakeGateway({ fileId: "f1", url: "https://docs.google.com/document/d/f1/edit" });
+    const { generateInvoiceDocument } = await import("./google-docs");
+
+    await expect(generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z")))
+      .rejects.toThrow("mixed_unit_prices");
+    // Nothing was copied and nothing was written: no half-made client document.
+    expect(gateway.copyTemplate).not.toHaveBeenCalled();
+    expect(calls.some((c) => c.method === "PATCH")).toBe(false);
+  });
+
+  it("still generates when an adjustment line carries a different amount than the leads", async () => {
+    // Only `lead` lines take part in the uniformity check — an adjustment has
+    // no business being compared to a lead price.
+    state.lines.push({ kind: "adjustment", label: "Remise", unit_price_chf: "-20.00", amount_chf: "-20.00" });
+    const gateway = fakeGateway({ fileId: "f1", url: "https://docs.google.com/document/d/f1/edit" });
+    const { generateInvoiceDocument } = await import("./google-docs");
+    await expect(generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z")))
+      .resolves.toMatchObject({ doc_file_id: "f1" });
+  });
+
+  it("generates for a manual lead line priced identically to the ledger leads", async () => {
+    // kind "lead" + dispatch null (addManualLeadLine) is a normal lead for the
+    // document's purposes — it counts towards the quantity.
+    state.lines.push({ kind: "lead", unit_price_chf: "40.00", amount_chf: "40.00" });
+    const gateway = fakeGateway({ fileId: "f1", url: "https://docs.google.com/document/d/f1/edit" });
+    const { generateInvoiceDocument } = await import("./google-docs");
+    await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
+    const map = gateway.replaceText.mock.calls[0][1] as Record<string, string>;
+    expect(map["{{line_quantity}}"]).toBe("3");
+    expect(map["{{line_amount}}"]).toBe("CHF 120.00");
+  });
 });
