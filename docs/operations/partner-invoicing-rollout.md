@@ -1,8 +1,8 @@
 # Partner Invoicing — Rollout Checklist
 
-**Status:** code complete on `feat/partner-invoicing` (26 commits, 434 tests green).
-Every step below is a **human** step: each mutates production Directus, Vercel, or Google,
-and none of them was executed by the agent that wrote the code.
+**Status:** code complete on `feat/partner-invoicing` (434 tests green).
+**Step 1 (schema) is DONE.** The remaining steps mutate production data, Vercel or Google
+and are still open.
 
 Spec: `docs/superpowers/specs/2026-09-05-partner-invoicing-design.md`
 Plan: `docs/superpowers/plans/2026-09-05-partner-invoicing.md`
@@ -23,40 +23,37 @@ can undo it.
 
 Order matters: disqualify this row **before** Step 6 provisions `CRON_SECRET`.
 
-## Step 1 — Directus schema
+## Step 1 — Directus schema — ✅ DONE 2026-09-05
 
-Create, per the spec's Data model tables:
+Applied via `scripts/create-invoicing-schema.py --apply` against
+`easyrechargev2-directus-production.up.railway.app` (same instance as `cms.easyrecharge.ch`
+— verified: identical `site_settings` id and `date_updated`).
 
-- collection `partner_invoices` — **`number` must carry a unique constraint.** It is
-  load-bearing, not cosmetic: `findInvoicesForPeriod` is a check-then-act race without it.
-- collection `partner_invoice_lines`
-- on `partner_invoices`, the O2M alias **named exactly `lines`** → `partner_invoice_lines.invoice`.
-  The partner-facing view reads `lines`; a different name leaves its detail table silently
-  empty (it degrades rather than crashing, so you would not notice).
-- on `partner_dispatches`: add `invoice` (M2O → `partner_invoices`, nullable)
-- on `partners`: add `invoice_code` (String, max 8). **Set it to `EME`** on the production
-  row `547c103f-2525-4fef-a10d-66dfd573f723`. Without it, issuing throws `missing_invoice_code`.
+Created: `partner_invoices` (31 fields, `number` unique), `partner_invoice_lines` (21 fields),
+the three relations, the `lines` O2M alias, `partners.invoice_code`, `partner_dispatches.invoice`.
+Permissions `read`/`create`/`update` with `fields: ["*"]` granted to the **Backend (Server
+Token)** policy on both new collections. `invoice_code = EME` set on all three partner rows.
 
-Then set defaults and backfill:
+`partner_dispatches` already had `update` with `fields: ["*"]` on that policy, so the new
+`invoice` field — which cancellation clears — was covered without a change.
 
-- `partner_dispatches.disqualified` and `.gift` → default `false`, **uncheck Allow NULL**
-- run the backfill, dry-run first:
-  ```bash
-  npx tsx --env-file=.env.local scripts/backfill-dispatch-booleans.ts
-  npx tsx --env-file=.env.local scripts/backfill-dispatch-booleans.ts --apply
-  ```
-  Expect ~37 rows. This is what makes `billable` lockable at all — it has never been set on
-  any dispatch, in any month.
+Verified end to end against real Directus: `POST /api/admin/invoices/preview` for
+`eme-energies` / `2026-07` returns `number: EME-202607`, `issuanceRank: 1`,
+`existingLiveInvoice: null`, and **15 unsettled** dispatches.
 
-**Permissions for the static token's role:** read + write on both new collections, **and
-write on `partner_dispatches.invoice`**. That last one is new — cancelling an invoice now
-clears the stamp to release its dispatches, and it fails without it.
-`scripts/verify-invoicing-schema.ts` checks field presence but **not** permissions.
+**Still to do here — the data half:**
 
-Verify:
 ```bash
-npx tsx --env-file=.env.local scripts/verify-invoicing-schema.ts
+npx tsx --env-file=.env.local scripts/backfill-dispatch-booleans.ts          # dry run
+npx tsx --env-file=.env.local scripts/backfill-dispatch-booleans.ts --apply
 ```
+
+Expect ~37 rows. `disqualified` and `gift` are NULL on every real row, which is what has
+kept `billable` from ever locking. Then set both fields' defaults to `false` and uncheck
+Allow NULL in the Directus data model.
+
+Those 15 unsettled dispatches stay unsettled — and July stays un-issuable — until the
+backfill lands and the cron (Step 6) locks them.
 
 ## Step 2 — `site_settings.global_config`
 
@@ -67,7 +64,8 @@ Add `invoicing: { payment_terms_days: 21 }`.
 
 ## Step 3 — the acceptance window *(gated)*
 
-Set `dispatch.billing.acceptance_window_days` to `15`.
+Set `dispatch.billing.acceptance_window_days` to `15`. It is still **30** — confirmed live:
+the July preview reports `issuableFrom: 2026-08-31` rather than the 2026-08-16 the spec assumes.
 
 **Do not do this until E-ME has agreed.** It halves their contractual window to disqualify a
 lead, from 30 days to 15. The code default already reads 15; until you change the stored
