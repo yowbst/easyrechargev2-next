@@ -5,6 +5,7 @@ import { registerAppTools } from "@/lib/mcp/tools/app";
 import { registerCmsTools } from "@/lib/mcp/tools/cms";
 import { registerDirectusTools } from "@/lib/mcp/tools/directus-generic";
 import { registerFormTools } from "@/lib/mcp/tools/forms";
+import { registerInvoicingTools } from "@/lib/mcp/tools/invoicing";
 
 const handler = createMcpHandler(
   (server) => {
@@ -12,6 +13,7 @@ const handler = createMcpHandler(
     registerAppTools(server);
     registerFormTools(server);
     registerAdminTools(server);
+    registerInvoicingTools(server);
     registerDirectusTools(server);
   },
   { serverInfo: { name: "easyrecharge", version: "1.0.0" } },
