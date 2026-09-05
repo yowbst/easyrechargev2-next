@@ -4,6 +4,16 @@ export const DIRECTUS_DEFAULT_LOCALE =
 
 interface DirectusFetchOptions extends RequestInit {
   next?: NextFetchRequestConfig;
+  /**
+   * Set `false` to disable the transient-error retry for this call only.
+   *
+   * The retry is safe for reads and for idempotent writes, and every existing
+   * caller relies on it. It is NOT safe for a non-idempotent POST: a 502 from a
+   * restarting Directus can be returned *after* the row was created, so retrying
+   * writes a second row. Money-critical POSTs (invoice + invoice lines) opt out
+   * and fail loudly instead of risking a duplicate. Defaults to `true`.
+   */
+  retry?: boolean;
 }
 
 /**
@@ -24,9 +34,9 @@ export async function directusFetch<T = Record<string, unknown>>(
   const token = process.env.DIRECTUS_STATIC_TOKEN;
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const { next: nextOptions, ...fetchInit } = init;
+  const { next: nextOptions, retry, ...fetchInit } = init;
 
-  const maxAttempts = 3;
+  const maxAttempts = retry === false ? 1 : 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const res = await fetch(url, {

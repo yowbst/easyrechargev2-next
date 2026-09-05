@@ -12,7 +12,14 @@ npm run build        # Production build (generates ~800 static pages)
 npm run start        # Run production build
 npm run lint         # ESLint
 npm test             # Vitest unit tests
+
+npm run ingest -- plan  --in <file>   # Diff EVDB snapshot vs CMS (read-only)
+npm run ingest -- apply --plan <file> # Apply a reviewed plan (writes)
 ```
+
+`ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
+before `plan`/`apply` — see `docs/vehicle-ingest.md` for the full runbook, sequence, and
+gotchas.
 
 ## Deploy
 
@@ -56,6 +63,12 @@ GOOGLE_OAUTH_CLIENT_SECRET=<secret>
 MCP_JWT_SECRET=<generate with `openssl rand -base64 32`>
 MCP_STATIC_TOKEN=<generate with `openssl rand -base64 32`>
 MCP_ALLOWED_EMAILS=yoan@easyrecharge.ch
+CRON_SECRET=<generate with `openssl rand -base64 32`>
+
+GOOGLE_SERVICE_ACCOUNT_EMAIL=<service account address>
+GOOGLE_SERVICE_ACCOUNT_KEY=<PEM private key, \n-escaped>
+GOOGLE_INVOICE_TEMPLATE_DOC_ID=<Doc id of the placeholder template>
+GOOGLE_INVOICE_ROOT_FOLDER_ID=<root Drive folder; <root>/<year>/Revenus is resolved per invoice>
 ```
 
 Optional: `DIRECTUS_LOCALITIES_COLLECTION` (defaults to "localities")
@@ -65,6 +78,14 @@ MCP server env vars (see `docs/mcp-setup.md`):
 - `MCP_JWT_SECRET` — signs/verifies MCP OAuth JWTs (auth codes, access/refresh tokens); rotating it revokes all outstanding tokens
 - `MCP_STATIC_TOKEN` — static bearer token for CLI/CI MCP access (treat like `DIRECTUS_STATIC_TOKEN`)
 - `MCP_ALLOWED_EMAILS` — comma-separated Google SSO allowlist for the MCP server (defaults to `yoan@easyrecharge.ch`)
+
+Vercel Cron env vars:
+- `CRON_SECRET` — bearer token for Vercel Cron authentication at `/api/cron/reconcile-billing`; generate with `openssl rand -base64 32` and set in Vercel project env vars (Production + Preview)
+
+Partner invoicing — Google Docs env vars (used by `src/lib/billing/google-docs.ts`):
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` — service account credentials (Drive + Docs API scopes) used to copy the invoice template and substitute placeholders; the key is a PEM private key with literal `\n` escapes
+- `GOOGLE_INVOICE_TEMPLATE_DOC_ID` — Doc id of the placeholder template (`{{invoice_number}}` etc.) that gets copied per invoice
+- `GOOGLE_INVOICE_ROOT_FOLDER_ID` — root Drive folder for filing. The destination is resolved per invoice as `<root>/<year>/Revenus`, the year coming from the invoice period; generation throws `invoice_folder_not_found` rather than creating a folder or filing elsewhere
 
 ## Design System
 
@@ -122,7 +143,7 @@ WordPress 301 redirects (legacy URLs) are in `next.config.ts` `redirects()`.
 ### MCP Server
 
 - Remote MCP server at `/api/mcp` — streamable HTTP via `mcp-handler`, implemented in `src/app/api/[transport]/route.ts`
-- 25 tools: CMS reads, form submission writes, billing/admin, generic Directus CRUD — for LLM clients (claude.ai, Claude Desktop, Claude Code)
+- 33 tools: CMS reads, form submission writes, billing/admin, partner invoicing, generic Directus CRUD — for LLM clients (claude.ai, Claude Desktop, Claude Code)
 - Auth: Google SSO with email allowlist, OR static bearer token (`MCP_STATIC_TOKEN`) for CLI use
 - OAuth AS at `/api/mcp-auth/{register,authorize,callback,token}`; discovery at `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource`
 - Tool implementations in `src/lib/mcp/tools/`, auth/JWT logic in `src/lib/mcp/`
@@ -288,7 +309,7 @@ Dictionary strings can contain `{quote_request_duration}`, `{first_contact}`, `{
 | `/api/docs` | GET | OpenAPI 3.0 spec (JSON) |
 | `/api/debug/urls` | GET | List all generated URLs by type |
 | `/api-docs` | — | Swagger UI (interactive docs page) |
-| `/api/mcp` | GET/POST/DELETE | MCP server (streamable HTTP, 25 tools; OAuth or static bearer auth) — see `docs/mcp-setup.md` |
+| `/api/mcp` | GET/POST/DELETE | MCP server (streamable HTTP, 33 tools; OAuth or static bearer auth) — see `docs/mcp-setup.md` |
 | `/api/mcp-auth/*` | GET/POST | MCP OAuth AS endpoints: `register`, `authorize`, `callback`, `token` |
 | `/.well-known/oauth-*` | GET | MCP OAuth discovery (`oauth-authorization-server`, `oauth-protected-resource`) |
 

@@ -40,7 +40,7 @@ import { PartnerDateFilter } from "./PartnerDateFilter";
 import { PartnerSortControl } from "./PartnerSortControl";
 import { PartnerFacetFilter } from "./PartnerFacetFilter";
 
-export type PartnerNav = "leads" | "stats";
+export type PartnerNav = "leads" | "stats" | "invoices";
 type Lang = "fr" | "de";
 
 export interface StatsTabAnchor {
@@ -206,20 +206,19 @@ export function PartnerSidebar({
                 )}
               </SidebarMenuItem>
 
-              {/* Coming soon — billing + settings, disabled with a "Bientôt" badge. */}
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  disabled
-                  aria-disabled
+                  isActive={activeNav === "invoices"}
                   tooltip={t("sidebar.nav.billing")}
                   className="font-medium"
+                  render={<Link href={`/${lang}/partners/${partnerToken}/invoices`} prefetch={false} />}
                 >
                   <Receipt className="h-4 w-4" />
                   <span>{t("sidebar.nav.billing")}</span>
                 </SidebarMenuButton>
-                <SidebarMenuBadge>{t("sidebar.nav.soon")}</SidebarMenuBadge>
               </SidebarMenuItem>
 
+              {/* Coming soon — settings, disabled with a "Bientôt" badge. */}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   disabled
