@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import { fetchPartnerInvoices } from "@/lib/billing/partner-queries";
+import { fetchPartnerDispatches } from "@/lib/dispatch/partner-dashboard-queries";
 import { fetchPage } from "@/lib/directus-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
@@ -34,19 +35,25 @@ export default async function PartnerInvoicesPage({
   if (!partner) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [invoices, invoicesPage] = await Promise.all([
+  const [invoices, dispatches, leadsPage, invoicesPage] = await Promise.all([
     fetchPartnerInvoices(partner.id),
+    fetchPartnerDispatches(partner.id),
+    fetchPage("partner-leads", locale),
     fetchPage("partner-invoices", locale),
   ]);
-  const dictionary = invoicesPage
-    ? extractPageDictionary("partner-invoices", invoicesPage, locale)
-    : {};
+  // Partner-section i18n is split across Directus pages: partner-leads owns the
+  // shared chrome (sidebar, header, filter), partner-invoices owns this view's
+  // strings. Both must be merged or the whole sidebar renders as [key].
+  const dictionary = {
+    ...(leadsPage ? extractPageDictionary("partner-leads", leadsPage, locale) : {}),
+    ...(invoicesPage ? extractPageDictionary("partner-invoices", invoicesPage, locale) : {}),
+  };
 
   return (
     <PartnerSidebar
       partnerName={partner.name}
       partnerToken={uuid}
-      leadCount={0}
+      leadCount={dispatches.length}
       supportHref={`mailto:yoan@easyrecharge.ch?subject=${encodeURIComponent(`[Factures] ${partner.name}`)}`}
       activeNav="invoices"
       lang={lang}
