@@ -241,6 +241,32 @@ export async function issueInvoice(
     }
   }
 
+  // Gifts are billed at zero but frozen onto the invoice all the same, so the
+  // partner can see what they received free and so a later invoice cannot pick
+  // them up again (they are stamped like any other line).
+  for (const [i, gift] of scope.gifts.entries()) {
+    await directusFetch("/items/partner_invoice_lines", {
+      method: "POST",
+      body: JSON.stringify({
+        invoice: invoiceId, dispatch: gift.dispatchId, kind: "gift",
+        label: gift.label, quantity: 1,
+        unit_price_chf: 0, amount_chf: 0,
+        sort: 1000 + i, dispatched_at: gift.dispatchedAt, canton: gift.canton,
+        postal_code: gift.postalCode, locality: gift.locality,
+        last_name: gift.lastName, lead_category: gift.leadCategory, product: gift.product,
+      }),
+      next: { revalidate: 0 },
+      retry: false,
+    });
+    if (gift.dispatchId) {
+      await directusFetch(`/items/partner_dispatches/${gift.dispatchId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ invoice: invoiceId }),
+        next: { revalidate: 0 },
+      });
+    }
+  }
+
   return { id: invoiceId, number, total_chf: total };
 }
 

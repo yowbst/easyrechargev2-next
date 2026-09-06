@@ -56,6 +56,22 @@ function toNumber(v: string | number | null | undefined): number {
  * row that is not yet billable is still inside its acceptance window, so the
  * scope is not final.
  */
+function toLine(r: Row, unitPriceChf: number): ScopeLine {
+  const data = r.submission?.data ?? {};
+  return {
+    dispatchId: r.id,
+    label: buildLeadLabel(r.submission?.user?.last_name, data.postalCode, data.locality, r.dispatched_at),
+    dispatchedAt: r.dispatched_at,
+    canton: r.canton,
+    postalCode: data.postalCode ?? null,
+    locality: data.locality ?? null,
+    lastName: r.submission?.user?.last_name ?? null,
+    leadCategory: r.lead_category,
+    product: r.product,
+    unitPriceChf,
+  };
+}
+
 export async function collectBillableDispatches(
   partnerId: string,
   month: string,
@@ -80,35 +96,26 @@ export async function collectBillableDispatches(
   if (rows.length >= SCOPE_LIMIT) throw new Error("scope_limit_exceeded");
 
   const lines: ScopeLine[] = [];
+  const gifts: ScopeLine[] = [];
   const unsettled: string[] = [];
   const excluded: { id: string; reason: string }[] = [];
 
   for (const r of rows) {
     if (r.invoice) { excluded.push({ id: r.id, reason: "already_invoiced" }); continue; }
-    if (r.gift === true) { excluded.push({ id: r.id, reason: "gift" }); continue; }
+    if (r.gift === true) {
+      excluded.push({ id: r.id, reason: "gift" });
+      gifts.push(toLine(r, 0));
+      continue;
+    }
     if (r.disqualified === true) { excluded.push({ id: r.id, reason: "disqualified" }); continue; }
     if (r.billable !== true) { unsettled.push(r.id); continue; }
 
-    const data = r.submission?.data ?? {};
-    lines.push({
-      dispatchId: r.id,
-      label: buildLeadLabel(
-        r.submission?.user?.last_name, data.postalCode, data.locality, r.dispatched_at,
-      ),
-      dispatchedAt: r.dispatched_at,
-      canton: r.canton,
-      postalCode: data.postalCode ?? null,
-      locality: data.locality ?? null,
-      lastName: r.submission?.user?.last_name ?? null,
-      leadCategory: r.lead_category,
-      product: r.product,
-      unitPriceChf: toNumber(r.price_chf),
-    });
+    lines.push(toLine(r, toNumber(r.price_chf)));
   }
 
   const subtotalChf = Number(
     lines.reduce((s, l) => s + l.unitPriceChf, 0).toFixed(2),
   );
 
-  return { lines, subtotalChf, unsettled, excluded };
+  return { lines, gifts, subtotalChf, unsettled, excluded };
 }

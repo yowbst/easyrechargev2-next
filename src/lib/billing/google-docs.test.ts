@@ -121,7 +121,8 @@ describe("generateInvoiceDocument", () => {
       async () => {},
     );
     const linkText = vi.fn<(fileId: string, text: string, url: string) => Promise<void>>(async () => {});
-    return { copyTemplate, replaceText, linkText };
+    const dropRowsContaining = vi.fn<(fileId: string, markers: string[]) => Promise<void>>(async () => {});
+    return { copyTemplate, replaceText, linkText, dropRowsContaining };
   }
 
   it("creates the first version and starts doc_versions as a one-entry array", async () => {
@@ -151,6 +152,36 @@ describe("generateInvoiceDocument", () => {
     await generateInvoiceDocument("inv-1", gateway, new Date("2027-03-01T00:00:00Z"));
 
     expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2027-01 _ EME _ v1", "2027");
+  });
+
+  it("drops both optional rows when there is no gift and no adjustment", async () => {
+    const gateway = fakeGateway({ fileId: "f1", url: "https://docs.google.com/document/d/f1/edit" });
+    const { generateInvoiceDocument } = await import("./google-docs");
+    await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
+
+    expect(gateway.dropRowsContaining).toHaveBeenCalledWith("f1", ["{{gift_quantity}}", "{{adjustment_label}}"]);
+    // Rows must go before substitution, or the markers would already be gone.
+    const dropOrder = gateway.dropRowsContaining.mock.invocationCallOrder[0];
+    const replaceOrder = gateway.replaceText.mock.invocationCallOrder[0];
+    expect(dropOrder).toBeLessThan(replaceOrder);
+  });
+
+  it("keeps the gift row and fills its quantity when gifts exist", async () => {
+    state.lines = [...baseLeadLines(),
+      { kind: "gift", amount_chf: "0.00", unit_price_chf: "0.00" },
+      { kind: "gift", amount_chf: "0.00", unit_price_chf: "0.00" },
+      { kind: "gift", amount_chf: "0.00", unit_price_chf: "0.00" }];
+    const gateway = fakeGateway({ fileId: "f1", url: "https://docs.google.com/document/d/f1/edit" });
+    const { generateInvoiceDocument } = await import("./google-docs");
+    await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
+
+    // Only the adjustment row is dropped; the gift row survives.
+    expect(gateway.dropRowsContaining).toHaveBeenCalledWith("f1", ["{{adjustment_label}}"]);
+    const map = gateway.replaceText.mock.calls[0][1] as Record<string, string>;
+    expect(map["{{gift_quantity}}"]).toBe("3");
+    // Gifts never touch the billed quantity or the total.
+    expect(map["{{line_quantity}}"]).toBe("2");
+    expect(map["{{total_due}}"]).toBe("CHF 80.00");
   });
 
   it("names the file in the partner's language and links the dashboard url", async () => {

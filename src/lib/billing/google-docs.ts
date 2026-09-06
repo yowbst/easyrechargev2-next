@@ -11,6 +11,12 @@ export interface DocGateway {
   replaceText(fileId: string, map: Record<string, string>): Promise<void>;
   /** Turn every occurrence of `text` into a hyperlink pointing at `url`. */
   linkText(fileId: string, text: string, url: string): Promise<void>;
+  /**
+   * Delete any table row containing one of `markers`. Used to drop the optional
+   * gift and adjustment rows: an empty row on an invoice is noise, and a blank
+   * amount next to a label reads as a mistake.
+   */
+  dropRowsContaining(fileId: string, markers: string[]): Promise<void>;
 }
 
 function chf(v: string | number): string {
@@ -55,6 +61,7 @@ export function buildPlaceholders(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   invoice: any, quantity: number, unitPrice: number, dashboardUrl: string,
   adjustment?: DocAdjustment | null,
+  giftQuantity = 0,
 ): Record<string, string> {
   const issuer = invoice.issuer_snapshot ?? {};
   const debtor = invoice.debtor_snapshot ?? {};
@@ -81,6 +88,7 @@ export function buildPlaceholders(
     "{{line_quantity}}": String(quantity),
     "{{line_unit_price}}": chf(unitPrice),
     "{{line_amount}}": chf(lineAmount),
+    "{{gift_quantity}}": giftQuantity > 0 ? String(giftQuantity) : "",
     "{{adjustment_label}}": adjustment ? adjustment.label : "",
     "{{adjustment_amount}}": adjustment ? chf(adjustment.amountChf) : "",
     "{{vat_rate}}": `${Number(invoice.vat_rate ?? 0).toFixed(0)}%`,
@@ -140,6 +148,29 @@ async function defaultGateway(): Promise<DocGateway> {
       });
       const fileId = res.data.id!;
       return { fileId, url: `https://docs.google.com/document/d/${fileId}/edit` };
+    },
+    async dropRowsContaining(fileId, markers) {
+      if (!markers.length) return;
+      const doc = await docs.documents.get({ documentId: fileId });
+      const requests: unknown[] = [];
+      for (const el of doc.data.body?.content ?? []) {
+        if (!el.table) continue;
+        // Walk rows high-to-low so each deletion cannot shift the next index.
+        el.table.tableRows?.forEach((row, ri) => {
+          const text = (row.tableCells ?? []).flatMap((c) =>
+            (c.content ?? []).flatMap((cc) => (cc.paragraph?.elements ?? []).map((x) => x.textRun?.content ?? "")),
+          ).join("");
+          if (markers.some((m) => text.includes(m))) {
+            requests.push({
+              deleteTableRow: { tableCellLocation: { tableStartLocation: { index: el.startIndex }, rowIndex: ri } },
+            });
+          }
+        });
+      }
+      if (requests.length) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await docs.documents.batchUpdate({ documentId: fileId, requestBody: { requests: requests.reverse() as any } });
+      }
     },
     async linkText(fileId, text, url) {
       // replaceAllText cannot set a link, so locate the substituted text and
@@ -226,6 +257,7 @@ export async function generateInvoiceDocument(
   const lines = linesRes?.data ?? [];
   const leadLines = lines.filter((l) => l.kind === "lead");
   const adjustmentLines = lines.filter((l) => l.kind === "adjustment");
+  const giftLines = lines.filter((l) => l.kind === "gift");
   const quantity = leadLines.length;
 
   /*
@@ -265,9 +297,18 @@ export async function generateInvoiceDocument(
   );
   const year = String(invoice.period_month).slice(0, 4);
   const { fileId, url } = await gw.copyTemplate(name, year);
+  // Drop optional rows before substituting: an invoice with no gifts and no
+  // discount should not carry blank rows explaining nothing.
+  const unusedRows: string[] = [];
+  if (giftLines.length === 0) unusedRows.push("{{gift_quantity}}");
+  if (!adjustment) unusedRows.push("{{adjustment_label}}");
+  await gw.dropRowsContaining(fileId, unusedRows);
+
   await gw.replaceText(
     fileId,
-    buildPlaceholders({ ...invoice, version: newVersion }, quantity, unitPrice, dashboardUrl, adjustment),
+    buildPlaceholders(
+      { ...invoice, version: newVersion }, quantity, unitPrice, dashboardUrl, adjustment, giftLines.length,
+    ),
   );
   // The placeholder is substituted as plain text; turn it into a real hyperlink.
   await gw.linkText(fileId, dashboardUrl, dashboardUrl);
