@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { pickPublicQuoteConfig } from "@/lib/public-config";
 import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands, fetchAllLocalitySlugs, fetchCantonCoats, fetchChargerPriceRange } from "@/lib/directus-queries";
 import { InstallationServicePage } from "@/components/InstallationServicePage";
 import Link from "next/link";
@@ -173,7 +174,10 @@ export default async function SlugPage({ params }: SlugPageProps) {
       const quotePageConfig = page?.config || {};
       // NB: the Directus field is snake_case — `globalConfig` was a latent
       // bug that left the quote form with default stats/SLAs and no ads config.
-      const globalConfig = layoutData?.global_config ?? {};
+      // Pick explicitly: global_config also holds the Make webhook URLs and the
+      // dispatch config, and anything handed to a client component is serialised
+      // into the page the browser receives.
+      const globalConfig = pickPublicQuoteConfig(layoutData?.global_config);
       return (
         <QuoteForm
           lang={lang}
