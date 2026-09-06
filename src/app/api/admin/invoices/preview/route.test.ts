@@ -74,7 +74,7 @@ describe("POST /api/admin/invoices/preview", () => {
       number: "EME-202607",
       issuanceRank: 1,
       existingLiveInvoice: null,
-      scope: { lines: [], subtotalChf: 0, unsettled: [], excluded: [] },
+      scope: { lines: [], gifts: [], subtotalChf: 0, unsettled: [], excluded: [] },
       subtotalChf: 0,
       totalChf: 0,
     });

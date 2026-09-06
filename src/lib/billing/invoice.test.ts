@@ -40,6 +40,7 @@ vi.mock("./scope", () => ({
     const lines = free.map(([id]) => line(id));
     return {
       lines,
+      gifts: [],
       subtotalChf: Number(lines.reduce((s, l) => s + l.unitPriceChf, 0).toFixed(2)),
       unsettled: state.unsettled,
       excluded: taken.map(([id]) => ({ id, reason: "already_invoiced" })),

@@ -53,8 +53,16 @@ export interface ScopeLine {
   unitPriceChf: number;
 }
 
+export const LINE_KINDS = ["lead", "adjustment", "gift"] as const;
+export type LineKind = (typeof LINE_KINDS)[number];
+
 export interface ScopeResult {
   lines: ScopeLine[];
+  /**
+   * Dispatches delivered free because the partner was over quota. Billed at
+   * zero, but frozen onto the invoice so the partner can see what they got.
+   */
+  gifts: ScopeLine[];
   subtotalChf: number;
   /** Dispatches in the month that are not yet settled — blocks issuance. */
   unsettled: string[];
