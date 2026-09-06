@@ -20,6 +20,21 @@ function splitLabel(label: string): { name: string; place: string } {
     : { name: label, place: "" };
 }
 
+/**
+ * Chronological, oldest first — the partner reads this as the list of requests
+ * they received over the month. Adjustments have no date, so they sit at the
+ * end. Sorted here as well as in the query because Directus null-ordering on a
+ * nested sort is not something to rely on.
+ */
+function byDispatchDate(a: PartnerInvoiceLine, b: PartnerInvoiceLine): number {
+  const da = a.dispatched_at ?? "";
+  const db = b.dispatched_at ?? "";
+  if (!da && !db) return a.label.localeCompare(b.label);
+  if (!da) return 1;
+  if (!db) return -1;
+  return da === db ? a.label.localeCompare(b.label) : da.localeCompare(db);
+}
+
 const STATUS_TONE: Record<string, string> = {
   issued: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400",
   sent: "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400",
@@ -45,11 +60,10 @@ function InvoiceLines({
             <th className="py-2 pr-4 font-medium">{t("detail.col.lead")}</th>
             <th className="py-2 pr-4 font-medium">{t("detail.col.category")}</th>
             <th className="py-2 pr-4 text-right font-medium">{t("detail.col.amount")}</th>
-            <th className="w-8 py-2" />
           </tr>
         </thead>
         <tbody>
-          {lines.map((line, i) => {
+          {[...lines].sort(byDispatchDate).map((line, i) => {
             const { name, place } = splitLabel(line.label);
             const submissionId = line.dispatch?.submission ?? null;
             const isGift = line.kind === "gift";
@@ -59,6 +73,18 @@ function InvoiceLines({
                   {frDate(line.dispatched_at)}
                 </td>
                 <td className="py-2 pr-4">
+                  {submissionId && (
+                    <a
+                      href={`/${lang}/demande-devis/${submissionId}?view=partner`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={t("detail.view")}
+                      title={t("detail.view")}
+                      className="mr-1.5 inline-flex translate-y-px rounded p-0.5 align-middle text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <FileSearch className="h-3.5 w-3.5" />
+                    </a>
+                  )}
                   <span className="font-medium">{name}</span>
                   {place && <span className="ml-2 text-muted-foreground">{place}</span>}
                   {isGift && (
@@ -72,20 +98,6 @@ function InvoiceLines({
                 </td>
                 <td className="py-2 pr-4 text-right font-mono whitespace-nowrap">
                   {chf(line.amount_chf)}
-                </td>
-                <td className="py-2">
-                  {submissionId && (
-                    <a
-                      href={`/${lang}/demande-devis/${submissionId}?view=partner`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={t("detail.view")}
-                      title={t("detail.view")}
-                      className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                      <FileSearch className="h-3.5 w-3.5" />
-                    </a>
-                  )}
                 </td>
               </tr>
             );

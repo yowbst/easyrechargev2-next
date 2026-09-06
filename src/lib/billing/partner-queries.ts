@@ -49,6 +49,10 @@ export async function fetchPartnerInvoices(
       "lines.label,lines.dispatched_at,lines.lead_category,lines.amount_chf,lines.kind," +
       "lines.dispatch.submission",
   );
+  // Directus returns a nested O2M in arbitrary order, and `sort` would not help:
+  // manual lead lines are appended, so the pre-go-live leads (the earliest dates)
+  // carry the highest sort values. Order by the date the lead was dispatched.
+  params.set("deep[lines][_sort]", "dispatched_at");
   params.set("filter[partner][_eq]", partnerId);
   params.set("filter[status][_neq]", "cancelled");
   params.set("sort", "-period_month");
