@@ -6,6 +6,12 @@ export interface PartnerInvoiceLine {
   lead_category: string | null;
   amount_chf: string;
   kind: string;
+  /**
+   * The dispatch behind this line, when there is one. Manual lead lines and
+   * adjustments carry none, so the "open the request" link is simply absent
+   * for them rather than pointing nowhere.
+   */
+  dispatch?: { submission?: string | null } | null;
 }
 
 export interface PartnerInvoice {
@@ -40,7 +46,8 @@ export async function fetchPartnerInvoices(
   params.set(
     "fields",
     "id,number,version,status,period_month,total_chf,issued_at,due_at,paid_at," +
-      "lines.label,lines.dispatched_at,lines.lead_category,lines.amount_chf,lines.kind",
+      "lines.label,lines.dispatched_at,lines.lead_category,lines.amount_chf,lines.kind," +
+      "lines.dispatch.submission",
   );
   params.set("filter[partner][_eq]", partnerId);
   params.set("filter[status][_neq]", "cancelled");
