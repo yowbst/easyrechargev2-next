@@ -2,8 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import { fetchPartnerInvoices } from "@/lib/billing/partner-queries";
-import { fetchPartnerDispatches } from "@/lib/dispatch/partner-dashboard-queries";
-import { fetchPage } from "@/lib/directus-queries";
+import { fetchPartnerDispatches, fetchPartnerSectionPage } from "@/lib/dispatch/partner-dashboard-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
@@ -38,8 +37,8 @@ export default async function PartnerInvoicesPage({
   const [invoices, dispatches, leadsPage, invoicesPage] = await Promise.all([
     fetchPartnerInvoices(partner.id),
     fetchPartnerDispatches(partner.id),
-    fetchPage("partner-leads", locale),
-    fetchPage("partner-invoices", locale),
+    fetchPartnerSectionPage("partner-leads", locale),
+    fetchPartnerSectionPage("partner-invoices", locale),
   ]);
   // Partner-section i18n is split across Directus pages: partner-leads owns the
   // shared chrome (sidebar, header, filter), partner-invoices owns this view's

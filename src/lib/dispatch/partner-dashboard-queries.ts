@@ -152,6 +152,30 @@ export async function fetchPartnerStatsPage(locale: string) {
   }
 }
 
+/**
+ * Same 60s window as fetchPartnerStatsPage, for any partner-section page.
+ * `fetchPage`'s 3600s cache is wrong here: it happily memoises a null for an
+ * hour when the Directus page does not exist yet, so a freshly seeded
+ * dictionary stays invisible and every label renders as [key].
+ */
+export async function fetchPartnerSectionPage(routeId: string, locale: string) {
+  try {
+    const params = new URLSearchParams();
+    params.set("fields", "*,translations.*");
+    params.set("filter[route_id][_eq]", routeId);
+    params.set("deep[translations][_filter][languages_code][_eq]", locale);
+    params.set("limit", "1");
+    const res = await directusFetch<{
+      data: Array<Record<string, unknown>> | null;
+    }>(`/items/pages?${params}`, {
+      next: { revalidate: 60, tags: [`page-${routeId}`] },
+    });
+    return res?.data?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPartnerStatsConfig(): Promise<PartnerStatsConfig> {
   try {
     const res = await directusFetch<{
