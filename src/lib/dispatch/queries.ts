@@ -6,6 +6,7 @@ import type {
   AreaMode,
   DispatchStage,
   LeadCategory,
+  GiftReason,
 } from "./types";
 
 const PARTNER_AREA_FIELDS = [
@@ -118,6 +119,7 @@ export interface RecordDispatchInput {
   price_chf?: number | null;
   lead_category?: LeadCategory | null;
   gift?: boolean;
+  gift_reason?: GiftReason | null;
 }
 
 /** Insert one `partner_dispatches` row. Returns the created row id when available. */
@@ -141,6 +143,7 @@ export async function recordDispatch(input: RecordDispatchInput): Promise<string
     body.price_chf = input.price_chf ?? null;
     body.lead_category = input.lead_category ?? null;
     body.gift = Boolean(input.gift);
+    body.gift_reason = input.gift ? (input.gift_reason ?? null) : null;
     body.billable = false;
     body.stage_history = [{ stage, at: now }];
   }

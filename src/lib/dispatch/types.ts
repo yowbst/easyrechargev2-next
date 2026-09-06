@@ -192,6 +192,12 @@ export interface DispatchContext {
   product: string;
 }
 
+export const GIFT_REASONS = [
+  "quota_exceeded", "no_price_row", "price_zero",
+  "commercial_agreement", "goodwill", "other",
+] as const;
+export type GiftReason = (typeof GIFT_REASONS)[number];
+
 export interface DispatchTarget {
   partnerSlug: string;
   displayName: string;
@@ -213,6 +219,12 @@ export interface DispatchTarget {
   priceChf: number | null; // null = gift
   leadCategory: LeadCategory;
   gift: boolean;
+  /**
+   * Why the lead is free, when it is. `no_price_row` is a misconfiguration
+   * wearing a gift's clothes — the partner has no price entry for this
+   * category — so it is recorded rather than left to a log line nobody reads.
+   */
+  giftReason: GiftReason | null;
 }
 
 export interface DispatchSummary {
