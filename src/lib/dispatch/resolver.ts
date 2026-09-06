@@ -1,4 +1,4 @@
-import type { PartnerArea, DispatchTarget, LeadCategory } from "./types";
+import type { PartnerArea, DispatchTarget, LeadCategory , GiftReason } from "./types";
 
 interface ResolvedArea {
   area: PartnerArea;
@@ -124,9 +124,17 @@ function toTarget(
   const p = e.area.partner;
   const priceLookup = partnerPrices.get(p.id);
   const rawPrice = priceLookup?.get(leadCategory);
-  // Gift if: over quota OR no price row OR price is 0.
-  const gift =
-    e.overQuota || rawPrice === undefined || rawPrice === null || rawPrice === 0;
+  // Gift if: over quota OR no price row OR price is 0. Quota is checked first
+  // because it is the legitimate case; the other two are configuration gaps.
+  const missingPrice = rawPrice === undefined || rawPrice === null;
+  const giftReason: GiftReason | null = e.overQuota
+    ? "quota_exceeded"
+    : missingPrice
+      ? "no_price_row"
+      : rawPrice === 0
+        ? "price_zero"
+        : null;
+  const gift = giftReason !== null;
   const priceChf = gift ? null : (rawPrice as number);
 
   if (rawPrice === undefined) {
@@ -159,6 +167,7 @@ function toTarget(
     priceChf,
     leadCategory,
     gift,
+    giftReason,
   };
 }
 

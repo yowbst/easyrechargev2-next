@@ -190,6 +190,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
           price_chf: target.priceChf,
           lead_category: target.leadCategory,
           gift: target.gift,
+          gift_reason: target.giftReason,
         });
         if (isTest) baseResult.summary.skipped += 1;
         else baseResult.summary.dispatched += 1;
