@@ -67,22 +67,35 @@ create, and no IBAN in Directus — the IBAN lives in the template's QR section,
 `issuer_snapshot` is still written on each invoice but is now unused by the document.
 Harmless, and it keeps the option of driving the issuer from config later.
 
-> **Security note found while checking this (pre-existing, unrelated to invoicing):**
-> `src/app/[lang]/[slug]/page.tsx` passes the whole `global_config` object as a prop to
-> `QuoteForm`, a client component — so its entire contents are serialised into the page sent
-> to the browser. Verified on production `/fr/demande-devis`: the Make webhook URLs,
-> `test_email_patterns`, the Google Ads account id and the billing config are all readable in
-> the served HTML. The Make webhook URLs are the serious one — anyone can post fabricated
-> quotes into the scenario. Fix is to pass only the keys `QuoteForm` needs. **Not done.**
+> **Security note found while checking this — FIXED 2026-09-06.**
+> `src/app/[lang]/[slug]/page.tsx` passed the whole `global_config` object to
+> `QuoteForm`, a client component, so its entire contents were serialised into the page
+> sent to the browser. Verified on production `/fr/demande-devis`: the Make webhook URLs,
+> `test_email_patterns`, the Google Ads account id and the billing config were all
+> readable in the served HTML — anyone could post fabricated quotes into the Make
+> scenario, producing real dispatches and real billing.
+>
+> Fixed with an allow-list (`src/lib/public-config.ts`): only `stats`, `trustpilot`,
+> `slas` and `google_ads` reach the client, so a secret added to `global_config` later
+> cannot leak by default. Five tests guard it. Verified closed on production.
+>
+> **Residual risk, accepted by Yoan on 2026-09-06:** the webhook URLs were not rotated,
+> so anyone who noted them during the exposure window can still post to the Make
+> scenarios. A payload or shared-header check at the top of each scenario would close
+> that without changing the URLs.
 
-## Step 3 — the acceptance window *(gated)*
+## Step 3 — the acceptance window — ✅ DONE 2026-09-06
 
-Set `dispatch.billing.acceptance_window_days` to `15`. It is still **30** — confirmed live:
-the July preview reports `issuableFrom: 2026-08-31` rather than the 2026-08-16 the spec assumes.
+`dispatch.billing.acceptance_window_days` is now **15** (was 30), applied after Yoan
+confirmed E-ME's agreement. August moved from issuable 2026-10-01 to **2026-09-16**;
+September will be issuable 2026-10-16.
 
-**Do not do this until E-ME has agreed.** It halves their contractual window to disqualify a
-lead, from 30 days to 15. The code default already reads 15; until you change the stored
-config, the live value of 30 wins and July stays un-issuable until 30 August.
+No retroactive locking resulted: a reconcile dry-run right after the change found zero
+new candidates. The eight unsettled August leads (dispatched 24–31.08) lock between
+08.09 and 15.09.
+
+**E-ME must be told the change is live** — their window to refuse a lead is now half
+what it was, including for leads already dispatched.
 
 ## Step 4 — fix E-ME's billing address
 
@@ -131,6 +144,39 @@ renders as `[key]` — visible, not broken.
 Keys needed: `title`, `empty`, `col.number`, `col.period`, `col.total`, `col.status`,
 `col.issued`, `col.due`, `status.issued`, `status.sent`, `status.disputed`, `status.paid`,
 `detail.title`, `detail.col.date`, `detail.col.lead`, `detail.col.category`, `detail.col.amount`.
+
+## August 2026 — issue from 16.09
+
+July's invoice `EME-202607` (17 leads, CHF 680) was issued and sent on 06.09.2026.
+
+August is **not issuable before 2026-09-16**, and that is deliberate: 8 of its 9 billable
+leads were still inside E-ME's 15-day refusal window on 06.09, locking between 08.09 and
+15.09. None of them had moved a stage, so E-ME had not looked at them yet. Yoan chose to
+wait rather than force the locks — billing a partner for leads they can still refuse,
+nine days after confirming the shorter window to them, is not defensible.
+
+Expected shape:
+
+| | |
+|---|---|
+| Billable | 9 leads, CHF 360 |
+| Gifted | 11 leads, CHF 0 — `gift_reason: commercial_agreement` |
+| Number | `EME-202608` |
+
+The 11 gifts are the 3–23 August commercial arrangement. They will appear on the partner
+dashboard with an "Offert" badge and as a `Leads offerts | 11` row on the document — no
+manual lead lines are needed this time, the ledger covers the whole month.
+
+```bash
+T=$(grep ^DIRECTUS_STATIC_TOKEN .env.local | cut -d= -f2-)
+curl -s -X POST -H "x-admin-token: $T" -H 'Content-Type: application/json' \
+  -d '{"partner":"eme-energies","month":"2026-08"}' \
+  https://easyrecharge.ch/api/admin/invoices/preview | python3 -m json.tool
+# then POST .../api/admin/invoices to issue, and .../<id>/document to generate
+```
+
+If `unsettled` is not empty on 16.09, the daily cron has not run — check that `CRON_SECRET`
+is set in Vercel, or call `POST /api/admin/reconcile-billing` by hand.
 
 ## Step 8 — the first real invoice (July 2026)
 
