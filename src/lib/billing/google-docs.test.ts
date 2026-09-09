@@ -131,7 +131,7 @@ describe("generateInvoiceDocument", () => {
     const r = await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
 
     expect(r).toEqual({ doc_url: "https://docs.google.com/document/d/f1/edit", doc_file_id: "f1", version: 1 });
-    expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2026-07 _ EME _ v1", "2026");
+    expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2026-07 _ EME-202607 _ v1", "2026");
 
     const patch = calls.find((c) => c.method === "PATCH");
     expect(patch).toBeDefined();
@@ -151,7 +151,7 @@ describe("generateInvoiceDocument", () => {
     const { generateInvoiceDocument } = await import("./google-docs");
     await generateInvoiceDocument("inv-1", gateway, new Date("2027-03-01T00:00:00Z"));
 
-    expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2027-01 _ EME _ v1", "2027");
+    expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2027-01 _ EME-202701 _ v1", "2027");
   });
 
   it("drops both optional rows when there is no gift and no adjustment", async () => {
@@ -199,7 +199,7 @@ describe("generateInvoiceDocument", () => {
     const { generateInvoiceDocument } = await import("./google-docs");
     await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
 
-    expect(gateway.copyTemplate).toHaveBeenCalledWith("Invoice _ E-ME Énergies _ 2026-07 _ EME _ v1", "2026");
+    expect(gateway.copyTemplate).toHaveBeenCalledWith("Invoice _ E-ME Énergies _ 2026-07 _ EME-202607 _ v1", "2026");
   });
 
   it("hands replaceText the quantity and unit price derived from the mocked lead lines", async () => {
@@ -229,7 +229,7 @@ describe("generateInvoiceDocument", () => {
     expect(second).toEqual({ doc_url: "https://docs.google.com/document/d/f2/edit", doc_file_id: "f2", version: 2 });
 
     // The filename and the {{invoice_version}} placeholder both reflect the bump.
-    expect(gateway.copyTemplate).toHaveBeenNthCalledWith(2, "Facture _ E-ME Énergies _ 2026-07 _ EME _ v2", "2026");
+    expect(gateway.copyTemplate).toHaveBeenNthCalledWith(2, "Facture _ E-ME Énergies _ 2026-07 _ EME-202607 _ v2", "2026");
     const secondMap = gateway.replaceText.mock.calls[1][1] as Record<string, string>;
     expect(secondMap["{{invoice_version}}"]).toBe("v2");
 
@@ -308,13 +308,16 @@ describe("generateInvoiceDocument", () => {
 describe("buildDocumentName", () => {
   it("uses the partner's language, falling back to English", async () => {
     const { buildDocumentName } = await import("./google-docs");
-    expect(buildDocumentName("fr", "E-ME Énergies", "2026-07", "EME", 1))
-      .toBe("Facture _ E-ME Énergies _ 2026-07 _ EME _ v1");
-    expect(buildDocumentName("de", "Muster AG", "2026-07", "MUS", 2))
-      .toBe("Rechnung _ Muster AG _ 2026-07 _ MUS _ v2");
-    expect(buildDocumentName("en", "Acme", "2026-07", "ACM", 1))
-      .toBe("Invoice _ Acme _ 2026-07 _ ACM _ v1");
-    expect(buildDocumentName(null, "Acme", "2026-07", "ACM", 1))
-      .toBe("Invoice _ Acme _ 2026-07 _ ACM _ v1");
+    expect(buildDocumentName("fr", "E-ME Énergies", "2026-07", "EME-202607", 1))
+      .toBe("Facture _ E-ME Énergies _ 2026-07 _ EME-202607 _ v1");
+    // A re-issue must not collide with the cancelled invoice's file.
+    expect(buildDocumentName("fr", "E-ME Énergies", "2026-07", "EME-202607-R2", 1))
+      .toBe("Facture _ E-ME Énergies _ 2026-07 _ EME-202607-R2 _ v1");
+    expect(buildDocumentName("de", "Muster AG", "2026-07", "MUS-202607", 2))
+      .toBe("Rechnung _ Muster AG _ 2026-07 _ MUS-202607 _ v2");
+    expect(buildDocumentName("en", "Acme", "2026-07", "ACM-202607", 1))
+      .toBe("Invoice _ Acme _ 2026-07 _ ACM-202607 _ v1");
+    expect(buildDocumentName(null, "Acme", "2026-07", "ACM-202607", 1))
+      .toBe("Invoice _ Acme _ 2026-07 _ ACM-202607 _ v1");
   });
 });
