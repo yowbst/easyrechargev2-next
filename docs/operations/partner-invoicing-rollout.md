@@ -12,7 +12,7 @@ Plan: `docs/superpowers/plans/2026-09-05-partner-invoicing.md`
 ## Step 0 — do this FIRST, before anything else
 
 **Disqualify the QA test lead of 12.07.2026** (`lead.dispatch.qa@proton.me`) in
-`partner_dispatches`: set `disqualified = true`, `disqualification_reason = "dedup"`,
+`partner_dispatches`: set `disqualified = true`, `disqualification_reason = "other"`,
 `disqualification_note = "QA test lead"`.
 
 Its row carries `status='dispatched'`, not `skipped_test`, so the scope rule treats it as a
