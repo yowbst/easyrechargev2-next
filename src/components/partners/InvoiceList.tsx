@@ -62,8 +62,9 @@ function InvoiceLines({
             <th className="py-2 pr-4 font-medium">{t("detail.col.lead")}</th>
             <th className="py-2 pr-4 font-medium">{t("detail.col.category")}</th>
             <th className="py-2 pr-4 font-medium">{t("detail.col.reason")}</th>
-            <th className="py-2 pr-4 text-right font-medium">{t("detail.col.amount")}</th>
-            <th className="py-2 pl-2 font-medium">{t("detail.col.status")}</th>
+            <th className="py-2 pr-4 font-medium">{t("detail.col.status")}</th>
+            {/* Rightmost, so the per-line amounts line up with the invoice total. */}
+            <th className="py-2 text-right font-medium">{t("detail.col.amount")}</th>
           </tr>
         </thead>
         <tbody>
@@ -115,16 +116,7 @@ function InvoiceLines({
                   {line.lead_category ? t(`category.${line.lead_category}`) : "—"}
                 </td>
                 <td className="py-2 pr-4 text-xs">{reason}</td>
-                <td className="py-2 pr-4 text-right font-mono whitespace-nowrap">
-                  {billed ? (
-                    chf(line.amount_chf)
-                  ) : (
-                    // What it WOULD have cost, struck: a plain CHF 0.00 hides
-                    // that a decision was taken.
-                    <span className="line-through">{chf(line.unit_price_chf ?? 0)}</span>
-                  )}
-                </td>
-                <td className="py-2 pl-2 whitespace-nowrap">
+                <td className="py-2 pr-4 whitespace-nowrap">
                   <span
                     className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
                       billed
@@ -134,6 +126,15 @@ function InvoiceLines({
                   >
                     {billed ? t("detail.status.billed") : t("detail.status.notBilled")}
                   </span>
+                </td>
+                <td className="py-2 text-right font-mono whitespace-nowrap">
+                  {billed ? (
+                    chf(line.amount_chf)
+                  ) : (
+                    // What it WOULD have cost, struck: a plain CHF 0.00 hides
+                    // that a decision was taken.
+                    <span className="line-through">{chf(line.unit_price_chf ?? 0)}</span>
+                  )}
                 </td>
               </tr>
             );
