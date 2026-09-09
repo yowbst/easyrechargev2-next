@@ -38,6 +38,8 @@ export type DisqualificationReason =
   | "ghosted"
   | "out_of_area"
   | "project_cancelled"
+  /** The installation cannot physically be done — assessed before quoting. */
+  | "technically_infeasible"
   | "competitor"
   | "long_timeframe"
   | "no_authorization"
@@ -103,6 +105,7 @@ export const DISQUALIFICATION_REASONS: DisqualificationReason[] = [
   "ghosted",
   "out_of_area",
   "project_cancelled",
+  "technically_infeasible",
   "competitor",
   "long_timeframe",
   "no_authorization",
