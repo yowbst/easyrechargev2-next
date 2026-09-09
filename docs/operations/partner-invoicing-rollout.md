@@ -114,10 +114,17 @@ adjustment row (table row 3) and `{{dashboard_url}}` under "Détail des leads". 
 block (name, contact, street, city) is deliberately **hardcoded**, not templated.
 
 Filing is **dynamic**: the destination is resolved per invoice as
-`<GOOGLE_INVOICE_ROOT_FOLDER_ID>/<year>/Revenus`, the year taken from `period_month`.
-Confirmed present: `2026/Revenus` and `2025/Revenus`. Generation throws
-`invoice_folder_not_found` (409) rather than creating a folder or filing elsewhere — so a
-missing year folder fails loudly every January instead of silently filing into the old one.
+`<GOOGLE_INVOICE_ROOT_FOLDER_ID>/<year>/Revenus/<YYYY-MM>`, from `period_month`.
+
+The year folder and `Revenus` are the operator's accounting structure — a missing one
+throws `invoice_folder_not_found` (409) rather than being created, so a wrong path fails
+loudly instead of filing invoices where nobody looks. The month folder is a mechanical
+subdivision of a period the invoice already knows, so it **is** created when absent.
+
+Cancelling an invoice prefixes its Drive documents with `ANNULÉE — ` — the Doc, every
+earlier version, and any PDF export sitting beside it. Best-effort: the cancellation is
+already recorded in Directus, so a Drive outage cannot undo it; the response reports what
+was renamed.
 
 **Still open:**
 
