@@ -14,10 +14,22 @@ import { parseFilterParams } from "@/lib/partner-filter-params";
 import { Kanban } from "@/components/partners/Kanban";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 
-export const metadata: Metadata = {
-  title: "Leads — Espace partenaire",
-  robots: { index: false, follow: false },
-};
+/**
+ * Title follows `?lang=`: a hardcoded French tab title was the last French
+ * string a German partner still saw.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const de = sp.lang === "de";
+  return {
+    title: de ? "Leads — Partnerbereich" : "Leads — Espace partenaire",
+    robots: { index: false, follow: false },
+  };
+}
 
 const SUPPORTED_LANGS = ["fr", "de"] as const;
 type Lang = (typeof SUPPORTED_LANGS)[number];
