@@ -4,10 +4,10 @@ import { findPartnerByToken } from "@/lib/partner-auth";
 import {
   fetchPartnerDispatches,
   fetchPartnerLeadsConfig,
+  fetchPartnerSectionPage,
 } from "@/lib/dispatch/partner-dashboard-queries";
 import { resolveWeights } from "@/lib/dispatch/scoring";
 import { collectFacetOptions } from "@/lib/partner-facets";
-import { fetchPage } from "@/lib/directus-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
 import { Kanban } from "@/components/partners/Kanban";
@@ -66,7 +66,7 @@ export default async function PartnerLeadsPage({
   const [dispatches, leadsConfig, leadsPage] = await Promise.all([
     fetchPartnerDispatches(partner.id),
     fetchPartnerLeadsConfig(),
-    fetchPage("partner-leads", locale),
+    fetchPartnerSectionPage("partner-leads", locale),
   ]);
   const dictionary = leadsPage
     ? extractPageDictionary("partner-leads", leadsPage, locale)
