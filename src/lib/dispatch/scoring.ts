@@ -3,10 +3,13 @@
  * captured on every quote submission. Pure module (no framework deps) so it
  * can run on the server or client.
  *
- * Score = round(100 · Σ(wᵢ·sᵢ) / Σ(wᵢ)) over factors whose value is present.
- * A missing field drops its weight from numerator AND denominator, so it
- * neither helps nor unfairly penalises. Dividing by the present-weight sum
+ * Score = min(100, round(100 · Σ(wᵢ·sᵢ) / Σ(wᵢ))) over factors whose value is
+ * present. A missing field drops its weight from numerator AND denominator, so
+ * it neither helps nor unfairly penalises. Dividing by the present-weight sum
  * means per-partner weight overrides don't need to renormalise.
+ *
+ * Sub-scores are 0..1 except `volume`, which reaches 1.5 for two or more
+ * chargers — a bonus on top of full marks, which is what the clamp is for.
  */
 
 export const SCORING_FACTOR_KEYS = [
@@ -35,7 +38,10 @@ export type ScoreBand = "hot" | "warm" | "cold";
 export interface ScoreBreakdownItem {
   key: ScoringFactorKey;
   weight: number;
-  /** 0..1 sub-score for this factor. */
+  /**
+   * Sub-score for this factor. Normally 0..1, but `volume` reaches 1.5 for two
+   * or more chargers — a bonus above full marks rather than a factor of its own.
+   */
   subScore: number;
 }
 
@@ -93,8 +99,12 @@ function subScores(
             ? 0.2
             : null;
 
+  // One charger is the normal case (87% of real submissions) and is already
+  // worth having, so it scores full marks rather than being penalised. Two or
+  // more is a bonus above full — hence a sub-score over 1, which is why the
+  // final score is clamped.
   const volume =
-    parking === "3+" ? 1 : parking === "2" ? 0.7 : parking === "1" ? 0.4 : null;
+    parking === "1" ? 1 : parking === "2" || parking === "3+" ? 1.5 : null;
 
   // No solar yet = biggest upsell opportunity.
   const solar_upsell =
@@ -139,6 +149,8 @@ export function scoreLead(
     den += w;
     breakdown.push({ key, weight: w, subScore: s });
   }
-  const score = den > 0 ? Math.round((100 * num) / den) : 0;
+  // Clamped because `volume` can exceed 1: without it a lead with two chargers
+  // and everything else perfect would score above 100.
+  const score = den > 0 ? Math.min(100, Math.round((100 * num) / den)) : 0;
   return { score, band: bandFor(score), breakdown };
 }
