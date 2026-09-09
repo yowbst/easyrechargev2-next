@@ -3,7 +3,7 @@ import type { ScopeLine, ScopeResult } from "./types";
 
 const FIELDS = [
   "id", "dispatched_at", "canton", "price_chf", "lead_category", "product",
-  "billable", "gift", "disqualified", "invoice",
+  "billable", "gift", "disqualified", "disqualification_reason", "invoice",
   "submission.user.last_name", "submission.data",
 ].join(",");
 
@@ -17,6 +17,7 @@ interface Row {
   billable: boolean | null;
   gift: boolean | null;
   disqualified: boolean | null;
+  disqualification_reason: string | null;
   invoice: string | null;
   submission: {
     user?: { last_name?: string | null } | null;
@@ -97,6 +98,7 @@ export async function collectBillableDispatches(
 
   const lines: ScopeLine[] = [];
   const gifts: ScopeLine[] = [];
+  const refused: ScopeLine[] = [];
   const unsettled: string[] = [];
   const excluded: { id: string; reason: string }[] = [];
 
@@ -107,7 +109,11 @@ export async function collectBillableDispatches(
       gifts.push(toLine(r, 0));
       continue;
     }
-    if (r.disqualified === true) { excluded.push({ id: r.id, reason: "disqualified" }); continue; }
+    if (r.disqualified === true) {
+      excluded.push({ id: r.id, reason: "disqualified" });
+      refused.push({ ...toLine(r, 0), disqualificationReason: r.disqualification_reason ?? null });
+      continue;
+    }
     if (r.billable !== true) { unsettled.push(r.id); continue; }
 
     lines.push(toLine(r, toNumber(r.price_chf)));
@@ -117,5 +123,5 @@ export async function collectBillableDispatches(
     lines.reduce((s, l) => s + l.unitPriceChf, 0).toFixed(2),
   );
 
-  return { lines, gifts, subtotalChf, unsettled, excluded };
+  return { lines, gifts, disqualified: refused, subtotalChf, unsettled, excluded };
 }

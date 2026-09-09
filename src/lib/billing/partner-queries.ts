@@ -5,7 +5,10 @@ export interface PartnerInvoiceLine {
   dispatched_at: string | null;
   lead_category: string | null;
   amount_chf: string;
+  unit_price_chf?: string | null;
   kind: string;
+  /** Present on a `disqualified` line — the reason the partner gave. */
+  disqualification_reason?: string | null;
   /**
    * The dispatch behind this line, when there is one. Manual lead lines and
    * adjustments carry none, so the "open the request" link is simply absent
@@ -50,7 +53,7 @@ export async function fetchPartnerInvoices(
     "fields",
     "id,number,version,status,period_month,total_chf,issued_at,due_at,paid_at," +
       "lines.label,lines.dispatched_at,lines.lead_category,lines.amount_chf,lines.kind," +
-      "lines.dispatch.submission",
+      "lines.dispatch.submission,lines.disqualification_reason,lines.unit_price_chf",
   );
   // Directus returns a nested O2M in arbitrary order, and `sort` would not help:
   // manual lead lines are appended, so the pre-go-live leads (the earliest dates)

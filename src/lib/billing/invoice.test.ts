@@ -7,6 +7,10 @@ const state = {
   existing: [] as InvoiceRow[],
   /** dispatch id -> the invoice it is stamped with, or null when free. */
   stamps: {} as Record<string, string | null>,
+  gifts: [] as unknown[],
+  disqualified: [] as unknown[],
+  /** Bodies of every partner_invoice_lines POST. */
+  lineBodies: [] as Record<string, unknown>[],
   patched: [] as string[],
   nextInvoiceId: 1,
 };
@@ -40,7 +44,8 @@ vi.mock("./scope", () => ({
     const lines = free.map(([id]) => line(id));
     return {
       lines,
-      gifts: [],
+      gifts: state.gifts ?? [],
+      disqualified: state.disqualified ?? [],
       subtotalChf: Number(lines.reduce((s, l) => s + l.unitPriceChf, 0).toFixed(2)),
       unsettled: state.unsettled,
       excluded: taken.map(([id]) => ({ id, reason: "already_invoiced" })),
@@ -85,7 +90,10 @@ vi.mock("@/lib/directus", () => ({
       state.existing.push(row);
       return { data: { id: row.id } };
     }
-    if (path.startsWith("/items/partner_invoice_lines")) return { data: [] };
+    if (path.startsWith("/items/partner_invoice_lines")) {
+      if (method === "POST" && body) state.lineBodies.push(body as Record<string, unknown>);
+      return { data: [] };
+    }
     // Bulk release: { keys, data: { invoice: null } }
     if (path === "/items/partner_dispatches" && method === "PATCH") {
       for (const id of (body!.keys ?? []) as string[]) {
@@ -115,6 +123,9 @@ function reset(stamps: Record<string, string | null> = { d1: null }) {
   state.existing = [];
   state.stamps = { ...stamps };
   state.patched = [];
+  state.gifts = [];
+  state.disqualified = [];
+  state.lineBodies = [];
   state.nextInvoiceId = 1;
   vi.resetModules();
 }
@@ -301,5 +312,44 @@ describe("issue -> cancel -> re-issue", () => {
     expect(retry.number).toBe("EME-202607-R2");
     // CHF 120, not CHF 40 — no lead is lost.
     expect(retry.total_chf).toBe(120);
+  });
+});
+
+describe("issueInvoice — refused leads", () => {
+  beforeEach(() => reset());
+
+  function refusedLine(id: string, reason: string) {
+    return {
+      dispatchId: id, label: `P / X${id} / 1000 Y / 2026-07-10`,
+      dispatchedAt: "2026-07-10T09:00:00.000Z", canton: "VD",
+      postalCode: "1000", locality: "Y", lastName: `X${id}`,
+      leadCategory: "owner_solar", product: "ecp", unitPriceChf: 40,
+      disqualificationReason: reason,
+    };
+  }
+
+  it("freezes refused leads as zero-priced lines carrying their reason", async () => {
+    state.disqualified = [refusedLine("d9", "unreachable"), refusedLine("d8", "technically_infeasible")];
+    const { issueInvoice } = await import("./invoice");
+    const r = await issueInvoice("eme-energies", "2026-07", { now: NOW });
+
+    // The refused leads add nothing to the total.
+    expect(r.total_chf).toBe(40);
+
+    const refused = state.lineBodies.filter((b) => b.kind === "disqualified");
+    expect(refused).toHaveLength(2);
+    const b = refused[0];
+    expect(b.amount_chf).toBe(0);
+    expect(b.unit_price_chf).toBe(0);
+    expect(b.disqualification_reason).toBe("unreachable");
+    expect(b.dispatch).toBe("d9");
+  });
+
+  it("does not stamp a refused dispatch, so a retraction can still be billed later", async () => {
+    state.disqualified = [refusedLine("d9", "unreachable")];
+    const { issueInvoice } = await import("./invoice");
+    await issueInvoice("eme-energies", "2026-07", { now: NOW });
+    // Only the billable lead is stamped.
+    expect(state.patched).toEqual(["d1"]);
   });
 });

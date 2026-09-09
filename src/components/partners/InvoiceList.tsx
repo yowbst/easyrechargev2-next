@@ -68,8 +68,14 @@ function InvoiceLines({
             const { name, place } = splitLabel(line.label);
             const submissionId = line.dispatch?.submission ?? null;
             const isGift = line.kind === "gift";
+            const isRefused = line.kind === "disqualified";
             return (
-              <tr key={i} className="border-b border-border/50 last:border-0">
+              <tr
+                key={i}
+                className={`border-b border-border/50 last:border-0${
+                  isRefused ? " text-muted-foreground" : ""
+                }`}
+              >
                 <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-muted-foreground">
                   {frDate(line.dispatched_at)}
                 </td>
@@ -93,12 +99,25 @@ function InvoiceLines({
                       {t("detail.gift")}
                     </span>
                   )}
+                  {isRefused && (
+                    <span className="ml-2 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium">
+                      {line.disqualification_reason
+                        ? t(`reasons.${line.disqualification_reason}.label`)
+                        : t("detail.refused")}
+                    </span>
+                  )}
                 </td>
                 <td className="py-2 pr-4 text-xs text-muted-foreground">
                   {line.lead_category ? t(`category.${line.lead_category}`) : "—"}
                 </td>
                 <td className="py-2 pr-4 text-right font-mono whitespace-nowrap">
-                  {chf(line.amount_chf)}
+                  {isRefused ? (
+                    // Struck, and showing what it WOULD have cost: a plain
+                    // CHF 0.00 hides that a decision was taken.
+                    <span className="line-through">{chf(line.unit_price_chf ?? 0)}</span>
+                  ) : (
+                    chf(line.amount_chf)
+                  )}
                 </td>
               </tr>
             );

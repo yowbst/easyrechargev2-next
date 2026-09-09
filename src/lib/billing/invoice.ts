@@ -267,6 +267,27 @@ export async function issueInvoice(
     }
   }
 
+  // Refused leads: zero-priced lines, and deliberately NOT stamped with the
+  // invoice id. Stamping would bar them from a later invoice if the partner
+  // ever retracts, and they are already kept out of scope by `disqualified`.
+  for (const [i, refused] of scope.disqualified.entries()) {
+    await directusFetch("/items/partner_invoice_lines", {
+      method: "POST",
+      body: JSON.stringify({
+        invoice: invoiceId, dispatch: refused.dispatchId, kind: "disqualified",
+        label: refused.label, quantity: 1,
+        unit_price_chf: 0, amount_chf: 0,
+        disqualification_reason: refused.disqualificationReason ?? null,
+        sort: 2000 + i, dispatched_at: refused.dispatchedAt, canton: refused.canton,
+        postal_code: refused.postalCode, locality: refused.locality,
+        last_name: refused.lastName, lead_category: refused.leadCategory,
+        product: refused.product,
+      }),
+      next: { revalidate: 0 },
+      retry: false,
+    });
+  }
+
   return { id: invoiceId, number, total_chf: total };
 }
 
