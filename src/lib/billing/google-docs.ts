@@ -346,7 +346,12 @@ export async function generateInvoiceDocument(
     : null;
 
   const token = invoice.partner?.dashboard_token ?? "";
-  const dashboardUrl = `https://easyrecharge.ch/fr/partners/${token}/invoices`;
+  // Deep link: the partner's own language, and `?invoice=` so the document
+  // lands on THIS invoice expanded rather than on a list they must hunt through.
+  const lang = String(invoice.partner?.language ?? "fr").toLowerCase() === "de" ? "de" : "fr";
+  const dashboardUrl =
+    `https://easyrecharge.ch/${lang}/partners/${token}/invoices` +
+    `?invoice=${encodeURIComponent(String(invoice.number))}`;
 
   const previous = Array.isArray(invoice.doc_versions) ? invoice.doc_versions : [];
   const currentVersion = Number(invoice.version) || 1;

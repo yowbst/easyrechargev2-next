@@ -21,10 +21,10 @@ export default async function PartnerInvoicesPage({
   searchParams,
 }: {
   params: Promise<{ uuid: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; invoice?: string }>;
 }) {
   const { uuid } = await params;
-  const { lang: langParam } = await searchParams;
+  const { lang: langParam, invoice: openInvoice } = await searchParams;
   const lang: Lang =
     langParam && (SUPPORTED_LANGS as readonly string[]).includes(langParam)
       ? (langParam as Lang)
@@ -59,7 +59,12 @@ export default async function PartnerInvoicesPage({
       dictionary={dictionary}
       facetOptions={{ housing: [], deadline: [], approval: [], score: [] }}
     >
-      <InvoiceList invoices={invoices} dictionary={dictionary} lang={lang} />
+      <InvoiceList
+        invoices={invoices}
+        dictionary={dictionary}
+        lang={lang}
+        openInvoice={openInvoice}
+      />
     </PartnerSidebar>
   );
 }

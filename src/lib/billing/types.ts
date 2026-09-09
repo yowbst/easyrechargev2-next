@@ -53,6 +53,8 @@ export interface ScopeLine {
   unitPriceChf: number;
   /** Set only on a disqualified line — why the partner refused the lead. */
   disqualificationReason?: string | null;
+  /** Set only on a gift line — why the lead was delivered free. */
+  giftReason?: string | null;
 }
 
 export const LINE_KINDS = ["lead", "adjustment", "gift", "disqualified"] as const;

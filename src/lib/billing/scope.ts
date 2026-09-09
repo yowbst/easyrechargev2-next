@@ -3,7 +3,7 @@ import type { ScopeLine, ScopeResult } from "./types";
 
 const FIELDS = [
   "id", "dispatched_at", "canton", "price_chf", "lead_category", "product",
-  "billable", "gift", "disqualified", "disqualification_reason", "invoice",
+  "billable", "gift", "gift_reason", "disqualified", "disqualification_reason", "invoice",
   "submission.user.last_name", "submission.data",
 ].join(",");
 
@@ -16,6 +16,7 @@ interface Row {
   product: string | null;
   billable: boolean | null;
   gift: boolean | null;
+  gift_reason: string | null;
   disqualified: boolean | null;
   disqualification_reason: string | null;
   invoice: string | null;
@@ -106,7 +107,7 @@ export async function collectBillableDispatches(
     if (r.invoice) { excluded.push({ id: r.id, reason: "already_invoiced" }); continue; }
     if (r.gift === true) {
       excluded.push({ id: r.id, reason: "gift" });
-      gifts.push(toLine(r, 0));
+      gifts.push({ ...toLine(r, toNumber(r.price_chf)), giftReason: r.gift_reason ?? null });
       continue;
     }
     if (r.disqualified === true) {
