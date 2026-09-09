@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import {
   fetchPartnerDispatches,
+  fetchPartnerSectionPage,
   fetchPartnerStatsConfig,
   fetchPartnerStatsPage,
 } from "@/lib/dispatch/partner-dashboard-queries";
 import { resolveWeights } from "@/lib/dispatch/scoring";
-import { fetchPage } from "@/lib/directus-queries";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
@@ -77,7 +77,7 @@ export default async function PartnerStatsPage({
   const locale = slugToDirectusLocale(lang);
   const [dispatches, leadsPage, statsPage, statsConfig] = await Promise.all([
     fetchPartnerDispatches(partner.id),
-    fetchPage("partner-leads", locale),
+    fetchPartnerSectionPage("partner-leads", locale),
     // Dedicated fetcher (60s ISR) so stats translations propagate fast — the
     // default fetchPage caches public pages for 3600s, which can serve a
     // pre-population empty payload for up to an hour after we seed content.
