@@ -8,7 +8,7 @@ import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queri
 import { scoreLead, type ScoringFactorKey } from "@/lib/dispatch/scoring";
 import type { Facets } from "@/components/partners/PartnerFilterContext";
 
-type ScoringWeights = Record<ScoringFactorKey, number>;
+export type ScoringWeights = Record<ScoringFactorKey, number>;
 
 const HOUSING_ORDER = ["owner", "co-owner", "tenant"];
 const APPROVAL_ORDER = ["yes", "in-progress", "no"];
@@ -83,4 +83,19 @@ export function matchesFacets(
     if (!facets.score.includes(band)) return false;
   }
   return true;
+}
+
+/**
+ * The single definition of "this lead is on screen": inside the active date
+ * window AND matching every selected facet. The board and the header count
+ * must agree, and they only do if they ask the same question — a duplicated
+ * predicate drifts the moment one side gains a filter.
+ */
+export function isLeadVisible(
+  d: PartnerDispatchCard,
+  inRange: (iso: string) => boolean,
+  facets: Facets,
+  scoringWeights: ScoringWeights,
+): boolean {
+  return inRange(d.dispatched_at) && matchesFacets(d, facets, scoringWeights);
 }

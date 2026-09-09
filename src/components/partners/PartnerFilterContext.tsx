@@ -4,48 +4,26 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { isLeadVisible, type ScoringWeights } from "@/lib/partner-facets";
+import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
+import {
+  DEFAULT_FILTER_STATE,
+  EMPTY_FACETS,
+  serialiseFilterParams,
+  type DateFilter,
+  type DatePreset,
+  type FacetGroup,
+  type Facets,
+  type FilterState,
+  type SortKey,
+} from "@/lib/partner-filter-params";
 
-export type DatePreset = "all" | "7d" | "30d" | "90d" | "month" | "custom";
-
-export type SortKey = "recent" | "oldest" | "name" | "stage_age" | "score";
-
-/** Multi-select facet filters on lead attributes. Empty array = no filter. */
-export interface Facets {
-  housing: string[];
-  deadline: string[];
-  approval: string[];
-  /** Score band values: "hot" | "warm" | "cold". */
-  score: string[];
-}
-
-export type FacetGroup = keyof Facets;
-
-const EMPTY_FACETS: Facets = {
-  housing: [],
-  deadline: [],
-  approval: [],
-  score: [],
-};
-
-export interface DateFilter {
-  preset: DatePreset;
-  /** yyyy-mm-dd, only used when preset === "custom". */
-  from: string | null;
-  to: string | null;
-  /** yyyy-mm, only used when preset === "month" (a billing cycle). */
-  month: string | null;
-}
-
-const DEFAULT_FILTER: DateFilter = {
-  preset: "all",
-  from: null,
-  to: null,
-  month: null,
-};
+export type { DateFilter, DatePreset, FacetGroup, Facets, SortKey };
 
 interface FilterContextValue {
   filter: DateFilter;
@@ -61,6 +39,15 @@ interface FilterContextValue {
   clearFacets: () => void;
   /** Total number of selected facet values across all groups. */
   facetCount: number;
+  /** True when anything is narrowing the list — a date window or any facet. */
+  filtering: boolean;
+  /**
+   * How many leads pass the current filter, and how many exist in total.
+   * `visible` is null when the provider was given no leads to count (the
+   * stats and invoices views), so the header can fall back to its own number.
+   */
+  visible: number | null;
+  total: number | null;
 }
 
 // Module-scoped so the Date.now() call stays out of the render path (the
@@ -102,10 +89,35 @@ function buildBounds(filter: DateFilter): {
 
 const PartnerFilterContext = createContext<FilterContextValue | null>(null);
 
-export function PartnerFilterProvider({ children }: { children: ReactNode }) {
-  const [filter, setFilter] = useState<DateFilter>(DEFAULT_FILTER);
-  const [sort, setSort] = useState<SortKey>("recent");
-  const [facets, setFacets] = useState<Facets>(EMPTY_FACETS);
+export function PartnerFilterProvider({
+  children,
+  dispatches,
+  scoringWeights,
+  initial = DEFAULT_FILTER_STATE,
+}: {
+  children: ReactNode;
+  /** Given on the Leads view so the header can count what passes the filter. */
+  dispatches?: PartnerDispatchCard[];
+  scoringWeights?: ScoringWeights;
+  /** Parsed by the page from `searchParams`. */
+  initial?: FilterState;
+}) {
+  // Seeded by the server from the incoming query string, so the first client
+  // render matches the HTML and a shared link is filtered from the first paint.
+  const [filter, setFilter] = useState<DateFilter>(initial.filter);
+  const [sort, setSort] = useState<SortKey>(initial.sort);
+  const [facets, setFacets] = useState<Facets>(initial.facets);
+
+  // Mirror state back into the URL so the address bar is always copy-pasteable.
+  // replaceState, not push: changing a filter is not a navigation step, and
+  // filling the back button with them would trap the partner.
+  useEffect(() => {
+    const qs = serialiseFilterParams(window.location.search, { filter, sort, facets });
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [filter, sort, facets]);
 
   const toggleFacet = useCallback((group: FacetGroup, value: string) => {
     setFacets((prev) => {
@@ -125,6 +137,12 @@ export function PartnerFilterProvider({ children }: { children: ReactNode }) {
       facets.deadline.length +
       facets.approval.length +
       facets.score.length;
+    const filtering = active || facetCount > 0;
+    const total = dispatches ? dispatches.length : null;
+    const visible =
+      dispatches && scoringWeights
+        ? dispatches.filter((d) => isLeadVisible(d, inRange, facets, scoringWeights)).length
+        : total;
     return {
       filter,
       setFilter,
@@ -136,8 +154,11 @@ export function PartnerFilterProvider({ children }: { children: ReactNode }) {
       toggleFacet,
       clearFacets,
       facetCount,
+      filtering,
+      visible,
+      total,
     };
-  }, [filter, sort, facets, toggleFacet, clearFacets]);
+  }, [filter, sort, facets, toggleFacet, clearFacets, dispatches, scoringWeights]);
 
   return (
     <PartnerFilterContext.Provider value={value}>

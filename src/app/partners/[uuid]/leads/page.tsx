@@ -10,6 +10,7 @@ import { resolveWeights } from "@/lib/dispatch/scoring";
 import { collectFacetOptions } from "@/lib/partner-facets";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
+import { parseFilterParams } from "@/lib/partner-filter-params";
 import { Kanban } from "@/components/partners/Kanban";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 
@@ -50,10 +51,12 @@ export default async function PartnerLeadsPage({
   searchParams,
 }: {
   params: Promise<{ uuid: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { uuid } = await params;
-  const { lang: langParam } = await searchParams;
+  const sp = await searchParams;
+  const langParam = typeof sp.lang === "string" ? sp.lang : undefined;
+  const initialFilters = parseFilterParams(sp);
   const lang: Lang =
     langParam && (SUPPORTED_LANGS as readonly string[]).includes(langParam)
       ? (langParam as Lang)
@@ -92,6 +95,9 @@ export default async function PartnerLeadsPage({
       lang={lang}
       dictionary={dictionary}
       facetOptions={facetOptions}
+      dispatches={dispatches}
+      scoringWeights={scoringWeights}
+      initialFilters={initialFilters}
     >
       <Kanban
         partnerToken={uuid}
