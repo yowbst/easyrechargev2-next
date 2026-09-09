@@ -115,14 +115,19 @@ describe("generateInvoiceDocument", () => {
   beforeEach(() => { resetState(); vi.resetModules(); });
 
   function fakeGateway(...results: { fileId: string; url: string }[]) {
-    const copyTemplate = vi.fn<(name: string, year: string) => Promise<{ fileId: string; url: string }>>();
+    const copyTemplate = vi.fn<(name: string, periodMonth: string) => Promise<{ fileId: string; url: string }>>();
     results.forEach((r) => copyTemplate.mockResolvedValueOnce(r));
     const replaceText = vi.fn<(fileId: string, map: Record<string, string>) => Promise<void>>(
       async () => {},
     );
     const linkText = vi.fn<(fileId: string, text: string, url: string) => Promise<void>>(async () => {});
     const dropRowsContaining = vi.fn<(fileId: string, markers: string[]) => Promise<void>>(async () => {});
-    return { copyTemplate, replaceText, linkText, dropRowsContaining };
+    const getFileName = vi.fn<(fileId: string) => Promise<string | null>>(async () => null);
+    const findSiblingsByNamePrefix = vi.fn<
+      (fileId: string, prefix: string) => Promise<{ id: string; name: string }[]>
+    >(async () => []);
+    const renameFile = vi.fn<(fileId: string, name: string) => Promise<void>>(async () => {});
+    return { copyTemplate, replaceText, linkText, dropRowsContaining, getFileName, findSiblingsByNamePrefix, renameFile };
   }
 
   it("creates the first version and starts doc_versions as a one-entry array", async () => {
@@ -131,7 +136,7 @@ describe("generateInvoiceDocument", () => {
     const r = await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
 
     expect(r).toEqual({ doc_url: "https://docs.google.com/document/d/f1/edit", doc_file_id: "f1", version: 1 });
-    expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2026-07 _ EME-202607 _ v1", "2026");
+    expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2026-07 _ EME-202607 _ v1", "2026-07");
 
     const patch = calls.find((c) => c.method === "PATCH");
     expect(patch).toBeDefined();
@@ -151,7 +156,7 @@ describe("generateInvoiceDocument", () => {
     const { generateInvoiceDocument } = await import("./google-docs");
     await generateInvoiceDocument("inv-1", gateway, new Date("2027-03-01T00:00:00Z"));
 
-    expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2027-01 _ EME-202701 _ v1", "2027");
+    expect(gateway.copyTemplate).toHaveBeenCalledWith("Facture _ E-ME Énergies _ 2027-01 _ EME-202701 _ v1", "2027-01");
   });
 
   it("drops both optional rows when there is no gift and no adjustment", async () => {
@@ -199,7 +204,7 @@ describe("generateInvoiceDocument", () => {
     const { generateInvoiceDocument } = await import("./google-docs");
     await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
 
-    expect(gateway.copyTemplate).toHaveBeenCalledWith("Invoice _ E-ME Énergies _ 2026-07 _ EME-202607 _ v1", "2026");
+    expect(gateway.copyTemplate).toHaveBeenCalledWith("Invoice _ E-ME Énergies _ 2026-07 _ EME-202607 _ v1", "2026-07");
   });
 
   it("hands replaceText the quantity and unit price derived from the mocked lead lines", async () => {
@@ -229,7 +234,7 @@ describe("generateInvoiceDocument", () => {
     expect(second).toEqual({ doc_url: "https://docs.google.com/document/d/f2/edit", doc_file_id: "f2", version: 2 });
 
     // The filename and the {{invoice_version}} placeholder both reflect the bump.
-    expect(gateway.copyTemplate).toHaveBeenNthCalledWith(2, "Facture _ E-ME Énergies _ 2026-07 _ EME-202607 _ v2", "2026");
+    expect(gateway.copyTemplate).toHaveBeenNthCalledWith(2, "Facture _ E-ME Énergies _ 2026-07 _ EME-202607 _ v2", "2026-07");
     const secondMap = gateway.replaceText.mock.calls[1][1] as Record<string, string>;
     expect(secondMap["{{invoice_version}}"]).toBe("v2");
 

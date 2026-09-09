@@ -2,12 +2,12 @@ import { directusFetch } from "@/lib/directus";
 
 export interface DocGateway {
   /**
-   * `year` selects the destination folder. Filing is year-scoped
-   * (`<root>/<year>/Revenus`), so the year travels with the call rather than
-   * living in a static env var that would silently keep filing into the old
-   * folder every January.
+   * `periodMonth` (`2026-07`) selects the destination folder. Filing is
+   * period-scoped — `<root>/<year>/Revenus/<YYYY-MM>` — so the period travels
+   * with the call rather than living in a static env var that would silently
+   * keep filing into the old folder every January.
    */
-  copyTemplate(name: string, year: string): Promise<{ fileId: string; url: string }>;
+  copyTemplate(name: string, periodMonth: string): Promise<{ fileId: string; url: string }>;
   replaceText(fileId: string, map: Record<string, string>): Promise<void>;
   /** Turn every occurrence of `text` into a hyperlink pointing at `url`. */
   linkText(fileId: string, text: string, url: string): Promise<void>;
@@ -17,6 +17,14 @@ export interface DocGateway {
    * amount next to a label reads as a mistake.
    */
   dropRowsContaining(fileId: string, markers: string[]): Promise<void>;
+  /** Current Drive name of a file, or null when it is gone. */
+  getFileName(fileId: string): Promise<string | null>;
+  /**
+   * Files in the same folder whose name starts with `prefix` — the document
+   * itself plus any export sitting beside it (`<name>.pdf`).
+   */
+  findSiblingsByNamePrefix(fileId: string, prefix: string): Promise<{ id: string; name: string }[]>;
+  renameFile(fileId: string, name: string): Promise<void>;
 }
 
 function chf(v: string | number): string {
@@ -120,7 +128,7 @@ async function defaultGateway(): Promise<DocGateway> {
   /** Exact name of the revenue subfolder inside each year folder. */
   const REVENUE_FOLDER = "Revenus";
 
-  async function childFolderId(parentId: string, name: string): Promise<string> {
+  async function findChildFolder(parentId: string, name: string): Promise<string | null> {
     const res = await drive.files.list({
       q:
         `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' ` +
@@ -129,18 +137,42 @@ async function defaultGateway(): Promise<DocGateway> {
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
     });
-    const id = res.data.files?.[0]?.id;
-    // Refuse rather than create: a folder appearing on its own would file real
-    // invoices somewhere nobody is looking.
+    return res.data.files?.[0]?.id ?? null;
+  }
+
+  /**
+   * The year folder and `Revenus` are the operator's accounting structure — if
+   * one is missing, something is wrong and filing elsewhere would hide it, so
+   * refuse. The month folder is a mechanical subdivision of a period the
+   * invoice already knows, so create it when absent.
+   */
+  async function requireChildFolder(parentId: string, name: string): Promise<string> {
+    const id = await findChildFolder(parentId, name);
     if (!id) throw new Error("invoice_folder_not_found");
     return id;
   }
 
+  async function ensureChildFolder(parentId: string, name: string): Promise<string> {
+    const existing = await findChildFolder(parentId, name);
+    if (existing) return existing;
+    const created = await drive.files.create({
+      requestBody: {
+        name,
+        mimeType: "application/vnd.google-apps.folder",
+        parents: [parentId],
+      },
+      fields: "id",
+      supportsAllDrives: true,
+    });
+    return created.data.id!;
+  }
+
   return {
-    async copyTemplate(name, year) {
+    async copyTemplate(name, periodMonth) {
       const root = process.env.GOOGLE_INVOICE_ROOT_FOLDER_ID!;
-      const yearFolder = await childFolderId(root, year);
-      const target = await childFolderId(yearFolder, REVENUE_FOLDER);
+      const yearFolder = await requireChildFolder(root, periodMonth.slice(0, 4));
+      const revenue = await requireChildFolder(yearFolder, REVENUE_FOLDER);
+      const target = await ensureChildFolder(revenue, periodMonth);
       const res = await drive.files.copy({
         fileId: process.env.GOOGLE_INVOICE_TEMPLATE_DOC_ID!,
         requestBody: { name, parents: [target] },
@@ -148,6 +180,34 @@ async function defaultGateway(): Promise<DocGateway> {
       });
       const fileId = res.data.id!;
       return { fileId, url: `https://docs.google.com/document/d/${fileId}/edit` };
+    },
+    async getFileName(fileId) {
+      try {
+        const res = await drive.files.get({ fileId, fields: "name", supportsAllDrives: true });
+        return res.data.name ?? null;
+      } catch {
+        return null;
+      }
+    },
+    async findSiblingsByNamePrefix(fileId, prefix) {
+      const meta = await drive.files.get({ fileId, fields: "parents", supportsAllDrives: true });
+      const parent = meta.data.parents?.[0];
+      if (!parent) return [];
+      const res = await drive.files.list({
+        q:
+          `'${parent}' in parents and trashed=false ` +
+          `and name contains '${prefix.replace(/'/g, "\\'")}'`,
+        fields: "files(id,name)",
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true,
+      });
+      // `name contains` is a substring match, so filter to a true prefix.
+      return (res.data.files ?? [])
+        .filter((f) => (f.name ?? "").startsWith(prefix))
+        .map((f) => ({ id: f.id!, name: f.name! }));
+    },
+    async renameFile(fileId, name) {
+      await drive.files.update({ fileId, requestBody: { name }, supportsAllDrives: true });
     },
     async dropRowsContaining(fileId, markers) {
       if (!markers.length) return;
@@ -299,8 +359,7 @@ export async function generateInvoiceDocument(
     String(invoice.number),
     newVersion,
   );
-  const year = String(invoice.period_month).slice(0, 4);
-  const { fileId, url } = await gw.copyTemplate(name, year);
+  const { fileId, url } = await gw.copyTemplate(name, String(invoice.period_month));
   // Drop optional rows before substituting: an invoice with no gifts and no
   // discount should not carry blank rows explaining nothing.
   const unusedRows: string[] = [];
@@ -330,4 +389,54 @@ export async function generateInvoiceDocument(
   });
 
   return { doc_url: url, doc_file_id: fileId, version: newVersion };
+}
+
+/** Prefix stamped on the documents of a superseded invoice. */
+export const SUPERSEDED_PREFIX = "ANNULÉE — ";
+
+/**
+ * Mark every document of a cancelled invoice, so the file that was actually
+ * sent cannot be picked up again by mistake. Covers the Google Doc and any
+ * export sitting beside it (`<name>.pdf`), and every earlier version too.
+ *
+ * Best-effort by design: the cancellation itself has already been recorded in
+ * Directus, and a Drive outage must not undo it. Returns what it renamed.
+ */
+export async function markInvoiceDocumentsSuperseded(
+  invoiceId: string,
+  gateway?: DocGateway,
+): Promise<{ renamed: string[]; skipped: string[] }> {
+  const gw = gateway ?? (await defaultGateway());
+  const res = await directusFetch<{ data: any }>( // eslint-disable-line @typescript-eslint/no-explicit-any
+    `/items/partner_invoices/${invoiceId}?fields=doc_file_id,doc_versions`,
+    { next: { revalidate: 0 } },
+  );
+  const invoice = res?.data;
+  if (!invoice) throw new Error("invoice_not_found");
+
+  const versions = Array.isArray(invoice.doc_versions) ? invoice.doc_versions : [];
+  const ids = [
+    ...new Set(
+      [invoice.doc_file_id, ...versions.map((v: { doc_file_id?: string }) => v?.doc_file_id)]
+        .filter((x): x is string => Boolean(x)),
+    ),
+  ];
+
+  const renamed: string[] = [];
+  const skipped: string[] = [];
+  for (const id of ids) {
+    const name = await gw.getFileName(id);
+    if (!name) { skipped.push(id); continue; }
+    if (name.startsWith(SUPERSEDED_PREFIX)) { skipped.push(name); continue; }
+    // Match before renaming: once the Doc carries the prefix, its .pdf sibling
+    // would no longer share a prefix with it.
+    const siblings = await gw.findSiblingsByNamePrefix(id, name);
+    const targets = siblings.length > 0 ? siblings : [{ id, name }];
+    for (const f of targets) {
+      if (f.name.startsWith(SUPERSEDED_PREFIX)) { skipped.push(f.name); continue; }
+      await gw.renameFile(f.id, SUPERSEDED_PREFIX + f.name);
+      renamed.push(SUPERSEDED_PREFIX + f.name);
+    }
+  }
+  return { renamed, skipped };
 }

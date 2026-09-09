@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { setInvoiceStatus } from "@/lib/billing/invoice";
+import { markInvoiceDocumentsSuperseded } from "@/lib/billing/google-docs";
 import { INVOICE_STATUSES, type InvoiceStatus } from "@/lib/billing/types";
 import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
@@ -18,7 +19,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   try {
     await setInvoiceStatus(id, status as InvoiceStatus, note);
-    return NextResponse.json({ ok: true, status });
+    // Cancelling supersedes whatever was sent. Best-effort: the cancellation is
+    // already recorded, and a Drive outage must not undo it.
+    let documents: { renamed: string[]; skipped: string[] } | { error: string } | undefined;
+    if (status === "cancelled") {
+      try {
+        documents = await markInvoiceDocumentsSuperseded(id);
+      } catch (e) {
+        console.error("[admin/invoices/status] marking documents superseded failed", e);
+        documents = { error: "rename_failed" };
+      }
+    }
+    return NextResponse.json({ ok: true, status, ...(documents ? { documents } : {}) });
   } catch (e) {
     return NextResponse.json(errorBody(e), { status: errorStatus(e) });
   }

@@ -6,7 +6,7 @@ import {
   addAdjustmentLine, addInvoiceNote, addManualLeadLine, issueInvoice, previewInvoice,
   setInvoiceStatus,
 } from "@/lib/billing/invoice";
-import { generateInvoiceDocument } from "@/lib/billing/google-docs";
+import { generateInvoiceDocument, markInvoiceDocumentsSuperseded } from "@/lib/billing/google-docs";
 import { INVOICE_STATUSES } from "@/lib/billing/types";
 import { adminDisqualify, adminRequalify } from "@/lib/dispatch/admin-override";
 import { DISQUALIFICATION_REASONS } from "@/lib/dispatch/types";
@@ -60,7 +60,7 @@ export function registerInvoicingTools(server: McpServer) {
     {
       title: "Set invoice status",
       description:
-        "Move an invoice through issued -> sent -> paid, or to disputed/cancelled. paid and cancelled are terminal; issued cannot jump straight to paid.",
+        "Move an invoice through issued -> sent -> paid, or to disputed/cancelled. paid and cancelled are terminal; issued cannot jump straight to paid. Cancelling also releases the invoice's dispatches back into the billable pool and prefixes its Drive documents — the Doc and any exported PDF — with ANNULÉE so the file that was sent cannot be reused by mistake.",
       inputSchema: {
         invoiceId: z.string(),
         status: z.enum(INVOICE_STATUSES),
