@@ -8,10 +8,22 @@ import { slugToDirectusLocale } from "@/lib/i18n/config";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 import { InvoiceList } from "@/components/partners/InvoiceList";
 
-export const metadata: Metadata = {
-  title: "Factures — Espace partenaire",
-  robots: { index: false, follow: false },
-};
+/**
+ * Title follows `?lang=`: a hardcoded French tab title was the last French
+ * string a German partner still saw.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const de = sp.lang === "de";
+  return {
+    title: de ? "Rechnungen — Partnerbereich" : "Factures — Espace partenaire",
+    robots: { index: false, follow: false },
+  };
+}
 
 const SUPPORTED_LANGS = ["fr", "de"] as const;
 type Lang = (typeof SUPPORTED_LANGS)[number];

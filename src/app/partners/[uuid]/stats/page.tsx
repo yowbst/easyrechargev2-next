@@ -22,10 +22,22 @@ const STATS_TABS = ["general", "performance"] as const;
 type StatsTabKey = (typeof STATS_TABS)[number];
 const DEFAULT_TAB: StatsTabKey = "general";
 
-export const metadata: Metadata = {
-  title: "Statistiques — Espace partenaire",
-  robots: { index: false, follow: false },
-};
+/**
+ * Title follows `?lang=`: a hardcoded French tab title was the last French
+ * string a German partner still saw.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const de = sp.lang === "de";
+  return {
+    title: de ? "Statistiken — Partnerbereich" : "Statistiques — Espace partenaire",
+    robots: { index: false, follow: false },
+  };
+}
 
 const SUPPORTED_LANGS = ["fr", "de"] as const;
 type Lang = (typeof SUPPORTED_LANGS)[number];
