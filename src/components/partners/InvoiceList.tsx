@@ -1,4 +1,5 @@
 import { FileSearch } from "lucide-react";
+import { InvoiceUrlSync } from "./InvoiceUrlSync";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import type { PartnerInvoice, PartnerInvoiceLine } from "@/lib/billing/partner-queries";
 
@@ -60,7 +61,9 @@ function InvoiceLines({
             <th className="py-2 pr-4 font-medium">{t("detail.col.date")}</th>
             <th className="py-2 pr-4 font-medium">{t("detail.col.lead")}</th>
             <th className="py-2 pr-4 font-medium">{t("detail.col.category")}</th>
+            <th className="py-2 pr-4 font-medium">{t("detail.col.reason")}</th>
             <th className="py-2 pr-4 text-right font-medium">{t("detail.col.amount")}</th>
+            <th className="py-2 pl-2 font-medium">{t("detail.col.status")}</th>
           </tr>
         </thead>
         <tbody>
@@ -69,11 +72,23 @@ function InvoiceLines({
             const submissionId = line.dispatch?.submission ?? null;
             const isGift = line.kind === "gift";
             const isRefused = line.kind === "disqualified";
+            // Binary on purpose: the partner only needs to know whether this
+            // request is on the amount they owe.
+            const billed = !isGift && !isRefused;
+            const reason = isRefused
+              ? line.disqualification_reason
+                ? t(`reasons.${line.disqualification_reason}.label`)
+                : t("detail.refused")
+              : isGift
+                ? line.gift_reason
+                  ? t(`gift_reasons.${line.gift_reason}`)
+                  : t("detail.gift")
+                : "—";
             return (
               <tr
                 key={i}
                 className={`border-b border-border/50 last:border-0${
-                  isRefused ? " text-muted-foreground" : ""
+                  billed ? "" : " text-muted-foreground"
                 }`}
               >
                 <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-muted-foreground">
@@ -94,30 +109,31 @@ function InvoiceLines({
                   )}
                   <span className="font-medium">{name}</span>
                   {place && <span className="ml-2 text-muted-foreground">{place}</span>}
-                  {isGift && (
-                    <span className="ml-2 rounded border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
-                      {t("detail.gift")}
-                    </span>
-                  )}
-                  {isRefused && (
-                    <span className="ml-2 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium">
-                      {line.disqualification_reason
-                        ? t(`reasons.${line.disqualification_reason}.label`)
-                        : t("detail.refused")}
-                    </span>
-                  )}
+
                 </td>
                 <td className="py-2 pr-4 text-xs text-muted-foreground">
                   {line.lead_category ? t(`category.${line.lead_category}`) : "—"}
                 </td>
+                <td className="py-2 pr-4 text-xs">{reason}</td>
                 <td className="py-2 pr-4 text-right font-mono whitespace-nowrap">
-                  {isRefused ? (
-                    // Struck, and showing what it WOULD have cost: a plain
-                    // CHF 0.00 hides that a decision was taken.
-                    <span className="line-through">{chf(line.unit_price_chf ?? 0)}</span>
-                  ) : (
+                  {billed ? (
                     chf(line.amount_chf)
+                  ) : (
+                    // What it WOULD have cost, struck: a plain CHF 0.00 hides
+                    // that a decision was taken.
+                    <span className="line-through">{chf(line.unit_price_chf ?? 0)}</span>
                   )}
+                </td>
+                <td className="py-2 pl-2 whitespace-nowrap">
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                      billed
+                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                        : "border-border bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {billed ? t("detail.status.billed") : t("detail.status.notBilled")}
+                  </span>
                 </td>
               </tr>
             );
@@ -132,10 +148,13 @@ export function InvoiceList({
   invoices,
   dictionary,
   lang,
+  openInvoice,
 }: {
   invoices: PartnerInvoice[];
   dictionary: PartnerDict;
   lang: "fr" | "de";
+  /** Invoice number from `?invoice=` — that one renders expanded. */
+  openInvoice?: string;
 }) {
   const t = makePartnerT(dictionary);
 
@@ -151,6 +170,7 @@ export function InvoiceList({
   return (
     <div className="space-y-4 p-4 sm:p-6">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
+      <InvoiceUrlSync />
 
       {invoices.map((inv) => {
         const lines = inv.lines ?? [];
@@ -164,6 +184,9 @@ export function InvoiceList({
         return (
           <details
             key={inv.id}
+            id={`invoice-${inv.number}`}
+            data-invoice-number={inv.number}
+            open={openInvoice === inv.number}
             className={`group rounded-lg border bg-card shadow-sm transition-shadow open:shadow-md${
               cancelled ? " opacity-60" : ""
             }`}

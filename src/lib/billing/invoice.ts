@@ -250,7 +250,8 @@ export async function issueInvoice(
       body: JSON.stringify({
         invoice: invoiceId, dispatch: gift.dispatchId, kind: "gift",
         label: gift.label, quantity: 1,
-        unit_price_chf: 0, amount_chf: 0,
+        unit_price_chf: gift.unitPriceChf, amount_chf: 0,
+        gift_reason: gift.giftReason ?? null,
         sort: 1000 + i, dispatched_at: gift.dispatchedAt, canton: gift.canton,
         postal_code: gift.postalCode, locality: gift.locality,
         last_name: gift.lastName, lead_category: gift.leadCategory, product: gift.product,

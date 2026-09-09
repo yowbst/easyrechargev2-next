@@ -68,7 +68,7 @@ describe("buildPlaceholders", () => {
         debtor_snapshot: { name: "E-ME Énergies Sàrl", street: "Chemin de la Crétaux 4",
           postal_code: "1196", locality: "Gland", email: "jendoubi@emeenergies.ch" } },
       17, 40,
-      "https://easyrecharge.ch/fr/partners/tok-123/invoices",
+      "https://easyrecharge.ch/fr/partners/tok-123/invoices?invoice=EME-202607",
     );
 
     expect(map["{{invoice_number}}"]).toBe("EME-202607");
@@ -84,7 +84,7 @@ describe("buildPlaceholders", () => {
     expect(map["{{line_amount}}"]).toBe("CHF 680.00");
     expect(map["{{total_due}}"]).toBe("CHF 680.00");
     expect(map["{{sent_to}}"]).toBe("jendoubi@emeenergies.ch");
-    expect(map["{{dashboard_url}}"]).toBe("https://easyrecharge.ch/fr/partners/tok-123/invoices");
+    expect(map["{{dashboard_url}}"]).toBe("https://easyrecharge.ch/fr/partners/tok-123/invoices?invoice=EME-202607");
     // No adjustment on this invoice — both keys render as empty string, never "CHF 0.00"/"null".
     expect(map["{{adjustment_label}}"]).toBe("");
     expect(map["{{adjustment_amount}}"]).toBe("");
@@ -100,7 +100,7 @@ describe("buildPlaceholders", () => {
         due_at: "2026-09-26T00:00:00.000Z", total_chf: "630.00", vat_rate: "0.00", vat_chf: "0.00",
         issuer_snapshot: {}, debtor_snapshot: {} },
       17, 40,
-      "https://easyrecharge.ch/fr/partners/tok-123/invoices",
+      "https://easyrecharge.ch/fr/partners/tok-123/invoices?invoice=EME-202607",
       { label: "Remise fidélité", amountChf: -50 },
     );
 
@@ -194,8 +194,30 @@ describe("generateInvoiceDocument", () => {
     const { generateInvoiceDocument } = await import("./google-docs");
     await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
 
-    const dash = "https://easyrecharge.ch/fr/partners/tok-123/invoices";
+    const dash = "https://easyrecharge.ch/fr/partners/tok-123/invoices?invoice=EME-202607";
     expect(gateway.linkText).toHaveBeenCalledWith("f1", dash, dash);
+  });
+
+  it("deep-links the dashboard in the partner's own language", async () => {
+    state.invoice = { ...state.invoice, partner: { ...state.invoice.partner, language: "de" } };
+    const gateway = fakeGateway({ fileId: "f1", url: "https://docs.google.com/document/d/f1/edit" });
+    const { generateInvoiceDocument } = await import("./google-docs");
+    await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
+
+    const map = gateway.replaceText.mock.calls[0][1] as Record<string, string>;
+    expect(map["{{dashboard_url}}"]).toBe(
+      "https://easyrecharge.ch/de/partners/tok-123/invoices?invoice=EME-202607",
+    );
+  });
+
+  it("url-encodes a re-issued number so the deep link survives the suffix", async () => {
+    state.invoice = { ...state.invoice, number: "EME-202607-R2" };
+    const gateway = fakeGateway({ fileId: "f1", url: "https://docs.google.com/document/d/f1/edit" });
+    const { generateInvoiceDocument } = await import("./google-docs");
+    await generateInvoiceDocument("inv-1", gateway, new Date("2026-09-05T00:00:00Z"));
+
+    const map = gateway.replaceText.mock.calls[0][1] as Record<string, string>;
+    expect(map["{{dashboard_url}}"]).toContain("?invoice=EME-202607-R2");
   });
 
   it("falls back to the English word for a language with no mapping", async () => {
