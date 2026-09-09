@@ -2539,7 +2539,7 @@ git commit -m "feat(partners): invoices view replacing the spreadsheet annex"
 
 - [ ] **Step 1: Prepare the July ledger**
 
-The QA test lead of 12.07 (`lead.dispatch.qa@proton.me`) carries `status='dispatched'`, so the scope rule includes it. Disqualify it in Directus before issuing: set `disqualified = true`, `disqualification_reason = "dedup"`, `disqualification_note = "QA test lead"`.
+The QA test lead of 12.07 (`lead.dispatch.qa@proton.me`) carries `status='dispatched'`, so the scope rule includes it. Disqualify it in Directus before issuing: set `disqualified = true`, `disqualification_reason = "other"`, `disqualification_note = "QA test lead"`. (`dedup` is a dispatch *status* value, not a disqualification reason — writing it renders as `[reasons.dedup.label]` in the partner dashboard.)
 
 - [ ] **Step 2: Preview July**
 
