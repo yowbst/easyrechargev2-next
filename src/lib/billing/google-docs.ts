@@ -229,11 +229,15 @@ export function buildDocumentName(
   language: string | null | undefined,
   partnerName: string,
   periodMonth: string,
-  invoiceCode: string,
+  invoiceNumber: string,
   version: number,
 ): string {
   const word = INVOICE_WORD[(language ?? "").toLowerCase()] ?? "Invoice";
-  return `${word} _ ${partnerName} _ ${periodMonth} _ ${invoiceCode} _ v${version}`;
+  // The full invoice number, not the partner code: it carries the re-issuance
+  // rank (EME-202607-R2), so a cancel-and-reissue cannot produce two files
+  // with the same name in the same folder. Matches the pre-existing convention
+  // (`… _ Juin 2026 _ B789CB54-202606 _ v1`).
+  return `${word} _ ${partnerName} _ ${periodMonth} _ ${invoiceNumber} _ v${version}`;
 }
 
 export async function generateInvoiceDocument(
@@ -292,7 +296,7 @@ export async function generateInvoiceDocument(
     invoice.partner?.language,
     invoice.partner?.name ?? "",
     String(invoice.period_month),
-    invoice.partner?.invoice_code ?? "",
+    String(invoice.number),
     newVersion,
   );
   const year = String(invoice.period_month).slice(0, 4);
