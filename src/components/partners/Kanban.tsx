@@ -29,7 +29,7 @@ import {
   scoreLead,
   type ScoringFactorKey,
 } from "@/lib/dispatch/scoring";
-import { matchesFacets } from "@/lib/partner-facets";
+import { isLeadVisible } from "@/lib/partner-facets";
 
 type ScoringWeights = Record<ScoringFactorKey, number>;
 
@@ -153,8 +153,8 @@ export function Kanban({
 
   // Header filters (date window + attribute facets) apply across every
   // section. A facet group with no selection doesn't constrain.
-  const visibleDispatches = localDispatches.filter(
-    (d) => inRange(d.dispatched_at) && matchesFacets(d, facets, scoringWeights),
+  const visibleDispatches = localDispatches.filter((d) =>
+    isLeadVisible(d, inRange, facets, scoringWeights),
   );
 
   for (const d of visibleDispatches) {

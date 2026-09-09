@@ -36,9 +36,13 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { PartnerLanguageSwitcher } from "./PartnerLanguageSwitcher";
 import { PartnerFilterProvider, type Facets } from "./PartnerFilterContext";
+import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
+import type { ScoringWeights } from "@/lib/partner-facets";
+import type { FilterState } from "@/lib/partner-filter-params";
 import { PartnerDateFilter } from "./PartnerDateFilter";
 import { PartnerSortControl } from "./PartnerSortControl";
 import { PartnerFacetFilter } from "./PartnerFacetFilter";
+import { LeadCountLabel } from "./LeadCountLabel";
 
 export type PartnerNav = "leads" | "stats" | "invoices";
 type Lang = "fr" | "de";
@@ -65,6 +69,9 @@ export function PartnerSidebar({
   lang,
   dictionary,
   facetOptions,
+  dispatches,
+  scoringWeights,
+  initialFilters,
   statsTabs,
   activeStatsTab,
   defaultStatsTab,
@@ -78,6 +85,11 @@ export function PartnerSidebar({
   lang: Lang;
   dictionary: PartnerDict;
   facetOptions: Facets;
+  /** Leads behind the board, so the header can count what passes the filter. */
+  dispatches?: PartnerDispatchCard[];
+  scoringWeights?: ScoringWeights;
+  /** Filter state the page parsed out of the query string. */
+  initialFilters?: FilterState;
   /** Stats tab anchors to surface in the sidebar when the stats page is
    *  active. Sub-items link to `?tab=…` (the default tab key skips the
    *  query string to keep URLs clean). */
@@ -104,7 +116,11 @@ export function PartnerSidebar({
   const leadsAnchor =
     hash === "leads-disqualified" || hash === "leads-closed" ? hash : "open";
   return (
-    <PartnerFilterProvider>
+    <PartnerFilterProvider
+      dispatches={dispatches}
+      scoringWeights={scoringWeights}
+      initial={initialFilters}
+    >
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon">
         <SidebarHeader>
@@ -263,9 +279,7 @@ export function PartnerSidebar({
           <SidebarTrigger className="-ml-1" />
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-base font-semibold">{partnerName}</h1>
-            <p className="text-xs text-muted-foreground">
-              {leadCount} {t(leadCount === 1 ? "header.lead" : "header.leads")}
-            </p>
+            <LeadCountLabel dictionary={dictionary} fallback={leadCount} />
           </div>
           <div className="ml-auto flex items-center gap-1">
             <PartnerFacetFilter options={facetOptions} dictionary={dictionary} />

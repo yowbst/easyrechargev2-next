@@ -10,6 +10,7 @@ import {
 import { resolveWeights } from "@/lib/dispatch/scoring";
 import { extractPageDictionary } from "@/lib/i18n/dictionaries";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
+import { parseFilterParams } from "@/lib/partner-filter-params";
 import { PartnerSidebar } from "@/components/partners/PartnerSidebar";
 import { StatsBoard } from "@/components/partners/StatsBoard";
 import { PerformanceBoard } from "@/components/partners/PerformanceBoard";
@@ -58,10 +59,13 @@ export default async function PartnerStatsPage({
   searchParams,
 }: {
   params: Promise<{ uuid: string }>;
-  searchParams: Promise<{ lang?: string; tab?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { uuid } = await params;
-  const { lang: langParam, tab: tabParam } = await searchParams;
+  const sp = await searchParams;
+  const langParam = typeof sp.lang === "string" ? sp.lang : undefined;
+  const tabParam = typeof sp.tab === "string" ? sp.tab : undefined;
+  const initialFilters = parseFilterParams(sp);
   const lang: Lang =
     langParam && (SUPPORTED_LANGS as readonly string[]).includes(langParam)
       ? (langParam as Lang)
@@ -121,6 +125,9 @@ export default async function PartnerStatsPage({
       lang={lang}
       dictionary={dictionary}
       facetOptions={facetOptions}
+      dispatches={dispatches}
+      scoringWeights={scoringWeights}
+      initialFilters={initialFilters}
       statsTabs={tabs}
       activeStatsTab={tab}
       defaultStatsTab={DEFAULT_TAB}
