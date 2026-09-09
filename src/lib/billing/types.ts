@@ -51,9 +51,11 @@ export interface ScopeLine {
   leadCategory: string | null;
   product: string | null;
   unitPriceChf: number;
+  /** Set only on a disqualified line — why the partner refused the lead. */
+  disqualificationReason?: string | null;
 }
 
-export const LINE_KINDS = ["lead", "adjustment", "gift"] as const;
+export const LINE_KINDS = ["lead", "adjustment", "gift", "disqualified"] as const;
 export type LineKind = (typeof LINE_KINDS)[number];
 
 export interface ScopeResult {
@@ -63,6 +65,12 @@ export interface ScopeResult {
    * zero, but frozen onto the invoice so the partner can see what they got.
    */
   gifts: ScopeLine[];
+  /**
+   * Leads the partner refused. Billed at zero, but frozen onto the invoice so
+   * its detail shows the whole month rather than only what was charged — a
+   * missing line reads as an oversight, a struck one reads as a decision.
+   */
+  disqualified: ScopeLine[];
   subtotalChf: number;
   /** Dispatches in the month that are not yet settled — blocks issuance. */
   unsettled: string[];
