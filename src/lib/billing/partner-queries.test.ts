@@ -7,7 +7,7 @@ vi.mock("@/lib/directus", () => ({
 }));
 
 describe("fetchPartnerInvoices", () => {
-  it("scopes the query to the partner and filters cancelled invoices out", async () => {
+  it("scopes to the partner and hides only never-sent cancelled invoices", async () => {
     directusFetch.mockResolvedValueOnce({
       data: [
         {
@@ -32,17 +32,19 @@ describe("fetchPartnerInvoices", () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("inv-1");
 
-    // Privacy boundary: the Directus query itself must scope to the partner
-    // and exclude cancelled invoices — this is not a cosmetic filter, so we
-    // assert on the actual request the function issued rather than trusting
-    // the mocked response shape.
+    // Privacy boundary: the Directus query itself must scope to the partner —
+    // this is not a cosmetic filter, so we assert on the actual request the
+    // function issued rather than trusting the mocked response shape.
     expect(directusFetch).toHaveBeenCalledTimes(1);
     const [path, init] = directusFetch.mock.calls[0];
     expect(path).toMatch(/^\/items\/partner_invoices\?/);
 
     const query = new URLSearchParams(path.split("?")[1]);
     expect(query.get("filter[partner][_eq]")).toBe("partner-1");
-    expect(query.get("filter[status][_neq]")).toBe("cancelled");
+    // Not cancelled, OR sent at some point — a cancelled invoice the partner
+    // received stays in their history; one that never left does not.
+    expect(query.get("filter[_or][0][status][_neq]")).toBe("cancelled");
+    expect(query.get("filter[_or][1][sent_at][_nnull]")).toBe("true");
     expect(init).toMatchObject({ next: { revalidate: 0 } });
   });
 

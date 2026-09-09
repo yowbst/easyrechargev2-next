@@ -40,6 +40,7 @@ const STATUS_TONE: Record<string, string> = {
   sent: "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400",
   disputed: "border-orange-500/40 bg-orange-500/10 text-orange-700 dark:text-orange-400",
   paid: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  cancelled: "border-border bg-muted text-muted-foreground",
 };
 
 function InvoiceLines({
@@ -137,20 +138,27 @@ export function InvoiceList({
         const billed = lines.filter((l) => l.kind !== "adjustment" && l.kind !== "gift");
         const gifts = lines.filter((l) => l.kind === "gift");
         const tone = STATUS_TONE[inv.status] ?? "border-border bg-muted text-muted-foreground";
+        // A cancelled invoice is history, not an amount owed: de-emphasise it
+        // and strike the total so it cannot be mistaken for something due.
+        const cancelled = inv.status === "cancelled";
 
         return (
           <details
             key={inv.id}
-            className="group rounded-lg border bg-card shadow-sm transition-shadow open:shadow-md"
+            className={`group rounded-lg border bg-card shadow-sm transition-shadow open:shadow-md${
+              cancelled ? " opacity-60" : ""
+            }`}
           >
             <summary className="cursor-pointer list-none p-4 [&::-webkit-details-marker]:hidden">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <span className="font-mono text-base font-semibold">{inv.number}</span>
+                <span className={`font-mono text-base font-semibold${cancelled ? " line-through" : ""}`}>
+                  {inv.number}
+                </span>
                 <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${tone}`}>
                   {t(`status.${inv.status}`)}
                 </span>
                 <span className="text-sm text-muted-foreground">{inv.period_month}</span>
-                <span className="ml-auto font-mono text-base font-semibold">
+                <span className={`ml-auto font-mono text-base font-semibold${cancelled ? " line-through" : ""}`}>
                   {chf(inv.total_chf)}
                 </span>
               </div>

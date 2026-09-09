@@ -34,10 +34,13 @@ export interface PartnerInvoice {
 }
 
 /**
- * Invoices visible to a partner in their dashboard. Scoped to the partner id
- * (a privacy boundary — never omit this filter) and cancelled invoices are
- * never returned: a cancelled invoice's number stays taken internally (see
- * `invoice.ts`), but the partner should never see a document that was voided.
+ * Invoices visible to a partner in their dashboard. Scoped to the partner id —
+ * a privacy boundary, never omit that filter.
+ *
+ * A cancelled invoice is shown only if it was sent. One cancelled before it
+ * ever left the office is internal churn the partner has no reason to see; one
+ * they actually received has to stay visible, or their dashboard contradicts
+ * the document in their inbox.
  */
 export async function fetchPartnerInvoices(
   partnerId: string,
@@ -54,7 +57,12 @@ export async function fetchPartnerInvoices(
   // carry the highest sort values. Order by the date the lead was dispatched.
   params.set("deep[lines][_sort]", "dispatched_at");
   params.set("filter[partner][_eq]", partnerId);
-  params.set("filter[status][_neq]", "cancelled");
+  // A cancelled invoice the partner never received is internal noise. One they
+  // DID receive is part of their history: hiding it leaves them holding a
+  // document their dashboard denies exists. So: not cancelled, OR sent at
+  // some point.
+  params.set("filter[_or][0][status][_neq]", "cancelled");
+  params.set("filter[_or][1][sent_at][_nnull]", "true");
   params.set("sort", "-period_month");
   params.set("limit", "100");
 
