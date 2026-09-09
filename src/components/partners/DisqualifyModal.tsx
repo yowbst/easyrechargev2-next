@@ -52,7 +52,10 @@ const REASON_GROUPS: Array<{ labelKey: string; reasons: string[] }> = [
   { labelKey: "geo", reasons: ["out_of_area"] },
   {
     labelKey: "project",
-    reasons: ["project_cancelled", "competitor", "long_timeframe", "no_authorization"],
+    reasons: [
+      "project_cancelled", "technically_infeasible", "competitor",
+      "long_timeframe", "no_authorization",
+    ],
   },
   { labelKey: "other", reasons: ["other"] },
 ];

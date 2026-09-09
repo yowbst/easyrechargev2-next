@@ -8,6 +8,8 @@ import {
 } from "@/lib/billing/invoice";
 import { generateInvoiceDocument } from "@/lib/billing/google-docs";
 import { INVOICE_STATUSES } from "@/lib/billing/types";
+import { adminDisqualify, adminRequalify } from "@/lib/dispatch/admin-override";
+import { DISQUALIFICATION_REASONS } from "@/lib/dispatch/types";
 import { run } from "./helpers";
 
 export function registerInvoicingTools(server: McpServer) {
@@ -134,6 +136,38 @@ export function registerInvoicingTools(server: McpServer) {
     async ({ invoiceId, label, unitPriceChf, ...meta }) => run(
       () => addManualLeadLine(invoiceId, label, unitPriceChf, meta),
     ),
+  );
+
+  server.registerTool(
+    "admin_disqualify_dispatch",
+    {
+      title: "Disqualify a dispatch (operator override)",
+      description:
+        "Disqualify a lead REGARDLESS of the billing lock, the acceptance window, or the per-stage reason list — the three guards the partner's own dashboard enforces. Use when a partner disputes an invoice after their window closed. Refused while the dispatch sits on a non-cancelled invoice: cancel that invoice first (which releases its dispatches), then disqualify, then re-issue. The note is stamped [admin <date>] so the override stays recognisable.",
+      inputSchema: {
+        dispatchId: z.string().min(1),
+        reason: z.enum(DISQUALIFICATION_REASONS as unknown as [string, ...string[]]),
+        note: z.string().optional().describe("required when reason is 'other'"),
+      },
+      annotations: { destructiveHint: true, idempotentHint: false },
+    },
+    async ({ dispatchId, reason, note }: { dispatchId: string; reason: string; note?: string }) =>
+      run(async () =>
+        adminDisqualify(dispatchId, reason as never, note ?? null),
+      ),
+  );
+
+  server.registerTool(
+    "admin_requalify_dispatch",
+    {
+      title: "Undo a disqualification (operator override)",
+      description:
+        "Clear a disqualification, putting the lead back in the billable pool. The billing lock is left off so the next reconcile decides whether the acceptance window has elapsed. Refused while the dispatch sits on a non-cancelled invoice.",
+      inputSchema: { dispatchId: z.string().min(1), note: z.string().optional() },
+      annotations: { destructiveHint: true, idempotentHint: false },
+    },
+    async ({ dispatchId, note }: { dispatchId: string; note?: string }) =>
+      run(async () => adminRequalify(dispatchId, note ?? null)),
   );
 
   server.registerTool(
