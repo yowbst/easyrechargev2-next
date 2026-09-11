@@ -37,7 +37,7 @@ import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { PartnerLanguageSwitcher } from "./PartnerLanguageSwitcher";
 import { PartnerFilterProvider, type Facets } from "./PartnerFilterContext";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
-import type { ScoringWeights } from "@/lib/partner-facets";
+import type { ScoreBands, ScoringWeights } from "@/lib/partner-facets";
 import type { FilterState } from "@/lib/partner-filter-params";
 import { PartnerDateFilter } from "./PartnerDateFilter";
 import { PartnerSortControl } from "./PartnerSortControl";
@@ -71,6 +71,7 @@ export function PartnerSidebar({
   facetOptions,
   dispatches,
   scoringWeights,
+  scoreBands,
   initialFilters,
   statsTabs,
   activeStatsTab,
@@ -88,6 +89,7 @@ export function PartnerSidebar({
   /** Leads behind the board, so the header can count what passes the filter. */
   dispatches?: PartnerDispatchCard[];
   scoringWeights?: ScoringWeights;
+  scoreBands?: ScoreBands;
   /** Filter state the page parsed out of the query string. */
   initialFilters?: FilterState;
   /** Stats tab anchors to surface in the sidebar when the stats page is
@@ -119,6 +121,7 @@ export function PartnerSidebar({
     <PartnerFilterProvider
       dispatches={dispatches}
       scoringWeights={scoringWeights}
+      scoreBands={scoreBands}
       initial={initialFilters}
     >
     <SidebarProvider defaultOpen>

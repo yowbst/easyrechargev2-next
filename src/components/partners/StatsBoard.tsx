@@ -10,6 +10,7 @@ import {
   pipelineStats,
   summarize,
   topReasons,
+  type ScoreBands,
   type ScoringWeights,
 } from "@/lib/dispatch/stats";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
@@ -63,11 +64,13 @@ function previousRange(filter: DateFilter): (iso: string) => boolean {
 export function StatsBoard({
   dispatches,
   scoringWeights,
+  scoreBands,
   dictionary,
   lookbackDaysByStage,
 }: {
   dispatches: PartnerDispatchCard[];
   scoringWeights: ScoringWeights;
+  scoreBands: ScoreBands;
   dictionary: PartnerDict;
   lookbackDaysByStage?: Record<string, number>;
 }) {
@@ -78,13 +81,13 @@ export function StatsBoard({
     // Facets apply to every metric the same way they apply on /leads —
     // narrow the dispatch list once, then aggregate.
     const filtered = dispatches.filter((d) =>
-      matchesFacets(d, facets, scoringWeights),
+      matchesFacets(d, facets, scoringWeights, scoreBands),
     );
     const prev = previousRange(filter);
-    const kpis = summarize(filtered, inRange, prev, scoringWeights);
+    const kpis = summarize(filtered, inRange, prev, scoringWeights, scoreBands);
     const funnel = pipelineStats(filtered, inRange, MAIN_STAGES);
     const monthly = monthlyVolume(filtered);
-    const sparkline = avgScoreByMonth(filtered, scoringWeights, 6);
+    const sparkline = avgScoreByMonth(filtered, scoringWeights, scoreBands, 6);
     // Conversion = end-to-end (new → won), maturity-gated by the "won"
     // lookback. Same metric as the Performance tab so the two views agree.
     const overall = overallConversionRate(
@@ -103,7 +106,7 @@ export function StatsBoard({
       (c) => c.disqualified && !!c.disqualification_reason,
     );
     return { kpis, funnel, monthly, sparkline, overall, lost, disq };
-  }, [dispatches, scoringWeights, inRange, filter, facets, lookbackDaysByStage]);
+  }, [dispatches, scoringWeights, scoreBands, inRange, filter, facets, lookbackDaysByStage]);
 
   return (
     <div className="space-y-4">

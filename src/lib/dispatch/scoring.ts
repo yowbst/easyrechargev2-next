@@ -31,9 +31,24 @@ export const DEFAULT_SCORING_WEIGHTS: Record<ScoringFactorKey, number> = {
 };
 
 /** Lower bound (inclusive) for each band; below `warm` is "cold". */
-export const SCORE_BANDS = { hot: 70, warm: 40 } as const;
+export const SCORE_BANDS = { hot: 70, warm: 40 };
+
+export type ScoreBands = { hot: number; warm: number };
 
 export type ScoreBand = "hot" | "warm" | "cold";
+
+/**
+ * Band thresholds from `pages.partner-leads.config.score_bands`, falling back
+ * to the defaults. They live in config because the right cut-offs depend on
+ * the score distribution, which shifts whenever a factor is retuned — and a
+ * badge that calls 82% of leads "hot" informs nobody.
+ */
+export function resolveScoreBands(override?: Partial<ScoreBands> | null): ScoreBands {
+  const hot = typeof override?.hot === "number" ? override.hot : SCORE_BANDS.hot;
+  const warm = typeof override?.warm === "number" ? override.warm : SCORE_BANDS.warm;
+  // A warm floor above the hot floor would make "warm" unreachable.
+  return warm <= hot ? { hot, warm } : { hot, warm: hot };
+}
 
 export interface ScoreBreakdownItem {
   key: ScoringFactorKey;
@@ -51,9 +66,9 @@ export interface LeadScore {
   breakdown: ScoreBreakdownItem[];
 }
 
-function bandFor(score: number): ScoreBand {
-  if (score >= SCORE_BANDS.hot) return "hot";
-  if (score >= SCORE_BANDS.warm) return "warm";
+function bandFor(score: number, bands: ScoreBands): ScoreBand {
+  if (score >= bands.hot) return "hot";
+  if (score >= bands.warm) return "warm";
   return "cold";
 }
 
@@ -136,6 +151,7 @@ export function resolveWeights(
 export function scoreLead(
   data: Record<string, unknown> | null | undefined,
   weights: Record<ScoringFactorKey, number>,
+  bands: ScoreBands = SCORE_BANDS,
 ): LeadScore {
   const subs = subScores(data ?? {});
   let num = 0;
@@ -152,5 +168,5 @@ export function scoreLead(
   // Clamped because `volume` can exceed 1: without it a lead with two chargers
   // and everything else perfect would score above 100.
   const score = den > 0 ? Math.min(100, Math.round((100 * num) / den)) : 0;
-  return { score, band: bandFor(score), breakdown };
+  return { score, band: bandFor(score, bands), breakdown };
 }

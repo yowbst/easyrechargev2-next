@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { isLeadVisible, type ScoringWeights } from "@/lib/partner-facets";
+import { isLeadVisible, type ScoreBands, type ScoringWeights } from "@/lib/partner-facets";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import {
   DEFAULT_FILTER_STATE,
@@ -93,12 +93,14 @@ export function PartnerFilterProvider({
   children,
   dispatches,
   scoringWeights,
+  scoreBands,
   initial = DEFAULT_FILTER_STATE,
 }: {
   children: ReactNode;
   /** Given on the Leads view so the header can count what passes the filter. */
   dispatches?: PartnerDispatchCard[];
   scoringWeights?: ScoringWeights;
+  scoreBands?: ScoreBands;
   /** Parsed by the page from `searchParams`. */
   initial?: FilterState;
 }) {
@@ -141,7 +143,7 @@ export function PartnerFilterProvider({
     const total = dispatches ? dispatches.length : null;
     const visible =
       dispatches && scoringWeights
-        ? dispatches.filter((d) => isLeadVisible(d, inRange, facets, scoringWeights)).length
+        ? dispatches.filter((d) => isLeadVisible(d, inRange, facets, scoringWeights, scoreBands)).length
         : total;
     return {
       filter,
@@ -158,7 +160,7 @@ export function PartnerFilterProvider({
       visible,
       total,
     };
-  }, [filter, sort, facets, toggleFacet, clearFacets, dispatches, scoringWeights]);
+  }, [filter, sort, facets, toggleFacet, clearFacets, dispatches, scoringWeights, scoreBands]);
 
   return (
     <PartnerFilterContext.Provider value={value}>

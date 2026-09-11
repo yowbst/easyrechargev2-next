@@ -1,10 +1,13 @@
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import {
+  SCORE_BANDS,
   scoreLead,
+  type ScoreBands,
   type ScoringFactorKey,
 } from "@/lib/dispatch/scoring";
 import { STAGE_RANK, type DispatchStage } from "@/lib/dispatch/types";
 
+export type { ScoreBands };
 export type ScoringWeights = Record<ScoringFactorKey, number>;
 
 export interface KpiSummary {
@@ -24,6 +27,7 @@ export function summarize(
   inRange: (iso: string) => boolean,
   prevInRange: (iso: string) => boolean,
   weights: ScoringWeights,
+  bands: ScoreBands = SCORE_BANDS,
 ): KpiSummary {
   let leads = 0;
   let prevLeads = 0;
@@ -40,7 +44,7 @@ export function summarize(
       } else if (c.stage === "lost") {
         closed += 1;
       }
-      scoreSum += scoreLead(c.submission?.data, weights).score;
+      scoreSum += scoreLead(c.submission?.data, weights, bands).score;
       scoreCount += 1;
     }
     if (prevInRange(c.dispatched_at)) prevLeads += 1;
@@ -103,6 +107,7 @@ export function monthlyVolume(
 export function avgScoreByMonth(
   cards: PartnerDispatchCard[],
   weights: ScoringWeights,
+  bands: ScoreBands = SCORE_BANDS,
   monthsBack = 6,
   now: Date = new Date(),
 ): { key: string; value: number | null }[] {
@@ -119,7 +124,7 @@ export function avgScoreByMonth(
     const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
     const bucket = sums[key];
     if (!bucket) continue;
-    bucket.total += scoreLead(c.submission?.data, weights).score;
+    bucket.total += scoreLead(c.submission?.data, weights, bands).score;
     bucket.n += 1;
   }
   for (const s of series) {
@@ -326,6 +331,7 @@ export function transitionByBand(
   toStage: string,
   lookbackDays: number,
   weights: ScoringWeights,
+  bands: ScoreBands = SCORE_BANDS,
   now: Date = new Date(),
 ): TransitionByBand[] {
   const fromRank = STAGE_RANK[fromStage as DispatchStage];
@@ -344,7 +350,7 @@ export function transitionByBand(
     const ageMs = now.getTime() - new Date(c.dispatched_at).getTime();
     if (ageMs < cutoffMs) continue;
     if (cardRank < fromRank) continue;
-    const band = scoreLead(c.submission?.data, weights).band;
+    const band = scoreLead(c.submission?.data, weights, bands).band;
     buckets[band].from += 1;
     const reachedTo = isWonStep ? c.stage === "won" : cardRank >= toRank;
     if (reachedTo) buckets[band].to += 1;
@@ -377,6 +383,7 @@ export function stageCostByBand(
   inRange: (iso: string) => boolean,
   stage: string,
   weights: ScoringWeights,
+  bands: ScoreBands = SCORE_BANDS,
 ): StageCostByBand[] {
   const stageRank = STAGE_RANK[stage as DispatchStage];
   const isWonStep = stage === "won";
@@ -387,7 +394,7 @@ export function stageCostByBand(
   };
   for (const c of cards) {
     if (!inRange(c.dispatched_at)) continue;
-    const band = scoreLead(c.submission?.data, weights).band;
+    const band = scoreLead(c.submission?.data, weights, bands).band;
     if (!c.gift) {
       const p =
         typeof c.price_chf === "number"

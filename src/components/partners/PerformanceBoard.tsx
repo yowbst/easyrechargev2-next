@@ -19,6 +19,7 @@ import {
   transitionByBand,
   transitionRates,
   type OverallConversion,
+  type ScoreBands,
   type ScoringWeights,
   type StageCostByBand,
   type StageCostRow,
@@ -79,11 +80,13 @@ const BAND_TONE: Record<string, string> = {
 export function PerformanceBoard({
   dispatches,
   scoringWeights,
+  scoreBands,
   dictionary,
   lookbackDaysByStage,
 }: {
   dispatches: PartnerDispatchCard[];
   scoringWeights: ScoringWeights;
+  scoreBands: ScoreBands;
   dictionary: PartnerDict;
   lookbackDaysByStage: Record<string, number>;
 }) {
@@ -96,7 +99,7 @@ export function PerformanceBoard({
 
   const data = useMemo(() => {
     const filtered = dispatches.filter((d) =>
-      matchesFacets(d, facets, scoringWeights),
+      matchesFacets(d, facets, scoringWeights, scoreBands),
     );
     const investment = investmentSum(filtered, inRange);
     const funnel = pipelineStats(filtered, inRange, MAIN_STAGES);
@@ -121,6 +124,7 @@ export function PerformanceBoard({
         r.to,
         r.lookbackDays,
         scoringWeights,
+        scoreBands,
       );
     }
     const stageCosts = costPerStage(funnel, investment);
@@ -134,6 +138,7 @@ export function PerformanceBoard({
         inRange,
         r.stage,
         scoringWeights,
+        scoreBands,
       );
     }
     const won = funnel.find((f) => f.stage === "won")?.count ?? 0;
@@ -150,7 +155,7 @@ export function PerformanceBoard({
       cacRows,
       cacByBand,
     };
-  }, [dispatches, inRange, facets, lookbackDaysByStage, scoringWeights]);
+  }, [dispatches, inRange, facets, lookbackDaysByStage, scoringWeights, scoreBands]);
 
   return (
     <div className="space-y-4">

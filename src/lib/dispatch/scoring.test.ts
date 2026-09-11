@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SCORING_WEIGHTS, resolveWeights, scoreLead } from "./scoring";
+import {
+  DEFAULT_SCORING_WEIGHTS,
+  SCORE_BANDS,
+  resolveScoreBands,
+  resolveWeights,
+  scoreLead,
+} from "./scoring";
 
 const W = DEFAULT_SCORING_WEIGHTS;
 
@@ -90,5 +96,45 @@ describe("resolveWeights", () => {
     expect(resolveWeights(null)).toEqual(W);
     expect(resolveWeights({ urgency: -1, bogus: 5 })).toEqual(W);
     expect(resolveWeights({ urgency: 0.5 })).toEqual({ ...W, urgency: 0.5 });
+  });
+});
+
+describe("resolveScoreBands", () => {
+  it("falls back to the code defaults when Directus holds nothing", () => {
+    expect(resolveScoreBands(null)).toEqual(SCORE_BANDS);
+    expect(resolveScoreBands(undefined)).toEqual(SCORE_BANDS);
+    expect(resolveScoreBands({})).toEqual(SCORE_BANDS);
+  });
+
+  it("takes each threshold independently", () => {
+    expect(resolveScoreBands({ hot: 90 })).toEqual({ hot: 90, warm: SCORE_BANDS.warm });
+    expect(resolveScoreBands({ warm: 60 })).toEqual({ hot: SCORE_BANDS.hot, warm: 60 });
+    expect(resolveScoreBands({ hot: 90, warm: 75 })).toEqual({ hot: 90, warm: 75 });
+  });
+
+  it("collapses an inverted pair rather than making warm unreachable", () => {
+    // warm above hot would leave no score that lands in "warm".
+    expect(resolveScoreBands({ hot: 40, warm: 70 })).toEqual({ hot: 40, warm: 40 });
+  });
+
+  it("ignores a non-numeric threshold", () => {
+    // A Directus text field holding "90" must not silently become a band.
+    expect(resolveScoreBands({ hot: "90" } as never)).toEqual(SCORE_BANDS);
+  });
+});
+
+describe("bands drive the badge, not the score", () => {
+  const mid = { housingStatus: "tenant", approval: "in-progress", deadline: "2-3mo" };
+
+  it("reads the same lead differently under tighter thresholds", () => {
+    const lenient = scoreLead(mid, W, { hot: 40, warm: 20 });
+    const strict = scoreLead(mid, W, { hot: 95, warm: 90 });
+    expect(lenient.score).toBe(strict.score);
+    expect(lenient.band).toBe("hot");
+    expect(strict.band).toBe("cold");
+  });
+
+  it("defaults to the code bands when none are passed", () => {
+    expect(scoreLead(mid, W).band).toBe(scoreLead(mid, W, SCORE_BANDS).band);
   });
 });

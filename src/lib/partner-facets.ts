@@ -5,9 +5,10 @@
  */
 
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
-import { scoreLead, type ScoringFactorKey } from "@/lib/dispatch/scoring";
+import { SCORE_BANDS, scoreLead, type ScoreBands, type ScoringFactorKey } from "@/lib/dispatch/scoring";
 import type { Facets } from "@/components/partners/PartnerFilterContext";
 
+export type { ScoreBands };
 export type ScoringWeights = Record<ScoringFactorKey, number>;
 
 const HOUSING_ORDER = ["owner", "co-owner", "tenant"];
@@ -23,6 +24,7 @@ const SCORE_ORDER = ["hot", "warm", "cold"];
 export function collectFacetOptions(
   dispatches: PartnerDispatchCard[],
   scoringWeights: ScoringWeights,
+  scoreBands: ScoreBands = SCORE_BANDS,
 ): Facets {
   const housing = new Set<string>();
   const deadline = new Set<string>();
@@ -35,7 +37,7 @@ export function collectFacetOptions(
     if (typeof data.deadline === "string") deadline.add(data.deadline);
     if (typeof data.approval === "string")
       approval.add(data.approval.toLowerCase());
-    score.add(scoreLead(data, scoringWeights).band);
+    score.add(scoreLead(data, scoringWeights, scoreBands).band);
   }
   const order = (set: Set<string>, pref: string[]) =>
     [...set].sort((a, b) => {
@@ -60,6 +62,7 @@ export function matchesFacets(
   d: PartnerDispatchCard,
   facets: Facets,
   scoringWeights: ScoringWeights,
+  scoreBands: ScoreBands = SCORE_BANDS,
 ): boolean {
   const data = (d.submission?.data ?? {}) as Record<string, unknown>;
   if (facets.housing.length > 0) {
@@ -79,7 +82,7 @@ export function matchesFacets(
     if (!v || !facets.approval.includes(v)) return false;
   }
   if (facets.score.length > 0) {
-    const band = scoreLead(data, scoringWeights).band;
+    const band = scoreLead(data, scoringWeights, scoreBands).band;
     if (!facets.score.includes(band)) return false;
   }
   return true;
@@ -96,6 +99,7 @@ export function isLeadVisible(
   inRange: (iso: string) => boolean,
   facets: Facets,
   scoringWeights: ScoringWeights,
+  scoreBands: ScoreBands = SCORE_BANDS,
 ): boolean {
-  return inRange(d.dispatched_at) && matchesFacets(d, facets, scoringWeights);
+  return inRange(d.dispatched_at) && matchesFacets(d, facets, scoringWeights, scoreBands);
 }
