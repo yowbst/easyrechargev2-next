@@ -14,6 +14,9 @@ const APPLY = process.argv.includes("--apply");
 // The deletion is irreversible and wider than the board row, so it is gated
 // on its own flag rather than riding along with the stage moves.
 const DO_DELETE = process.argv.includes("--delete-qa-lead");
+// The moves are not idempotent — a second run re-stamps stage_entered_at and
+// appends a duplicate history entry — so they can be skipped once applied.
+const SKIP_MOVES = process.argv.includes("--skip-moves");
 
 const MOVES: { id: string; who: string; to: DispatchStage; why: string }[] = [
   {
@@ -53,7 +56,7 @@ const DELETE_CHAIN: [string, string][] = [
 async function main() {
   console.log(APPLY ? "=== APPLY ===" : "=== DRY RUN (pass --apply) ===");
 
-  for (const m of MOVES) {
+  for (const m of SKIP_MOVES ? [] : MOVES) {
     if (!APPLY) {
       console.log(`  move ${m.who} -> ${m.to} (${m.why})`);
       continue;

@@ -59,7 +59,12 @@ export async function directusFetch<T = Record<string, unknown>>(
         }
         throw new Error(`Directus ${status}: ${text}`);
       }
-      return res.json() as Promise<T>;
+      // DELETE and some PATCHes answer 204 with an empty body. Parsing that as
+      // JSON throws "Unexpected end of JSON input" — which reads as a failed
+      // write when the write actually succeeded.
+      if (res.status === 204) return undefined as T;
+      const text = await res.text();
+      return (text.length > 0 ? JSON.parse(text) : undefined) as T;
     } catch (err: unknown) {
       const error = err as Error & { code?: string };
       const isTimeout =
