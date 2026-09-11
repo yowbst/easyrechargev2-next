@@ -76,3 +76,51 @@ describe("directusFetch retry", () => {
     expect(init.method).toBe("POST");
   });
 });
+
+describe("directusFetch empty bodies", () => {
+  /** Directus answers DELETE with 204 and no body at all. */
+  function noContent() {
+    return {
+      ok: true,
+      status: 204,
+      text: async () => "",
+      json: async () => {
+        throw new SyntaxError("Unexpected end of JSON input");
+      },
+    } as unknown as Response;
+  }
+
+  it("returns undefined on 204 instead of failing a successful DELETE", async () => {
+    // Regression: a successful delete reported "Unexpected end of JSON input",
+    // which read as a failed write and invited a retry of a done deletion.
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(noContent());
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { directusFetch } = await import("./directus");
+    await expect(
+      directusFetch("/items/form_users/abc", { method: "DELETE" }),
+    ).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns undefined on a 200 that carries no body", async () => {
+    const empty = {
+      ok: true,
+      status: 200,
+      text: async () => "",
+      json: async () => {
+        throw new SyntaxError("Unexpected end of JSON input");
+      },
+    } as unknown as Response;
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(empty));
+
+    const { directusFetch } = await import("./directus");
+    await expect(directusFetch("/items/thing")).resolves.toBeUndefined();
+  });
+
+  it("still parses a normal JSON body", async () => {
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(response(200, { data: [1] })));
+    const { directusFetch } = await import("./directus");
+    await expect(directusFetch("/items/thing")).resolves.toEqual({ data: [1] });
+  });
+});
