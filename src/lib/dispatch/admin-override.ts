@@ -1,5 +1,10 @@
 import { directusFetch } from "@/lib/directus";
-import { DISQUALIFICATION_REASONS, type DisqualificationReason } from "./types";
+import {
+  DISPATCH_STAGES,
+  DISQUALIFICATION_REASONS,
+  type DispatchStage,
+  type DisqualificationReason,
+} from "./types";
 
 /**
  * Administrator overrides on the dispatch ledger.
@@ -19,6 +24,7 @@ import { DISQUALIFICATION_REASONS, type DisqualificationReason } from "./types";
 interface Row {
   id: string;
   stage: string;
+  stage_history: Array<{ stage: string; at: string }> | null;
   disqualified: boolean | null;
   disqualification_reason: string | null;
   disqualification_note: string | null;
@@ -29,8 +35,8 @@ interface Row {
 }
 
 const ROW_FIELDS =
-  "id,stage,disqualified,disqualification_reason,disqualification_note," +
-  "gift,billable,billable_locked_at,invoice";
+  "id,stage,stage_history,disqualified,disqualification_reason," +
+  "disqualification_note,gift,billable,billable_locked_at,invoice";
 
 async function fetchRow(dispatchId: string): Promise<Row> {
   const res = await directusFetch<{ data: Row | null }>(
@@ -121,4 +127,51 @@ export async function adminRequalify(
     next: { revalidate: 0 },
   });
   return { ok: true, wasDisqualified };
+}
+
+/**
+ * Move a lead to another stage as an operator, with none of the partner
+ * route's transitions guards.
+ *
+ * /api/partners/[uuid]/dispatches/[id]/stage refuses two things an operator
+ * legitimately needs: a disqualified row (409 `already_disqualified`) and a
+ * backward move (409 `backward_stage`). Both come up in the same situation —
+ * a lead was dropped at the wrong stage, so the board shows it in a column
+ * that contradicts its own disqualification reason.
+ *
+ * Billing is deliberately untouched. The partner route re-evaluates
+ * `shouldLockBilling` on every move, which can flip `billable` to true; here
+ * the stage is a CRM fact and must never re-bill a lead — least of all one a
+ * partner was credited for.
+ */
+export async function adminSetStage(
+  dispatchId: string,
+  stage: DispatchStage,
+  note: string | null = null,
+  now: Date = new Date(),
+): Promise<{ ok: true; from: string; to: DispatchStage }> {
+  if (!DISPATCH_STAGES.includes(stage)) throw new Error("invalid_stage");
+
+  const row = await fetchRow(dispatchId);
+  const iso = now.toISOString();
+  const history = Array.isArray(row.stage_history) ? row.stage_history : [];
+
+  await directusFetch(`/items/partner_dispatches/${dispatchId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      stage,
+      stage_entered_at: iso,
+      // `by` marks the entry as forced; the board only reads `.stage`.
+      stage_history: [...history, { stage, at: iso, by: "admin" }],
+      // Moving out of a terminal stage drops the sales outcome with it.
+      ...(row.stage === "lost" && stage !== "lost"
+        ? { lost_reason: null, lost_note: null }
+        : {}),
+      ...(note?.trim()
+        ? { disqualification_note: adminNote(`stage:${stage}`, note, now) }
+        : {}),
+    }),
+    next: { revalidate: 0 },
+  });
+  return { ok: true, from: row.stage, to: stage };
 }

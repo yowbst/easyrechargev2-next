@@ -8,7 +8,8 @@ const state: { row: any; invoice: any } = { row: null, invoice: null };
 
 function baseRow() {
   return {
-    id: "d1", stage: "new", disqualified: false,
+    id: "d1", stage: "new", stage_history: [{ stage: "new", at: "2026-07-12T00:00:00.000Z" }],
+    disqualified: false,
     disqualification_reason: null, disqualification_note: null,
     gift: false, billable: true,
     // Locked: the partner-facing route would refuse outright from here.
@@ -122,5 +123,77 @@ describe("adminRequalify", () => {
     const { adminRequalify } = await import("./admin-override");
     await expect(adminRequalify("d1", null)).rejects.toThrow("attached_to_live_invoice");
     expect(patch()).toBeUndefined();
+  });
+});
+
+describe("adminSetStage", () => {
+  const NOW = new Date("2026-09-11T00:00:00Z");
+
+  it("moves a disqualified lead, which the partner route refuses outright", async () => {
+    state.row = { ...baseRow(), disqualified: true, disqualification_reason: "long_timeframe" };
+    const { adminSetStage } = await import("./admin-override");
+    const r = await adminSetStage("d1", "contacted", null, NOW);
+
+    expect(r).toEqual({ ok: true, from: "new", to: "contacted" });
+    expect(patch()!.body!.stage).toBe("contacted");
+    // Still disqualified — a column fix is not a requalification.
+    expect(patch()!.body).not.toHaveProperty("disqualified");
+  });
+
+  it("moves backward, which the partner route rejects as backward_stage", async () => {
+    state.row = { ...baseRow(), stage: "contacted", disqualified: true, disqualification_reason: "unreachable" };
+    const { adminSetStage } = await import("./admin-override");
+    const r = await adminSetStage("d1", "new", null, NOW);
+    expect(r).toEqual({ ok: true, from: "contacted", to: "new" });
+  });
+
+  it("never touches billing — the partner route would re-lock it", async () => {
+    state.row = { ...baseRow(), billable: false, billable_locked_at: null };
+    const { adminSetStage } = await import("./admin-override");
+    await adminSetStage("d1", "appointment", null, NOW);
+
+    const b = patch()!.body!;
+    expect(b).not.toHaveProperty("billable");
+    expect(b).not.toHaveProperty("billable_locked_at");
+  });
+
+  it("appends to the history and marks the entry as forced", async () => {
+    const { adminSetStage } = await import("./admin-override");
+    await adminSetStage("d1", "appointment", null, NOW);
+
+    expect(patch()!.body!.stage_history).toEqual([
+      { stage: "new", at: "2026-07-12T00:00:00.000Z" },
+      { stage: "appointment", at: NOW.toISOString(), by: "admin" },
+    ]);
+  });
+
+  it("drops the lost reason when leaving the lost stage", async () => {
+    state.row = { ...baseRow(), stage: "lost" };
+    const { adminSetStage } = await import("./admin-override");
+    await adminSetStage("d1", "quote_sent", null, NOW);
+
+    expect(patch()!.body!.lost_reason).toBeNull();
+    expect(patch()!.body!.lost_note).toBeNull();
+  });
+
+  it("keeps the lost reason when the target is still lost", async () => {
+    state.row = { ...baseRow(), stage: "lost" };
+    const { adminSetStage } = await import("./admin-override");
+    await adminSetStage("d1", "lost", null, NOW);
+    expect(patch()!.body).not.toHaveProperty("lost_reason");
+  });
+
+  it("refuses a stage that is not in the funnel", async () => {
+    const { adminSetStage } = await import("./admin-override");
+    await expect(adminSetStage("d1", "archived" as never, null, NOW)).rejects.toThrow("invalid_stage");
+    expect(patch()).toBeUndefined();
+  });
+
+  it("stamps the note so the forced move is traceable", async () => {
+    const { adminSetStage } = await import("./admin-override");
+    await adminSetStage("d1", "contacted", "tri de juillet", NOW);
+    expect(patch()!.body!.disqualification_note).toBe(
+      "[admin 2026-09-11] stage:contacted: tri de juillet",
+    );
   });
 });
