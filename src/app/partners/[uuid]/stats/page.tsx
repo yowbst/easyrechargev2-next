@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import {
   fetchPartnerDispatches,
+  fetchPartnerLeadsConfig,
   fetchPartnerSectionPage,
   fetchPartnerStatsConfig,
   fetchPartnerStatsPage,
@@ -91,15 +92,19 @@ export default async function PartnerStatsPage({
   if (!partner) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [dispatches, leadsPage, statsPage, statsConfig] = await Promise.all([
-    fetchPartnerDispatches(partner.id),
-    fetchPartnerSectionPage("partner-leads", locale),
-    // Dedicated fetcher (60s ISR) so stats translations propagate fast — the
-    // default fetchPage caches public pages for 3600s, which can serve a
-    // pre-population empty payload for up to an hour after we seed content.
-    fetchPartnerStatsPage(locale),
-    fetchPartnerStatsConfig(),
-  ]);
+  const [dispatches, leadsPage, statsPage, statsConfig, leadsConfig] =
+    await Promise.all([
+      fetchPartnerDispatches(partner.id),
+      fetchPartnerSectionPage("partner-leads", locale),
+      // Dedicated fetcher (60s ISR) so stats translations propagate fast — the
+      // default fetchPage caches public pages for 3600s, which can serve a
+      // pre-population empty payload for up to an hour after we seed content.
+      fetchPartnerStatsPage(locale),
+      fetchPartnerStatsConfig(),
+      // Score bands live on the partner-leads config: the badge a lead wears
+      // here must be the badge it wears on the board.
+      fetchPartnerLeadsConfig(),
+    ]);
   // Partner-section i18n is split across two Directus pages: partner-leads
   // owns the shared chrome (sidebar / filter / card / modals), partner-stats
   // owns the stats-specific strings. Merge — partnerT looks up both prefixes.
@@ -119,7 +124,8 @@ export default async function PartnerStatsPage({
   // Facet options derived from the same dispatches the boards aggregate.
   // The boards read `facets` from PartnerFilterContext and apply matchesFacets
   // before computing — so the Filtres button works the same as on /leads.
-  const facetOptions = collectFacetOptions(dispatches, scoringWeights);
+  const scoreBands = leadsConfig.score_bands;
+  const facetOptions = collectFacetOptions(dispatches, scoringWeights, scoreBands);
 
   const t = makePartnerT(dictionary);
   const tabs = STATS_TABS.map((key) => ({
@@ -139,6 +145,7 @@ export default async function PartnerStatsPage({
       facetOptions={facetOptions}
       dispatches={dispatches}
       scoringWeights={scoringWeights}
+      scoreBands={scoreBands}
       initialFilters={initialFilters}
       statsTabs={tabs}
       activeStatsTab={tab}
@@ -150,6 +157,7 @@ export default async function PartnerStatsPage({
           <StatsBoard
             dispatches={dispatches}
             scoringWeights={scoringWeights}
+            scoreBands={scoreBands}
             dictionary={dictionary}
             lookbackDaysByStage={statsConfig.lookback_days_by_stage}
           />
@@ -158,6 +166,7 @@ export default async function PartnerStatsPage({
           <PerformanceBoard
             dispatches={dispatches}
             scoringWeights={scoringWeights}
+            scoreBands={scoreBands}
             dictionary={dictionary}
             lookbackDaysByStage={statsConfig.lookback_days_by_stage}
           />

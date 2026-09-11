@@ -1,4 +1,5 @@
 import { directusFetch } from "@/lib/directus";
+import { SCORE_BANDS, resolveScoreBands, type ScoreBands } from "@/lib/dispatch/scoring";
 import { getEnvironment } from "@/lib/directus-storage";
 
 export interface PartnerDispatchCard {
@@ -74,11 +75,14 @@ export interface PartnerLeadsConfig {
   rotting_days_by_stage: Record<string, number>;
   /** Per-stage allowed disqualification reasons. Empty = all reasons allowed. */
   reasons_by_stage: Record<string, string[]>;
+  /** Lower bound for the hot and warm score bands. */
+  score_bands: ScoreBands;
 }
 
 const PARTNER_LEADS_DEFAULTS: PartnerLeadsConfig = {
   rotting_days_by_stage: { new: 5, contacted: 7, appointment: 14, quote_sent: 21 },
   reasons_by_stage: {},
+  score_bands: SCORE_BANDS,
 };
 
 /**
@@ -102,6 +106,7 @@ export async function fetchPartnerLeadsConfig(): Promise<PartnerLeadsConfig> {
         ...(cfg.rotting_days_by_stage ?? {}),
       },
       reasons_by_stage: cfg.reasons_by_stage ?? {},
+      score_bands: resolveScoreBands(cfg.score_bands),
     };
   } catch {
     return PARTNER_LEADS_DEFAULTS;

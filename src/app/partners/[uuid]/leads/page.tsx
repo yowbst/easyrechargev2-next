@@ -95,7 +95,8 @@ export default async function PartnerLeadsPage({
   });
 
   const scoringWeights = resolveWeights(partner.lead_scoring_weights);
-  const facetOptions = collectFacetOptions(dispatches, scoringWeights);
+  const scoreBands = leadsConfig.score_bands;
+  const facetOptions = collectFacetOptions(dispatches, scoringWeights, scoreBands);
 
   return (
     <PartnerSidebar
@@ -109,6 +110,7 @@ export default async function PartnerLeadsPage({
       facetOptions={facetOptions}
       dispatches={dispatches}
       scoringWeights={scoringWeights}
+      scoreBands={scoreBands}
       initialFilters={initialFilters}
     >
       <Kanban
@@ -118,6 +120,7 @@ export default async function PartnerLeadsPage({
         rottingDaysByStage={leadsConfig.rotting_days_by_stage}
         reasonsByStage={leadsConfig.reasons_by_stage}
         scoringWeights={scoringWeights}
+        scoreBands={scoreBands}
         dictionary={dictionary}
       />
     </PartnerSidebar>

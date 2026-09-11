@@ -27,6 +27,7 @@ import { LeadCard } from "./LeadCard";
 import { usePartnerFilter, type SortKey } from "./PartnerFilterContext";
 import {
   scoreLead,
+  type ScoreBands,
   type ScoringFactorKey,
 } from "@/lib/dispatch/scoring";
 import { isLeadVisible } from "@/lib/partner-facets";
@@ -97,6 +98,7 @@ export function Kanban({
   rottingDaysByStage,
   reasonsByStage,
   scoringWeights,
+  scoreBands,
   dictionary,
 }: {
   partnerToken: string;
@@ -105,6 +107,7 @@ export function Kanban({
   rottingDaysByStage: Record<string, number>;
   reasonsByStage: Record<string, string[]>;
   scoringWeights: ScoringWeights;
+  scoreBands: ScoreBands;
   dictionary: PartnerDict;
 }) {
   const router = useRouter();
@@ -154,7 +157,7 @@ export function Kanban({
   // Header filters (date window + attribute facets) apply across every
   // section. A facet group with no selection doesn't constrain.
   const visibleDispatches = localDispatches.filter((d) =>
-    isLeadVisible(d, inRange, facets, scoringWeights),
+    isLeadVisible(d, inRange, facets, scoringWeights, scoreBands),
   );
 
   for (const d of visibleDispatches) {
@@ -456,6 +459,7 @@ export function Kanban({
                         rottingDaysByStage={rottingDaysByStage}
                         reasonsByStage={reasonsByStage}
                         scoringWeights={scoringWeights}
+                        scoreBands={scoreBands}
                         dictionary={dictionary}
                         lang={lang}
                         pending={pending === d.id}

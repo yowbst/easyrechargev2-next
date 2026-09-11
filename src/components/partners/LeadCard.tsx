@@ -35,6 +35,7 @@ import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queri
 import {
   scoreLead,
   type ScoreBand,
+  type ScoreBands,
   type ScoringFactorKey,
 } from "@/lib/dispatch/scoring";
 import { makePartnerT, type PartnerDict, type PartnerT } from "@/lib/partner-i18n";
@@ -113,6 +114,7 @@ export function LeadCard({
   rottingDaysByStage,
   reasonsByStage,
   scoringWeights,
+  scoreBands,
   dictionary,
   readOnly = false,
 }: {
@@ -128,6 +130,7 @@ export function LeadCard({
   rottingDaysByStage: Record<string, number>;
   reasonsByStage: Record<string, string[]>;
   scoringWeights?: Record<ScoringFactorKey, number>;
+  scoreBands?: ScoreBands;
   dictionary: PartnerDict;
   readOnly?: boolean;
 }) {
@@ -216,7 +219,7 @@ export function LeadCard({
   // matters); disqualified/closed cards omit it to cut noise.
   const leadScore =
     !readOnly && !dispatch.disqualified && !isClosed && scoringWeights
-      ? scoreLead(submissionData, scoringWeights)
+      ? scoreLead(submissionData, scoringWeights, scoreBands)
       : null;
 
   // Left accent bar marks terminal outcomes only. Rotting is a soft nudge —
