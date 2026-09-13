@@ -97,13 +97,25 @@ export function validateFlags(command: string, argv: string[]): void {
  * Returns `undefined` when the flag was not passed, so `assertPlanSane`'s
  * own default (0.3) applies untouched.
  */
+/**
+ * Upper bound for the override. The change ratio is
+ * (creates + updates) / cmsCount, which is NOT capped at 1: a refresh that
+ * adds more vehicles than the CMS holds legitimately exceeds 100%. The real
+ * 2026-09-13 run measured 117% (268 creates + 388 updates against 562
+ * records), and an earlier ceiling of 1 wrongly blocked it.
+ *
+ * 10 is far above any plausible refresh while still catching the mistake this
+ * guard mainly exists to catch: typing "30" for 30% instead of 0.3.
+ */
+const MAX_CHANGE_RATIO_CEILING = 10;
+
 export function parseMaxChangeRatio(raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined;
   const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0 || n > 1) {
+  if (!Number.isFinite(n) || n <= 0 || n > MAX_CHANGE_RATIO_CEILING) {
     throw new Error(
-      `--max-change-ratio must be a finite number in (0, 1] — a fraction of the CMS catalogue, ` +
-        `not a percentage (e.g. 0.3, not 30). Got "${raw}".`,
+      `--max-change-ratio must be a finite number in (0, ${MAX_CHANGE_RATIO_CEILING}] — a fraction ` +
+        `of the CMS catalogue, not a percentage (e.g. 1.2, not 120). Got "${raw}".`,
     );
   }
   return n;

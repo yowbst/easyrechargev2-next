@@ -168,15 +168,15 @@ describe("parseMaxChangeRatio", () => {
   });
 
   it("rejects a value typed as a percentage instead of a fraction (30 meaning 30%)", () => {
-    expect(() => parseMaxChangeRatio("30")).toThrow(/\(0, 1\]/);
+    expect(() => parseMaxChangeRatio("30")).toThrow(/\(0, 10\]/);
   });
 
   it("rejects zero", () => {
-    expect(() => parseMaxChangeRatio("0")).toThrow(/\(0, 1\]/);
+    expect(() => parseMaxChangeRatio("0")).toThrow(/\(0, 10\]/);
   });
 
   it("rejects a negative ratio", () => {
-    expect(() => parseMaxChangeRatio("-0.5")).toThrow(/\(0, 1\]/);
+    expect(() => parseMaxChangeRatio("-0.5")).toThrow(/\(0, 10\]/);
   });
 });
 
@@ -228,5 +228,24 @@ describe("partitionUnmatched", () => {
       skippedByLimit: [],
       unresolved: [],
     });
+  });
+});
+
+describe("parseMaxChangeRatio — ratios above 1", () => {
+  it("accepts a ratio above 1, which a large refresh legitimately produces", () => {
+    // Measured live 2026-09-13: 268 creates + 388 updates on 562 records = 117%.
+    expect(parseMaxChangeRatio("1.2")).toBe(1.2);
+    expect(parseMaxChangeRatio("2")).toBe(2);
+  });
+
+  it("still rejects a percentage typed as a percentage", () => {
+    expect(() => parseMaxChangeRatio("30")).toThrow(/not a percentage/);
+    expect(() => parseMaxChangeRatio("120")).toThrow(/not a percentage/);
+  });
+
+  it("still rejects nonsense and non-positive values", () => {
+    expect(() => parseMaxChangeRatio("abc")).toThrow();
+    expect(() => parseMaxChangeRatio("0")).toThrow();
+    expect(() => parseMaxChangeRatio("-1")).toThrow();
   });
 });
