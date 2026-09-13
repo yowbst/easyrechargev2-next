@@ -67,7 +67,8 @@ Commands:
 Options:
   --dry-run                 brands/apply/images: print intent, perform zero writes
   --max-change-ratio <n>    plan: override the change-ratio safety ceiling
-  --limit <n>                scrape: cap how many DETAILS URLs are fetched
+  --limit <n>                scrape: cap how many DETAILS URLs are fetched;
+                             images: cap how many thumbnails are attempted
   --only <file>              scrape: target these car_urls (one per line), ignoring
                              availability — used to repair discontinued records
   --include-unavailable      clean: keep discontinued vehicles instead of dropping them
@@ -452,8 +453,9 @@ async function cmdImages() {
     },
   });
 
+  const notAttemptedSuffix = r.notAttempted > 0 ? `, ${r.notAttempted} not attempted (--limit)` : "";
   console.log(
-    `\n${dryRun ? "[DRY RUN] " : ""}✅ uploaded ${r.uploaded}, skipped ${r.skipped}, failed ${r.failed}`,
+    `\n${dryRun ? "[DRY RUN] " : ""}✅ uploaded ${r.uploaded}, skipped ${r.skipped}, failed ${r.failed}${notAttemptedSuffix}`,
   );
   if (r.noUrl.length) printTruncated("ℹ️  no source image url upstream", r.noUrl);
   if (r.failures.length) {
@@ -461,6 +463,9 @@ async function cmdImages() {
       "⚠️  failed",
       r.failures.map((f) => `${f.slug}: ${f.error}`),
     );
+  }
+  if (r.notAttempted > 0) {
+    console.log(`   ${r.notAttempted} vehicles still need a thumbnail — re-run without --limit to finish.`);
   }
   if (!dryRun && r.uploaded > 0) {
     console.log("   Previous thumbnail files are kept — rollback is a repoint.");
