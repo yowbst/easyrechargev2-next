@@ -27,8 +27,14 @@ interface FlagSpec {
 }
 
 export const COMMAND_FLAGS: Record<string, FlagSpec[]> = {
-  scrape: [{ name: "limit", takesValue: true }],
-  clean: [{ name: "in", takesValue: true }],
+  scrape: [
+    { name: "limit", takesValue: true },
+    { name: "only", takesValue: true },
+  ],
+  clean: [
+    { name: "in", takesValue: true },
+    { name: "include-unavailable", takesValue: false },
+  ],
   brands: [
     { name: "in", takesValue: true },
     { name: "dry-run", takesValue: false },
@@ -36,6 +42,7 @@ export const COMMAND_FLAGS: Record<string, FlagSpec[]> = {
   plan: [
     { name: "in", takesValue: true },
     { name: "max-change-ratio", takesValue: true },
+    { name: "partial", takesValue: false },
   ],
   apply: [
     { name: "plan", takesValue: true },
@@ -180,4 +187,28 @@ export function partitionUnmatched(
   }
 
   return { skippedByLimit, unresolved };
+}
+
+/**
+ * Chooses which LIST rows go on to the (billable) DETAILS stage.
+ *
+ * Default: only vehicles currently "Available to order", because those are
+ * the only ones `clean` keeps — scraping the rest is pure cost.
+ *
+ * With `onlyUrls`, availability is ignored and the explicit set wins. That is
+ * how discontinued records already in the CMS get repaired: they are absent
+ * from every normal run by definition, so their data freezes at whatever it
+ * was when they were last available. The 2026-09-13 run left 174 such
+ * vehicles carrying acceleration values 10x too large, inherited from the
+ * original January import.
+ */
+export function pickScrapeTargets<T extends Record<string, unknown>>(
+  list: T[],
+  isAvailable: (row: T) => boolean,
+  onlyUrls?: Set<string>,
+): T[] {
+  if (onlyUrls) {
+    return list.filter((r) => typeof r.car_url === "string" && onlyUrls.has(r.car_url));
+  }
+  return list.filter(isAvailable);
 }

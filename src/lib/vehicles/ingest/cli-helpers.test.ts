@@ -6,6 +6,7 @@ import {
   validateFlags,
   parseMaxChangeRatio,
   partitionUnmatched,
+  pickScrapeTargets,
 } from "./cli-helpers";
 
 describe("parseArgs", () => {
@@ -247,5 +248,36 @@ describe("parseMaxChangeRatio — ratios above 1", () => {
     expect(() => parseMaxChangeRatio("abc")).toThrow();
     expect(() => parseMaxChangeRatio("0")).toThrow();
     expect(() => parseMaxChangeRatio("-1")).toThrow();
+  });
+});
+
+describe("pickScrapeTargets", () => {
+  const rows = [
+    { car_url: "https://x/1", availability: "Available to order" },
+    { car_url: "https://x/2", availability: "Discontinued" },
+    { car_url: "https://x/3", availability: "Available to order" },
+  ];
+  const isAvail = (r: (typeof rows)[number]) => r.availability === "Available to order";
+
+  it("keeps only available vehicles by default", () => {
+    expect(pickScrapeTargets(rows, isAvail).map((r) => r.car_url)).toEqual([
+      "https://x/1",
+      "https://x/3",
+    ]);
+  });
+
+  it("ignores availability entirely when an explicit set is given", () => {
+    // This is the repair path: a discontinued vehicle must be reachable.
+    const only = new Set(["https://x/2"]);
+    expect(pickScrapeTargets(rows, isAvail, only).map((r) => r.car_url)).toEqual(["https://x/2"]);
+  });
+
+  it("silently skips requested urls absent from the listing", () => {
+    const only = new Set(["https://x/2", "https://x/999"]);
+    expect(pickScrapeTargets(rows, isAvail, only)).toHaveLength(1);
+  });
+
+  it("returns nothing for an empty explicit set rather than falling back to availability", () => {
+    expect(pickScrapeTargets(rows, isAvail, new Set())).toEqual([]);
   });
 });

@@ -43,6 +43,7 @@ import {
   validateFlags,
   parseMaxChangeRatio,
   partitionUnmatched,
+  pickScrapeTargets,
 } from "@/lib/vehicles/ingest/cli-helpers";
 import type { ScrapedVehicle, IngestPlan } from "@/lib/vehicles/ingest/types";
 
@@ -60,6 +61,9 @@ Options:
   --dry-run                 brands/apply: print intent, perform zero writes
   --max-change-ratio <n>    plan: override the change-ratio safety ceiling
   --limit <n>                scrape: cap how many DETAILS URLs are fetched
+  --only <file>              scrape: target these car_urls (one per line), ignoring
+                             availability — used to repair discontinued records
+  --include-unavailable      clean: keep discontinued vehicles instead of dropping them
   --help                     print this message
 
 Recommended order: scrape -> clean -> brands -> plan -> apply
@@ -106,11 +110,32 @@ async function cmdScrape() {
   // collector returns the whole historical catalogue: the first live run
   // returned 1,405 rows of which 645 were available, so filtering here avoids
   // ~760 billable page scrapes per refresh.
-  const available = list.filter((r) => classifyAvailability(r.availability) === true);
-  console.log(
-    `  ${available.length} available to order (of ${list.length} listed) — ` +
-      `DETAILS runs for the available ones only`,
+  // --only <file> targets an explicit set of car_urls, one per line, and
+  // ignores availability. That is the only way to reach a discontinued
+  // vehicle: it is absent from every normal run, so its record in the CMS
+  // freezes at whatever it held when it was last on sale.
+  const onlyFile = flag("only");
+  const onlyUrls = onlyFile
+    ? new Set(readFileSync(onlyFile, "utf8").split("\n").map((l) => l.trim()).filter(Boolean))
+    : undefined;
+
+  const available = pickScrapeTargets(
+    list,
+    (r) => classifyAvailability(r.availability) === true,
+    onlyUrls,
   );
+
+  if (onlyUrls) {
+    console.log(
+      `  --only ${onlyFile}: ${available.length} of ${onlyUrls.size} requested urls found ` +
+        `in the listing (availability ignored)`,
+    );
+  } else {
+    console.log(
+      `  ${available.length} available to order (of ${list.length} listed) — ` +
+        `DETAILS runs for the available ones only`,
+    );
+  }
 
   const urls = available
     .map((r) => (typeof r.car_url === "string" ? r.car_url : null))
@@ -165,8 +190,11 @@ async function cmdClean() {
   if (!input) throw new Error("clean requires --in <file>");
 
   const rows = readRows(input);
+  // Repairing a discontinued vehicle requires keeping it: its `available` is
+  // false by definition, and the default filter would drop it here.
+  const keepUnavailable = has("include-unavailable");
   const cleaned = rows
-    .filter((r) => r.available === true)
+    .filter((r) => keepUnavailable || r.available === true)
     .map((r) => ({
       ...r,
       model: cleanModel(String(r.model ?? ""), String(r.make ?? "")),
@@ -176,7 +204,9 @@ async function cmdClean() {
 
   const path = out("clean", `${today}.json`);
   writeFileSync(path, JSON.stringify(cleaned, null, 1));
-  console.log(`✅ ${cleaned.length} available rows (of ${rows.length}) → ${path}`);
+  console.log(
+    `✅ ${cleaned.length} ${keepUnavailable ? "rows" : "available rows"} (of ${rows.length}) → ${path}`,
+  );
 
   const brands = deriveBrands(cleaned);
   console.log(`   ${brands.length} distinct brands`);
