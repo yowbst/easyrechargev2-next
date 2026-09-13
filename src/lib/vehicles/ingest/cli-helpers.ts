@@ -136,3 +136,36 @@ export function diffBrandFields(
   }
   return changes;
 }
+
+/**
+ * Splits the `unmatched` list returned by `mergeListAndDetails` by cause.
+ *
+ * A LIST row lands in `unmatched` when it has no DETAILS record — but that
+ * happens for two very different reasons, and conflating them produces a
+ * badly misleading warning. With `--limit 2` against a 656-vehicle
+ * catalogue, 654 rows are unmatched purely because DETAILS was never run
+ * for them; reporting those as "could not be merged" reads like a mass
+ * failure when nothing is wrong at all.
+ *
+ * `skippedByLimit` holds rows whose URL was never submitted to DETAILS.
+ * `unresolved` holds everything else: a row that WAS scraped and still has
+ * no DETAILS match, or one dropped for a blank make. Those are the only
+ * ones worth a warning. A row with no `car_url` at all arrives here as an
+ * empty string and is always treated as unresolved — it can never be
+ * explained away by the limit.
+ */
+export function partitionUnmatched(
+  unmatched: string[],
+  targets: string[],
+): { skippedByLimit: string[]; unresolved: string[] } {
+  const targeted = new Set(targets);
+  const skippedByLimit: string[] = [];
+  const unresolved: string[] = [];
+
+  for (const url of unmatched) {
+    if (url && !targeted.has(url)) skippedByLimit.push(url);
+    else unresolved.push(url || "(row with no car_url)");
+  }
+
+  return { skippedByLimit, unresolved };
+}

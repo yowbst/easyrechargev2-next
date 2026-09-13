@@ -42,6 +42,7 @@ import {
   diffBrandFields,
   validateFlags,
   parseMaxChangeRatio,
+  partitionUnmatched,
 } from "@/lib/vehicles/ingest/cli-helpers";
 import type { ScrapedVehicle, IngestPlan } from "@/lib/vehicles/ingest/types";
 
@@ -135,10 +136,22 @@ async function cmdScrape() {
   // Join against the AVAILABLE subset, not the full list — otherwise every
   // discontinued row would land in `unmatched` as a spurious drop warning.
   const { merged, unmatched } = mergeListAndDetails(available, details);
-  if (unmatched.length) {
+
+  // Separate "we never asked for it" from "we asked and it failed". Under
+  // --limit almost every unmatched row is the former, and lumping them
+  // together reads like a mass failure when nothing is wrong.
+  const { skippedByLimit, unresolved } = partitionUnmatched(unmatched, targets);
+
+  if (skippedByLimit.length) {
+    console.log(
+      `  ℹ️  ${skippedByLimit.length} available vehicles not scraped — excluded by ` +
+        `--limit ${limit}. Expected, not a data problem.`,
+    );
+  }
+  if (unresolved.length) {
     printTruncated(
-      "⚠️  dropped — could not be merged or had no usable make",
-      unmatched,
+      "⚠️  dropped — scraped but no DETAILS match, or no usable make",
+      unresolved,
     );
   }
 

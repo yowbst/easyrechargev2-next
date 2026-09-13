@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { parseArgs, truncateList, diffBrandFields, validateFlags, parseMaxChangeRatio } from "./cli-helpers";
+import {
+  parseArgs,
+  truncateList,
+  diffBrandFields,
+  validateFlags,
+  parseMaxChangeRatio,
+  partitionUnmatched,
+} from "./cli-helpers";
 
 describe("parseArgs", () => {
   it("reads the command as the first positional arg", () => {
@@ -170,5 +177,56 @@ describe("parseMaxChangeRatio", () => {
 
   it("rejects a negative ratio", () => {
     expect(() => parseMaxChangeRatio("-0.5")).toThrow(/\(0, 1\]/);
+  });
+});
+
+describe("partitionUnmatched", () => {
+  it("attributes rows never submitted to DETAILS to the limit, not to a failure", () => {
+    // The real shape of a --limit 2 run: 2 targeted, the rest untouched.
+    const targets = ["https://x/1", "https://x/2"];
+    const unmatched = ["https://x/3", "https://x/4", "https://x/5"];
+    const { skippedByLimit, unresolved } = partitionUnmatched(unmatched, targets);
+
+    expect(skippedByLimit).toEqual(unmatched);
+    expect(unresolved).toEqual([]);
+  });
+
+  it("keeps a scraped-but-unmatched row as a genuine problem", () => {
+    const { skippedByLimit, unresolved } = partitionUnmatched(
+      ["https://x/1"],
+      ["https://x/1", "https://x/2"],
+    );
+    expect(skippedByLimit).toEqual([]);
+    expect(unresolved).toEqual(["https://x/1"]);
+  });
+
+  it("separates the two causes in a single run", () => {
+    const { skippedByLimit, unresolved } = partitionUnmatched(
+      ["https://x/1", "https://x/9"],
+      ["https://x/1", "https://x/2"],
+    );
+    expect(unresolved).toEqual(["https://x/1"]);
+    expect(skippedByLimit).toEqual(["https://x/9"]);
+  });
+
+  it("never blames the limit for a row that has no car_url at all", () => {
+    const { skippedByLimit, unresolved } = partitionUnmatched([""], ["https://x/1"]);
+    expect(skippedByLimit).toEqual([]);
+    expect(unresolved).toEqual(["(row with no car_url)"]);
+  });
+
+  it("reports everything as unresolved when no limit was applied", () => {
+    // Without --limit, targets covers every URL, so nothing can be excused.
+    const all = ["https://x/1", "https://x/2"];
+    const { skippedByLimit, unresolved } = partitionUnmatched(["https://x/2"], all);
+    expect(skippedByLimit).toEqual([]);
+    expect(unresolved).toEqual(["https://x/2"]);
+  });
+
+  it("returns two empty lists when nothing was dropped", () => {
+    expect(partitionUnmatched([], ["https://x/1"])).toEqual({
+      skippedByLimit: [],
+      unresolved: [],
+    });
   });
 });
