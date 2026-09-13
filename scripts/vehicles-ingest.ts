@@ -67,6 +67,8 @@ Commands:
 Options:
   --dry-run                 brands/apply/images: print intent, perform zero writes
   --max-change-ratio <n>    plan: override the change-ratio safety ceiling
+  --partial                 plan: this snapshot is knowingly a subset — disables the
+                             scrape-size floor (the change-ratio guard stays active)
   --limit <n>                scrape: cap how many DETAILS URLs are fetched;
                              images: cap how many thumbnails are attempted
   --only <file>              scrape: target these car_urls (one per line), ignoring
