@@ -28,7 +28,7 @@ export function PartnerSortControl({ dictionary }: { dictionary: PartnerDict }) 
           <button
             type="button"
             aria-label={t("sort.label")}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-muted ${
+            className={`inline-flex h-10 items-center gap-2 rounded-md border bg-card px-3.5 text-sm font-medium transition-colors hover:bg-muted ${
               sort !== "recent"
                 ? "border-primary text-primary"
                 : "text-muted-foreground"
@@ -36,7 +36,7 @@ export function PartnerSortControl({ dictionary }: { dictionary: PartnerDict }) 
           />
         }
       >
-        <ArrowDownUp className="h-3.5 w-3.5 shrink-0" />
+        <ArrowDownUp className="h-[15px] w-[15px] shrink-0" />
         <span className="hidden sm:inline">{t(`sort.${sort}`)}</span>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56">

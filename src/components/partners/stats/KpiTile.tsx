@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Minus, type LucideIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
 
 export function KpiTile({
   label,
@@ -11,6 +10,7 @@ export function KpiTile({
   fraction,
   sparkline,
   Icon,
+  tone = "default",
 }: {
   label: string;
   value: string;
@@ -19,6 +19,9 @@ export function KpiTile({
   fraction?: string;
   sparkline?: React.ReactNode;
   Icon?: LucideIcon;
+  /** "inverted" paints the tile in the sidebar's forest green — used for the
+   *  one figure on the Performance tab that is money out, not a result. */
+  tone?: "default" | "inverted";
 }) {
   const arrow =
     typeof delta === "number"
@@ -28,38 +31,66 @@ export function KpiTile({
           ? ArrowDown
           : Minus
       : null;
+  const inverted = tone === "inverted";
   const deltaTone =
     typeof delta === "number" && delta !== 0
       ? delta > 0
-        ? "text-emerald-600 dark:text-emerald-400"
-        : "text-rose-600 dark:text-rose-400"
+        ? "text-partner-won"
+        : "text-partner-lost"
       : "text-muted-foreground";
 
   return (
-    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
-      <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-        {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
-        <span>{label}</span>
+    <div
+      className={`rounded-xl px-6 py-5 animate-in fade-in-0 slide-in-from-bottom-2 duration-500 ${
+        inverted
+          ? "bg-sidebar text-sidebar-foreground"
+          : "border bg-card text-card-foreground"
+      }`}
+    >
+      {/* min-w-0 + truncate: these labels are Directus-authored and a long
+          German translation would otherwise run out of the tile. */}
+      <p
+        className={`flex min-w-0 items-center gap-2 text-sm font-semibold ${
+          inverted ? "text-sidebar-foreground/65" : "text-muted-foreground"
+        }`}
+        title={label}
+      >
+        {Icon && <Icon className="size-[15px] shrink-0" aria-hidden />}
+        <span className="truncate">{label}</span>
       </p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
+      <div className="mt-3.5 flex items-end justify-between gap-4">
+        {/* Instrument Sans at display size with tight tracking — the figure is
+            the point of the tile, so it gets the whole visual budget. */}
+        <p
+          className={`font-heading font-semibold leading-none tracking-[-0.04em] tabular-nums ${
+            inverted ? "text-4xl" : "text-[2.75rem]"
+          }`}
+        >
+          {value}
+        </p>
+        {sparkline && <div className="h-10 w-36 shrink-0">{sparkline}</div>}
+      </div>
       {(arrow || fraction) && (
-        <div className="mt-1 flex items-center gap-2 text-xs">
+        <div className="mt-3 flex items-center gap-1.5 text-sm">
           {arrow && (
-            <span className={`inline-flex items-center gap-0.5 ${deltaTone}`}>
+            <span className={`inline-flex items-center gap-1 font-semibold ${deltaTone}`}>
               {(() => {
-                const Icon = arrow;
-                return <Icon className="h-3 w-3" aria-hidden />;
+                const DeltaIcon = arrow;
+                return <DeltaIcon className="size-3.5" aria-hidden />;
               })()}
               <span className="tabular-nums">
                 {delta! > 0 ? `+${delta}` : delta}
               </span>
-              {deltaLabel && <span className="ml-1 text-muted-foreground">{deltaLabel}</span>}
             </span>
           )}
-          {fraction && <span className="text-muted-foreground tabular-nums">{fraction}</span>}
+          {arrow && deltaLabel && (
+            <span className="text-muted-foreground">{deltaLabel}</span>
+          )}
+          {fraction && (
+            <span className="tabular-nums text-muted-foreground">{fraction}</span>
+          )}
         </div>
       )}
-      {sparkline && <div className="mt-2 h-8">{sparkline}</div>}
-    </Card>
+    </div>
   );
 }

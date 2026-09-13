@@ -404,7 +404,7 @@ export function Kanban({
       <div className="flex min-h-[calc(100dvh-9rem)] scroll-smooth flex-col gap-6">
         {/* Mobile-only sticky stage nav: scroll-jump to each section. */}
         <nav
-          className="sticky top-0 z-20 -mx-4 -mt-4 flex gap-1.5 overflow-x-auto border-b bg-background/95 px-4 py-2 backdrop-blur-sm md:hidden"
+          className="sticky top-0 z-20 -mx-4 -mt-4 flex gap-2 overflow-x-auto border-b bg-background/95 px-4 py-2.5 backdrop-blur-sm md:hidden"
           aria-label="Navigation par étape"
         >
           {MAIN_STAGES.map((stage) => {
@@ -414,7 +414,7 @@ export function Kanban({
               <a
                 key={stage}
                 href={`#stage-${stage}`}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs text-foreground hover:bg-muted"
+                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border bg-card px-3 text-[13px] font-medium text-foreground hover:bg-muted"
               >
                 <Icon className="h-3 w-3 shrink-0" />
                 <span>{t(`stages.${stage}`)}</span>
@@ -440,18 +440,22 @@ export function Kanban({
                 onDragOver={(e) => handleDragOver(e, stage)}
                 onDragLeave={() => handleDragLeave(stage)}
                 onDrop={(e) => handleDrop(e, stage)}
-                className={`w-[85vw] shrink-0 snap-start scroll-mt-16 rounded-lg border bg-card p-3 transition-colors md:w-auto md:shrink ${
+                className={`w-[85vw] shrink-0 snap-start scroll-mt-16 rounded-xl bg-partner-column p-3.5 transition-colors md:w-auto md:shrink md:min-h-[32rem] ${
                   isDropTarget
-                    ? "border-primary bg-primary/5 ring-2 ring-primary/40"
+                    ? "outline outline-2 -outline-offset-2 outline-partner-won"
                     : ""
                 }`}
               >
-                <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                  <Icon className="h-[15px] w-[15px] shrink-0" />
                   <span>{t(`stages.${stage}`)}</span>
-                  <span className="text-xs">({activeGrouped[stage].length})</span>
+                  {/* Count as a pill, not "(n)" — it reads as a column badge
+                      at a glance instead of trailing punctuation. */}
+                  <span className="ml-auto inline-flex h-[22px] min-w-[22px] items-center justify-center rounded-md bg-background px-1.5 text-[13px] font-semibold text-foreground">
+                    {activeGrouped[stage].length}
+                  </span>
                 </h2>
-                <ul className="min-h-[40px] space-y-2">
+                <ul className="min-h-[60px] space-y-2.5">
                   {activeGrouped[stage].map((d) => (
                     <li key={d.id}>
                       <LeadCard
@@ -485,7 +489,7 @@ export function Kanban({
         {/* Disqualified: same 4-column layout, aligned with active funnel. */}
         {mainDisqCount > 0 && (
           <details id="leads-disqualified" className="group scroll-mt-16 space-y-3" open>
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
+            <summary className="flex h-9 cursor-pointer list-none items-center gap-2.5 text-[15px] font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
               <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
               <Ban className="h-4 w-4 shrink-0" />
               <span>
@@ -498,16 +502,16 @@ export function Kanban({
                 return (
                 <section
                   key={stage}
-                  className="rounded-lg border border-dashed bg-muted/20 p-3"
+                  className="rounded-xl border-[1.5px] border-dashed border-partner-dashed p-3"
                 >
-                  <h2 className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <h2 className="mb-2.5 flex items-center gap-1.5 text-[13px] text-muted-foreground">
                     <Icon
                       className="h-3.5 w-3.5 shrink-0"
                       aria-label={t(`stages.${stage}`)}
                     />
                     <span>({disqGrouped[stage].length})</span>
                   </h2>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2.5">
                     {disqGrouped[stage].map((d) => (
                       <li key={d.id}>
                         <LeadCard
@@ -537,7 +541,7 @@ export function Kanban({
             outcome. Read-only review — closing happens via the card buttons. */}
         {closedCount > 0 && (
           <details id="leads-closed" className="group scroll-mt-16 space-y-3" open>
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
+            <summary className="flex h-9 cursor-pointer list-none items-center gap-2.5 text-[15px] font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
               <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
               <Archive className="h-4 w-4 shrink-0" />
               <span>
@@ -551,16 +555,16 @@ export function Kanban({
                 return (
                   <section
                     key={stage}
-                    className="rounded-lg border border-dashed bg-muted/20 p-3"
+                    className="rounded-xl border-[1.5px] border-dashed border-partner-dashed p-3"
                   >
-                    <h2 className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <h2 className="mb-2.5 flex items-center gap-1.5 text-[13px] text-muted-foreground">
                       <Icon
                         className="h-3.5 w-3.5 shrink-0"
                         aria-label={t(`stages.${stage}`)}
                       />
                       <span>({cards.length})</span>
                     </h2>
-                    <ul className="space-y-2">
+                    <ul className="space-y-2.5">
                       {cards.map((d) => (
                         <li key={d.id}>
                           <LeadCard

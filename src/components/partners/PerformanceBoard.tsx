@@ -9,7 +9,6 @@ import {
   Trophy,
   Wallet,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import {
   costPerStage,
   investmentSum,
@@ -31,6 +30,7 @@ import { matchesFacets } from "@/lib/partner-facets";
 import { usePartnerFilter } from "./PartnerFilterContext";
 import { makePartnerT, type PartnerDict, type PartnerT } from "@/lib/partner-i18n";
 import { KpiTile } from "./stats/KpiTile";
+import { StatsCard } from "./stats/StatsCard";
 
 const MAIN_STAGES = ["new", "contacted", "appointment", "quote_sent", "won"];
 
@@ -72,9 +72,9 @@ const BAND_GLYPH: Record<string, string> = {
   cold: "★",
 };
 const BAND_TONE: Record<string, string> = {
-  hot: "text-emerald-600 dark:text-emerald-400",
-  warm: "text-amber-600 dark:text-amber-400",
-  cold: "text-blue-600 dark:text-blue-400",
+  hot: "text-partner-hot",
+  warm: "text-partner-warm",
+  cold: "text-partner-cold",
 };
 
 export function PerformanceBoard({
@@ -160,10 +160,13 @@ export function PerformanceBoard({
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Investment is money out, not a result earned — the inverted tile
+            keeps it visually distinct from the three efficiency figures. */}
         <KpiTile
           Icon={Wallet}
           label={t("stats.performance.investment")}
           value={fmtChf(data.investment)}
+          tone="inverted"
         />
         <KpiTile
           Icon={Trophy}
@@ -215,54 +218,50 @@ function ConversionCascade({
 }) {
   const empty = transitions.every((r) => r.fromCount === 0);
   return (
-    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
-      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
-        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        <span>{t("stats.performance.cascade")}</span>
-      </h3>
-
+    <StatsCard title={t("stats.performance.cascade")} Icon={ArrowRight}>
+      {/* End-to-end rate, pulled out above the step-by-step breakdown: it is
+          the number the partner came for, and the rows below explain it. */}
       {overall.total > 0 && (
-        <div className="mb-3 rounded-md border bg-muted/40 px-3 py-2">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 text-xs font-medium">
+        <div className="mb-3.5 rounded-lg bg-muted px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[15px]">
+            <div className="flex items-center gap-2 font-semibold">
               <span>{t("stages.new")}</span>
-              <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+              <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
               <span>{t("stages.won")}</span>
             </div>
-            <span className="text-sm font-semibold tabular-nums">
-              {overall.rate === null ? "—" : `${overall.rate}%`}{" "}
-              <span className="font-normal text-muted-foreground">
+            <span className="tabular-nums">
+              <strong className="text-[17px]">
+                {overall.rate === null ? "—" : `${overall.rate}%`}
+              </strong>{" "}
+              <span className="text-muted-foreground">
                 ({overall.won}/{overall.total})
+                {overall.lookbackDays > 0 &&
+                  ` · ${t("stats.performance.maturity_row", { n: overall.lookbackDays })}`}
               </span>
             </span>
           </div>
-          {overall.lookbackDays > 0 && (
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              {t("stats.performance.maturity_row", { n: overall.lookbackDays })}
-            </p>
-          )}
         </div>
       )}
 
       {empty ? (
-        <p className="py-6 text-center text-xs text-muted-foreground">
+        <p className="py-6 text-center text-sm text-muted-foreground">
           {t("stats.empty")}
         </p>
       ) : (
         <>
-          <p className="mb-2 text-[11px] text-muted-foreground">
+          <p className="mb-1 text-[13px] text-muted-foreground">
             {t("stats.performance.maturity_hint")}
           </p>
-          <ul className="divide-y divide-dotted divide-border">
+          <ul>
             {transitions.map((r) => {
               const width = r.rate ?? 0;
               const bands = transitionsByBand[`${r.from}-${r.to}`] ?? [];
               return (
                 <li
                   key={`${r.from}-${r.to}`}
-                  className="grid grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-2.5"
+                  className="grid grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 border-t border-dotted py-3 first:border-t-0"
                 >
-                  <div className="flex min-w-0 flex-col gap-0.5 text-xs">
+                  <div className="flex min-w-0 flex-col gap-0.5 text-sm">
                     <div className="flex min-w-0 items-center gap-1.5">
                       <span className="truncate font-medium text-foreground">
                         {t(`stages.${r.from}`)}
@@ -273,7 +272,7 @@ function ConversionCascade({
                       </span>
                     </div>
                     {r.lookbackDays > 0 && (
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-[13px] text-muted-foreground">
                         {t("stats.performance.maturity_row", {
                           n: r.lookbackDays,
                         })}
@@ -286,21 +285,21 @@ function ConversionCascade({
                     style={{ width: mounted ? `${width}%` : "0%" }}
                   />
                 </div>
-                <span className="w-20 text-right text-xs font-semibold tabular-nums">
+                <span className="w-[7rem] text-right text-sm font-semibold tabular-nums">
                   {pct(r.rate)}{" "}
                   <span className="font-normal text-muted-foreground">
                     ({r.toCount}/{r.fromCount})
                   </span>
                 </span>
                 {bands.some((b) => b.from > 0) && (
-                  <div className="col-span-3 flex flex-wrap items-center gap-x-4 gap-y-1 pl-1 text-[11px] text-muted-foreground">
+                  <div className="col-span-3 flex flex-wrap items-center gap-x-5 gap-y-1 pl-0.5 text-[13px] text-muted-foreground">
                     {bands.map((b) =>
                       b.from === 0 ? null : (
                         <span
                           key={b.band}
                           className="inline-flex items-center gap-1.5 tabular-nums"
                         >
-                          <span className={BAND_TONE[b.band]}>
+                          <span className={`tracking-[0.05em] ${BAND_TONE[b.band]}`}>
                             {BAND_GLYPH[b.band]}
                           </span>
                           <span>
@@ -320,7 +319,7 @@ function ConversionCascade({
         </ul>
         </>
       )}
-    </Card>
+    </StatsCard>
   );
 }
 
@@ -341,17 +340,13 @@ function CacPerStage({
   );
   const empty = max === 0;
   return (
-    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
-      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
-        <Banknote className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        <span>{t("stats.performance.cac_per_stage")}</span>
-      </h3>
+    <StatsCard title={t("stats.performance.cac_per_stage")} Icon={Banknote}>
       {empty ? (
-        <p className="py-6 text-center text-xs text-muted-foreground">
+        <p className="py-6 text-center text-sm text-muted-foreground">
           {t("stats.empty")}
         </p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-3.5">
           {rows.map((r) => {
             const Icon = STAGE_ICON[r.stage];
             const width =
@@ -359,11 +354,11 @@ function CacPerStage({
             const bands = byBand[r.stage] ?? [];
             return (
               <li key={r.stage} className="space-y-1">
-                <div className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)_auto] items-center gap-3 text-xs">
+                <div className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)_auto] items-center gap-3.5 text-sm">
                   <span className="flex min-w-0 items-center gap-1.5">
                     {Icon && (
                       <Icon
-                        className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                        className="size-[15px] shrink-0 text-muted-foreground"
                         aria-hidden
                       />
                     )}
@@ -377,19 +372,19 @@ function CacPerStage({
                       style={{ width: mounted ? `${width}%` : "0%" }}
                     />
                   </div>
-                  <span className="w-24 text-right font-semibold tabular-nums">
+                  <span className="w-[6.5rem] text-right font-semibold tabular-nums">
                     {fmtChf(r.costPer)}
                   </span>
                 </div>
                 {bands.some((b) => b.count > 0) && (
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-5 text-[11px] text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-1 pl-[1.6rem] text-[13px] text-muted-foreground">
                     {bands.map((b) =>
                       b.count === 0 ? null : (
                         <span
                           key={b.band}
                           className="inline-flex items-center gap-1.5 tabular-nums"
                         >
-                          <span className={BAND_TONE[b.band]}>
+                          <span className={`tracking-[0.05em] ${BAND_TONE[b.band]}`}>
                             {BAND_GLYPH[b.band]}
                           </span>
                           <span>
@@ -406,6 +401,6 @@ function CacPerStage({
           })}
         </ul>
       )}
-    </Card>
+    </StatsCard>
   );
 }

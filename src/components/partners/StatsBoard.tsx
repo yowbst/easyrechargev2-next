@@ -142,8 +142,9 @@ export function StatsBoard({
                 <Line
                   type="monotone"
                   dataKey="v"
-                  stroke="var(--primary)"
-                  strokeWidth={1.5}
+                  stroke="var(--chart-1)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
                   dot={false}
                 />
               </LineChart>
@@ -152,9 +153,10 @@ export function StatsBoard({
         />
       </div>
 
-      <PipelineFunnelCard rows={data.funnel} dictionary={dictionary} />
-
-      <MonthlyVolumeCard series={data.monthly} dictionary={dictionary} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <PipelineFunnelCard rows={data.funnel} dictionary={dictionary} />
+        <MonthlyVolumeCard series={data.monthly} dictionary={dictionary} />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <ReasonsBreakdownCard
@@ -163,7 +165,7 @@ export function StatsBoard({
           rows={data.disq}
           labelNs="reasons"
           dictionary={dictionary}
-          fill="rgb(217 119 6)"
+          fill="var(--partner-rot)"
         />
         <ReasonsBreakdownCard
           Icon={CircleX}
@@ -171,7 +173,7 @@ export function StatsBoard({
           rows={data.lost}
           labelNs="lost_reasons"
           dictionary={dictionary}
-          fill="rgb(225 29 72)"
+          fill="var(--partner-lost)"
         />
       </div>
     </div>

@@ -39,9 +39,13 @@ export function StatsTabs({
 
   return (
     <Tabs value={active} onValueChange={onChange}>
-      <TabsList>
+      <TabsList className="gap-1 p-1 group-data-horizontal/tabs:h-11">
         {tabs.map((t) => (
-          <TabsTrigger key={t.key} value={t.key}>
+          <TabsTrigger
+            key={t.key}
+            value={t.key}
+            className="px-3.5 data-active:bg-card data-active:font-semibold"
+          >
             {t.label}
           </TabsTrigger>
         ))}

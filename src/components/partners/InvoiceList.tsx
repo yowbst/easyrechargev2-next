@@ -1,4 +1,4 @@
-import { FileSearch } from "lucide-react";
+import { ChevronDown, FileSearch } from "lucide-react";
 import { InvoiceUrlSync } from "./InvoiceUrlSync";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import type { PartnerInvoice, PartnerInvoiceLine } from "@/lib/billing/partner-queries";
@@ -36,35 +36,43 @@ function byDispatchDate(a: PartnerInvoiceLine, b: PartnerInvoiceLine): number {
   return da === db ? a.label.localeCompare(b.label) : da.localeCompare(db);
 }
 
+// Warm tones for "you owe this", green for settled, neutral for void — drawn
+// from the partner palette so they hold up in both themes.
 const STATUS_TONE: Record<string, string> = {
-  issued: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  sent: "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400",
-  disputed: "border-orange-500/40 bg-orange-500/10 text-orange-700 dark:text-orange-400",
-  paid: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  issued: "border-partner-warm/35 bg-partner-warm-bg text-partner-warm",
+  sent: "border-partner-cold/35 bg-partner-cold-bg text-partner-cold",
+  disputed: "border-partner-lost/35 bg-partner-lost/10 text-partner-lost",
+  paid: "border-partner-won/40 bg-partner-hot-bg text-partner-hot",
   cancelled: "border-border bg-muted text-muted-foreground",
 };
+
+/** Statuses that mean money is still owed — summed into the header figure. */
+const OUTSTANDING = new Set(["issued", "sent", "disputed"]);
 
 function InvoiceLines({
   lines,
   lang,
   t,
+  total,
 }: {
   lines: PartnerInvoiceLine[];
   lang: "fr" | "de";
   t: ReturnType<typeof makePartnerT>;
+  /** Invoice total, repeated under the lines so the column adds up on screen. */
+  total?: string | number;
 }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-xs font-medium text-muted-foreground">
-            <th className="py-2 pr-4 font-medium">{t("detail.col.date")}</th>
-            <th className="py-2 pr-4 font-medium">{t("detail.col.lead")}</th>
-            <th className="py-2 pr-4 font-medium">{t("detail.col.category")}</th>
-            <th className="py-2 pr-4 font-medium">{t("detail.col.reason")}</th>
-            <th className="py-2 pr-4 font-medium">{t("detail.col.status")}</th>
+          <tr className="border-b text-left font-semibold text-muted-foreground">
+            <th className="py-3 pr-4 font-semibold">{t("detail.col.date")}</th>
+            <th className="py-3 pr-4 font-semibold">{t("detail.col.lead")}</th>
+            <th className="py-3 pr-4 font-semibold">{t("detail.col.category")}</th>
+            <th className="py-3 pr-4 font-semibold">{t("detail.col.reason")}</th>
+            <th className="py-3 pr-4 font-semibold">{t("detail.col.status")}</th>
             {/* Rightmost, so the per-line amounts line up with the invoice total. */}
-            <th className="py-2 text-right font-medium">{t("detail.col.amount")}</th>
+            <th className="py-3 text-right font-semibold">{t("detail.col.amount")}</th>
           </tr>
         </thead>
         <tbody>
@@ -88,14 +96,14 @@ function InvoiceLines({
             return (
               <tr
                 key={i}
-                className={`border-b border-border/50 last:border-0${
+                className={`border-t border-border/60${
                   billed ? "" : " text-muted-foreground"
                 }`}
               >
-                <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-muted-foreground">
+                <td className="py-3 pr-4 whitespace-nowrap tabular-nums text-muted-foreground">
                   {frDate(line.dispatched_at)}
                 </td>
-                <td className="py-2 pr-4">
+                <td className="py-3 pr-4">
                   {submissionId && (
                     <a
                       href={`/${lang}/demande-devis/${submissionId}?view=partner`}
@@ -108,38 +116,55 @@ function InvoiceLines({
                       <FileSearch className="h-3.5 w-3.5" />
                     </a>
                   )}
-                  <span className="font-medium">{name}</span>
+                  <span className="font-semibold">{name}</span>
                   {place && <span className="ml-2 text-muted-foreground">{place}</span>}
 
                 </td>
-                <td className="py-2 pr-4 text-xs text-muted-foreground">
+                <td className="py-3 pr-4 text-muted-foreground">
                   {line.lead_category ? t(`category.${line.lead_category}`) : "—"}
                 </td>
-                <td className="py-2 pr-4 text-xs">{reason}</td>
-                <td className="py-2 pr-4 whitespace-nowrap">
+                <td className="py-3 pr-4">{reason}</td>
+                <td className="py-3 pr-4 whitespace-nowrap">
                   <span
-                    className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                    className={`inline-flex h-[26px] items-center rounded-md px-2.5 text-xs font-semibold ${
                       billed
-                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                        : "border-border bg-muted text-muted-foreground"
+                        ? "bg-partner-hot-bg text-partner-hot"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {billed ? t("detail.status.billed") : t("detail.status.notBilled")}
                   </span>
                 </td>
-                <td className="py-2 text-right font-mono whitespace-nowrap">
+                <td className="py-3 text-right font-semibold tabular-nums whitespace-nowrap">
                   {billed ? (
                     chf(line.amount_chf)
                   ) : (
                     // What it WOULD have cost, struck: a plain CHF 0.00 hides
                     // that a decision was taken.
-                    <span className="line-through">{chf(line.unit_price_chf ?? 0)}</span>
+                    <span className="font-normal text-muted-foreground line-through">
+                      {chf(line.unit_price_chf ?? 0)}
+                    </span>
                   )}
                 </td>
               </tr>
             );
           })}
         </tbody>
+        {total !== undefined && (
+          <tfoot>
+            <tr>
+              <td
+                colSpan={5}
+                className="pt-4 pr-4 text-right font-semibold text-muted-foreground"
+              >
+                {t("detail.col.amount")}
+              </td>
+              <td className="pt-4 text-right font-heading text-xl font-semibold tracking-tight tabular-nums">
+                {chf(total)}
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );
@@ -160,18 +185,30 @@ export function InvoiceList({
   const t = makePartnerT(dictionary);
 
   if (invoices.length === 0) {
-    return (
-      <div className="p-6">
-        <h1 className="mb-2 text-xl font-semibold">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
-      </div>
-    );
+    return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
   }
 
+  // What the partner actually owes right now, across every unsettled invoice.
+  // The per-invoice totals are each one row of this; the sum is the number
+  // they came to the page for, so it leads.
+  const outstanding = invoices
+    .filter((inv) => OUTSTANDING.has(inv.status))
+    .reduce((sum, inv) => sum + Number(inv.total_chf), 0);
+
   return (
-    <div className="space-y-4 p-4 sm:p-6">
-      <h1 className="text-xl font-semibold">{t("title")}</h1>
+    <div className="space-y-3">
       <InvoiceUrlSync />
+
+      {outstanding > 0 && (
+        <div className="flex items-baseline justify-end gap-3 pb-1">
+          <span className="text-sm text-muted-foreground">
+            {t("status.issued")}
+          </span>
+          <span className="font-heading text-2xl font-semibold tracking-tight tabular-nums text-partner-warm">
+            {chf(outstanding)}
+          </span>
+        </div>
+      )}
 
       {invoices.map((inv) => {
         const lines = inv.lines ?? [];
@@ -188,24 +225,34 @@ export function InvoiceList({
             id={`invoice-${inv.number}`}
             data-invoice-number={inv.number}
             open={openInvoice === inv.number}
-            className={`group rounded-lg border bg-card shadow-sm transition-shadow open:shadow-md${
+            className={`group rounded-xl border bg-card transition-shadow open:shadow-md${
               cancelled ? " opacity-60" : ""
             }`}
           >
-            <summary className="cursor-pointer list-none p-4 [&::-webkit-details-marker]:hidden">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <span className={`font-mono text-base font-semibold${cancelled ? " line-through" : ""}`}>
+            <summary className="cursor-pointer list-none px-6 py-5 [&::-webkit-details-marker]:hidden">
+              <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
+                <span
+                  className={`font-heading text-xl font-semibold tracking-tight${cancelled ? " line-through" : ""}`}
+                >
                   {inv.number}
                 </span>
-                <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${tone}`}>
+                <span
+                  className={`inline-flex h-7 items-center rounded-md border px-2.5 text-[13px] font-semibold ${tone}`}
+                >
                   {t(`status.${inv.status}`)}
                 </span>
-                <span className="text-sm text-muted-foreground">{inv.period_month}</span>
-                <span className={`ml-auto font-mono text-base font-semibold${cancelled ? " line-through" : ""}`}>
+                <span className="text-[15px] text-muted-foreground">{inv.period_month}</span>
+                <span
+                  className={`ml-auto font-heading text-2xl font-semibold tracking-tight tabular-nums${cancelled ? " line-through" : ""}`}
+                >
                   {chf(inv.total_chf)}
                 </span>
+                <ChevronDown
+                  className="size-[18px] shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                  aria-hidden
+                />
               </div>
-              <div className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground">
+              <div className="mt-2 flex flex-wrap gap-x-5 text-sm text-muted-foreground">
                 <span>
                   {t("col.issued")} {frDate(inv.issued_at)}
                 </span>
@@ -224,11 +271,11 @@ export function InvoiceList({
               </div>
             </summary>
 
-            <div className="border-t px-4 pb-4">
+            <div className="border-t px-6 pb-6">
               {lines.length === 0 ? (
                 <p className="py-4 text-sm text-muted-foreground">{t("detail.empty")}</p>
               ) : (
-                <InvoiceLines lines={lines} lang={lang} t={t} />
+                <InvoiceLines lines={lines} lang={lang} t={t} total={inv.total_chf} />
               )}
             </div>
           </details>

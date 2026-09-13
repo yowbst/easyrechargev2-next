@@ -31,10 +31,12 @@ const GROUPS: { group: FacetGroup; titleKey: string; labelNs: string }[] = [
   { group: "approval", titleKey: "facets.approval", labelNs: "card.approval" },
 ];
 
+// Band tones come from the partner palette so they track the theme rather
+// than pinning three fixed Tailwind hues.
 const MUTED = "text-muted-foreground";
-const EMERALD = "text-emerald-600 dark:text-emerald-400";
-const AMBER = "text-amber-600 dark:text-amber-400";
-const BLUE = "text-blue-600 dark:text-blue-400";
+const EMERALD = "text-partner-hot";
+const AMBER = "text-partner-warm";
+const BLUE = "text-partner-cold";
 
 const HOUSING_ICONS: Record<string, LucideIcon> = {
   owner: Home,
@@ -97,13 +99,13 @@ export function PartnerFacetFilter({
           <button
             type="button"
             aria-label={t("facets.label")}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-muted ${
+            className={`inline-flex h-10 items-center gap-2 rounded-md border bg-card px-3.5 text-sm font-medium transition-colors hover:bg-muted ${
               facetCount > 0 ? "border-primary text-primary" : "text-muted-foreground"
             }`}
           />
         }
       >
-        <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+        <SlidersHorizontal className="h-[15px] w-[15px] shrink-0" />
         <span className="hidden sm:inline">{t("facets.label")}</span>
         {facetCount > 0 && (
           <span className="rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">

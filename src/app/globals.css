@@ -40,6 +40,35 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* Direction B — the named palette from the design: Paper, Sand, Forest,
+     Charge, Signal. Used by the public home page; fall back to the site's
+     own tokens outside the Direction B scope. */
+  --color-b-paper: var(--b-paper, var(--background));
+  --color-b-sand: var(--b-sand, var(--muted));
+  --color-b-inset: var(--b-inset, var(--muted));
+  --color-b-forest: var(--b-forest, var(--foreground));
+  --color-b-on-forest: var(--b-on-forest, var(--background));
+  --color-b-charge: var(--b-charge, var(--primary));
+  --color-b-on-charge: var(--b-on-charge, var(--primary-foreground));
+  --color-b-signal: var(--b-signal, var(--primary));
+
+  /* Direction B — partner-space surfaces and lead-quality bands. Values are
+     defined in the `[data-partner-shell]` scope below; outside it they fall
+     back to the public site's tokens so a stray class can't render invisible. */
+  --color-partner-column: var(--partner-column, var(--muted));
+  --color-partner-inset: var(--partner-inset, var(--muted));
+  --color-partner-dashed: var(--partner-dashed, var(--border));
+  --color-partner-accent: var(--partner-accent, var(--primary));
+  --color-partner-hot: var(--partner-hot, var(--primary));
+  --color-partner-hot-bg: var(--partner-hot-bg, var(--muted));
+  --color-partner-warm: var(--partner-warm, var(--foreground));
+  --color-partner-warm-bg: var(--partner-warm-bg, var(--muted));
+  --color-partner-cold: var(--partner-cold, var(--foreground));
+  --color-partner-cold-bg: var(--partner-cold-bg, var(--muted));
+  --color-partner-won: var(--partner-won, var(--primary));
+  --color-partner-lost: var(--partner-lost, var(--destructive));
+  --color-partner-rot: var(--partner-rot, var(--foreground));
+
   --font-sans: var(--font-open-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-heading: var(--font-montserrat), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: Georgia, serif;
@@ -179,6 +208,310 @@
   --destructive-border: hsl(0 80% 59%);
   --sidebar-primary-border: hsl(142 71% 54%);
   --sidebar-accent-border: hsl(220 16% 31%);
+}
+
+/* ─── Direction B — public home page ─────────────────────────────────────────
+   Same visual direction as the partner space, applied to the public site. The
+   home page carries `data-direction-b`; `:has()` lifts the palette to <html>
+   so the shared Header and Footer (rendered by [lang]/layout.tsx, outside the
+   page) adopt it too — and only on the routes that opt in. Every other public
+   page keeps the site's existing palette and type.
+
+   Light and dark are mutually exclusive selectors of equal specificity so
+   neither out-ranks the other; both out-rank the plain `:root` / `.dark`. */
+html:not(.dark):has([data-direction-b]) {
+  --background: #f0ede5;
+  --foreground: #14231c;
+  --border: #d6cfbf;
+  --card: #f3f1eb;
+  --card-foreground: #14231c;
+  --card-border: #d6cfbf;
+  --popover: #f3f1eb;
+  --popover-foreground: #14231c;
+  --popover-border: #d6cfbf;
+  /* Forest, not the link green: every `bg-primary` on this page is a CTA, and
+     the design paints those #07231A. Links get their own colour below. */
+  --primary: #07231a;
+  --primary-foreground: #f3f1eb;
+  --secondary: #e2dcce;
+  --secondary-foreground: #14231c;
+  --muted: #e2dcce;
+  --muted-foreground: #465550;
+  --accent: #e2dcce;
+  --accent-foreground: #14231c;
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --input: #c4bcaa;
+  --ring: #0f7a3d;
+
+  --primary-border: #04150c;
+  --secondary-border: #c4bcaa;
+  --muted-border: #c4bcaa;
+  --accent-border: #c4bcaa;
+  --destructive-border: #8c1d18;
+
+  --b-paper: #f0ede5;
+  --b-sand: #e2dcce;
+  --b-inset: #e9e4d8;
+  --b-forest: #07231a;
+  --b-on-forest: #f3f1eb;
+  --b-charge: #16a34a;
+  --b-on-charge: #04150c;
+  --b-signal: #3ddc84;
+  --b-link: #0f7a3d;
+}
+
+html.dark:has([data-direction-b]) {
+  --background: #060f0b;
+  --foreground: #e8ede9;
+  --border: #25402f;
+  --card: #142a20;
+  --card-foreground: #e8ede9;
+  --card-border: #25402f;
+  --popover: #142a20;
+  --popover-foreground: #e8ede9;
+  --popover-border: #25402f;
+  --primary: #3ddc84;
+  --primary-foreground: #04150c;
+  --secondary: #1b3527;
+  --secondary-foreground: #e8ede9;
+  --muted: #1b3527;
+  --muted-foreground: #a3b8ad;
+  --accent: #1b3527;
+  --accent-foreground: #e8ede9;
+  --destructive: #f2645a;
+  --destructive-foreground: #1a0705;
+  --input: #2f4d3b;
+  --ring: #3ddc84;
+
+  --primary-border: #2fb96c;
+  --secondary-border: #244034;
+  --muted-border: #244034;
+  --accent-border: #244034;
+  --destructive-border: #c94a42;
+
+  --b-paper: #060f0b;
+  --b-sand: #0c1b14;
+  --b-inset: #0f2318;
+  --b-forest: #0c1b14;
+  --b-on-forest: #e8ede9;
+  --b-charge: #16a34a;
+  --b-on-charge: #eafff2;
+  --b-signal: #3ddc84;
+  --b-link: #3ddc84;
+}
+
+html:has([data-direction-b]) {
+  --font-sans: var(--font-public-sans), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-instrument-sans), system-ui, -apple-system, sans-serif;
+}
+
+[data-direction-b] {
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
+[data-direction-b] :focus-visible {
+  outline: 3px solid var(--b-link, var(--ring));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Sections slide up as they enter the viewport, driven by the scroll position
+   rather than a JS observer. Guarded twice: browsers without scroll-driven
+   animations show the content outright, and so does reduced-motion. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-direction-b] [data-reveal] {
+      animation: er-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+@keyframes er-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes er-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.9;
+  }
+}
+
+/* ─── Direction B — partner space ────────────────────────────────────────────
+   The partner portal runs its own visual direction: a warm parchment ground,
+   a deep-forest sidebar and a green accent, set in Instrument Sans / Public
+   Sans. It is scoped rather than global so the public site keeps its own
+   palette and type.
+
+   The hook is `:has([data-partner-shell])` on <html> rather than a class on a
+   wrapper div, because the sidebar's mobile Sheet and every popover/tooltip
+   portal to document.body — a wrapper scope would leave them on the public
+   palette. Light and dark are written as mutually exclusive selectors of equal
+   specificity (`html:not(.dark):has(…)` / `html.dark:has(…)`) so neither can
+   out-rank the other, and both out-rank the plain `:root` / `.dark` blocks. */
+html:not(.dark):has([data-partner-shell]) {
+  --background: #f0ede5;
+  --foreground: #14231c;
+  --border: #d6cfbf;
+  --card: #f3f1eb;
+  --card-foreground: #14231c;
+  --card-border: #d6cfbf;
+  --popover: #f3f1eb;
+  --popover-foreground: #14231c;
+  --popover-border: #d6cfbf;
+  --primary: #0f7a3d;
+  --primary-foreground: #f3f1eb;
+  --secondary: #e2dcce;
+  --secondary-foreground: #14231c;
+  --muted: #e2dcce;
+  --muted-foreground: #465550;
+  --accent: #e2dcce;
+  --accent-foreground: #14231c;
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --input: #c4bcaa;
+  --ring: #0f7a3d;
+
+  --chart-1: #16a34a;
+  --chart-2: #0f7a3d;
+  --chart-3: #a16207;
+  --chart-4: #1e5ba8;
+  --chart-5: #b3261e;
+
+  --sidebar: #07231a;
+  --sidebar-foreground: #f3f1eb;
+  --sidebar-border: rgba(243, 241, 235, 0.14);
+  --sidebar-primary: #3ddc84;
+  --sidebar-primary-foreground: #04150c;
+  --sidebar-accent: rgba(243, 241, 235, 0.1);
+  --sidebar-accent-foreground: #f3f1eb;
+  --sidebar-ring: #3ddc84;
+
+  --primary-border: #0b5c2e;
+  --secondary-border: #c4bcaa;
+  --muted-border: #c4bcaa;
+  --accent-border: #c4bcaa;
+  --destructive-border: #8c1d18;
+  --sidebar-primary-border: #2fb96c;
+  --sidebar-accent-border: rgba(243, 241, 235, 0.2);
+
+  --partner-column: #e2dcce;
+  --partner-inset: #e9e4d8;
+  --partner-dashed: #c4bcaa;
+  --partner-accent: #3ddc84;
+  --partner-hot: #0b5c2e;
+  --partner-hot-bg: rgba(22, 163, 74, 0.14);
+  --partner-warm: #5c3d00;
+  --partner-warm-bg: #fbf3e1;
+  --partner-cold: #173f73;
+  --partner-cold-bg: rgba(30, 91, 168, 0.12);
+  --partner-won: #16a34a;
+  --partner-lost: #b3261e;
+  --partner-rot: #a16207;
+}
+
+html.dark:has([data-partner-shell]) {
+  /* Dark counterpart to the parchment ramp. Direction B stacks four surfaces —
+     ground < column < card < muted — and the dark set has to keep the same
+     four steps apart, or the kanban columns and the sidebar dissolve into the
+     page. Values are a single green-tinted ramp, lightening as they rise. */
+  --background: #060f0b;
+  --foreground: #e8ede9;
+  --border: #25402f;
+  --card: #142a20;
+  --card-foreground: #e8ede9;
+  --card-border: #25402f;
+  --popover: #142a20;
+  --popover-foreground: #e8ede9;
+  --popover-border: #25402f;
+  --primary: #3ddc84;
+  --primary-foreground: #04150c;
+  --secondary: #1b3527;
+  --secondary-foreground: #e8ede9;
+  --muted: #1b3527;
+  --muted-foreground: #a3b8ad;
+  --accent: #1b3527;
+  --accent-foreground: #e8ede9;
+  --destructive: #f2645a;
+  --destructive-foreground: #1a0705;
+  --input: #2f4d3b;
+  --ring: #3ddc84;
+
+  --chart-1: #3ddc84;
+  --chart-2: #16a34a;
+  --chart-3: #e0a63a;
+  --chart-4: #6ba3e8;
+  --chart-5: #f2645a;
+
+  /* The sidebar is the darkest surface in light mode; in dark mode it becomes
+     a *raised* rail instead, because a near-black rail on a near-black page
+     reads as nothing at all. */
+  --sidebar: #0c1b14;
+  --sidebar-foreground: #e8ede9;
+  --sidebar-border: rgba(232, 237, 233, 0.14);
+  --sidebar-primary: #3ddc84;
+  --sidebar-primary-foreground: #04150c;
+  --sidebar-accent: rgba(232, 237, 233, 0.1);
+  --sidebar-accent-foreground: #e8ede9;
+  --sidebar-ring: #3ddc84;
+
+  --primary-border: #2fb96c;
+  --secondary-border: #2a4737;
+  --muted-border: #2a4737;
+  --accent-border: #2a4737;
+  --destructive-border: #c94a42;
+  --sidebar-primary-border: #2fb96c;
+  --sidebar-accent-border: rgba(232, 237, 233, 0.2);
+
+  --partner-column: #0c1b14;
+  --partner-inset: #0f2318;
+  --partner-dashed: #2f4d3b;
+  --partner-accent: #3ddc84;
+  --partner-hot: #7ce8ad;
+  --partner-hot-bg: rgba(22, 163, 74, 0.22);
+  --partner-warm: #e8c98a;
+  --partner-warm-bg: rgba(161, 98, 7, 0.26);
+  --partner-cold: #9cc4f0;
+  --partner-cold-bg: rgba(30, 91, 168, 0.28);
+  --partner-won: #3ddc84;
+  --partner-lost: #f2645a;
+  --partner-rot: #e0a63a;
+}
+
+/* Type: Instrument Sans for headings and figures, Public Sans for text.
+   Tabular figures throughout — the partner reads these screens as numbers. */
+html:has([data-partner-shell]) {
+  --font-sans: var(--font-public-sans), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-instrument-sans), system-ui, -apple-system, sans-serif;
+}
+
+[data-partner-shell] {
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
+/* A 3px ring is the design's focus treatment — visible against both the
+   parchment ground and the dark sidebar. */
+[data-partner-shell] :focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* ─── Focused layout: hides site header/footer for immersive pages (e.g. quote form) ─── */

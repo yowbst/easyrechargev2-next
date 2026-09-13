@@ -23,15 +23,25 @@ import {
 import { DIRECTUS_URL } from "@/lib/directus";
 import { resolveRouteId } from "@/lib/pageConfig";
 
-import { Hero } from "@/components/Hero";
-import { Features } from "@/components/Features";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { FAQ } from "@/components/FAQ";
-import { GetQuote } from "@/components/GetQuote";
-import { LazyTestimonials as Testimonials } from "@/components/lazy";
-import { LazyGuideCarousel as GuideCarousel } from "@/components/lazy";
-import { LazySwissMap as SwissMap } from "@/components/lazy";
 import { MiniQuoteForm } from "@/components/MiniQuoteForm";
+
+// Direction B — home-only components. The shared Hero/Features/ProcessSteps/
+// Testimonials/GetQuote are still used by [slug] templates and the vehicle,
+// blog and contact pages, so this page gets its own set rather than restyling
+// theirs out from under them.
+import { HeroB, type HeroStat } from "@/components/home-b/HeroB";
+import { ProductShowcase, type Callout } from "@/components/home-b/ProductShowcase";
+import { PowerOptions, type PowerOption } from "@/components/home-b/PowerOptions";
+import { ProofGrid, type ProofItem } from "@/components/home-b/ProofGrid";
+import { ProcessB, type ProcessStepB } from "@/components/home-b/ProcessB";
+import { PartnerNetwork, type PartnerCard } from "@/components/home-b/PartnerNetwork";
+import { CoproBlock } from "@/components/home-b/CoproBlock";
+import { TestimonialsB, type TestimonialB } from "@/components/home-b/TestimonialsB";
+import { CtaB } from "@/components/home-b/CtaB";
+import { GuidesB, type GuidePost } from "@/components/home-b/GuidesB";
+import { CoverageB, type CoverageStat } from "@/components/home-b/CoverageB";
+import { FaqB, type FaqEntry } from "@/components/home-b/FaqB";
+import { opt, optList } from "@/components/home-b/content";
 
 export function generateStaticParams() {
   return [{ lang: "fr" }, { lang: "de" }];
@@ -103,7 +113,6 @@ export default async function Home({ params }: HomeProps) {
   const heroBlock = findBlock(blocks, "block_hero");
   const miniQuoteBlock = findBlock(blocks, "block_miniquote");
   const faqBlock = findBlock(blocks, "block_faq");
-  const getQuoteBlock = findBlock(blocks, "block_getquote");
 
   // Global config
   const gc = layoutData?.global_config || {};
@@ -138,29 +147,6 @@ export default async function Home({ params }: HomeProps) {
     (str, [k, v]) => str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)),
     heroSubtitleRaw,
   );
-  const heroImage = heroBlock?.image ? `${DIRECTUS_URL}/assets/${heroBlock.image}` : undefined;
-  // Hero checks: read from block translation content (not block root content)
-  const heroTranslationChecks = heroTranslation?.content?.checks;
-  const heroChecksConfig = heroTranslationChecks
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ? heroTranslationChecks.map((_: any, i: number) => String(i))
-    : undefined;
-  const heroChecksMap: Record<string, string> = {};
-  if (heroTranslationChecks) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    heroTranslationChecks.forEach((_: any, i: number) => {
-      const val = t(dictionary, `pages.home.blocks.hero.checks.${i}`);
-      if (val !== `pages.home.blocks.hero.checks.${i}` && !val.startsWith("[")) {
-        heroChecksMap[String(i)] = val;
-      }
-    });
-  }
-  const heroRatingTemplate = t(dictionary, "pages.home.blocks.hero.rating");
-  const heroRating = stats.installations && trustpilot.score
-    ? heroRatingTemplate.startsWith("[")
-      ? `${stats.installations}+ installations · ${trustpilot.score}/5 Trustpilot`
-      : heroRatingTemplate.replace("{installations}", String(stats.installations)).replace("{score}", String(trustpilot.score))
-    : undefined;
 
   // Features and ProcessSteps use tPrefix + dictionary internally — no pre-resolution needed
 
@@ -241,6 +227,206 @@ export default async function Home({ params }: HomeProps) {
   const quoteEntry = pageRegistry.find((p) => p.id === "quote");
   const quoteSlug = quoteEntry?.slugs[lang];
   const ctaHref = quoteSlug ? `/${lang}/${quoteSlug}` : `/${lang}`;
+  // Secondary CTA ("parler à un conseiller") points at the contact page when
+  // the registry has one; without it the button simply isn't rendered.
+  const contactEntry = pageRegistry.find((p) => p.id === "contact");
+  const contactHref = contactEntry?.slugs[lang]
+    ? `/${lang}/${contactEntry.slugs[lang]}`
+    : undefined;
+
+  // ─── Direction B sections ───────────────────────────────────────────────
+  // Hero figures come from global_config, which already holds the SLAs the
+  // rest of the site quotes — so the hero can never disagree with the process
+  // section about how long a first contact takes.
+  const heroStats: HeroStat[] = [
+    {
+      value: String(slas?.first_contact?.value ?? 48),
+      unit: "h",
+      label: t(dictionary, "pages.home.blocks.hero.stats.first_contact"),
+    },
+    {
+      value: String(slas?.quote_delivery_timeline?.value ?? "3-5"),
+      unit: "j",
+      label: t(dictionary, "pages.home.blocks.hero.stats.quote_delivery"),
+    },
+    {
+      value: String(trustpilot.score ?? "4.8"),
+      unit: "/5",
+      label: t(dictionary, "pages.home.blocks.hero.stats.rating"),
+    },
+  ].filter((stat) => !stat.label.startsWith("[") && !stat.label.startsWith("pages."));
+
+  // Proof cards reuse the Features block's own keys — same copy, new form.
+  const featuresBlock = findBlock(blocks, "block_features");
+  const proofItems: ProofItem[] = (
+    featuresBlock?.config?.items ?? [
+      { id: "certifiedInstallers", icon: "ShieldCheck" },
+      { id: "transparentPrices", icon: "Landmark" },
+      { id: "expertAdvice", icon: "Users" },
+      { id: "nationalCoverage", icon: "MapPin" },
+      { id: "fastInstallation", icon: "Timer" },
+      { id: "qualityGuarantee", icon: "Award" },
+    ]
+  )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((item: any) => {
+      const title = opt(dictionary, `pages.home.features.items.${item.id}.title`);
+      const body = opt(dictionary, `pages.home.features.items.${item.id}.description`);
+      return title ? { id: item.id, icon: item.icon, title, body: body ?? "" } : null;
+    })
+    .filter(Boolean) as ProofItem[];
+
+  // Process steps likewise reuse the existing block's keys; the SLA chips are
+  // the global_config values the copy already interpolates.
+  const processBlock = findBlock(blocks, "block_process");
+  const stepSlas: Record<string, string | undefined> = {
+    request: opt(dictionary, "pages.home.process.steps.request.sla"),
+    contact: opt(dictionary, "pages.home.process.steps.contact.sla"),
+    decision: opt(dictionary, "pages.home.process.steps.decision.sla"),
+    installation: opt(dictionary, "pages.home.process.steps.installation.sla"),
+  };
+  const processSteps: ProcessStepB[] = (
+    processBlock?.config?.steps ?? [
+      { id: "request" },
+      { id: "contact" },
+      { id: "decision" },
+      { id: "installation" },
+    ]
+  )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((step: any, i: number) => {
+      const title = opt(dictionary, `pages.home.process.steps.${step.id}.title`);
+      const body = opt(dictionary, `pages.home.process.steps.${step.id}.description`);
+      return title
+        ? {
+            id: step.id,
+            n: String(i + 1).padStart(2, "0"),
+            sla: stepSlas[step.id],
+            title,
+            body: body ?? "",
+          }
+        : null;
+    })
+    .filter(Boolean) as ProcessStepB[];
+
+  const testimonialsB: TestimonialB[] = testimonialItems
+    .map((ti) => {
+      const tbp = "pages.home.blocks.testimonials";
+      const text = opt(dictionary, `${tbp}.items.${ti.id}.text`);
+      const name = opt(dictionary, `${tbp}.items.${ti.id}.name`);
+      if (!text || !name) return null;
+      const status = opt(dictionary, `${tbp}.items.${ti.id}.status`);
+      const location = opt(dictionary, `${tbp}.items.${ti.id}.location`);
+      return {
+        id: ti.id,
+        text,
+        name,
+        meta: [status, location].filter(Boolean).join(" · ") || undefined,
+        rating: ti.rating,
+      };
+    })
+    .filter(Boolean) as TestimonialB[];
+
+  // The four sections the design adds have no Directus block yet. Each is
+  // built from optional keys and renders only once its content exists — so
+  // the page ships complete in both languages today and fills in later,
+  // rather than shipping French placeholder copy to German visitors.
+  const productCallouts = optList<Callout>(
+    dictionary,
+    "pages.home.blocks.product.items",
+    (at, i) => {
+      const title = at("title");
+      return title
+        ? { n: String(i + 1), title, body: at("body") ?? "" }
+        : null;
+    },
+    3,
+  );
+  const productTitle = opt(dictionary, "pages.home.blocks.product.title");
+
+  const powerOptions = optList<PowerOption>(
+    dictionary,
+    "pages.home.blocks.power.items",
+    (at, i) => {
+      const kw = at("kw");
+      const title = at("title");
+      if (!kw || !title) return null;
+      return {
+        id: `power-${i}`,
+        kw,
+        tag: at("tag"),
+        recommended: at("recommended") === "true",
+        title,
+        body: at("body") ?? "",
+        time: at("time"),
+      };
+    },
+    3,
+  );
+  const powerTitle = opt(dictionary, "pages.home.blocks.power.title");
+
+  const networkPartners = optList<PartnerCard>(
+    dictionary,
+    "pages.home.blocks.network.items",
+    (at, i) => {
+      const name = at("name");
+      return name
+        ? { id: `partner-${i}`, name, canton: at("canton") ?? "", meta: at("meta") }
+        : null;
+    },
+  );
+  const networkTitle = opt(dictionary, "pages.home.blocks.network.title");
+
+  const coproPoints = optList<{ text: string }>(
+    dictionary,
+    "pages.home.blocks.copro.points",
+    (at) => {
+      const text = at("");
+      return text ? { text } : null;
+    },
+    6,
+  ).map((p) => p.text);
+  const coproTitle = opt(dictionary, "pages.home.blocks.copro.title");
+
+  // Guides, coverage and FAQ keep their existing Directus sources; only the
+  // rendering moves to Direction B.
+  const guidePosts: GuidePost[] = guideCarouselPosts.map((post) => ({
+    id: post.id,
+    title: post.title,
+    excerpt: post.excerpt,
+    readingTime: post.readingTime,
+    image: post.image,
+    category: post.category,
+    tag: post.tag,
+    href: `/${lang}/${blogSlug}/${post.categorySlug}/${post.slug}`,
+  }));
+
+  const coverageStats: CoverageStat[] = [
+    { id: "cantonsCovered", icon: "Pin", value: stats.cantons ?? 4 },
+    { id: "certifiedInstallers", icon: "CheckCircle", value: stats.partners ?? 1 },
+    { id: "installationsDone", icon: "Zap", value: stats.installations ?? 550 },
+  ].map((stat) => ({
+    ...stat,
+    label: t(dictionary, `pages.home.location.stats.${stat.id}`),
+  }));
+
+  const faqEntries: FaqEntry[] = faqItems.map((item) => ({
+    id: item.id,
+    question: item.question,
+    answer: item.answer,
+  }));
+
+  const faqBlockData = findBlock(blocks, "block_faq");
+  const faqTranslation = faqBlockData?.translations?.[0];
+  const faqCta = faqTranslation?.ctas?.[0];
+  const faqCtaHref = faqCta?.page_route_id
+    ? resolveRouteId(faqCta.page_route_id, lang, pageRegistry) || `/${lang}`
+    : undefined;
+
+  const networkEntry = pageRegistry.find((p) => p.id === "partners-network");
+  const networkHref = networkEntry?.slugs[lang]
+    ? `/${lang}/${networkEntry.slugs[lang]}`
+    : undefined;
 
   // JSON-LD
   const SITE_URL = getSiteUrl();
@@ -259,24 +445,28 @@ export default async function Home({ params }: HomeProps) {
   const jsonLd = wrapInGraph(...schemas);
 
   return (
-    <>
+    <div data-direction-b>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       <section id="hero">
-        <Hero
+        <HeroB
+          badgeValue={stats.installations ? String(stats.installations) : undefined}
+          badgeLabel={opt(dictionary, "pages.home.blocks.hero.badge")}
           title={heroTitle}
           subtitle={heroSubtitle}
-          checksConfig={heroChecksConfig}
-          checks={heroChecksMap}
-          rating={heroRating}
-          image={heroImage}
-          pageId="home"
-
+          stats={heroStats}
         >
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <span className="text-[17px] font-semibold">
+              {opt(dictionary, "pages.home.blocks.mini-quote.title") ??
+                t(dictionary, "pages.home.blocks.mini-quote.form.submit.text")}
+            </span>
+          </div>
           <MiniQuoteForm
+            variant="surface"
             miniQuoteContent={miniQuoteBlock ? { config: miniQuoteBlock.config } : undefined}
             pageId="home"
             dictionary={dictionary}
@@ -286,110 +476,199 @@ export default async function Home({ params }: HomeProps) {
               quote_request_duration: slas?.quote_request_duration?.value ?? 3,
             }}
           />
-        </Hero>
+          {opt(dictionary, "pages.home.blocks.mini-quote.reassurance") && (
+            <p className="mt-3.5 text-center text-sm leading-[1.6] text-muted-foreground">
+              {opt(dictionary, "pages.home.blocks.mini-quote.reassurance")}
+            </p>
+          )}
+        </HeroB>
       </section>
 
+      {/* The borne in context. Renders once its Directus copy exists. */}
+      {productTitle && (
+        <section id="product">
+          <ProductShowcase
+            eyebrow={opt(dictionary, "pages.home.blocks.product.eyebrow")}
+            title={productTitle}
+            lede={opt(dictionary, "pages.home.blocks.product.lede")}
+            action={
+              opt(dictionary, "pages.home.blocks.product.cta.label")
+                ? {
+                    label: opt(dictionary, "pages.home.blocks.product.cta.label")!,
+                    href: ctaHref,
+                  }
+                : undefined
+            }
+            image={
+              findBlock(blocks, "block_product")?.image
+                ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_product").image}`
+                : undefined
+            }
+            imageAlt={opt(dictionary, "pages.home.blocks.product.image_alt") ?? ""}
+            callouts={productCallouts}
+            badge={opt(dictionary, "pages.home.blocks.product.badge")}
+          />
+        </section>
+      )}
+
+      {powerTitle && powerOptions.length > 0 && (
+        <section id="power">
+          <PowerOptions
+            title={powerTitle}
+            aside={opt(dictionary, "pages.home.blocks.power.aside")}
+            options={powerOptions}
+            note={opt(dictionary, "pages.home.blocks.power.note")}
+          />
+        </section>
+      )}
+
       <section id="features">
-        <Features
-          title={t(dictionary, "pages.home.features.title")}
-          subtitle={t(dictionary, "pages.home.features.subtitle")}
-          tPrefix="pages.home"
-          image={findBlock(blocks, "block_features")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_features").image}` : undefined}
-          dictionary={dictionary}
+        <ProofGrid
+          eyebrow={opt(dictionary, "pages.home.features.eyebrow")}
+          title={opt(dictionary, "pages.home.features.title")}
+          items={proofItems}
         />
       </section>
 
       <section id="process">
-        <ProcessSteps
+        <ProcessB
           title={t(dictionary, "pages.home.process.title")}
-          subtitle={t(dictionary, "pages.home.process.subtitle")}
-          tPrefix="pages.home"
-          image={findBlock(blocks, "block_process")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_process").image}` : undefined}
-          tOptions={{
-            first_contact: slas?.first_contact?.value ?? 48,
-            quote_delivery_timeline: slas?.quote_delivery_timeline?.value ?? "3-5",
-            quote_request_duration: slas?.quote_request_duration?.value ?? 3,
-          }}
-          dictionary={dictionary}
+          lede={opt(dictionary, "pages.home.process.subtitle")}
+          steps={processSteps}
         />
       </section>
 
-      <section id="recharging-guide">
-        {guideCarouselPosts.length > 0 && (
-          <GuideCarousel
-            title={postGroupTranslation?.headline}
-            subtitle={postGroupTranslation?.subheadline}
-            ctaLabel={postGroupTranslation?.ctas?.[0]?.label}
-            ctaHref={`/${lang}/${blogSlug}`}
-            posts={guideCarouselPosts}
-            image={findBlock(blocks, "block_postgroup")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_postgroup").image}` : undefined}
-            dictionary={dictionary}
-            pageRegistry={pageRegistry}
+      {networkTitle && networkPartners.length > 0 && (
+        <section id="network">
+          <PartnerNetwork
+            title={networkTitle}
+            certifiedLabel={opt(dictionary, "pages.home.blocks.network.certified")}
+            action={
+              networkHref && opt(dictionary, "pages.home.blocks.network.cta.label")
+                ? {
+                    label: opt(dictionary, "pages.home.blocks.network.cta.label")!,
+                    href: networkHref,
+                  }
+                : undefined
+            }
+            partners={networkPartners}
           />
-        )}
-      </section>
+        </section>
+      )}
 
+      {/* Coverage answers the same question as the network above it — "who
+          actually comes to my place?" — so the two sit together, then hand
+          over to the reviews. */}
       <section id="location">
-        <SwissMap
+        <CoverageB
+          eyebrow={opt(dictionary, "pages.home.location.eyebrow")}
           title={t(dictionary, "pages.home.location.title")}
-          subtitle={t(dictionary, "pages.home.location.subtitle")}
+          lede={opt(dictionary, "pages.home.location.subtitle")}
           activeCantons={page?.config?.location?.activeCantons || ["GE", "VD", "FR", "VS"]}
-          statsConfig={[
-            { id: "cantonsCovered", icon: "Pin", value: stats.cantons ?? 4 },
-            { id: "certifiedInstallers", icon: "CheckCircle", value: stats.partners ?? 1 },
-            { id: "installationsDone", icon: "Zap", value: stats.installations ?? 550 },
-          ]}
-          tPrefix="pages.home"
-          dictionary={dictionary}
+          stats={coverageStats}
           cantonCoats={cantonCoats}
+          legendActive={t(dictionary, "pages.home.location.legend.activeCantons")}
+          legendInactive={t(dictionary, "pages.home.location.legend.inactiveCantons")}
+          loadingLabel={t(dictionary, "common.loadingMap")}
         />
-      </section>
-
-      <section id="faq">
-        {faqItems.length > 0 && (() => {
-          const faqBlockData = findBlock(blocks, "block_faq");
-          const faqTranslation = faqBlockData?.translations?.[0];
-          const faqCta = faqTranslation?.ctas?.[0];
-          const faqCtaHref = faqCta?.page_route_id
-            ? resolveRouteId(faqCta.page_route_id, lang, pageRegistry) || `/${lang}`
-            : undefined;
-          return (
-            <FAQ
-              title={faqTranslation?.headline || t(dictionary, "pages.home.blocks.faq.title")}
-              subtitle={faqTranslation?.subheadline || undefined}
-              items={faqItems}
-              image={faqBlockData?.image ? `${DIRECTUS_URL}/assets/${faqBlockData.image}` : undefined}
-              ctaLabel={faqCta?.label}
-              ctaHref={faqCtaHref}
-              ctaVariant={faqCta?.variant}
-              lang={lang}
-              pageRegistry={pageRegistry}
-            />
-          );
-        })()}
       </section>
 
       <section id="testimonials">
-        {testimonialItems.length > 0 && (
-          <Testimonials
-            headline={t(dictionary, "pages.home.blocks.testimonials.title")}
-            subheadline={t(dictionary, "pages.home.blocks.testimonials.subtitle")}
-            itemsConfig={testimonialItems.map((ti) => ({ id: ti.id, rating: ti.rating }))}
-            pageId="home"
-            image={findBlock(blocks, "block_testimonials")?.image ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_testimonials").image}` : undefined}
-            dictionary={dictionary}
-          />
-        )}
+        <TestimonialsB
+          eyebrow={opt(dictionary, "pages.home.blocks.testimonials.eyebrow")}
+          title={t(dictionary, "pages.home.blocks.testimonials.title")}
+          aside={
+            trustpilot.score
+              ? opt(dictionary, "pages.home.blocks.testimonials.rating", {
+                  score: String(trustpilot.score),
+                })
+              : undefined
+          }
+          items={testimonialsB}
+        />
       </section>
 
-      <GetQuote
+      {coproTitle && (
+        <section id="copro">
+          <CoproBlock
+            eyebrow={opt(dictionary, "pages.home.blocks.copro.eyebrow")}
+            title={coproTitle}
+            lede={opt(dictionary, "pages.home.blocks.copro.lede")}
+            points={coproPoints}
+            action={
+              opt(dictionary, "pages.home.blocks.copro.cta.label")
+                ? {
+                    label: opt(dictionary, "pages.home.blocks.copro.cta.label")!,
+                    href: ctaHref,
+                  }
+                : undefined
+            }
+            image={
+              findBlock(blocks, "block_copro")?.image
+                ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_copro").image}`
+                : undefined
+            }
+            imageAlt={opt(dictionary, "pages.home.blocks.copro.image_alt") ?? ""}
+            statValue={opt(dictionary, "pages.home.blocks.copro.stat.value")}
+            statLabel={opt(dictionary, "pages.home.blocks.copro.stat.label")}
+          />
+        </section>
+      )}
+
+      <section id="recharging-guide">
+        <GuidesB
+          eyebrow={opt(dictionary, "pages.home.blocks.postgroup.eyebrow")}
+          title={postGroupTranslation?.headline ?? t(dictionary, "pages.home.blocks.postgroup.title")}
+          lede={postGroupTranslation?.subheadline ?? undefined}
+          posts={guidePosts}
+          action={
+            postGroupTranslation?.ctas?.[0]?.label
+              ? { label: postGroupTranslation.ctas[0].label, href: `/${lang}/${blogSlug}` }
+              : undefined
+          }
+          readingTimeLabel={
+            opt(dictionary, "pages.home.blocks.postgroup.reading_time") ?? "{n} min"
+          }
+          readLabel={opt(dictionary, "pages.home.blocks.postgroup.read")}
+          prevLabel={t(dictionary, "common.previous")}
+          nextLabel={t(dictionary, "common.next")}
+        />
+      </section>
+
+      {/* Last before the CTA: objections are answered at the moment of
+          deciding. This section also backs the page's FAQPage schema, so its
+          answers must stay in the document — see FaqB. */}
+      <section id="faq">
+        <FaqB
+          eyebrow={opt(dictionary, "pages.home.blocks.faq.eyebrow")}
+          title={faqTranslation?.headline || t(dictionary, "pages.home.blocks.faq.title")}
+          lede={faqTranslation?.subheadline || undefined}
+          items={faqEntries}
+          action={
+            faqCta?.label && faqCtaHref
+              ? { label: faqCta.label, href: faqCtaHref }
+              : undefined
+          }
+        />
+      </section>
+
+      <CtaB
         title={t(dictionary, "pages.home.blocks.getquote.headline")}
-        subtitle={t(dictionary, "pages.home.blocks.getquote.subheadline")}
-        ctaLabel={t(dictionary, "pages.home.blocks.getquote.cta.label")}
-        ctaHref={ctaHref}
-        note={t(dictionary, "pages.home.blocks.getquote.note")}
-        image={getQuoteBlock?.image ? `${DIRECTUS_URL}/assets/${getQuoteBlock.image}` : undefined}
+        subtitle={opt(dictionary, "pages.home.blocks.getquote.subheadline")}
+        primary={{
+          label: t(dictionary, "pages.home.blocks.getquote.cta.label"),
+          href: ctaHref,
+        }}
+        secondary={
+          contactHref && opt(dictionary, "pages.home.blocks.getquote.cta.secondary")
+            ? {
+                label: opt(dictionary, "pages.home.blocks.getquote.cta.secondary")!,
+                href: contactHref,
+              }
+            : undefined
+        }
+        note={opt(dictionary, "pages.home.blocks.getquote.note")}
       />
-    </>
+    </div>
   );
 }
