@@ -55,3 +55,85 @@ export function needsThumbnailUpgrade(v: ThumbnailCandidate): boolean {
   if (t.filename_download === thumbnailFilename(v.slug)) return false;
   return true;
 }
+
+export interface ThumbnailSeams {
+  download: (url: string) => Promise<Buffer>;
+  uploadFile: (bytes: Buffer, filename: string, title: string) => Promise<string>;
+  attachThumbnail: (vehicleId: string, fileId: string) => Promise<void>;
+}
+
+export interface ThumbnailFailure {
+  slug: string;
+  error: string;
+}
+
+export interface ThumbnailResult {
+  uploaded: number;
+  skipped: number;
+  failed: number;
+  failures: ThumbnailFailure[];
+  noUrl: string[];
+}
+
+/**
+ * There is deliberately no delete seam. The previous file stays: rollback is
+ * repointing `thumbnail`, and nothing in this pipeline has ever deleted.
+ *
+ * One failure never aborts the run — across ~830 network round-trips,
+ * stopping at the first error would make the command unusable.
+ */
+export async function upgradeThumbnails(
+  vehicles: ThumbnailCandidate[],
+  seams: ThumbnailSeams,
+  opts: { dryRun: boolean; limit?: number; onProgress?: (done: number, total: number) => void },
+): Promise<ThumbnailResult> {
+  const todo = vehicles.filter(needsThumbnailUpgrade);
+  const skippedAlreadyDone = vehicles.length - todo.length;
+
+  const selected = typeof opts.limit === "number" ? todo.slice(0, opts.limit) : todo;
+
+  const result: ThumbnailResult = {
+    uploaded: 0,
+    skipped: skippedAlreadyDone,
+    failed: 0,
+    failures: [],
+    noUrl: [],
+  };
+
+  for (const [i, vehicle] of selected.entries()) {
+    const url = pickImageUrl(vehicle.evdb_images_urls);
+
+    if (!url) {
+      // Nothing is broken — the data is simply absent upstream.
+      result.skipped += 1;
+      result.noUrl.push(vehicle.slug);
+      continue;
+    }
+
+    if (opts.dryRun) {
+      result.uploaded += 1;
+      continue;
+    }
+
+    try {
+      const bytes = await seams.download(url);
+      const fileId = await seams.uploadFile(
+        bytes,
+        thumbnailFilename(vehicle.slug),
+        thumbnailTitle(vehicle.name),
+      );
+      await seams.attachThumbnail(vehicle.id, fileId);
+      result.uploaded += 1;
+    } catch (err) {
+      result.failed += 1;
+      result.failures.push({
+        slug: vehicle.slug,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    opts.onProgress?.(i + 1, selected.length);
+  }
+
+  return result;
+}
