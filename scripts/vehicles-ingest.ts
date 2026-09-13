@@ -298,7 +298,21 @@ async function cmdPlan() {
   }
 
   const plan = buildPlan(scraped, cms, { sourceFile: input, brandIds });
-  assertPlanSane(plan, { maxChangeRatio });
+
+  // --partial says "this snapshot is deliberately a subset of the catalogue",
+  // which disables the scrape-size floor ONLY. That floor compares the scrape
+  // against the whole CMS, and the CMS keeps discontinued vehicles forever, so
+  // a targeted repair run trips it by construction. The change-ratio guard
+  // still applies.
+  const partial = has("partial");
+  if (partial) {
+    console.log("  --partial: scrape-size floor disabled (change-ratio guard still active)");
+  }
+
+  assertPlanSane(plan, {
+    maxChangeRatio,
+    ...(partial ? { minScrapeRatio: 0 } : {}),
+  });
 
   const s = summarize(plan);
   console.log(
