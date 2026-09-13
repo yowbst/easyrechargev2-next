@@ -7,6 +7,7 @@ import {
   parseMaxChangeRatio,
   partitionUnmatched,
   pickScrapeTargets,
+  parseLimit,
 } from "./cli-helpers";
 
 describe("parseArgs", () => {
@@ -291,5 +292,36 @@ describe("images command flags", () => {
 
   it("rejects an unknown flag rather than ignoring it", () => {
     expect(() => validateFlags("images", ["images", "--statuss", "draft"])).toThrow(/Unknown flag/);
+  });
+});
+
+describe("parseLimit", () => {
+  it("returns undefined when the flag is absent", () => {
+    expect(parseLimit(undefined)).toBeUndefined();
+  });
+
+  it("accepts a whole positive number", () => {
+    expect(parseLimit("5")).toBe(5);
+  });
+
+  it("rejects a fraction rather than silently flooring it", () => {
+    // slice(0, 2.5) takes 2 without a word. The operator asked for a number
+    // the command cannot honour; say so instead of guessing.
+    expect(() => parseLimit("2.5")).toThrow(/whole number/);
+  });
+
+  it("rejects a non-number rather than slicing to nothing", () => {
+    // Number("abc") is NaN and slice(0, NaN) is empty: the run would do zero
+    // work and report no error at all.
+    expect(() => parseLimit("abc")).toThrow(/whole number/);
+  });
+
+  it("rejects zero and negatives", () => {
+    expect(() => parseLimit("0")).toThrow(/greater than zero/);
+    expect(() => parseLimit("-3")).toThrow(/greater than zero/);
+  });
+
+  it("names the value it rejected", () => {
+    expect(() => parseLimit("2.5")).toThrow(/"2\.5"/);
   });
 });

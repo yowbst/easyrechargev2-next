@@ -40,7 +40,11 @@ import {
 import { buildPlan, assertPlanSane, summarize } from "@/lib/vehicles/ingest/diff";
 import { applyPlanAndPersist } from "@/lib/vehicles/ingest/upsert";
 import { deriveBrands, buildBrandPayload } from "@/lib/vehicles/ingest/brands";
-import { upgradeThumbnails, type ThumbnailSeams } from "@/lib/vehicles/ingest/images";
+import {
+  upgradeThumbnails,
+  assertJpegBytes,
+  type ThumbnailSeams,
+} from "@/lib/vehicles/ingest/images";
 import { readProxyConfig, createDispatcher } from "@/lib/vehicles/ingest/proxy";
 import {
   parseArgs,
@@ -48,6 +52,7 @@ import {
   diffBrandFields,
   validateFlags,
   parseMaxChangeRatio,
+  parseLimit,
   partitionUnmatched,
   pickScrapeTargets,
 } from "@/lib/vehicles/ingest/cli-helpers";
@@ -155,7 +160,7 @@ async function cmdScrape() {
     .map((r) => (typeof r.car_url === "string" ? r.car_url : null))
     .filter((u): u is string => Boolean(u));
 
-  const limit = flag("limit") ? Number(flag("limit")) : urls.length;
+  const limit = parseLimit(flag("limit")) ?? urls.length;
   const targets = urls.slice(0, limit);
   if (limit < urls.length) console.log(`  --limit ${limit}: scraping a subset`);
 
@@ -397,10 +402,7 @@ async function cmdImages() {
     throw new Error(`--status must be "draft" or "published". Got "${rawStatus}".`);
   }
   const status = rawStatus as "draft" | "published" | undefined;
-  const limit = flag("limit") ? Number(flag("limit")) : undefined;
-  if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
-    throw new Error(`--limit must be a positive number. Got "${flag("limit")}".`);
-  }
+  const limit = parseLimit(flag("limit"));
 
   // Fail closed BEFORE reading the CMS: if the proxy is not configured there
   // is nothing to do, and we must never fall back to a direct download.
@@ -414,8 +416,18 @@ async function cmdImages() {
   const seams: ThumbnailSeams = {
     download: async (url) => {
       const res = await undiciFetch(url, { dispatcher });
-      if (!res.ok) throw new Error(`download ${res.status} for ${url}`);
-      return Buffer.from(await res.arrayBuffer());
+      if (!res.ok) {
+        // Drain the body so the socket returns to the pool instead of being
+        // held until GC — this loop makes 830 of these.
+        await res.body?.cancel().catch(() => {});
+        throw new Error(`download ${res.status} for ${url}`);
+      }
+      const bytes = Buffer.from(await res.arrayBuffer());
+      // An HTTP 200 is not proof of a photo. See assertJpegBytes: writing our
+      // own filename marker over a block page would mark the vehicle done
+      // forever with a broken image.
+      assertJpegBytes(bytes, url);
+      return bytes;
     },
     // NOT directusFetch: it sets Content-Type: application/json BEFORE
     // spreading init.headers, so `headers: {}` cannot remove it and the

@@ -6,6 +6,8 @@ import {
   needsThumbnailUpgrade,
   upgradeThumbnails,
   TARGET_WIDTH,
+  assertJpegBytes,
+  MIN_IMAGE_BYTES,
   type ThumbnailCandidate,
   type ThumbnailSeams,
 } from "./images";
@@ -105,6 +107,36 @@ const seams = () => {
   return s as unknown as ThumbnailSeams & typeof s;
 };
 
+describe("assertJpegBytes", () => {
+  const jpeg = (n = MIN_IMAGE_BYTES) => {
+    const b = Buffer.alloc(n, 0x20);
+    b[0] = 0xff;
+    b[1] = 0xd8;
+    b[2] = 0xff;
+    return b;
+  };
+
+  it("accepts a plausible JPEG", () => {
+    expect(() => assertJpegBytes(jpeg(), "https://x/a@2x.jpg")).not.toThrow();
+  });
+
+  it("rejects an HTML block page served with 200", () => {
+    const html = Buffer.from("<!doctype html><html>Access denied</html>".repeat(500));
+    expect(html.length).toBeGreaterThan(MIN_IMAGE_BYTES);
+    expect(() => assertJpegBytes(html, "https://x/a@2x.jpg")).toThrow(/not a JPEG/);
+  });
+
+  it("rejects a response too small to be a photo, even with JPEG magic bytes", () => {
+    expect(() => assertJpegBytes(jpeg(200), "https://x/a@2x.jpg")).toThrow(/too small/);
+  });
+
+  it("names the url it rejected, so the failure list is actionable", () => {
+    expect(() => assertJpegBytes(Buffer.alloc(50), "https://x/broken@2x.jpg")).toThrow(
+      /broken@2x\.jpg/,
+    );
+  });
+});
+
 describe("upgradeThumbnails", () => {
   it("downloads, uploads and attaches for a vehicle that needs it", async () => {
     const s = seams();
@@ -182,12 +214,26 @@ describe("upgradeThumbnails", () => {
     expect(r).toMatchObject({ uploaded: 1, skipped: 0 });
   });
 
-  it("never deletes the previous thumbnail — there is no delete seam to call", async () => {
-    const s = seams();
-    await upgradeThumbnails([v({ thumbnail: { width: 448, filename_download: "old_thumb@2x.jpg" } })], s, {
-      dryRun: false,
-    });
-    expect(Object.keys(s)).toEqual(["download", "uploadFile", "attachThumbnail"]);
+  it("never deletes the previous thumbnail, even when a delete seam is handed to it", async () => {
+    // Offering a delete seam is the only way to observe that the production
+    // code does not reach for one. Asserting on the keys of a fixture the
+    // test itself built proves nothing: it would still pass if
+    // upgradeThumbnails deleted files.
+    const deleteFile = vi.fn(async () => {});
+    const s = { ...seams(), deleteFile };
+
+    await upgradeThumbnails(
+      [v({ thumbnail: { width: 448, filename_download: "old_thumb@2x.jpg" } })],
+      s as unknown as ThumbnailSeams,
+      { dryRun: false },
+    );
+
+    expect(deleteFile).not.toHaveBeenCalled();
+    // The positive half: replacement really is additive — a new file was
+    // uploaded and the relation repointed at it, while the old file's id was
+    // never passed to anything.
+    expect(s.uploadFile).toHaveBeenCalledTimes(1);
+    expect(s.attachThumbnail).toHaveBeenCalledWith("uuid-1", "file-uuid");
   });
 
   it("honours limit", async () => {

@@ -56,6 +56,43 @@ export function needsThumbnailUpgrade(v: ThumbnailCandidate): boolean {
   return true;
 }
 
+/**
+ * Smallest byte count a real 1536x864 vehicle photo can plausibly have. The
+ * six sources sampled from EV Database were 250-280 KB; a proxy interstitial
+ * or an error page is orders of magnitude smaller.
+ */
+export const MIN_IMAGE_BYTES = 10_000;
+
+/**
+ * Rejects anything that is not a JPEG, or is too small to be a photo.
+ *
+ * This guard is load-bearing, not defensive padding. A block page or error
+ * page served with HTTP 200 would otherwise be uploaded under our own
+ * `<slug>@2x.jpg` marker; Directus would record `width: null` for it (it is
+ * not an image it can measure), and `needsThumbnailUpgrade` would then skip
+ * the width test and match the filename — marking that vehicle permanently
+ * done, with a broken image, uncounted and unreachable by re-running. The
+ * filename marker is what makes this command idempotent, and it must only
+ * ever be written over bytes we have confirmed are a photo.
+ *
+ * Throwing is the right outcome: the caller counts it as a failure, prints
+ * it, and a later run retries that vehicle.
+ */
+export function assertJpegBytes(bytes: Uint8Array, url: string): void {
+  if (bytes.length < MIN_IMAGE_BYTES) {
+    throw new Error(
+      `download for ${url} returned ${bytes.length} bytes — too small to be a vehicle photo`,
+    );
+  }
+  // JPEG SOI marker: FF D8 FF.
+  if (!(bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)) {
+    const head = Array.from(bytes.slice(0, 3))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join(" ");
+    throw new Error(`download for ${url} is not a JPEG (starts with ${head})`);
+  }
+}
+
 export interface ThumbnailSeams {
   download: (url: string) => Promise<Buffer>;
   uploadFile: (bytes: Buffer, filename: string, title: string) => Promise<string>;
