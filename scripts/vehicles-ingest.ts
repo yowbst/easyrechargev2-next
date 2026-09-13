@@ -12,10 +12,13 @@
 //                             site silently drops them.
 //   plan    --in <file>       diff against CMS, write data/plans/<date>.json (no writes)
 //   apply   --plan <file>     execute a plan (the only command besides brands that writes)
+//   images                    download 1536px thumbnails through the Bright Data proxy
 //
 // Options: --dry-run, --max-change-ratio <n>, --limit <n>, --help
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { directusFetch } from "@/lib/directus";
+import { Blob } from "node:buffer";
+import { fetch as undiciFetch, FormData } from "undici";
+import { directusFetch, DIRECTUS_URL } from "@/lib/directus";
 import {
   triggerCollection,
   pollSnapshot,
@@ -32,10 +35,13 @@ import {
   fetchAllCmsVehicles,
   fetchBrandIdBySlug,
   fetchBrandRowBySlug,
+  fetchVehiclesForThumbnails,
 } from "@/lib/vehicles/ingest/queries";
 import { buildPlan, assertPlanSane, summarize } from "@/lib/vehicles/ingest/diff";
 import { applyPlanAndPersist } from "@/lib/vehicles/ingest/upsert";
 import { deriveBrands, buildBrandPayload } from "@/lib/vehicles/ingest/brands";
+import { upgradeThumbnails, type ThumbnailSeams } from "@/lib/vehicles/ingest/images";
+import { readProxyConfig, createDispatcher } from "@/lib/vehicles/ingest/proxy";
 import {
   parseArgs,
   truncateList,
@@ -56,14 +62,16 @@ Commands:
   brands  --in <file>       create/update vehicle_brands rows (run before plan/apply)
   plan    --in <file>       diff against CMS, write data/plans/<date>.json (no writes)
   apply   --plan <file>     execute a plan (the only vehicle-writing command)
+  images                    download 1536px thumbnails through the Bright Data proxy
 
 Options:
-  --dry-run                 brands/apply: print intent, perform zero writes
+  --dry-run                 brands/apply/images: print intent, perform zero writes
   --max-change-ratio <n>    plan: override the change-ratio safety ceiling
   --limit <n>                scrape: cap how many DETAILS URLs are fetched
   --only <file>              scrape: target these car_urls (one per line), ignoring
                              availability — used to repair discontinued records
   --include-unavailable      clean: keep discontinued vehicles instead of dropping them
+  --status <draft|published> images: restrict to one half of the catalogue
   --help                     print this message
 
 Recommended order: scrape -> clean -> brands -> plan -> apply
@@ -94,6 +102,9 @@ function printTruncated(label: string, lines: string[], max = 10) {
 
 /** Bright Data recommends chunking bulk inputs; the notebook used 100. */
 const CHUNK = 100;
+
+/** The vehicles folder the existing 562 thumbnails already live in. */
+const VEHICLES_FOLDER_ID = "8d8adba5-b056-49f9-9882-e12c8c6efb55";
 
 async function cmdScrape() {
   // ---- Stage 1: LIST — identity and summary specs, one request for the whole catalogue.
@@ -376,12 +387,93 @@ async function cmdApply() {
   }
 }
 
+async function cmdImages() {
+  const dryRun = has("dry-run");
+  const rawStatus = flag("status");
+  if (rawStatus && rawStatus !== "draft" && rawStatus !== "published") {
+    throw new Error(`--status must be "draft" or "published". Got "${rawStatus}".`);
+  }
+  const status = rawStatus as "draft" | "published" | undefined;
+  const limit = flag("limit") ? Number(flag("limit")) : undefined;
+  if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+    throw new Error(`--limit must be a positive number. Got "${flag("limit")}".`);
+  }
+
+  // Fail closed BEFORE reading the CMS: if the proxy is not configured there
+  // is nothing to do, and we must never fall back to a direct download.
+  const proxy = readProxyConfig(process.env);
+  const dispatcher = createDispatcher(proxy);
+  console.log(`  egress via Bright Data zone "${proxy.zone}" (${proxy.host})`);
+
+  const vehicles = await fetchVehiclesForThumbnails(status);
+  console.log(`  ${vehicles.length} vehicles${status ? ` with status ${status}` : ""}`);
+
+  const seams: ThumbnailSeams = {
+    download: async (url) => {
+      const res = await undiciFetch(url, { dispatcher });
+      if (!res.ok) throw new Error(`download ${res.status} for ${url}`);
+      return Buffer.from(await res.arrayBuffer());
+    },
+    // NOT directusFetch: it sets Content-Type: application/json BEFORE
+    // spreading init.headers, so `headers: {}` cannot remove it and the
+    // multipart boundary would never be sent. Verified by reading
+    // src/lib/directus.ts. This one call goes direct, with the bearer set by
+    // hand and no Content-Type, so FormData sets its own.
+    uploadFile: async (bytes, filename, title) => {
+      const form = new FormData();
+      form.append("folder", VEHICLES_FOLDER_ID);
+      form.append("title", title);
+      form.append("file", new Blob([bytes], { type: "image/jpeg" }), filename);
+
+      const res = await undiciFetch(`${DIRECTUS_URL}/files`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.DIRECTUS_STATIC_TOKEN}` },
+        body: form,
+      });
+      if (!res.ok) throw new Error(`upload ${res.status}: ${(await res.text()).slice(0, 200)}`);
+
+      const json = (await res.json()) as { data: { id: string } };
+      return json.data.id;
+    },
+    attachThumbnail: async (vehicleId, fileId) => {
+      await directusFetch(`/items/vehicles/${vehicleId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ thumbnail: fileId }),
+        next: { revalidate: 0 },
+      });
+    },
+  };
+
+  const r = await upgradeThumbnails(vehicles, seams, {
+    dryRun,
+    limit,
+    onProgress: (done, total) => {
+      if (done % 25 === 0 || done === total) console.log(`  ${done}/${total} …`);
+    },
+  });
+
+  console.log(
+    `\n${dryRun ? "[DRY RUN] " : ""}✅ uploaded ${r.uploaded}, skipped ${r.skipped}, failed ${r.failed}`,
+  );
+  if (r.noUrl.length) printTruncated("ℹ️  no source image url upstream", r.noUrl);
+  if (r.failures.length) {
+    printTruncated(
+      "⚠️  failed",
+      r.failures.map((f) => `${f.slug}: ${f.error}`),
+    );
+  }
+  if (!dryRun && r.uploaded > 0) {
+    console.log("   Previous thumbnail files are kept — rollback is a repoint.");
+  }
+}
+
 const commands: Record<string, () => Promise<void>> = {
   scrape: cmdScrape,
   clean: cmdClean,
   brands: cmdBrands,
   plan: cmdPlan,
   apply: cmdApply,
+  images: cmdImages,
 };
 
 async function main() {

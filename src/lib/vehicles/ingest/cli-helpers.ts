@@ -48,6 +48,11 @@ export const COMMAND_FLAGS: Record<string, FlagSpec[]> = {
     { name: "plan", takesValue: true },
     { name: "dry-run", takesValue: false },
   ],
+  images: [
+    { name: "status", takesValue: true },
+    { name: "limit", takesValue: true },
+    { name: "dry-run", takesValue: false },
+  ],
 };
 
 /**

@@ -281,3 +281,15 @@ describe("pickScrapeTargets", () => {
     expect(pickScrapeTargets(rows, isAvail, new Set())).toEqual([]);
   });
 });
+
+describe("images command flags", () => {
+  it("accepts its three flags", () => {
+    expect(() =>
+      validateFlags("images", ["images", "--status", "draft", "--limit", "5", "--dry-run"]),
+    ).not.toThrow();
+  });
+
+  it("rejects an unknown flag rather than ignoring it", () => {
+    expect(() => validateFlags("images", ["images", "--statuss", "draft"])).toThrow(/Unknown flag/);
+  });
+});
