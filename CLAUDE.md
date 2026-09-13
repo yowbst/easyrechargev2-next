@@ -15,11 +15,13 @@ npm test             # Vitest unit tests
 
 npm run ingest -- plan  --in <file>   # Diff EVDB snapshot vs CMS (read-only)
 npm run ingest -- apply --plan <file> # Apply a reviewed plan (writes)
+npm run ingest -- images              # Upload 1536px thumbnails (writes)
 ```
 
 `ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
 before `plan`/`apply` — see `docs/vehicle-ingest.md` for the full runbook, sequence, and
-gotchas.
+gotchas. `images` downloads every thumbnail through a Bright Data proxy zone and refuses
+to start when that zone is not configured — it never falls back to a direct download.
 
 ## Deploy
 

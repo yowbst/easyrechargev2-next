@@ -48,6 +48,11 @@ export const COMMAND_FLAGS: Record<string, FlagSpec[]> = {
     { name: "plan", takesValue: true },
     { name: "dry-run", takesValue: false },
   ],
+  images: [
+    { name: "status", takesValue: true },
+    { name: "limit", takesValue: true },
+    { name: "dry-run", takesValue: false },
+  ],
 };
 
 /**
@@ -124,6 +129,25 @@ export function parseMaxChangeRatio(raw: string | undefined): number | undefined
       `--max-change-ratio must be a finite number in (0, ${MAX_CHANGE_RATIO_CEILING}] — a fraction ` +
         `of the CMS catalogue, not a percentage (e.g. 1.2, not 120). Got "${raw}".`,
     );
+  }
+  return n;
+}
+
+/**
+ * Parses `--limit`, or throws.
+ *
+ * Both commands that take it consume it as `slice(0, limit)`, which is silent
+ * about anything it dislikes: `--limit abc` yields NaN and slices to an empty
+ * list (zero work, no message), and `--limit 2.5` floors to 2 without saying
+ * so. A flag that quietly changes how much work happens — or makes all of it
+ * disappear — is the defect this pipeline has already shipped three times.
+ * Demand a whole positive number and say so loudly otherwise.
+ */
+export function parseLimit(raw: string | undefined): number | undefined {
+  if (raw === undefined) return undefined;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) {
+    throw new Error(`--limit must be a whole number greater than zero. Got "${raw}".`);
   }
   return n;
 }
