@@ -227,11 +227,22 @@ kept, rolling back is a repoint.
 - Any change to how the site renders images. `VehicleCard`'s `sizes` attribute
   is already correct — it was the source that was too small.
 
-## Open risk
+## The proxy call, resolved
 
-`fetch(url, { dispatcher })` with undici's `ProxyAgent` is the documented
-route, and `undici` will be added as a devDependency (the CLI runs locally and
-never ships to Vercel). It has not been exercised from Node — the chain was
-validated with `curl --proxy`. If the dispatcher option proves unusable, the
-fallback is `https-proxy-agent`, with no design change: the dispatcher stays
-behind `proxy.ts`.
+`fetch(url, { dispatcher })` works, but **only when `fetch` and `ProxyAgent`
+come from the same undici**. Passing an installed-undici dispatcher to Node's
+global `fetch` fails with `UND_ERR_INVALID_ARG: invalid onRequestStart method`:
+the global uses Node's *bundled* undici, whose internal handler interface
+differs from the installed package's.
+
+So the import is:
+
+```ts
+import { fetch, ProxyAgent } from "undici";
+```
+
+not the global `fetch`. Verified from Node: geo reports MA through the zone
+against CH direct, and the image arrives at 253 079 bytes, 1536x864.
+
+`undici` is added as a devDependency — the CLI runs locally and never ships to
+Vercel.
