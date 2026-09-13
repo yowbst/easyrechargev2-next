@@ -73,6 +73,14 @@ export interface ThumbnailResult {
   failed: number;
   failures: ThumbnailFailure[];
   noUrl: string[];
+  /**
+   * Vehicles that needed an upgrade but were never attempted because
+   * `--limit` truncated the run before reaching them. Without this bucket
+   * those vehicles vanish from every counter: `uploaded + skipped + failed`
+   * would silently fall short of `vehicles.length` and an operator would
+   * have no way to tell that work remains.
+   */
+  notAttempted: number;
 }
 
 /**
@@ -81,6 +89,9 @@ export interface ThumbnailResult {
  *
  * One failure never aborts the run — across ~830 network round-trips,
  * stopping at the first error would make the command unusable.
+ *
+ * Invariant: for every input, `uploaded + skipped + failed + notAttempted`
+ * always equals `vehicles.length`.
  */
 export async function upgradeThumbnails(
   vehicles: ThumbnailCandidate[],
@@ -91,6 +102,7 @@ export async function upgradeThumbnails(
   const skippedAlreadyDone = vehicles.length - todo.length;
 
   const selected = typeof opts.limit === "number" ? todo.slice(0, opts.limit) : todo;
+  const notAttempted = todo.length - selected.length;
 
   const result: ThumbnailResult = {
     uploaded: 0,
@@ -98,41 +110,47 @@ export async function upgradeThumbnails(
     failed: 0,
     failures: [],
     noUrl: [],
+    notAttempted,
   };
 
   for (const [i, vehicle] of selected.entries()) {
-    const url = pickImageUrl(vehicle.evdb_images_urls);
-
-    if (!url) {
-      // Nothing is broken — the data is simply absent upstream.
-      result.skipped += 1;
-      result.noUrl.push(vehicle.slug);
-      continue;
-    }
-
-    if (opts.dryRun) {
-      result.uploaded += 1;
-      continue;
-    }
-
     try {
-      const bytes = await seams.download(url);
-      const fileId = await seams.uploadFile(
-        bytes,
-        thumbnailFilename(vehicle.slug),
-        thumbnailTitle(vehicle.name),
-      );
-      await seams.attachThumbnail(vehicle.id, fileId);
-      result.uploaded += 1;
-    } catch (err) {
-      result.failed += 1;
-      result.failures.push({
-        slug: vehicle.slug,
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
+      const url = pickImageUrl(vehicle.evdb_images_urls);
 
-    opts.onProgress?.(i + 1, selected.length);
+      if (!url) {
+        // Nothing is broken — the data is simply absent upstream.
+        result.skipped += 1;
+        result.noUrl.push(vehicle.slug);
+        continue;
+      }
+
+      if (opts.dryRun) {
+        result.uploaded += 1;
+        continue;
+      }
+
+      try {
+        const bytes = await seams.download(url);
+        const fileId = await seams.uploadFile(
+          bytes,
+          thumbnailFilename(vehicle.slug),
+          thumbnailTitle(vehicle.name),
+        );
+        await seams.attachThumbnail(vehicle.id, fileId);
+        result.uploaded += 1;
+      } catch (err) {
+        result.failed += 1;
+        result.failures.push({
+          slug: vehicle.slug,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    } finally {
+      // Runs on every path — no-URL skip, dryRun, success, or failure —
+      // so progress reflects every selected vehicle, not just the ones
+      // that reached the network calls.
+      opts.onProgress?.(i + 1, selected.length);
+    }
   }
 
   return result;

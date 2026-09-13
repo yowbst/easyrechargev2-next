@@ -162,6 +162,17 @@ describe("upgradeThumbnails", () => {
     expect(r).toMatchObject({ uploaded: 1, failed: 1 });
   });
 
+  it("keeps going after a failed attach too", async () => {
+    const s = seams();
+    s.attachThumbnail.mockRejectedValueOnce(new Error("500 attach failed"));
+    const r = await upgradeThumbnails([v({ id: "a", slug: "a" }), v({ id: "b", slug: "b" })], s, {
+      dryRun: false,
+    });
+    expect(r).toMatchObject({ uploaded: 1, failed: 1 });
+    expect(r.failures[0]).toMatchObject({ slug: "a" });
+    expect(r.failures[0].error).toMatch(/500 attach failed/);
+  });
+
   it("performs ZERO side effects under dryRun while still reporting intent", async () => {
     const s = seams();
     const r = await upgradeThumbnails([v()], s, { dryRun: true });
@@ -186,5 +197,44 @@ describe("upgradeThumbnails", () => {
       limit: 2,
     });
     expect(r.uploaded).toBe(2);
+  });
+
+  it("reconciles every counter against the input length, including vehicles a limit never reaches", async () => {
+    const s = seams();
+    s.download.mockRejectedValueOnce(new Error("502 from EVDB"));
+
+    const vehicles = [
+      v({ id: "done", slug: "done", thumbnail: { width: TARGET_WIDTH, filename_download: "x.jpg" } }),
+      v({ id: "no-url", slug: "no-url", evdb_images_urls: [] }),
+      v({ id: "will-fail", slug: "will-fail" }),
+      v({ id: "will-succeed", slug: "will-succeed" }),
+      v({ id: "truncated-1", slug: "truncated-1" }),
+      v({ id: "truncated-2", slug: "truncated-2" }),
+    ];
+
+    const r = await upgradeThumbnails(vehicles, s, { dryRun: false, limit: 3 });
+
+    // todo (needs upgrade) excludes "done": no-url, will-fail, will-succeed,
+    // truncated-1, truncated-2 (5). limit:3 selects the first 3, leaving 2
+    // untouched.
+    expect(r).toMatchObject({ uploaded: 1, skipped: 2, failed: 1, notAttempted: 2 });
+    expect(r.uploaded + r.skipped + r.failed + r.notAttempted).toBe(vehicles.length);
+  });
+
+  it("calls onProgress once per selected vehicle, on every path", async () => {
+    const s = seams();
+    s.download.mockRejectedValueOnce(new Error("502 from EVDB"));
+    const onProgress = vi.fn();
+
+    const vehicles = [
+      v({ id: "no-url", slug: "no-url", evdb_images_urls: [] }),
+      v({ id: "will-fail", slug: "will-fail" }),
+      v({ id: "will-succeed", slug: "will-succeed" }),
+    ];
+
+    await upgradeThumbnails(vehicles, s, { dryRun: false, onProgress });
+
+    expect(onProgress).toHaveBeenCalledTimes(vehicles.length);
+    expect(onProgress).toHaveBeenLastCalledWith(vehicles.length, vehicles.length);
   });
 });
