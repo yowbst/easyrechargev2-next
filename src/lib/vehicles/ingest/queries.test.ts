@@ -7,7 +7,7 @@ vi.mock("@/lib/directus", () => ({
 }));
 
 // vitest hoists vi.mock() above this import, same pattern as directus-storage.test.ts.
-import { indexByEvdbId, fetchBrandRowBySlug, fetchBrandIdBySlug } from "./queries";
+import { indexByEvdbId, fetchBrandRowBySlug, fetchBrandIdBySlug, buildThumbnailQuery } from "./queries";
 
 const rows = [
   { id: "a", evdb_id: "3303", slug: "togg-t10x", status: "published" },
@@ -103,5 +103,31 @@ describe("fetchBrandRowBySlug / fetchBrandIdBySlug", () => {
   it("fetchBrandIdBySlug returns null when no row matches", async () => {
     directusFetch.mockResolvedValue({ data: [] });
     expect(await fetchBrandIdBySlug("nonexistent")).toBeNull();
+  });
+});
+
+describe("buildThumbnailQuery", () => {
+  it("requests both thumbnail fields the skip test reads", () => {
+    const q = buildThumbnailQuery(undefined, 200, 0);
+    expect(q).toContain("thumbnail.width");
+    expect(q).toContain("thumbnail.filename_download");
+  });
+
+  it("narrows by status when one is given", () => {
+    expect(buildThumbnailQuery("draft", 200, 0)).toContain("filter[status][_eq]=draft");
+  });
+
+  it("omits the status filter entirely when none is given", () => {
+    expect(buildThumbnailQuery(undefined, 200, 0)).not.toContain("filter[status]");
+  });
+
+  it("carries limit and offset for pagination", () => {
+    const q = buildThumbnailQuery(undefined, 200, 400);
+    expect(q).toContain("limit=200");
+    expect(q).toContain("offset=400");
+  });
+
+  it("sorts by id so pagination is stable across pages", () => {
+    expect(buildThumbnailQuery(undefined, 200, 0)).toContain("sort=id");
   });
 });
