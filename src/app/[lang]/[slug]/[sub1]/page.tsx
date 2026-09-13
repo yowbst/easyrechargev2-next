@@ -540,7 +540,10 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                         fill
                         priority
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 66vw"
-                        quality={90}
+                        // 90 n'est pas dans `images.qualities` : Next le
+                        // ramenait silencieusement à 75, et une URL q=90
+                        // forgée renvoie un 400. On écrit ce qui est servi.
+                        quality={75}
                         className="object-cover"
                         data-testid="img-vehicle-hero"
                       />

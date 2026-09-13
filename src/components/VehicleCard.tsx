@@ -89,7 +89,12 @@ export function VehicleCard({
               src={image}
               alt={`${brand} ${model}`}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+              // La carte vit dans `container mx-auto px-4` : sa largeur réelle
+              // est le viewport moins 2rem, pas 100vw. Surdéclarer faisait
+              // choisir au navigateur le candidat 1920w (66,8 Ko) sur un
+              // téléphone DPR 3, là où son besoin réel tombe sur 1200w
+              // (46,8 Ko). calc() est évalué exactement par le navigateur.
+              sizes="(max-width: 640px) calc(100vw - 2rem), (max-width: 1024px) 48vw, 400px"
               quality={65}
               loading="lazy"
               className="object-cover"
