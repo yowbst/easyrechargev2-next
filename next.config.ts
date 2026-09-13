@@ -20,9 +20,16 @@ const nextConfig: NextConfig = {
   images: {
     qualities: [60, 65, 75],
     remotePatterns: [
+      // Both hostnames serve the same Directus instance. Listing both means a
+      // switch of DIRECTUS_URL cannot silently break every image on the site:
+      // next/image rejects any host absent from this list.
       {
         protocol: "https",
         hostname: "easyrechargev2-directus-production.up.railway.app",
+      },
+      {
+        protocol: "https",
+        hostname: "cms.easyrecharge.ch",
       },
     ],
   },
