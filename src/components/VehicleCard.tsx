@@ -51,6 +51,8 @@ interface VehicleCardProps {
   charging?: VehicleCharging;
   brandIconSvg?: string | null;
   brandIconName?: string | null;
+  /** False marks a model no longer on sale. It stays listed — see Vehicle.isAvailable. */
+  isAvailable?: boolean;
   lang: string;
   dictionary: Record<string, string>;
 }
@@ -68,6 +70,7 @@ export function VehicleCard({
   charging,
   brandIconSvg,
   brandIconName,
+  isAvailable = true,
   lang,
   dictionary,
 }: VehicleCardProps) {
@@ -108,6 +111,14 @@ export function VehicleCard({
             <div className="absolute top-4 left-4 bg-background/90 backdrop-blur rounded-lg p-2">
               <BrandIcon iconSvg={brandIconSvg} iconName={brandIconName} className="h-6 w-6" />
             </div>
+          )}
+          {!isAvailable && (
+            <Badge
+              variant="secondary"
+              className="absolute bottom-3 left-3 bg-background/90 backdrop-blur text-[11px] font-medium shadow-sm border border-border/50"
+            >
+              {d("common.vehicle.discontinued")}
+            </Badge>
           )}
           <div className="absolute top-4 right-4 bg-background/90 backdrop-blur rounded-lg p-2.5 flex flex-col gap-2 text-[11px] font-bold shadow-md border border-border/50 w-28">
             <div className="flex items-center gap-2">

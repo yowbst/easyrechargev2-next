@@ -560,7 +560,18 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
                     <div className="mt-auto pt-6" />
 
-                    <h1 className="text-xl sm:text-2xl font-heading font-bold mb-6">{vehicle.brand} {vehicle.model}</h1>
+                    <div className="flex flex-wrap items-center gap-3 mb-6">
+                      <h1 className="text-xl sm:text-2xl font-heading font-bold">{vehicle.brand} {vehicle.model}</h1>
+                      {/* Le modèle reste en ligne à dessein : quelqu'un qui possède
+                          déjà une voiture retirée de la vente est précisément celui
+                          qui cherche une borne compatible. Le badge informe, il
+                          n'écarte pas. */}
+                      {vehicle.isAvailable === false && (
+                        <Badge variant="secondary" className="font-medium">
+                          {d("common.vehicle.discontinued")}
+                        </Badge>
+                      )}
+                    </div>
 
                     {description && (
                       <p className="text-base leading-relaxed text-muted-foreground mb-10">{description}</p>

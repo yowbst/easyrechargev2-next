@@ -153,9 +153,14 @@ export function VehicleDetailView({
               {brandName}
             </Link>
           )}
-          <h1 className="text-3xl md:text-4xl font-heading font-bold mt-1 mb-6">
-            {vehicleName}
-          </h1>
+          <div className="flex flex-wrap items-center gap-3 mt-1 mb-6">
+            <h1 className="text-3xl md:text-4xl font-heading font-bold">{vehicleName}</h1>
+            {vehicle.is_available === false && (
+              <span className="rounded-md border border-border bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                {d("common.vehicle.discontinued")}
+              </span>
+            )}
+          </div>
 
           <dl className="grid grid-cols-2 gap-4 text-sm">
             {battery && (
