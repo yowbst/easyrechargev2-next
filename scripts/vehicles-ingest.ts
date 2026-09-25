@@ -15,7 +15,7 @@
 //   images                    download 1536px thumbnails through the Bright Data proxy
 //
 // Options: --dry-run, --max-change-ratio <n>, --limit <n>, --help
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { Blob } from "node:buffer";
 import { fetch as undiciFetch, FormData } from "undici";
 import { directusFetch, DIRECTUS_URL } from "@/lib/directus";
@@ -87,10 +87,35 @@ Recommended order: scrape -> clean -> brands -> plan -> apply
 
 const { command, flag, has } = parseArgs(process.argv.slice(2));
 
-const today = new Date().toISOString().slice(0, 10);
+/**
+ * Run stamp down to the second, not the day.
+ *
+ * These files used to be named `<date>.json`, so a second run on the same day
+ * silently overwrote the first. That is exactly what happened on 2026-09-13:
+ * the targeted repair pass for the 174 discontinued vehicles destroyed the
+ * main 656-row snapshot, and with it the ability to re-run `clean`/`plan`
+ * without re-scraping — the very thing the runbook tells you these files are
+ * kept for.
+ */
+const runStamp = new Date()
+  .toISOString()
+  .slice(0, 19)
+  .replace("T", "-")
+  .replace(/:/g, "");
+
+/**
+ * Builds the artefact path, and never returns one that already exists. A
+ * scrape costs billable page fetches; refusing to start would be worse than
+ * a suffix, and silently overwriting is what this whole change exists to
+ * stop.
+ */
 const out = (dir: string, file: string) => {
   mkdirSync(`data/${dir}`, { recursive: true });
-  return `data/${dir}/${file}`;
+  const dot = file.lastIndexOf(".");
+  const [base, ext] = dot === -1 ? [file, ""] : [file.slice(0, dot), file.slice(dot)];
+  let candidate = `data/${dir}/${file}`;
+  for (let n = 2; existsSync(candidate); n++) candidate = `data/${dir}/${base}-${n}${ext}`;
+  return candidate;
 };
 
 /** The snapshot files are JSON-lines; plan files are plain JSON. */
@@ -199,7 +224,7 @@ async function cmdScrape() {
     );
   }
 
-  const path = out("raw", `${today}.json`);
+  const path = out("raw", `${runStamp}.json`);
   writeFileSync(path, JSON.stringify(merged, null, 1));
   console.log(`✅ ${merged.length} merged rows → ${path}`);
 }
@@ -221,7 +246,7 @@ async function cmdClean() {
       slug: generateSlug(r),
     }));
 
-  const path = out("clean", `${today}.json`);
+  const path = out("clean", `${runStamp}.json`);
   writeFileSync(path, JSON.stringify(cleaned, null, 1));
   console.log(
     `✅ ${cleaned.length} ${keepUnavailable ? "rows" : "available rows"} (of ${rows.length}) → ${path}`,
@@ -363,7 +388,7 @@ async function cmdPlan() {
     plan.entries.filter((x) => x.bucket === "GONE").map((e) => e.slug),
   );
 
-  const path = out("plans", `${today}.json`);
+  const path = out("plans", `${runStamp}.json`);
   writeFileSync(path, JSON.stringify(plan, null, 1));
   console.log(`\n✅ plan → ${path}`);
   console.log(`   review it, then: npm run ingest -- apply --plan ${path}`);

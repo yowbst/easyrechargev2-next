@@ -72,18 +72,22 @@ rejected with an error.
 
 ## Sequence
 
+Each command prints the path it wrote; paste that path into the next one. The names are
+stamped to the second, so they differ on every run — do not guess them.
+
 ```bash
 npm run ingest -- scrape
-npm run ingest -- clean  --in data/raw/<date>.json
+npm run ingest -- clean  --in data/raw/<stamp>.json
 
-npm run ingest -- brands --in data/clean/<date>.json --dry-run
+npm run ingest -- brands --in data/clean/<stamp>.json --dry-run
 # read the printed CREATE/UPDATE/unchanged lines — brands has no plan/apply gate,
 # this dry run is the only review step it gets before writing to Directus
-npm run ingest -- brands --in data/clean/<date>.json
+npm run ingest -- brands --in data/clean/<stamp>.json
 
-npm run ingest -- plan   --in data/clean/<date>.json
-# review the printed bucket summary and data/plans/<date>.json
-npm run ingest -- apply  --plan data/plans/<date>.json
+npm run ingest -- plan   --in data/clean/<stamp>.json --partial
+# --partial is expected here, see Guardrails; review the printed bucket summary
+# and the plan file before applying
+npm run ingest -- apply  --plan data/plans/<stamp>.json
 ```
 
 **`brands` writes immediately — it is not gated by a plan/apply step the way vehicles
@@ -149,8 +153,14 @@ Re-running picks up exactly what failed.
 
 ## Guardrails
 
-- `plan` aborts if the scrape returns under 80% of the current CMS vehicle count (looks
-  like a broken scrape, not a shrinking catalogue).
+- `plan` aborts if the scrape returns under 80% of the current CMS vehicle count.
+  **Since the discontinued vehicles were imported, this floor trips on every normal
+  run — expect it.** EV Database lists only vehicles still on sale (~656); the CMS keeps
+  every model ever imported, withdrawn ones included (830 as of 2026-09-25). That is
+  79%, just under the floor, and the gap only widens as more models are withdrawn.
+  Confirm the raw snapshot looks sane, then re-run `plan` with `--partial`, which
+  disables this floor and nothing else — the change-ratio ceiling stays armed. The
+  error message spells this out at the point of failure.
 - `plan` aborts if CREATE + UPDATE exceeds 30% of the CMS count (looks like a
   field-mapping regression, not a real refresh). Override with `--max-change-ratio` only
   after you've confirmed the change is real.
@@ -197,6 +207,12 @@ Re-running picks up exactly what failed.
   by hand in Directus — publishing is deliberately never automated.
 - Bright Data snapshots expire (16 days for batch collections, 7 days for real-time).
   Keep `data/raw/` around if you might need to re-run `clean`/`plan` without re-scraping.
+- **Run artefacts are stamped to the second** (`data/raw/2026-09-25-190211.json`), not by
+  day, and an existing path is never overwritten — a collision gets a `-2` suffix. They
+  used to be named `<date>.json`: on 2026-09-13 the targeted repair pass for the 174
+  discontinued vehicles silently overwrote the main 656-row snapshot of the same day,
+  destroying exactly the re-run capability the line above promises. Because the names now
+  vary, pass the real path to `clean`/`plan`/`apply` — the commands print it.
 - **`/dca/*` endpoints are current, not deprecated** — they were rebranded "Scraper
   Studio" in Bright Data's UI, but the API paths didn't change. Do **not** migrate to
   `/datasets/v3/*`; that's for Bright Data's prebuilt scrapers, not custom collectors
@@ -214,6 +230,13 @@ SLUG_DRIFT 0
 GONE       0
 UNCHANGED  562
 ```
+
+**This baseline is currently unusable: the December 2025 snapshot is not on disk.** The
+same-day overwrite described under Gotchas destroyed the September snapshots too, so the
+only surviving artefacts are those of the 174-row repair pass. Re-establishing a baseline
+means keeping the next full run's `data/raw/` file somewhere durable and recording its
+bucket counts here. Until then, treat the paragraph below as the procedure, not as
+something you can run today.
 
 If you ever suspect the comparison layer (`diff.ts`, `fieldmap.ts`, `queries.ts`) has
 regressed — e.g. `plan` starts reporting spurious `UPDATE`s or `CREATE`s against a
