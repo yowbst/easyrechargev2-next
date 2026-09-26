@@ -1,0 +1,3708 @@
+{
+ "date": "2026-09-26",
+ "folder": "8d8adba5-b056-49f9-9882-e12c8c6efb55",
+ "raison": "anciennes vignettes 448x252 remplacées par les 1536x864 du 2026-09-13",
+ "conserve": "smart-5-premium-my25-100kwh-465km-2025_thumb@2x.jpg (encore référencé)",
+ "fichiers": [
+  {
+   "id": "01194264-ac76-46d2-bf81-53ad4bbfeabf",
+   "nom": "xpeng-g6-rwd-long-range-my24-92kwh-480km-2024-2025_thumb@2x.jpg",
+   "octets": "35533"
+  },
+  {
+   "id": "01486e77-a3ce-4edc-bc27-f873bee685f5",
+   "nom": "porsche-taycan-turbo-gt-weissach-105kwh-475km-2024_thumb@2x.jpg",
+   "octets": "37164"
+  },
+  {
+   "id": "018282c0-f00c-4dbb-968c-df86c9e821e7",
+   "nom": "citroen-e-spacetourer-m-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "39807"
+  },
+  {
+   "id": "01d911eb-b827-468b-a616-7163d5c2bd9a",
+   "nom": "changan-deepal-s05-rwd-69kwh-385km-2025_thumb@2x.jpg",
+   "octets": "34915"
+  },
+  {
+   "id": "01e3f981-ac37-4edf-b062-d07ed5ffd9d3",
+   "nom": "volkswagen-id7-gtx-my26-91kwh-500km-2025_thumb@2x.jpg",
+   "octets": "49235"
+  },
+  {
+   "id": "02016ece-8b39-43ff-8848-84a2149a1b33",
+   "nom": "volvo-es90-single-motor-my26-92kwh-485km-2025_thumb@2x.jpg",
+   "octets": "34110"
+  },
+  {
+   "id": "02070bbd-21c5-4d0e-b0a3-3de00541397c",
+   "nom": "audi-q6-suv-e-tron-performance-100kwh-490km-2024_thumb@2x.jpg",
+   "octets": "40294"
+  },
+  {
+   "id": "02b77ac9-1fe1-4b7d-82f5-975b6709ee69",
+   "nom": "mercedes-benz-eqs-suv-maybach-680-125kwh-490km-2024_thumb@2x.jpg",
+   "octets": "40085"
+  },
+  {
+   "id": "02dc525b-6922-4334-a012-a35b7520ee64",
+   "nom": "bmw-i4-m60-xdrive-84kwh-465km-2025_thumb@2x.jpg",
+   "octets": "38785"
+  },
+  {
+   "id": "02de032d-9d36-48e1-83f7-c34e2561172a",
+   "nom": "audi-q4-sportback-e-tron-45-quattro-82kwh-410km-2023_thumb@2x.jpg",
+   "octets": "35110"
+  },
+  {
+   "id": "02e79473-982c-4ee2-ba9a-aa479efce048",
+   "nom": "volkswagen-id5-pro-my26-82kwh-455km-2025_thumb@2x.jpg",
+   "octets": "49613"
+  },
+  {
+   "id": "030ada3b-9537-474d-82b3-f1abc4479524",
+   "nom": "hyundai-ioniq-9-long-range-rwd-110kwh-505km-2025_thumb@2x.jpg",
+   "octets": "37521"
+  },
+  {
+   "id": "03c7b73d-f8e9-44a0-bcca-a5d505d6ea70",
+   "nom": "toyota-urban-cruiser-488-49kwh-270km-2025_thumb@2x.jpg",
+   "octets": "26325"
+  },
+  {
+   "id": "040a2d9c-9036-48e6-8731-a3d3de2bc109",
+   "nom": "byd-seal-614-rwd-comfort-63kwh-365km-2025_thumb@2x.jpg",
+   "octets": "37452"
+  },
+  {
+   "id": "040e0fb1-928c-4520-bbab-30574298e431",
+   "nom": "fiat-500e-cabrio-24kwh-135km-2022_thumb@2x.jpg",
+   "octets": "27823"
+  },
+  {
+   "id": "048dbf3b-8222-4675-af8f-ad5add790b69",
+   "nom": "mercedes-benz-eqs-suv-580-4matic-125kwh-530km-2023_thumb@2x.jpg",
+   "octets": "34598"
+  },
+  {
+   "id": "05865373-cff1-487e-ac16-d5d8f1f8e40d",
+   "nom": "volvo-ex40-single-motor-my26-70kwh-345km-2025_thumb@2x.jpg",
+   "octets": "23811"
+  },
+  {
+   "id": "05d88342-1e8d-44a2-9632-fecfffa56e39",
+   "nom": "citroen-e-c4-50kwh-285km-2024_thumb@2x.jpg",
+   "octets": "33836"
+  },
+  {
+   "id": "060419c1-28e0-4f3c-93e7-ac4ef319a87e",
+   "nom": "vinfast-vf-8-eco-extended-range-90kwh-405km-2023_thumb@2x.jpg",
+   "octets": "38606"
+  },
+  {
+   "id": "067e5320-d8b2-48cc-9045-f502a6661f23",
+   "nom": "hyundai-ioniq-5-rwd-my24-84kwh-450km-2024_thumb@2x.jpg",
+   "octets": "27717"
+  },
+  {
+   "id": "07375c02-d33c-41c0-a7d8-947496f06031",
+   "nom": "volkswagen-id3-pure-my24-26-55kwh-325km-2024_thumb@2x.jpg",
+   "octets": "39645"
+  },
+  {
+   "id": "07479519-0a14-4c51-840f-f1dae6804324",
+   "nom": "fiat-500e-31-42kwh-235km-2020_thumb@2x.jpg",
+   "octets": "42076"
+  },
+  {
+   "id": "07646a7a-1db1-434b-bcf7-9c9281d79690",
+   "nom": "audi-e-tron-gt-rs-105kwh-525km-2024_thumb@2x.jpg",
+   "octets": "42234"
+  },
+  {
+   "id": "086dd4a1-3e32-4a89-898f-1b241b1c4c0f",
+   "nom": "porsche-macan-turbo-electric-my26-100kwh-465km-2025_thumb@2x.jpg",
+   "octets": "30975"
+  },
+  {
+   "id": "08c4cc1b-3bd3-4ba4-9cbc-fe2b1be1e805",
+   "nom": "bmw-i7-m70-xdrive-106kwh-490km-2023_thumb@2x.jpg",
+   "octets": "34334"
+  },
+  {
+   "id": "09ef4454-2007-40c2-9bdb-9b75180470b6",
+   "nom": "polestar-3-rear-motor-my26-92kwh-440km-2025_thumb@2x.jpg",
+   "octets": "24691"
+  },
+  {
+   "id": "0a2e061d-bac5-4dff-ad22-5b5a2d42b605",
+   "nom": "ford-capri-standard-range-rwd-55kwh-320km-2024_thumb@2x.jpg",
+   "octets": "25890"
+  },
+  {
+   "id": "0b19e835-bea9-4980-9105-712ec13cab80",
+   "nom": "zeekr-x-long-range-rwd-my25-69kwh-360km-2025_thumb@2x.jpg",
+   "octets": "22255"
+  },
+  {
+   "id": "0b5d9725-f169-40d6-b7c1-d790d24ce7c5",
+   "nom": "zeekr-7x-performance-awd-100kwh-475km-2025_thumb@2x.jpg",
+   "octets": "31958"
+  },
+  {
+   "id": "0bbc811b-57b8-4e75-8530-fb6b4c541b4d",
+   "nom": "mg-cyberster-gt-77kwh-395km-2024_thumb@2x.jpg",
+   "octets": "24952"
+  },
+  {
+   "id": "0bfdd9c4-a5a3-4748-985c-a27c1010d43e",
+   "nom": "audi-q4-sportback-e-tron-55-quattro-82kwh-415km-2023-2025_thumb@2x.jpg",
+   "octets": "35110"
+  },
+  {
+   "id": "0c4e2c54-e749-4007-9b94-5fb97b9bdc9b",
+   "nom": "citroen-e-c4-x-54kwh-335km-2024_thumb@2x.jpg",
+   "octets": "37012"
+  },
+  {
+   "id": "0d976ff7-c833-4766-ab47-648cf4945cdc",
+   "nom": "omoda-e5-61kwh-330km-2024_thumb@2x.jpg",
+   "octets": "34881"
+  },
+  {
+   "id": "0da38d6c-f531-4e31-9fcc-8c5b376dd4a5",
+   "nom": "ford-e-tourneo-custom-l2-210kw-68kwh-235km-2023_thumb@2x.jpg",
+   "octets": "40705"
+  },
+  {
+   "id": "0dc0cb33-8bea-42bd-a6a6-012920726180",
+   "nom": "hongqi-e-hs9-84kwh-320km-2022_thumb@2x.jpg",
+   "octets": "27960"
+  },
+  {
+   "id": "0dca57f2-855f-4c52-abc3-04339644a19c",
+   "nom": "porsche-taycan-plus-105kwh-575km-2024_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "0dd8bcfc-0bbe-4100-b606-9cf63a89ab13",
+   "nom": "lucid-gravity-grand-touring-my26-123kwh-625km-2025_thumb@2x.jpg",
+   "octets": "31821"
+  },
+  {
+   "id": "0dea1071-c032-4a4e-bd4c-18d0073ee2c0",
+   "nom": "renault-megane-e-tech-ev60-130hp-tu2025-65kwh-380km-2025_thumb@2x.jpg",
+   "octets": "31099"
+  },
+  {
+   "id": "0e2b7143-bcc6-49f5-a48b-a31f44398ef8",
+   "nom": "cadillac-lyriq-600-e4-my24-107kwh-460km-2024_thumb@2x.jpg",
+   "octets": "38136"
+  },
+  {
+   "id": "0f0c548a-7b7c-4019-8a5c-3943cb333e4e",
+   "nom": "opel-grandland-electric-awd-77kwh-355km-2025_thumb@2x.jpg",
+   "octets": "25928"
+  },
+  {
+   "id": "0f4a3f18-7319-4b42-a903-b16a20bb054e",
+   "nom": "ford-capri-extended-range-awd-84kwh-455km-2024_thumb@2x.jpg",
+   "octets": "25890"
+  },
+  {
+   "id": "0fb679f6-8b06-4f94-a7b2-e83c130b4b2f",
+   "nom": "mercedes-benz-eqv-300-long-100kwh-320km-2024_thumb@2x.jpg",
+   "octets": "34534"
+  },
+  {
+   "id": "1097e022-5809-46c4-8a16-3d3f8ff16ed8",
+   "nom": "lucid-air-touring-my26-96kwh-600km-2025_thumb@2x.jpg",
+   "octets": "42656"
+  },
+  {
+   "id": "10f4b4dc-5859-4be3-af16-dcf82493ca03",
+   "nom": "volkswagen-id5-gtx-my26-84kwh-445km-2025_thumb@2x.jpg",
+   "octets": "36678"
+  },
+  {
+   "id": "11b1d91f-5f8e-4aed-a8f4-1032e02f4659",
+   "nom": "mini-aceman-e-42kwh-230km-2024_thumb@2x.jpg",
+   "octets": "44937"
+  },
+  {
+   "id": "11b92715-ce65-42a5-bd3d-c529a56af4ae",
+   "nom": "bmw-ix1-edrive20-66kwh-390km-2023_thumb@2x.jpg",
+   "octets": "37858"
+  },
+  {
+   "id": "11cd35e2-96a1-43e1-add5-c17e720d7368",
+   "nom": "audi-e-tron-gt-s-105kwh-540km-2024_thumb@2x.jpg",
+   "octets": "33781"
+  },
+  {
+   "id": "11f26967-8231-4dc9-9b34-5d22146b5af3",
+   "nom": "cupra-tavascan-endurance-82kwh-445km-2024_thumb@2x.jpg",
+   "octets": "29440"
+  },
+  {
+   "id": "12043bde-ca4c-4580-a6fa-61c3df3b7816",
+   "nom": "dacia-spring-electric-100-24kwh-160km-2025_thumb@2x.jpg",
+   "octets": "34454"
+  },
+  {
+   "id": "12758275-9f6e-4baa-81f5-95ee256752d8",
+   "nom": "peugeot-e-208-my25-54kwh-335km-2025_thumb@2x.jpg",
+   "octets": "32958"
+  },
+  {
+   "id": "12bde511-b1a7-42d1-bcef-9eb279ce3b30",
+   "nom": "bmw-i5-xdrive40-sedan-my25-84kwh-465km-2025_thumb@2x.jpg",
+   "octets": "40580"
+  },
+  {
+   "id": "12fcfa06-c10f-4ab3-8cde-39d1684d8b78",
+   "nom": "tesla-model-y-performance-juniper-82kwh-460km-2025_thumb@2x.jpg",
+   "octets": "26231"
+  },
+  {
+   "id": "137fbf23-6a62-4529-a6e3-e6fc67841751",
+   "nom": "nissan-townstar-ev-passenger-l2-48kwh-220km-2024_thumb@2x.jpg",
+   "octets": "37996"
+  },
+  {
+   "id": "13fce683-96ac-478a-a240-d0e86a96407d",
+   "nom": "skywell-be11-long-range-86kwh-385km-2024_thumb@2x.jpg",
+   "octets": "43336"
+  },
+  {
+   "id": "143207fc-dcac-43a9-b349-c00859ace3ba",
+   "nom": "polestar-3-long-range-performance-my23-25-111kwh-480km-2022-2025_thumb@2x.jpg",
+   "octets": "30967"
+  },
+  {
+   "id": "1516850a-6d5c-491d-bce2-1c1cd2ebb569",
+   "nom": "gwm-ora-03-48kwh-260km-2024_thumb@2x.jpg",
+   "octets": "37155"
+  },
+  {
+   "id": "15671933-3cbe-4bf3-af50-057c83a48898",
+   "nom": "ford-explorer-standard-range-rwd-55kwh-305km-2024_thumb@2x.jpg",
+   "octets": "32891"
+  },
+  {
+   "id": "1592c184-e2ef-4dfd-87f2-5055ba5eda29",
+   "nom": "fiat-grande-panda-44kwh-260km-2024_thumb@2x.jpg",
+   "octets": "35672"
+  },
+  {
+   "id": "15c2c391-0261-4a9a-8b0f-6ca90b80f9ad",
+   "nom": "changan-deepal-s05-4wd-max-69kwh-365km-2025_thumb@2x.jpg",
+   "octets": "34915"
+  },
+  {
+   "id": "15daf2f6-0fc1-4dc5-9686-fb0fcd09cc1d",
+   "nom": "audi-a6-sportback-e-tron-performance-100kwh-600km-2024_thumb@2x.jpg",
+   "octets": "34463"
+  },
+  {
+   "id": "16167ffc-d7a9-41d4-930d-40d4943b8ee6",
+   "nom": "xpeng-g6-rwd-long-range-my25-81kwh-435km-2025_thumb@2x.jpg",
+   "octets": "34655"
+  },
+  {
+   "id": "165597f9-0012-41db-8975-c84b9e71b24e",
+   "nom": "audi-q4-sportback-e-tron-45-82kwh-435km-2023_thumb@2x.jpg",
+   "octets": "35110"
+  },
+  {
+   "id": "167d5de2-6134-4176-be5b-d65716264200",
+   "nom": "hyundai-ioniq-9-performance-awd-110kwh-485km-2025_thumb@2x.jpg",
+   "octets": "37521"
+  },
+  {
+   "id": "16bec94c-0510-4a8f-ab66-1f27999e4c80",
+   "nom": "maserati-grecale-folgore-105kwh-400km-2024_thumb@2x.jpg",
+   "octets": "33791"
+  },
+  {
+   "id": "17b5d6eb-e566-4a66-97b1-d2723ff9feef",
+   "nom": "dongfeng-box-423-42kwh-255km-2024_thumb@2x.jpg",
+   "octets": "34100"
+  },
+  {
+   "id": "17b8ac15-6b84-48bb-a13a-f909b305f475",
+   "nom": "kia-ev6-long-range-2wd-84kwh-455km-2024_thumb@2x.jpg",
+   "octets": "20472"
+  },
+  {
+   "id": "17c3edba-b7dd-431c-a286-cc51c3d4e561",
+   "nom": "hongqi-e-hs9-84kwh-320km-2022_thumb@2x.jpg",
+   "octets": "27960"
+  },
+  {
+   "id": "183d5f1e-9599-4e77-9439-53585592280b",
+   "nom": "cupra-born-150kw-63kwh-360km-2025_thumb@2x.jpg",
+   "octets": "29842"
+  },
+  {
+   "id": "18dc2324-08de-40ca-9eaa-828c09525813",
+   "nom": "mini-countryman-e-66kwh-380km-2024_thumb@2x.jpg",
+   "octets": "28683"
+  },
+  {
+   "id": "18dd94ec-071c-42e5-8fc2-5c747abd0fb2",
+   "nom": "mercedes-benz-eqe-350-4matic-my25-100kwh-515km-2025_thumb@2x.jpg",
+   "octets": "32070"
+  },
+  {
+   "id": "193f50d4-3bda-465d-9010-3f83b5980546",
+   "nom": "opel-zafira-electric-xl-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "27009"
+  },
+  {
+   "id": "1949fd51-196b-4f56-823f-7eee899651d7",
+   "nom": "gwm-ora-07-pure-67kwh-350km-2024_thumb@2x.jpg",
+   "octets": "34902"
+  },
+  {
+   "id": "1950b6cc-4eaf-4d72-ad9b-f78b0c9486e7",
+   "nom": "togg-t10x-standard-range-rwd-52kwh-265km-2025_thumb@2x.jpg",
+   "octets": "43283"
+  },
+  {
+   "id": "1a3ad4b4-77bf-485a-b119-4df0af6d4ae0",
+   "nom": "kia-ev3-long-range-81kwh-455km-2024_thumb@2x.jpg",
+   "octets": "33960"
+  },
+  {
+   "id": "1ba5a622-2dd3-43a2-8a91-b36b57ae4c73",
+   "nom": "skoda-enyaq-85-my25-82kwh-455km-2025_thumb@2x.jpg",
+   "octets": "37389"
+  },
+  {
+   "id": "1bc11a47-b0a9-435a-84d7-bb7ab1dc0bbf",
+   "nom": "mercedes-benz-eqe-500-4matic-my25-100kwh-505km-2025_thumb@2x.jpg",
+   "octets": "32070"
+  },
+  {
+   "id": "1cb2e30b-f0bb-48a7-b71b-fe1837d82a7e",
+   "nom": "porsche-taycan-4s-plus-105kwh-565km-2024_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "1cbda347-acb4-4d5c-b64e-3d723c9708c2",
+   "nom": "alfa-romeo-junior-elettrica-54kwh-320km-2024_thumb@2x.jpg",
+   "octets": "31620"
+  },
+  {
+   "id": "1cea90cb-8c70-4efd-be86-cc4fc1598e45",
+   "nom": "peugeot-e-3008-77kwh-380km-2023_thumb@2x.jpg",
+   "octets": "32250"
+  },
+  {
+   "id": "1d0d6eb1-27d5-4fd2-bebb-693d2127887e",
+   "nom": "gwm-ora-03-48kwh-260km-2024_thumb@2x.jpg",
+   "octets": "37155"
+  },
+  {
+   "id": "1db6a4a1-6f41-4fe2-bbe7-216f1d3aff4f",
+   "nom": "citroen-e-berlingo-m-52kwh-235km-2024_thumb@2x.jpg",
+   "octets": "42529"
+  },
+  {
+   "id": "1dcaca44-947c-4b65-a50a-51902b8ed846",
+   "nom": "renault-4-e-tech-120hp-43kwh-245km-2025_thumb@2x.jpg",
+   "octets": "27580"
+  },
+  {
+   "id": "1ddceea3-aede-4f62-9444-d9190d8ee806",
+   "nom": "suzuki-e-vitara-2wd-61kwh-330km-2025_thumb@2x.jpg",
+   "octets": "40528"
+  },
+  {
+   "id": "1e0fbfc6-a03a-4dd1-b0c1-4612249c062a",
+   "nom": "bmw-i5-xdrive40-touring-my25-84kwh-450km-2025_thumb@2x.jpg",
+   "octets": "49744"
+  },
+  {
+   "id": "1e22d5ee-a203-4006-b43c-cb8b807f5eb3",
+   "nom": "byd-seal-u-design-89kwh-425km-2024_thumb@2x.jpg",
+   "octets": "33985"
+  },
+  {
+   "id": "1e780f57-6316-45a5-9649-0dca77301e6f",
+   "nom": "byd-tang-flagship-111kwh-460km-2024_thumb@2x.jpg",
+   "octets": "29635"
+  },
+  {
+   "id": "1ece6c38-1f9f-44c9-b406-e889ae9866a0",
+   "nom": "byd-dolphin-surf-432-comfort-46kwh-265km-2025_thumb@2x.jpg",
+   "octets": "24171"
+  },
+  {
+   "id": "1ed73210-d5a2-4ab0-adfc-121f9bfbe6cd",
+   "nom": "lexus-rz-350e-my26-77kwh-400km-2025_thumb@2x.jpg",
+   "octets": "38760"
+  },
+  {
+   "id": "1f546e8a-7646-4f6c-a15d-77cf3ca2cae9",
+   "nom": "audi-q4-sportback-e-tron-55-quattro-82kwh-415km-2023-2025_thumb@2x.jpg",
+   "octets": "35110"
+  },
+  {
+   "id": "1f658812-b7ad-48f0-8184-b9dc43fb04cb",
+   "nom": "bmw-i5-edrive40-touring-my25-84kwh-465km-2025_thumb@2x.jpg",
+   "octets": "49744"
+  },
+  {
+   "id": "1faf4ff1-1f54-4963-8d05-c1161e92d308",
+   "nom": "cupra-tavascan-vz-82kwh-425km-2024_thumb@2x.jpg",
+   "octets": "29440"
+  },
+  {
+   "id": "216b694e-1b39-4d90-b6ea-ffea77d2f8af",
+   "nom": "byd-seal-u-718-comfort-73kwh-360km-2024_thumb@2x.jpg",
+   "octets": "33985"
+  },
+  {
+   "id": "216f0e95-a7b3-4145-8eb0-e69d3dc50744",
+   "nom": "audi-a6-sportback-e-tron-83kwh-485km-2024_thumb@2x.jpg",
+   "octets": "34463"
+  },
+  {
+   "id": "21e27ee1-6364-4a65-9367-4d9560a94aef",
+   "nom": "audi-s6-avant-e-tron-100kwh-530km-2024_thumb@2x.jpg",
+   "octets": "33895"
+  },
+  {
+   "id": "22ab159b-4e55-46a8-885f-730c84c1a8bf",
+   "nom": "ford-mustang-mach-e-gt-my24-99kwh-425km-2024-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "230d25ce-9147-4efe-b861-e40d37b05372",
+   "nom": "citroen-e-c3-standard-range-44kwh-255km-2024_thumb@2x.jpg",
+   "octets": "48412"
+  },
+  {
+   "id": "23e09c2a-0a1a-4f8c-85e0-74531276c85f",
+   "nom": "mercedes-benz-eqe-suv-500-4matic-my25-105kwh-455km-2025_thumb@2x.jpg",
+   "octets": "31883"
+  },
+  {
+   "id": "240fa624-99ef-4591-a332-74a1c54de2bf",
+   "nom": "renault-scenic-e-tech-ev60-170hp-tu2025-65kwh-340km-2025_thumb@2x.jpg",
+   "octets": "32239"
+  },
+  {
+   "id": "2470796e-c93c-458a-b399-a0c2e9705873",
+   "nom": "fiat-500e-cabrio-42kwh-230km-2020_thumb@2x.jpg",
+   "octets": "27823"
+  },
+  {
+   "id": "247b067d-4764-43f6-a266-89e25f1e5471",
+   "nom": "alpine-a390-gts-94kwh-470km-2026_thumb@2x.jpg",
+   "octets": "36161"
+  },
+  {
+   "id": "24b412e8-d69d-4fdc-9598-33dad411fa47",
+   "nom": "fiat-500e-31-24kwh-135km-2022_thumb@2x.jpg",
+   "octets": "42076"
+  },
+  {
+   "id": "24bd5f9e-3abf-4615-b335-cd8fbaa25722",
+   "nom": "kia-ev4-fastback-814-81kwh-495km-2025_thumb@2x.jpg",
+   "octets": "33918"
+  },
+  {
+   "id": "25a6dd50-9efb-4daa-8a05-236101867da9",
+   "nom": "renault-4-e-tech-150hp-55kwh-315km-2025_thumb@2x.jpg",
+   "octets": "27580"
+  },
+  {
+   "id": "25cf2c8d-ce92-43d0-b167-299b972b1e52",
+   "nom": "opel-frontera-electric-54kwh-290km-2025_thumb@2x.jpg",
+   "octets": "22504"
+  },
+  {
+   "id": "25d432b6-ba24-4489-9688-8cc2064e59bd",
+   "nom": "peugeot-e-308-my26-58kwh-345km-2025_thumb@2x.jpg",
+   "octets": "29313"
+  },
+  {
+   "id": "26aca489-d0b0-42b8-bb01-133c23a89df7",
+   "nom": "lexus-rz-550e-f-sport-my26-77kwh-390km-2025_thumb@2x.jpg",
+   "octets": "34163"
+  },
+  {
+   "id": "26c2eb50-4068-42f9-aaad-556581145a44",
+   "nom": "smart-1-pure-66kwh-335km-2024_thumb@2x.jpg",
+   "octets": "30540"
+  },
+  {
+   "id": "2819e7d8-e52d-4325-8c9c-9654a2be0864",
+   "nom": "ford-mustang-mach-e-sr-rwd-my24-78kwh-385km-2024-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "28362ddb-f32b-4219-ba0f-f1b49e83e0b8",
+   "nom": "mini-cooper-se-54kwh-330km-2023_thumb@2x.jpg",
+   "octets": "26644"
+  },
+  {
+   "id": "2870c4df-f4b1-4958-af73-daf30070880f",
+   "nom": "leapmotor-b10-671-67kwh-360km-2025_thumb@2x.jpg",
+   "octets": "43495"
+  },
+  {
+   "id": "2876bf41-5a12-4323-b185-c33dbc530f1b",
+   "nom": "gwm-ora-07-gt-86kwh-430km-2024_thumb@2x.jpg",
+   "octets": "34902"
+  },
+  {
+   "id": "28774ace-e9e3-4152-bb57-bc8979c2fe32",
+   "nom": "citroen-e-spacetourer-m-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "39807"
+  },
+  {
+   "id": "28acfd0b-fe85-405c-a7c5-955915aa35dd",
+   "nom": "kia-ev9-998-rwd-100kwh-450km-2023_thumb@2x.jpg",
+   "octets": "39778"
+  },
+  {
+   "id": "28eb7c23-92aa-40c4-86f1-d98edefdb8ed",
+   "nom": "mercedes-benz-eqe-350-my25-105kwh-555km-2025_thumb@2x.jpg",
+   "octets": "32070"
+  },
+  {
+   "id": "28feb222-8a7d-4c4f-93a4-2a1e41202263",
+   "nom": "audi-q6-sportback-e-tron-83kwh-410km-2024_thumb@2x.jpg",
+   "octets": "35294"
+  },
+  {
+   "id": "2908ed8a-e536-46fe-b9ac-0b6246276fc1",
+   "nom": "kia-ev4-hatchback-583-58kwh-340km-2025_thumb@2x.jpg",
+   "octets": "30261"
+  },
+  {
+   "id": "2987c423-18ee-48ba-8ff1-407603f1aeba",
+   "nom": "mercedes-benz-eqa-250-74kwh-420km-2023_thumb@2x.jpg",
+   "octets": "35970"
+  },
+  {
+   "id": "29a1fd8d-56cb-474c-92ff-d6846df56313",
+   "nom": "volkswagen-id3-pro-my24-26-63kwh-365km-2024_thumb@2x.jpg",
+   "octets": "39645"
+  },
+  {
+   "id": "29f672d1-ebb2-46f3-a7f7-c06f95f3dd47",
+   "nom": "smart-1-pro-66kwh-335km-2023_thumb@2x.jpg",
+   "octets": "30540"
+  },
+  {
+   "id": "2a2495a0-6a67-4e9d-8e17-06d6c48b39fb",
+   "nom": "mercedes-benz-eqe-suv-350-my25-105kwh-475km-2025_thumb@2x.jpg",
+   "octets": "31883"
+  },
+  {
+   "id": "2a2bc1f7-fefd-4c3e-8f1e-99776e1a05fc",
+   "nom": "volkswagen-id3-gtx-performance-my24-26-84kwh-465km-2024_thumb@2x.jpg",
+   "octets": "32199"
+  },
+  {
+   "id": "2a54a035-d9aa-4066-b5f2-a807dcfd6df2",
+   "nom": "bmw-ix2-xdrive30-66kwh-385km-2023_thumb@2x.jpg",
+   "octets": "36779"
+  },
+  {
+   "id": "2a79ab1a-76ed-4593-bfbb-2c81f306cb93",
+   "nom": "volvo-es90-twin-motor-my26-106kwh-535km-2025_thumb@2x.jpg",
+   "octets": "34110"
+  },
+  {
+   "id": "2a7b6ebf-236d-4fb1-b5c0-74c21a52065c",
+   "nom": "mercedes-benz-eqs-500-4matic-125kwh-640km-2024_thumb@2x.jpg",
+   "octets": "28176"
+  },
+  {
+   "id": "2ac1c0ad-98ef-4973-9420-95c059db950d",
+   "nom": "nio-el8-standard-range-75kwh-360km-2024_thumb@2x.jpg",
+   "octets": "25923"
+  },
+  {
+   "id": "2b059e43-416b-441b-85ed-49f28d5b00df",
+   "nom": "rolls-royce-spectre-107kwh-465km-2023_thumb@2x.jpg",
+   "octets": "26570"
+  },
+  {
+   "id": "2bec07ef-ba9b-45ce-906f-944fa9ccbf5c",
+   "nom": "ford-explorer-standard-range-rwd-55kwh-305km-2024_thumb@2x.jpg",
+   "octets": "32891"
+  },
+  {
+   "id": "2bfe4f90-e491-4417-b3cc-7352b436b216",
+   "nom": "ford-mustang-mach-e-sr-rwd-my25-78kwh-380km-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "2c615a48-7298-48e7-af4b-06307fe53237",
+   "nom": "cadillac-vistiq-900-e4-my26-95kwh-375km-2025_thumb@2x.jpg",
+   "octets": "29488"
+  },
+  {
+   "id": "2c6f2ba0-f7c8-4d7f-b0dd-10b126d411d7",
+   "nom": "bmw-i5-xdrive40-touring-my25-84kwh-450km-2025_thumb@2x.jpg",
+   "octets": "49744"
+  },
+  {
+   "id": "2c9a22ad-2476-4d1b-a9a9-47213c863e48",
+   "nom": "togg-t10x-long-range-awd-88kwh-425km-2025_thumb@2x.jpg",
+   "octets": "43283"
+  },
+  {
+   "id": "2c9fae4d-c3c2-4268-839a-0ca8ca081ab7",
+   "nom": "skoda-enyaq-coupe-85x-my26-82kwh-460km-2025_thumb@2x.jpg",
+   "octets": "40483"
+  },
+  {
+   "id": "2cb56ee8-1a1c-4d79-9198-cf31fe280fe2",
+   "nom": "citroen-c5-aircross-long-range-101kwh-485km-2025_thumb@2x.jpg",
+   "octets": "25681"
+  },
+  {
+   "id": "2d22cd7a-fb28-45c2-89f2-405843418c87",
+   "nom": "ford-mustang-mach-e-gt-my25-99kwh-435km-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "2df4248c-1293-4fa5-818b-e88e0957e3f1",
+   "nom": "jeep-avenger-electric-54kwh-310km-2023_thumb@2x.jpg",
+   "octets": "39777"
+  },
+  {
+   "id": "2e00ba23-08f3-455f-9b17-600e617e87fc",
+   "nom": "porsche-taycan-turbo-105kwh-535km-2024_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "2e3a4a64-774d-498c-a66d-b42204d3fcfd",
+   "nom": "dongfeng-box-423-42kwh-255km-2024_thumb@2x.jpg",
+   "octets": "34100"
+  },
+  {
+   "id": "2e7a2aea-5742-4fb9-8dab-9413b9ff9a91",
+   "nom": "mercedes-benz-eqs-suv-450-4matic-125kwh-530km-2023_thumb@2x.jpg",
+   "octets": "34598"
+  },
+  {
+   "id": "2eaa6442-6cad-4f44-ba63-212593ce87c4",
+   "nom": "gwm-ora-03-63kwh-340km-2024_thumb@2x.jpg",
+   "octets": "37155"
+  },
+  {
+   "id": "2f2ed4e7-dde4-46b4-bc9d-fd8d1b637b34",
+   "nom": "porsche-cayenne-turbo-electric-my26-113kwh-495km-2025_thumb@2x.jpg",
+   "octets": "35822"
+  },
+  {
+   "id": "2f90cae0-3355-4d49-b658-af7f86d05045",
+   "nom": "vinfast-vf-6-plus-62kwh-310km-2025_thumb@2x.jpg",
+   "octets": "34048"
+  },
+  {
+   "id": "3117df32-353f-4ae1-a749-88fd27fd90db",
+   "nom": "smart-5-summit-edition-my25-100kwh-450km-2025_thumb@2x.jpg",
+   "octets": "39175"
+  },
+  {
+   "id": "3147c341-9789-4d2f-9671-ae6f8098a523",
+   "nom": "jeep-compass-electric-80kwh-370km-2025_thumb@2x.jpg",
+   "octets": "19628"
+  },
+  {
+   "id": "31d920fe-3152-47c8-939b-f5993038832f",
+   "nom": "volkswagen-id-buzz-lwb-pro-91kwh-390km-2024_thumb@2x.jpg",
+   "octets": "30255"
+  },
+  {
+   "id": "325020bb-173d-4c96-8b42-8df3f562c83a",
+   "nom": "mg-im6-long-range-100kwh-500km-2025_thumb@2x.jpg",
+   "octets": "35745"
+  },
+  {
+   "id": "32a3ea5e-bf34-4a5d-a499-05b120cd210e",
+   "nom": "volvo-ex30-cross-country-my26-69kwh-330km-2025_thumb@2x.jpg",
+   "octets": "43862"
+  },
+  {
+   "id": "32e6aaaa-7cf6-47f7-93ff-e9f83e510a51",
+   "nom": "genesis-g80-electrified-my25-94kwh-450km-2025_thumb@2x.jpg",
+   "octets": "55697"
+  },
+  {
+   "id": "32f7dac4-46f4-474b-86a8-ec2771810296",
+   "nom": "mercedes-benz-eqs-suv-450-125kwh-540km-2023_thumb@2x.jpg",
+   "octets": "34598"
+  },
+  {
+   "id": "33595b2a-10fc-4c42-babb-c9e3d792be1c",
+   "nom": "genesis-gv60-performance-my25-84kwh-395km-2025_thumb@2x.jpg",
+   "octets": "25909"
+  },
+  {
+   "id": "33b35636-2e8f-4c4e-8376-9c3b6a26bcba",
+   "nom": "ford-mustang-mach-e-gt-my24-99kwh-425km-2024-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "345ada49-27e2-4e29-9888-7c17dfd9782f",
+   "nom": "peugeot-e-3008-long-range-101kwh-500km-2024_thumb@2x.jpg",
+   "octets": "32250"
+  },
+  {
+   "id": "347618b8-b479-4523-95bf-2679fb476eec",
+   "nom": "byd-sealion-7-825-awd-design-84kwh-405km-2024_thumb@2x.jpg",
+   "octets": "34383"
+  },
+  {
+   "id": "348d0361-0c3a-49d7-86aa-599e8835f6e7",
+   "nom": "smart-5-pro-my25-100kwh-465km-2025_thumb@2x.jpg",
+   "octets": "39175"
+  },
+  {
+   "id": "34db6247-b338-47e5-adf9-e41c4e7b5f1c",
+   "nom": "toyota-c-hr-awd-my26-77kwh-385km-2025_thumb@2x.jpg",
+   "octets": "32694"
+  },
+  {
+   "id": "3521a745-3d87-4163-9fa1-38a4bbacb9a9",
+   "nom": "porsche-taycan-sport-turismo-89kwh-460km-2024-2025_thumb@2x.jpg",
+   "octets": "36386"
+  },
+  {
+   "id": "35233a83-26c5-4aa3-babb-782d3234d908",
+   "nom": "volkswagen-e-caravelle-l1-210kw-68kwh-245km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "3540fe17-19c3-4e9e-bfba-2ffed08511c9",
+   "nom": "audi-q6-suv-e-tron-83kwh-395km-2024_thumb@2x.jpg",
+   "octets": "40294"
+  },
+  {
+   "id": "3542e558-ed03-4488-90f3-10bc265f9385",
+   "nom": "ford-mustang-mach-e-er-rwd-my25-99kwh-475km-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "356279d7-c041-4332-b463-bd88d5de1209",
+   "nom": "polestar-5-dual-motor-112kwh-580km-2025_thumb@2x.jpg",
+   "octets": "33183"
+  },
+  {
+   "id": "35e9d5f4-8927-429a-9b48-15f1f6ae7097",
+   "nom": "lucid-gravity-touring-my26-89kwh-465km-2025_thumb@2x.jpg",
+   "octets": "31821"
+  },
+  {
+   "id": "372c4437-083f-4a89-b1ae-01b905b66475",
+   "nom": "polestar-2-standard-range-single-motor-my26-70kwh-405km-2025_thumb@2x.jpg",
+   "octets": "34664"
+  },
+  {
+   "id": "37430ba7-1fc0-4dd1-b190-b7428809ac05",
+   "nom": "xpeng-g6-rwd-standard-range-my24-66kwh-365km-2024-2025_thumb@2x.jpg",
+   "octets": "35533"
+  },
+  {
+   "id": "379a1da7-513a-4567-b859-8d654de45d58",
+   "nom": "polestar-2-long-range-performance-my26-82kwh-450km-2025_thumb@2x.jpg",
+   "octets": "34664"
+  },
+  {
+   "id": "37a2f1b7-bc44-4263-8dd0-379e00b82f69",
+   "nom": "polestar-4-long-range-dual-motor-100kwh-485km-2024_thumb@2x.jpg",
+   "octets": "21336"
+  },
+  {
+   "id": "37fa8ff7-969d-4dfb-92aa-161d065f86a1",
+   "nom": "ford-e-tourneo-custom-l2-210kw-68kwh-235km-2023_thumb@2x.jpg",
+   "octets": "40705"
+  },
+  {
+   "id": "386b3c68-f948-4519-b7ed-7d3ab8755793",
+   "nom": "mercedes-benz-eqa-350-4matic-70kwh-350km-2023_thumb@2x.jpg",
+   "octets": "35970"
+  },
+  {
+   "id": "38852c7d-07c7-4c80-8eeb-7490c05281f8",
+   "nom": "citroen-e-spacetourer-xl-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "39807"
+  },
+  {
+   "id": "391028df-410a-4f0f-b862-af794cf019ea",
+   "nom": "byd-sealion-7-825-awd-design-84kwh-405km-2024_thumb@2x.jpg",
+   "octets": "34383"
+  },
+  {
+   "id": "392cddab-6b5c-4f76-9e67-0d5e3fa5a702",
+   "nom": "mercedes-benz-cla-350-4matic-90kwh-575km-2025_thumb@2x.jpg",
+   "octets": "40613"
+  },
+  {
+   "id": "39809f83-e847-4a02-9061-eac17df98d61",
+   "nom": "toyota-proace-city-verso-l2-52kwh-230km-2024_thumb@2x.jpg",
+   "octets": "31166"
+  },
+  {
+   "id": "39aab8b2-d626-4e29-8239-95a2a8cbe043",
+   "nom": "hyundai-ioniq-5-awd-my24-84kwh-445km-2024_thumb@2x.jpg",
+   "octets": "27717"
+  },
+  {
+   "id": "39b2a245-4772-4c3d-b5fb-9996bba34431",
+   "nom": "xpeng-p7-rwd-long-range-86kwh-495km-2023-2025_thumb@2x.jpg",
+   "octets": "40398"
+  },
+  {
+   "id": "39c12ecf-22a5-40f2-ba30-83fa3d6aca97",
+   "nom": "toyota-proace-verso-m-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "28450"
+  },
+  {
+   "id": "39c9ad83-595c-494a-8122-864419487612",
+   "nom": "bmw-i4-edrive35-70kwh-435km-2025_thumb@2x.jpg",
+   "octets": "37342"
+  },
+  {
+   "id": "39d482b9-a06b-4bb4-8b10-0139450fb0fd",
+   "nom": "smart-5-brabus-my25-100kwh-450km-2025_thumb@2x.jpg",
+   "octets": "27757"
+  },
+  {
+   "id": "39dcb685-8fab-4818-bb66-52e8e52d46ae",
+   "nom": "volkswagen-e-caravelle-l1-160kw-68kwh-245km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "3a0c0e32-8498-43f7-a724-5cdedd628a77",
+   "nom": "peugeot-e-rifter-xl-52kwh-230km-2024_thumb@2x.jpg",
+   "octets": "39030"
+  },
+  {
+   "id": "3a3d7cf1-68d1-4a55-82ed-95faf4f697e9",
+   "nom": "ford-mustang-mach-e-rally-my24-99kwh-410km-2024-2025_thumb@2x.jpg",
+   "octets": "37409"
+  },
+  {
+   "id": "3a55ab20-78a4-4c15-945f-438de1a7667f",
+   "nom": "volkswagen-id7-pro-my26-82kwh-475km-2025_thumb@2x.jpg",
+   "octets": "31132"
+  },
+  {
+   "id": "3bcd2e73-60cc-47d2-9380-8492a9a425be",
+   "nom": "mercedes-benz-eqs-450-4matic-125kwh-655km-2024_thumb@2x.jpg",
+   "octets": "28176"
+  },
+  {
+   "id": "3c327c82-9888-4aa1-9833-7ae09d59df4f",
+   "nom": "porsche-macan-gts-electric-my26-100kwh-465km-2025_thumb@2x.jpg",
+   "octets": "26766"
+  },
+  {
+   "id": "3c6cc7b7-7777-404d-ae8a-64d3b42ec8ee",
+   "nom": "byd-dolphin-surf-432-comfort-46kwh-265km-2025_thumb@2x.jpg",
+   "octets": "24171"
+  },
+  {
+   "id": "3cb19cc9-599c-410c-b3bd-fafc78e959f4",
+   "nom": "hyundai-ioniq-9-long-range-awd-110kwh-495km-2025_thumb@2x.jpg",
+   "octets": "37521"
+  },
+  {
+   "id": "3d52c263-71d2-45d5-b63e-6681d907cf2f",
+   "nom": "maxus-mifa-9-90kwh-360km-2023_thumb@2x.jpg",
+   "octets": "29450"
+  },
+  {
+   "id": "3d54feda-f050-4529-9f0a-d4cf897d242e",
+   "nom": "porsche-taycan-gts-sport-turismo-105kwh-505km-2024_thumb@2x.jpg",
+   "octets": "45995"
+  },
+  {
+   "id": "3d5789e3-1948-42f7-992a-1d5d981e0b7a",
+   "nom": "cupra-tavascan-endurance-82kwh-445km-2024_thumb@2x.jpg",
+   "octets": "29440"
+  },
+  {
+   "id": "3d7be3a0-68da-4694-a331-b08af9d09c09",
+   "nom": "bmw-ix-xdrive45-100kwh-470km-2025_thumb@2x.jpg",
+   "octets": "26130"
+  },
+  {
+   "id": "3dd5179a-9537-48f8-9a3c-41936aa62283",
+   "nom": "citroen-e-spacetourer-xl-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "39807"
+  },
+  {
+   "id": "3dfbf298-ce0a-462a-9356-085c9150ff3e",
+   "nom": "tesla-model-3-premium-awd-highland-82kwh-555km-2025_thumb@2x.jpg",
+   "octets": "29448"
+  },
+  {
+   "id": "3e4c419a-6fd7-409d-a2e0-02d3544a20da",
+   "nom": "smart-5-pulse-my25-100kwh-455km-2025_thumb@2x.jpg",
+   "octets": "39175"
+  },
+  {
+   "id": "3ecc3433-d644-4f93-8664-3ace0a2ba86b",
+   "nom": "tesla-model-y-standard-rwd-juniper-64kwh-380km-2025_thumb@2x.jpg",
+   "octets": "33324"
+  },
+  {
+   "id": "3edab522-0811-45a2-a66b-9977fa0b156b",
+   "nom": "ds-automobiles-ds-3-e-tense-54kwh-300km-2022_thumb@2x.jpg",
+   "octets": "44923"
+  },
+  {
+   "id": "3f831433-b41d-453b-9885-da92beaed21c",
+   "nom": "ford-e-tourneo-custom-l2-160kw-68kwh-235km-2023_thumb@2x.jpg",
+   "octets": "40705"
+  },
+  {
+   "id": "3fe0e1bc-3446-45ff-8bde-862bdefd74ba",
+   "nom": "audi-q6-suv-e-tron-quattro-100kwh-480km-2024_thumb@2x.jpg",
+   "octets": "40294"
+  },
+  {
+   "id": "400e00a8-fedf-4bd5-99fd-4a9b601a89d3",
+   "nom": "genesis-gv60-performance-my25-84kwh-395km-2025_thumb@2x.jpg",
+   "octets": "25909"
+  },
+  {
+   "id": "4076db37-e0cb-48a4-9237-0993e65f733b",
+   "nom": "subaru-solterra-awd-71kwh-320km-2022_thumb@2x.jpg",
+   "octets": "41479"
+  },
+  {
+   "id": "411b9e32-d75b-4c24-aa67-023a7b82672f",
+   "nom": "toyota-bz4x-fwd-731-my25-73kwh-385km-2025_thumb@2x.jpg",
+   "octets": "27158"
+  },
+  {
+   "id": "417ab0b7-5bd7-45c8-a0f3-895f72a6dfcf",
+   "nom": "ford-puma-gen-e-53kwh-275km-2024_thumb@2x.jpg",
+   "octets": "42111"
+  },
+  {
+   "id": "41d9b384-0281-4a03-92cf-aa4df9a85d62",
+   "nom": "mercedes-benz-eqe-amg-53-4matic-my25-100kwh-450km-2025_thumb@2x.jpg",
+   "octets": "30223"
+  },
+  {
+   "id": "41ec7388-7cf3-48ac-881a-4ae08e6d5c96",
+   "nom": "toyota-bz4x-touring-fwd-747-my26-75kwh-395km-2026_thumb@2x.jpg",
+   "octets": "39685"
+  },
+  {
+   "id": "41f84024-3a51-40d5-8281-4a5453fd3abd",
+   "nom": "bmw-i5-m60-xdrive-touring-my25-84kwh-425km-2025_thumb@2x.jpg",
+   "octets": "25846"
+  },
+  {
+   "id": "422d4e3b-df24-48bc-9ca9-470b79b51d3b",
+   "nom": "hyundai-kona-electric-51kwh-295km-2023_thumb@2x.jpg",
+   "octets": "35624"
+  },
+  {
+   "id": "429dfd7f-8d00-4e8e-9169-3fe62467b18c",
+   "nom": "voyah-free-106kwh-480km-2023_thumb@2x.jpg",
+   "octets": "51615"
+  },
+  {
+   "id": "42a693a8-8be1-46c2-8a56-201688cee129",
+   "nom": "byd-atto-2-51kwh-245km-2025_thumb@2x.jpg",
+   "octets": "36218"
+  },
+  {
+   "id": "42f576bc-d14f-4443-b149-5e5ba1e2b072",
+   "nom": "volkswagen-id5-pure-my26-55kwh-320km-2025_thumb@2x.jpg",
+   "octets": "49613"
+  },
+  {
+   "id": "4351fde6-70c4-447f-ab69-a73aaaf75e8c",
+   "nom": "leapmotor-t03-37kwh-225km-2024_thumb@2x.jpg",
+   "octets": "45125"
+  },
+  {
+   "id": "43685ae6-6fe8-4858-8057-95fa05820347",
+   "nom": "mercedes-benz-eqb-300-4matic-70kwh-345km-2023-2025_thumb@2x.jpg",
+   "octets": "40476"
+  },
+  {
+   "id": "43ffe3ff-e9fd-4666-a040-cf3ff35dc1b1",
+   "nom": "byd-sealion-7-913-awd-excellence-93kwh-440km-2024_thumb@2x.jpg",
+   "octets": "34383"
+  },
+  {
+   "id": "44f76478-8aa4-4e67-b80f-059bd484bea2",
+   "nom": "porsche-taycan-4-89kwh-490km-2024_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "45a3f6a0-3e84-474d-9218-c88ca7338c2a",
+   "nom": "volkswagen-id4-gtx-my26-84kwh-435km-2025_thumb@2x.jpg",
+   "octets": "42397"
+  },
+  {
+   "id": "46a1176d-8210-43a2-8f01-0f12e739b03c",
+   "nom": "skoda-enyaq-rs-my25-84kwh-460km-2025-2025_thumb@2x.jpg",
+   "octets": "39344"
+  },
+  {
+   "id": "46ff1aee-9555-457d-b331-30ba80d6fc9d",
+   "nom": "leapmotor-b10-562-56kwh-305km-2025_thumb@2x.jpg",
+   "octets": "43495"
+  },
+  {
+   "id": "4766fc9a-e434-4863-a58f-65c2e29c5b89",
+   "nom": "nissan-micra-standard-range-43kwh-260km-2023_thumb@2x.jpg",
+   "octets": "33142"
+  },
+  {
+   "id": "478bf134-f272-4839-9932-ebcf7c284a86",
+   "nom": "smart-3-pro-49kwh-265km-2024_thumb@2x.jpg",
+   "octets": "27052"
+  },
+  {
+   "id": "47946711-45a2-4ef3-b786-f48d5e251897",
+   "nom": "alpine-a290-electric-180hp-55kwh-310km-2024_thumb@2x.jpg",
+   "octets": "27067"
+  },
+  {
+   "id": "479a4426-f3b8-48e2-a4aa-8d58a715a15d",
+   "nom": "audi-e-tron-gt-rs-105kwh-525km-2024_thumb@2x.jpg",
+   "octets": "42234"
+  },
+  {
+   "id": "47c9ad6c-77fa-450e-852b-89ef91693c2f",
+   "nom": "mercedes-benz-cla-200-60kwh-400km-2025_thumb@2x.jpg",
+   "octets": "40613"
+  },
+  {
+   "id": "47e4d3fb-861f-4007-8948-0cb0c57470f3",
+   "nom": "skoda-elroq-rs-my25-84kwh-450km-2025-2025_thumb@2x.jpg",
+   "octets": "28040"
+  },
+  {
+   "id": "47ef6816-c68c-4efd-be17-9fc81b11f66b",
+   "nom": "polestar-3-performance-my26-106kwh-460km-2025_thumb@2x.jpg",
+   "octets": "24691"
+  },
+  {
+   "id": "48407a17-8437-461c-898e-0464296ba734",
+   "nom": "tesla-model-x-awd-my26-100kwh-490km-2025_thumb@2x.jpg",
+   "octets": "41899"
+  },
+  {
+   "id": "484ca442-0319-4a54-8797-dccdbb66d963",
+   "nom": "volkswagen-e-caravelle-l2-160kw-68kwh-245km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "48f00603-0e7a-493f-bb2c-006a3fef2bed",
+   "nom": "audi-a6-sportback-e-tron-83kwh-485km-2024_thumb@2x.jpg",
+   "octets": "34463"
+  },
+  {
+   "id": "4a5ee849-29d7-48f3-b38f-e08a4be0c949",
+   "nom": "renault-5-e-tech-150hp-55kwh-335km-2024_thumb@2x.jpg",
+   "octets": "27726"
+  },
+  {
+   "id": "4a72f1e6-da61-4483-8a48-62a6c1422b04",
+   "nom": "ds-automobiles-n8-awd-long-range-101kwh-530km-2024_thumb@2x.jpg",
+   "octets": "34680"
+  },
+  {
+   "id": "4ac86fac-8e49-43c2-97d3-ae6026bc9e78",
+   "nom": "kia-ev9-761-rwd-76kwh-350km-2024_thumb@2x.jpg",
+   "octets": "39778"
+  },
+  {
+   "id": "4b3b06ec-196a-48f3-889d-3ab91d06ba37",
+   "nom": "ford-capri-extended-range-awd-84kwh-455km-2024_thumb@2x.jpg",
+   "octets": "25890"
+  },
+  {
+   "id": "4b8ea392-f141-4e79-bd5b-9cafb5c5c8ff",
+   "nom": "nio-el8-long-range-100kwh-440km-2024_thumb@2x.jpg",
+   "octets": "25923"
+  },
+  {
+   "id": "4bfb546c-3a65-444c-a460-5f6350e94392",
+   "nom": "renault-5-e-tech-120hp-43kwh-260km-2024_thumb@2x.jpg",
+   "octets": "27726"
+  },
+  {
+   "id": "4c1871eb-90a2-4109-a3ae-7074dcd90322",
+   "nom": "renault-5-e-tech-95hp-43kwh-260km-2025_thumb@2x.jpg",
+   "octets": "27726"
+  },
+  {
+   "id": "4c1e1642-3e7f-4780-96b6-32f2563c9d11",
+   "nom": "skoda-enyaq-coupe-rs-my26-84kwh-470km-2025_thumb@2x.jpg",
+   "octets": "36695"
+  },
+  {
+   "id": "4d908970-61e4-454e-8534-9de6ae30489e",
+   "nom": "skoda-enyaq-85x-my26-82kwh-455km-2025_thumb@2x.jpg",
+   "octets": "37389"
+  },
+  {
+   "id": "4dd4ed91-e9f9-477a-af54-8902393be441",
+   "nom": "audi-a6-sportback-e-tron-quattro-100kwh-570km-2024_thumb@2x.jpg",
+   "octets": "34463"
+  },
+  {
+   "id": "4e55ecbf-f59e-4d6c-b192-153b604f31f3",
+   "nom": "gwm-ora-03-gt-63kwh-325km-2024_thumb@2x.jpg",
+   "octets": "37155"
+  },
+  {
+   "id": "4e93f74c-7608-4510-90a9-3b0d7fa2b658",
+   "nom": "byd-dolphin-surf-active-32kwh-190km-2025_thumb@2x.jpg",
+   "octets": "24171"
+  },
+  {
+   "id": "4ef29be4-5a7b-44e0-989d-bdbbc18887e0",
+   "nom": "ds-automobiles-n4-e-tense-61kwh-370km-2025_thumb@2x.jpg",
+   "octets": "35834"
+  },
+  {
+   "id": "4f11fa85-60b9-43f6-a0d9-fc4f92148efc",
+   "nom": "mercedes-benz-eqb-350-4matic-70kwh-345km-2023-2025_thumb@2x.jpg",
+   "octets": "40476"
+  },
+  {
+   "id": "4f145bdb-3294-40a5-81bc-cd99c36f5473",
+   "nom": "renault-megane-e-tech-ev60-220hp-tu2025-65kwh-380km-2025_thumb@2x.jpg",
+   "octets": "31099"
+  },
+  {
+   "id": "4f6415a8-0df4-4242-979e-15b6cf22253f",
+   "nom": "peugeot-e-208-my25-50kwh-295km-2025_thumb@2x.jpg",
+   "octets": "32958"
+  },
+  {
+   "id": "4f794c54-f088-4d88-8bf7-ae307ba47445",
+   "nom": "hyundai-kona-electric-51kwh-295km-2023_thumb@2x.jpg",
+   "octets": "35624"
+  },
+  {
+   "id": "4f7c6ee7-5ac1-41ae-82e3-16cd140cc25b",
+   "nom": "volkswagen-e-caravelle-l2-100kw-68kwh-245km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "503298fc-e20d-4d77-96a2-93846644d100",
+   "nom": "hongqi-e-hs9-120kwh-455km-2023_thumb@2x.jpg",
+   "octets": "27960"
+  },
+  {
+   "id": "507c69b5-22ca-4389-97f6-31fbb90f479e",
+   "nom": "mg-mgs5-ev-64kwh-365km-2025_thumb@2x.jpg",
+   "octets": "32543"
+  },
+  {
+   "id": "5085ccca-a932-4776-946a-a5b8d373b14e",
+   "nom": "nissan-leaf-standard-range-my26-55kwh-320km-2025_thumb@2x.jpg",
+   "octets": "30064"
+  },
+  {
+   "id": "516ff663-65dc-4cf5-a808-197718be08e7",
+   "nom": "dongfeng-box-314-31kwh-190km-2025_thumb@2x.jpg",
+   "octets": "34100"
+  },
+  {
+   "id": "51d9ba9b-c8c3-46bd-b6f5-c1e0d3053d21",
+   "nom": "peugeot-e-5008-77kwh-370km-2024_thumb@2x.jpg",
+   "octets": "33891"
+  },
+  {
+   "id": "524c5c6a-7d27-4b65-903a-d87d9635a9e4",
+   "nom": "ford-mustang-mach-e-er-rwd-my24-99kwh-480km-2024-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "52531d40-c8e4-4162-bf6e-ac25de7700d7",
+   "nom": "hyundai-ioniq-5-n-my24-84kwh-390km-2023_thumb@2x.jpg",
+   "octets": "25210"
+  },
+  {
+   "id": "53cd71cc-8448-497a-8828-2351dbe4233a",
+   "nom": "byd-atto-3-my25-62kwh-340km-2025_thumb@2x.jpg",
+   "octets": "41006"
+  },
+  {
+   "id": "54ccb788-571f-4eb2-8bb7-9698f4fa9cad",
+   "nom": "ford-e-tourneo-custom-l1-160kw-68kwh-235km-2023_thumb@2x.jpg",
+   "octets": "40705"
+  },
+  {
+   "id": "54fce291-77a2-41dc-9e4d-2312d4123317",
+   "nom": "bmw-i5-m60-xdrive-sedan-my25-84kwh-430km-2025_thumb@2x.jpg",
+   "octets": "32177"
+  },
+  {
+   "id": "55034516-210f-4282-a506-444384c117ed",
+   "nom": "lotus-eletre-900-112kwh-455km-2025_thumb@2x.jpg",
+   "octets": "25349"
+  },
+  {
+   "id": "5553b04e-abb4-4205-8d91-139638c5d277",
+   "nom": "ford-mustang-mach-e-rally-my25-99kwh-415km-2025_thumb@2x.jpg",
+   "octets": "37409"
+  },
+  {
+   "id": "5647056d-67a5-4549-81b1-4522c518fd02",
+   "nom": "byd-dolphin-surf-432-boost-46kwh-270km-2025_thumb@2x.jpg",
+   "octets": "24171"
+  },
+  {
+   "id": "5674da52-8d23-4d04-9019-5a94e67ff68a",
+   "nom": "cadillac-lyriq-v-my26-95kwh-400km-2025_thumb@2x.jpg",
+   "octets": "31783"
+  },
+  {
+   "id": "56dff62c-415f-4c6f-b7fd-9827e137e519",
+   "nom": "mini-countryman-se-all4-66kwh-365km-2024_thumb@2x.jpg",
+   "octets": "28683"
+  },
+  {
+   "id": "56e27bb4-94b6-4735-bee9-a2bbcee99d7f",
+   "nom": "opel-zafira-electric-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "27009"
+  },
+  {
+   "id": "56ea4354-4535-4779-899f-4b021e34c912",
+   "nom": "voyah-courage-awd-80kwh-390km-2025_thumb@2x.jpg",
+   "octets": "29690"
+  },
+  {
+   "id": "571d0e69-3809-48b2-a19d-848f1f34e4e1",
+   "nom": "skoda-enyaq-60-my25-63kwh-360km-2025_thumb@2x.jpg",
+   "octets": "37389"
+  },
+  {
+   "id": "57d76f5c-0283-4258-bdc2-55d5e5aa3fe7",
+   "nom": "volkswagen-id3-pro-s-my26-84kwh-475km-2025_thumb@2x.jpg",
+   "octets": "39645"
+  },
+  {
+   "id": "57f02606-e39a-44af-af78-a1095a327841",
+   "nom": "audi-q6-suv-e-tron-performance-100kwh-490km-2024_thumb@2x.jpg",
+   "octets": "40294"
+  },
+  {
+   "id": "59044f61-3439-46d3-a24a-8105915cda72",
+   "nom": "mg-mgs5-ev-49kwh-275km-2025_thumb@2x.jpg",
+   "octets": "32543"
+  },
+  {
+   "id": "594c5b7a-0625-464e-8c14-e80a496d9b30",
+   "nom": "bmw-i5-m60-xdrive-touring-my25-84kwh-425km-2025_thumb@2x.jpg",
+   "octets": "25846"
+  },
+  {
+   "id": "59596e39-9c57-4b57-9bb2-59cec8a65d68",
+   "nom": "volvo-ex30-single-motor-er-my24-26-69kwh-365km-2023_thumb@2x.jpg",
+   "octets": "24562"
+  },
+  {
+   "id": "59efd13b-0465-4fec-a530-172abc6c1821",
+   "nom": "kia-ev3-standard-range-58kwh-325km-2024_thumb@2x.jpg",
+   "octets": "33960"
+  },
+  {
+   "id": "59fd8592-983f-4264-8f4f-acb4ae80ad2b",
+   "nom": "maserati-grancabrio-folgore-92kwh-395km-2024_thumb@2x.jpg",
+   "octets": "41611"
+  },
+  {
+   "id": "5a7e493c-759c-4af3-8373-2ca39b2901c6",
+   "nom": "porsche-taycan-plus-sport-turismo-105kwh-530km-2024_thumb@2x.jpg",
+   "octets": "36386"
+  },
+  {
+   "id": "5bcd9fab-fd84-4e6f-b6e2-ebc8c2f0d6b0",
+   "nom": "cupra-born-170kw-63kwh-360km-2024_thumb@2x.jpg",
+   "octets": "29842"
+  },
+  {
+   "id": "5c638848-beb0-456e-b736-372b72eab257",
+   "nom": "vinfast-vf-6-eco-62kwh-315km-2025_thumb@2x.jpg",
+   "octets": "34048"
+  },
+  {
+   "id": "5c6566e4-070c-4e36-8002-16a6097b9244",
+   "nom": "hyundai-ioniq-9-long-range-rwd-110kwh-505km-2025_thumb@2x.jpg",
+   "octets": "37521"
+  },
+  {
+   "id": "5e179600-0b7f-4183-bea8-020ec89701ec",
+   "nom": "ds-automobiles-n8-fwd-80kwh-415km-2024_thumb@2x.jpg",
+   "octets": "34680"
+  },
+  {
+   "id": "5e38ac68-1aef-4618-96c2-f39b77167a8f",
+   "nom": "renault-twingo-e-tech-29kwh-185km-2025_thumb@2x.jpg",
+   "octets": "33480"
+  },
+  {
+   "id": "5ec03a47-f347-425a-bfdb-4e6a510b5ea3",
+   "nom": "zeekr-001-long-range-rwd-100kwh-505km-2023_thumb@2x.jpg",
+   "octets": "42858"
+  },
+  {
+   "id": "5ec5e743-2adb-463b-8de8-95de8580b4ad",
+   "nom": "mercedes-benz-eqv-300-extra-long-100kwh-315km-2024_thumb@2x.jpg",
+   "octets": "34534"
+  },
+  {
+   "id": "5fb0ea71-32c7-40d4-9dca-45b7618ccdb8",
+   "nom": "suzuki-e-vitara-4wd-allgrip-61kwh-310km-2025_thumb@2x.jpg",
+   "octets": "40528"
+  },
+  {
+   "id": "6015ad0a-e1dd-4f03-b977-d9bdf0d3705d",
+   "nom": "smart-1-pulse-66kwh-325km-2023_thumb@2x.jpg",
+   "octets": "30540"
+  },
+  {
+   "id": "603b4061-1210-4887-be95-57185421877a",
+   "nom": "bmw-i4-m60-xdrive-84kwh-465km-2025_thumb@2x.jpg",
+   "octets": "38785"
+  },
+  {
+   "id": "603fd84d-50d9-4b76-ae62-83a29c147759",
+   "nom": "audi-q6-sportback-e-tron-performance-100kwh-510km-2024_thumb@2x.jpg",
+   "octets": "35294"
+  },
+  {
+   "id": "604d5825-bfa6-4db5-8d67-64d5634d9e7d",
+   "nom": "audi-q4-e-tron-40-63kwh-325km-2025_thumb@2x.jpg",
+   "octets": "39322"
+  },
+  {
+   "id": "607e6ad8-446b-471a-9800-8721375235d6",
+   "nom": "ford-e-tourneo-courier-54kwh-200km-2024_thumb@2x.jpg",
+   "octets": "39105"
+  },
+  {
+   "id": "60ab7f1e-5d01-4bf8-901d-a9421252da40",
+   "nom": "polestar-5-performance-112kwh-530km-2025_thumb@2x.jpg",
+   "octets": "33183"
+  },
+  {
+   "id": "617fa7a7-52cf-4318-b4e9-e16065786c0d",
+   "nom": "audi-e-tron-gt-s-105kwh-540km-2024_thumb@2x.jpg",
+   "octets": "33781"
+  },
+  {
+   "id": "62e401c5-706e-4897-b126-83ad163a35cd",
+   "nom": "dacia-spring-electric-100-24kwh-160km-2025_thumb@2x.jpg",
+   "octets": "34454"
+  },
+  {
+   "id": "6335cc2b-3af4-4937-bd69-036ad66d5eb8",
+   "nom": "volkswagen-id3-gtx-my24-26-84kwh-470km-2024-2025_thumb@2x.jpg",
+   "octets": "43399"
+  },
+  {
+   "id": "640f1cc0-04da-4b30-9759-1404623c5d60",
+   "nom": "mercedes-benz-eqb-250-74kwh-415km-2023-2025_thumb@2x.jpg",
+   "octets": "40476"
+  },
+  {
+   "id": "6518c3be-5462-4ae4-8627-4ce9b1bc1943",
+   "nom": "alfa-romeo-junior-elettrica-54kwh-320km-2024_thumb@2x.jpg",
+   "octets": "31620"
+  },
+  {
+   "id": "653983db-5b6b-4394-81ea-0957dbc1709f",
+   "nom": "hongqi-e-hs7-awd-pro-111kwh-435km-2025_thumb@2x.jpg",
+   "octets": "20360"
+  },
+  {
+   "id": "65759b65-6111-4ecb-9915-5f9f36777b3c",
+   "nom": "nissan-ariya-e-4orce-320kw-nismo-91kwh-385km-2024_thumb@2x.jpg",
+   "octets": "34775"
+  },
+  {
+   "id": "659db9a4-549f-4d96-9cd6-d278c646f2be",
+   "nom": "cadillac-optiq-500-e4-my26-79kwh-365km-2025_thumb@2x.jpg",
+   "octets": "35244"
+  },
+  {
+   "id": "6603ba51-4c44-4572-a31e-acc4cb068083",
+   "nom": "smart-3-pro-66kwh-355km-2024_thumb@2x.jpg",
+   "octets": "27052"
+  },
+  {
+   "id": "663e2367-535e-47a3-92cb-fd3b6b98e448",
+   "nom": "citroen-e-berlingo-xl-52kwh-230km-2024_thumb@2x.jpg",
+   "octets": "42529"
+  },
+  {
+   "id": "667f20de-7254-4552-b59a-b00c5714e1a5",
+   "nom": "ford-capri-standard-range-rwd-55kwh-320km-2024_thumb@2x.jpg",
+   "octets": "25890"
+  },
+  {
+   "id": "67694150-cced-46f9-a9ef-671547da763c",
+   "nom": "opel-zafira-electric-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "27009"
+  },
+  {
+   "id": "67ca45f7-97ea-4d56-82e3-82bbd14b5ce7",
+   "nom": "fiat-500e-hatchback-24kwh-135km-2020_thumb@2x.jpg",
+   "octets": "44273"
+  },
+  {
+   "id": "68da692d-691e-4d33-bd22-938905567080",
+   "nom": "opel-combo-electric-52kwh-235km-2024_thumb@2x.jpg",
+   "octets": "27385"
+  },
+  {
+   "id": "68db5b98-8bbd-4f78-aa05-81726a11c7d8",
+   "nom": "audi-q4-e-tron-45-quattro-82kwh-395km-2023_thumb@2x.jpg",
+   "octets": "39322"
+  },
+  {
+   "id": "698aa6ae-2a39-4d52-b1ad-27193ff6a196",
+   "nom": "citroen-e-berlingo-xl-52kwh-230km-2024_thumb@2x.jpg",
+   "octets": "42529"
+  },
+  {
+   "id": "699538af-ba96-4b73-9a31-16a9ccf9be39",
+   "nom": "porsche-taycan-4s-sport-turismo-89kwh-440km-2024-2025_thumb@2x.jpg",
+   "octets": "36386"
+  },
+  {
+   "id": "6a267054-f3d0-4f27-af06-31a80a9e3fd0",
+   "nom": "polestar-3-long-range-single-motor-my23-25-111kwh-530km-2024-2025_thumb@2x.jpg",
+   "octets": "30967"
+  },
+  {
+   "id": "6a513fd6-f30a-4415-b27c-067dda0a3fac",
+   "nom": "mazda-6e-long-range-80kwh-440km-2025_thumb@2x.jpg",
+   "octets": "31042"
+  },
+  {
+   "id": "6a88a13e-3876-4671-a4a0-48891a256dce",
+   "nom": "alpine-a290-electric-180hp-55kwh-310km-2024_thumb@2x.jpg",
+   "octets": "27067"
+  },
+  {
+   "id": "6abe5265-0d76-4d12-ba1a-3c7df8d0a398",
+   "nom": "kia-ev9-998-awd-100kwh-435km-2023_thumb@2x.jpg",
+   "octets": "39778"
+  },
+  {
+   "id": "6ace30f4-2c9b-447e-be87-b58fd76591c8",
+   "nom": "hyundai-kona-electric-68kwh-390km-2023_thumb@2x.jpg",
+   "octets": "35624"
+  },
+  {
+   "id": "6ad08c1b-817c-4cb4-b392-c090b27a94df",
+   "nom": "kgm-musso-ev-2wd-83kwh-365km-2025_thumb@2x.jpg",
+   "octets": "27574"
+  },
+  {
+   "id": "6b500a8f-4b56-4123-8f47-98640ab373eb",
+   "nom": "ford-mustang-mach-e-er-rwd-my24-99kwh-480km-2024-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "6b59b217-2a1f-4286-8b63-4669ad98742e",
+   "nom": "genesis-gv60-pure-my25-84kwh-425km-2025_thumb@2x.jpg",
+   "octets": "25909"
+  },
+  {
+   "id": "6c42e67f-f085-4bfd-b7b8-9d4bbc88a028",
+   "nom": "abarth-600e-turismo-54kwh-280km-2024_thumb@2x.jpg",
+   "octets": "34151"
+  },
+  {
+   "id": "6c601076-338c-442f-b391-4db085de2f48",
+   "nom": "citroen-e-c4-x-54kwh-335km-2024_thumb@2x.jpg",
+   "octets": "37012"
+  },
+  {
+   "id": "6c814e81-de1b-46a5-9f99-d369341982a1",
+   "nom": "hyundai-ioniq-6-standard-range-2wd-53kwh-335km-2023_thumb@2x.jpg",
+   "octets": "38342"
+  },
+  {
+   "id": "6cab6739-3e36-479c-93d5-8e5fb48f66f3",
+   "nom": "skywell-be11-standard-range-72kwh-325km-2024_thumb@2x.jpg",
+   "octets": "43336"
+  },
+  {
+   "id": "6d18b80f-5268-408d-bc10-015ce6bc0bb3",
+   "nom": "bmw-ix1-edrive20-66kwh-390km-2023_thumb@2x.jpg",
+   "octets": "37858"
+  },
+  {
+   "id": "6d3afd31-077f-4e2c-b565-156e4605d6ae",
+   "nom": "bmw-i5-edrive40-sedan-my25-84kwh-480km-2025_thumb@2x.jpg",
+   "octets": "40580"
+  },
+  {
+   "id": "6d9a47a5-133a-452c-a4c5-ce95b8d0bd3c",
+   "nom": "citroen-e-c3-urban-range-30kwh-175km-2025_thumb@2x.jpg",
+   "octets": "48412"
+  },
+  {
+   "id": "6e1c95af-ae3c-4c6d-8429-853e34198662",
+   "nom": "citroen-e-spacetourer-m-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "39807"
+  },
+  {
+   "id": "6e4a41b7-33f1-43bf-b3c1-5dc03a31f087",
+   "nom": "leapmotor-c10-awd-819-84kwh-380km-2025_thumb@2x.jpg",
+   "octets": "39129"
+  },
+  {
+   "id": "6e6a8c85-f409-4da2-bf6b-7e3d45ac6755",
+   "nom": "byd-tang-flagship-111kwh-460km-2024_thumb@2x.jpg",
+   "octets": "29635"
+  },
+  {
+   "id": "6e7a56fe-f313-4de2-b7ad-ef64c3157596",
+   "nom": "opel-corsa-electric-my25-50kwh-290km-2025_thumb@2x.jpg",
+   "octets": "25809"
+  },
+  {
+   "id": "6ed50843-4459-4b45-be12-c3e9a34dd5ea",
+   "nom": "changan-deepal-s05-4wd-max-69kwh-365km-2025_thumb@2x.jpg",
+   "octets": "34915"
+  },
+  {
+   "id": "6efe9217-732a-4e51-b796-9720d95ffa16",
+   "nom": "ds-automobiles-ds-3-e-tense-54kwh-300km-2022_thumb@2x.jpg",
+   "octets": "44923"
+  },
+  {
+   "id": "6fa55a29-1857-4639-a59e-b0ce18923e0a",
+   "nom": "cupra-born-vz-84kwh-465km-2024_thumb@2x.jpg",
+   "octets": "24487"
+  },
+  {
+   "id": "6fb2af69-caf2-4a42-8ce0-ea335a8f68f9",
+   "nom": "hyundai-ioniq-6-long-range-2wd-77kwh-495km-2022_thumb@2x.jpg",
+   "octets": "38342"
+  },
+  {
+   "id": "7007af92-0e2d-41a2-b7ad-3cc5eff45ad6",
+   "nom": "cadillac-vistiq-900-e4-my26-95kwh-375km-2025_thumb@2x.jpg",
+   "octets": "29488"
+  },
+  {
+   "id": "70783e06-4a60-44f4-98ca-751543d828c1",
+   "nom": "porsche-taycan-4-cross-turismo-105kwh-510km-2024-2025_thumb@2x.jpg",
+   "octets": "38469"
+  },
+  {
+   "id": "70e34f92-8be8-4d26-91dc-b81cdae0c76e",
+   "nom": "mercedes-benz-glb-250-90kwh-465km-2025_thumb@2x.jpg",
+   "octets": "30417"
+  },
+  {
+   "id": "71037725-42e5-418a-8579-9ff26eb19eea",
+   "nom": "byd-sealion-7-825-rwd-comfort-84kwh-420km-2024_thumb@2x.jpg",
+   "octets": "34383"
+  },
+  {
+   "id": "710a5f07-25c7-4c8a-b1aa-0ad5e38bdae5",
+   "nom": "toyota-proace-city-verso-l1-52kwh-235km-2024_thumb@2x.jpg",
+   "octets": "31166"
+  },
+  {
+   "id": "715770bc-1a0f-4d50-a01f-a7b201400cdf",
+   "nom": "hongqi-eh7-long-range-111kwh-550km-2025_thumb@2x.jpg",
+   "octets": "42005"
+  },
+  {
+   "id": "715da2ed-d7bd-44c7-b739-fc91196e990e",
+   "nom": "porsche-taycan-4s-cross-turismo-105kwh-510km-2024_thumb@2x.jpg",
+   "octets": "38469"
+  },
+  {
+   "id": "71ae165f-8d5e-42ff-93c2-ccb8e65ef3ad",
+   "nom": "porsche-macan-electric-my26-100kwh-495km-2025_thumb@2x.jpg",
+   "octets": "43064"
+  },
+  {
+   "id": "72478a76-9887-4c3f-9a8a-787e9c5c4775",
+   "nom": "mercedes-benz-eqs-350-105kwh-570km-2024_thumb@2x.jpg",
+   "octets": "28176"
+  },
+  {
+   "id": "7261da91-f921-4440-8073-7cb95fa42659",
+   "nom": "renault-scenic-e-tech-ev87-220hp-tu2025-92kwh-480km-2025_thumb@2x.jpg",
+   "octets": "32239"
+  },
+  {
+   "id": "73811907-6679-4f25-a515-f3662ec04a3e",
+   "nom": "abarth-600e-scorpionissima-54kwh-280km-2024_thumb@2x.jpg",
+   "octets": "37303"
+  },
+  {
+   "id": "73864c91-0d9b-49ce-abbd-1725dfae37cb",
+   "nom": "nissan-townstar-ev-passenger-48kwh-225km-2023_thumb@2x.jpg",
+   "octets": "37996"
+  },
+  {
+   "id": "7462c612-4006-4ab2-9335-d87bde5230e7",
+   "nom": "porsche-taycan-turbo-cross-turismo-105kwh-495km-2024_thumb@2x.jpg",
+   "octets": "38469"
+  },
+  {
+   "id": "74d35bb0-0d8f-474e-b130-da9d13d5c8b1",
+   "nom": "skoda-enyaq-coupe-85x-my25-82kwh-460km-2025-2025_thumb@2x.jpg",
+   "octets": "40483"
+  },
+  {
+   "id": "74e09e80-e91a-476c-a761-131158c4ba79",
+   "nom": "citroen-c5-aircross-comfort-range-80kwh-375km-2025_thumb@2x.jpg",
+   "octets": "25681"
+  },
+  {
+   "id": "74ef1975-1c7a-449f-9adf-2f73a2d72b33",
+   "nom": "citroen-e-spacetourer-m-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "39807"
+  },
+  {
+   "id": "7529bbee-e707-4a55-b45e-8ef3f2d6175f",
+   "nom": "bmw-i5-edrive40-touring-my25-84kwh-465km-2025_thumb@2x.jpg",
+   "octets": "49744"
+  },
+  {
+   "id": "75c40c7b-535d-4ad1-99c3-9cf59f118c14",
+   "nom": "volkswagen-e-caravelle-l1-100kw-68kwh-245km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "75fbf99c-f3b9-471f-bfed-981fc47d71f4",
+   "nom": "audi-a6-sportback-e-tron-quattro-100kwh-570km-2024_thumb@2x.jpg",
+   "octets": "34463"
+  },
+  {
+   "id": "76bbf6b8-362c-40c1-8134-9645ba2ad68c",
+   "nom": "volvo-ex90-single-motor-my26-92kwh-425km-2025_thumb@2x.jpg",
+   "octets": "36709"
+  },
+  {
+   "id": "76dad90f-ab8f-4602-9cee-fa3a22c7d75e",
+   "nom": "kia-ev6-standard-range-2wd-63kwh-345km-2024_thumb@2x.jpg",
+   "octets": "20472"
+  },
+  {
+   "id": "77800a36-3a64-4848-aff6-21abb42eafcf",
+   "nom": "skoda-elroq-50-my25-55kwh-310km-2024_thumb@2x.jpg",
+   "octets": "29976"
+  },
+  {
+   "id": "7786029c-0701-4d1f-aff8-024a68355ad4",
+   "nom": "toyota-bz4x-fwd-577-my25-58kwh-305km-2025_thumb@2x.jpg",
+   "octets": "27158"
+  },
+  {
+   "id": "77aa5557-c5cc-4807-94c3-767643bac788",
+   "nom": "mercedes-benz-eqv-250-long-66kwh-215km-2024_thumb@2x.jpg",
+   "octets": "34534"
+  },
+  {
+   "id": "77bea4fa-1237-4faf-9d19-6b5d4cf85127",
+   "nom": "alfa-romeo-junior-elettrica-veloce-54kwh-310km-2024_thumb@2x.jpg",
+   "octets": "31620"
+  },
+  {
+   "id": "78394f59-4728-43b0-b3db-e8b7847fb224",
+   "nom": "skoda-enyaq-85x-my25-82kwh-450km-2025-2025_thumb@2x.jpg",
+   "octets": "37389"
+  },
+  {
+   "id": "785a6a7b-c2d8-4bce-863a-e7d00ff42642",
+   "nom": "gwm-ora-07-pro-67kwh-350km-2024_thumb@2x.jpg",
+   "octets": "34902"
+  },
+  {
+   "id": "785be3f2-fc9f-47fc-b7e9-ec628fab23ca",
+   "nom": "mg-mg4-electric-64kwh-360km-2022_thumb@2x.jpg",
+   "octets": "34771"
+  },
+  {
+   "id": "78a6f254-0e1b-4046-ad28-30525c1e7d64",
+   "nom": "bmw-ix1-xdrive30-66kwh-380km-2022_thumb@2x.jpg",
+   "octets": "37858"
+  },
+  {
+   "id": "78fc0895-4854-49ab-91ae-b7995fa50e61",
+   "nom": "ds-automobiles-n4-e-tense-61kwh-370km-2025_thumb@2x.jpg",
+   "octets": "35834"
+  },
+  {
+   "id": "796e69d4-8cea-4ea8-a83f-26c2902c5505",
+   "nom": "audi-e-tron-gt-quattro-105kwh-540km-2025_thumb@2x.jpg",
+   "octets": "33781"
+  },
+  {
+   "id": "79d59d86-ccd4-450c-b72e-fe7660c47a3b",
+   "nom": "bmw-i7-edrive50-106kwh-520km-2023_thumb@2x.jpg",
+   "octets": "33707"
+  },
+  {
+   "id": "79ef3054-a305-4611-b8a9-8c74ba2bedfd",
+   "nom": "dacia-spring-electric-70-24kwh-165km-2025_thumb@2x.jpg",
+   "octets": "34454"
+  },
+  {
+   "id": "7aa51903-3ab4-4eb5-8988-1a19ff7a7a2a",
+   "nom": "hyundai-ioniq-5-rwd-my24-63kwh-345km-2024_thumb@2x.jpg",
+   "octets": "27717"
+  },
+  {
+   "id": "7aa56f15-9439-4632-8b02-0b45b5d57d34",
+   "nom": "audi-q4-e-tron-45-82kwh-420km-2023_thumb@2x.jpg",
+   "octets": "39322"
+  },
+  {
+   "id": "7b844f1b-fa60-47b0-a09a-89eb50d007c9",
+   "nom": "ford-mustang-mach-e-er-awd-my25-99kwh-435km-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "7b9fef16-1ebd-42ef-b048-9b3723ff9db3",
+   "nom": "byd-sealion-7-825-rwd-comfort-84kwh-420km-2024_thumb@2x.jpg",
+   "octets": "34383"
+  },
+  {
+   "id": "7c15cfa3-2833-4522-960b-3b3e690cdd51",
+   "nom": "byd-atto-2-648-65kwh-310km-2025_thumb@2x.jpg",
+   "octets": "36218"
+  },
+  {
+   "id": "7c347e23-0050-4c10-9602-59b2bb2a87ab",
+   "nom": "citroen-e-c4-54kwh-325km-2024_thumb@2x.jpg",
+   "octets": "33836"
+  },
+  {
+   "id": "7cc43936-5af5-4912-a664-199858df4596",
+   "nom": "mercedes-benz-eqs-suv-500-4matic-125kwh-530km-2023_thumb@2x.jpg",
+   "octets": "34598"
+  },
+  {
+   "id": "7d16a343-fc65-4159-ba39-649e04b47e23",
+   "nom": "mazda-6e-688-69kwh-385km-2025_thumb@2x.jpg",
+   "octets": "31042"
+  },
+  {
+   "id": "7d17f93c-8360-41d0-b437-4790d48cbde9",
+   "nom": "audi-e-tron-gt-rs-performance-105kwh-525km-2024_thumb@2x.jpg",
+   "octets": "30834"
+  },
+  {
+   "id": "7d968c25-b067-4a3f-ac61-6032b35c3869",
+   "nom": "volvo-ec40-twin-motor-my26-82kwh-400km-2025_thumb@2x.jpg",
+   "octets": "28483"
+  },
+  {
+   "id": "7e280b95-4ca8-43f4-966c-c3df44da977f",
+   "nom": "citroen-e-c3-aircross-extended-range-54kwh-290km-2025_thumb@2x.jpg",
+   "octets": "27390"
+  },
+  {
+   "id": "7eeb4d9e-b9ee-4d0f-9507-713ceaa64d7f",
+   "nom": "skoda-enyaq-coupe-60-my25-63kwh-370km-2025_thumb@2x.jpg",
+   "octets": "40483"
+  },
+  {
+   "id": "7f151b97-8988-409b-b361-a730fce5a835",
+   "nom": "volvo-ec40-single-motor-my26-70kwh-360km-2025_thumb@2x.jpg",
+   "octets": "28483"
+  },
+  {
+   "id": "7fa13ab0-020d-48ac-a355-c99f0177b3a5",
+   "nom": "tesla-model-3-performance-highland-82kwh-515km-2025_thumb@2x.jpg",
+   "octets": "21664"
+  },
+  {
+   "id": "7fb224fb-ee0a-49e8-8584-830d940f7c8b",
+   "nom": "hyundai-ioniq-6-long-range-awd-77kwh-440km-2022_thumb@2x.jpg",
+   "octets": "38342"
+  },
+  {
+   "id": "7fc17add-90de-4a44-968b-c933a2eab6fa",
+   "nom": "volkswagen-id-buzz-nwb-pro-84kwh-370km-2024_thumb@2x.jpg",
+   "octets": "41847"
+  },
+  {
+   "id": "80122584-3838-4fce-aca9-59802cebbad4",
+   "nom": "volvo-ex30-single-motor-my24-26-51kwh-275km-2023_thumb@2x.jpg",
+   "octets": "24562"
+  },
+  {
+   "id": "8030457a-39b5-465e-882f-513bb2f0b178",
+   "nom": "toyota-bz4x-awd-731-my25-73kwh-375km-2025_thumb@2x.jpg",
+   "octets": "27158"
+  },
+  {
+   "id": "80c4c88b-8f3d-45f1-a917-4b161d8b6a96",
+   "nom": "bmw-ix-xdrive45-100kwh-470km-2025_thumb@2x.jpg",
+   "octets": "26130"
+  },
+  {
+   "id": "80ffa4d6-6fc6-439c-9894-9af7738b8085",
+   "nom": "tesla-model-3-rwd-highland-catl-lfp64-64kwh-440km-2025-2025_thumb@2x.jpg",
+   "octets": "29448"
+  },
+  {
+   "id": "811a830d-cf88-4eb2-a3c7-5fd9d043e85a",
+   "nom": "mg-im5-standard-range-75kwh-405km-2025_thumb@2x.jpg",
+   "octets": "55686"
+  },
+  {
+   "id": "81a9475f-d9d2-4382-827e-016247d79ff2",
+   "nom": "mercedes-benz-evito-tourer-long-100kwh-325km-2024_thumb@2x.jpg",
+   "octets": "33767"
+  },
+  {
+   "id": "8277c5af-96f4-4616-8007-104c9b9a9854",
+   "nom": "genesis-gv60-sport-my25-84kwh-410km-2025_thumb@2x.jpg",
+   "octets": "25909"
+  },
+  {
+   "id": "8369e7cd-7cf8-4d9a-ae3c-54e0e8e3c2dc",
+   "nom": "bmw-ix-xdrive60-115kwh-525km-2025_thumb@2x.jpg",
+   "octets": "26130"
+  },
+  {
+   "id": "837c8034-44ff-4709-b97f-6379f9cbda53",
+   "nom": "byd-dolphin-surf-active-32kwh-190km-2025_thumb@2x.jpg",
+   "octets": "24171"
+  },
+  {
+   "id": "8393c94b-3e92-47b1-b342-f67e3603b0ac",
+   "nom": "hongqi-e-hs9-99kwh-370km-2022_thumb@2x.jpg",
+   "octets": "27960"
+  },
+  {
+   "id": "8400fc04-ad8c-4106-96dc-035de119d2b6",
+   "nom": "bmw-i5-xdrive40-sedan-my25-84kwh-465km-2025_thumb@2x.jpg",
+   "octets": "40580"
+  },
+  {
+   "id": "858e595b-f451-44bd-9fdf-79cb2333ac39",
+   "nom": "volkswagen-e-transporter-kombi-l1-100kw-68kwh-255km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "85d0ab4b-2816-4fb3-be71-5b5a4b5ae758",
+   "nom": "hyundai-ioniq-9-performance-awd-110kwh-485km-2025_thumb@2x.jpg",
+   "octets": "37521"
+  },
+  {
+   "id": "85d839ec-4775-49ac-bb76-87972002f039",
+   "nom": "abarth-600e-scorpionissima-54kwh-280km-2024_thumb@2x.jpg",
+   "octets": "37303"
+  },
+  {
+   "id": "85f65d06-5781-4feb-a8cb-0a9c754e8b2d",
+   "nom": "citroen-e-spacetourer-xl-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "39807"
+  },
+  {
+   "id": "862bc3ea-88d9-41b0-be8b-7ce2894ad848",
+   "nom": "tesla-model-3-standard-rwd-highland-64kwh-445km-2025_thumb@2x.jpg",
+   "octets": "28034"
+  },
+  {
+   "id": "86deaffa-f37f-4326-9e2e-f5a3b8a175ac",
+   "nom": "smart-3-premium-66kwh-355km-2024_thumb@2x.jpg",
+   "octets": "27052"
+  },
+  {
+   "id": "86ebd001-d5f0-4328-82a1-41fc9d6febb6",
+   "nom": "opel-corsa-electric-my25-54kwh-335km-2025_thumb@2x.jpg",
+   "octets": "25809"
+  },
+  {
+   "id": "86f84fdf-940c-47f8-94e9-5c1e48306ef7",
+   "nom": "citroen-e-c4-x-50kwh-290km-2024_thumb@2x.jpg",
+   "octets": "37012"
+  },
+  {
+   "id": "874d4e41-51aa-41ba-99f6-e7675c890583",
+   "nom": "audi-q4-sportback-e-tron-40-63kwh-340km-2025_thumb@2x.jpg",
+   "octets": "35110"
+  },
+  {
+   "id": "885945d7-4c16-493b-84a7-368626bec8b2",
+   "nom": "mini-cooper-e-41kwh-250km-2023_thumb@2x.jpg",
+   "octets": "26644"
+  },
+  {
+   "id": "89825f35-b188-431a-b5f3-88eb1cdc4d56",
+   "nom": "nissan-ariya-91kwh-450km-2022_thumb@2x.jpg",
+   "octets": "30949"
+  },
+  {
+   "id": "89a947f6-86a0-420b-80ee-1b3bd3f0c7a6",
+   "nom": "peugeot-e-408-61kwh-350km-2024_thumb@2x.jpg",
+   "octets": "35783"
+  },
+  {
+   "id": "8a1d5e2b-00d0-403b-8d43-c667424fae65",
+   "nom": "hongqi-e-hs9-99kwh-370km-2022_thumb@2x.jpg",
+   "octets": "27960"
+  },
+  {
+   "id": "8b329762-db2f-4dd9-b7d6-e03e25c97582",
+   "nom": "smart-1-brabus-66kwh-325km-2023_thumb@2x.jpg",
+   "octets": "40116"
+  },
+  {
+   "id": "8bcb4d88-e7e1-4a2b-9ecb-220ea53a8fdd",
+   "nom": "byd-atto-3-my25-62kwh-340km-2025_thumb@2x.jpg",
+   "octets": "41006"
+  },
+  {
+   "id": "8cae6b6c-5fa1-48fc-bb35-ddd27629e82a",
+   "nom": "audi-s6-avant-e-tron-100kwh-530km-2024_thumb@2x.jpg",
+   "octets": "33895"
+  },
+  {
+   "id": "8cf28b9d-a8f3-40e8-aa3a-73f17408f333",
+   "nom": "polestar-4-long-range-single-motor-100kwh-495km-2024_thumb@2x.jpg",
+   "octets": "21336"
+  },
+  {
+   "id": "8d1166e6-120e-4541-b204-99937fd13a4b",
+   "nom": "mg-mg4-electric-51kwh-300km-2022_thumb@2x.jpg",
+   "octets": "34771"
+  },
+  {
+   "id": "8d25749a-37a4-46be-bb98-019489ead13a",
+   "nom": "hyundai-ioniq-5-rwd-my24-84kwh-450km-2024_thumb@2x.jpg",
+   "octets": "27717"
+  },
+  {
+   "id": "8d5c2533-221e-4559-b07b-725e43776c23",
+   "nom": "fiat-600e-54kwh-310km-2023_thumb@2x.jpg",
+   "octets": "47647"
+  },
+  {
+   "id": "8d5de987-f119-4cb3-8a23-903aee27bb89",
+   "nom": "ford-puma-gen-e-53kwh-275km-2024_thumb@2x.jpg",
+   "octets": "42111"
+  },
+  {
+   "id": "8e88164e-1eeb-44ae-bff9-87bb220a7121",
+   "nom": "toyota-c-hr-577-my26-58kwh-330km-2025_thumb@2x.jpg",
+   "octets": "32694"
+  },
+  {
+   "id": "8eed9104-4905-4f3d-8965-2bd77322acb7",
+   "nom": "hongqi-e-hs7-awd-pro-111kwh-435km-2025_thumb@2x.jpg",
+   "octets": "20360"
+  },
+  {
+   "id": "8ef30755-0be8-4a86-b73d-432094b2eef4",
+   "nom": "togg-t10x-long-range-awd-88kwh-425km-2025_thumb@2x.jpg",
+   "octets": "43283"
+  },
+  {
+   "id": "8fe71022-792e-4d86-b975-ce1723739157",
+   "nom": "hyundai-inster-long-range-49kwh-300km-2024_thumb@2x.jpg",
+   "octets": "35775"
+  },
+  {
+   "id": "8ff95e94-2ae5-4b43-b215-603930dcdde1",
+   "nom": "mercedes-benz-eqt-200-long-48kwh-220km-2024_thumb@2x.jpg",
+   "octets": "33642"
+  },
+  {
+   "id": "900330e9-1f06-40f8-9bf8-035c2e4512d6",
+   "nom": "mg-im6-performance-100kwh-440km-2025_thumb@2x.jpg",
+   "octets": "35745"
+  },
+  {
+   "id": "9008fb40-f3ca-430d-a484-b4f4bd2b116a",
+   "nom": "audi-q4-sportback-e-tron-45-82kwh-435km-2023_thumb@2x.jpg",
+   "octets": "35110"
+  },
+  {
+   "id": "903bd0c4-118c-4747-92e5-a0d9fde8aa93",
+   "nom": "cupra-born-170kw-63kwh-360km-2024_thumb@2x.jpg",
+   "octets": "29842"
+  },
+  {
+   "id": "90a667f8-4835-463c-90f6-15bae482af43",
+   "nom": "toyota-urban-cruiser-611-61kwh-330km-2025_thumb@2x.jpg",
+   "octets": "26325"
+  },
+  {
+   "id": "91715f53-87d8-4881-bac4-bcfbe0ef1c5e",
+   "nom": "fiat-500e-hatchback-42kwh-235km-2020_thumb@2x.jpg",
+   "octets": "44273"
+  },
+  {
+   "id": "91c4956f-33ae-44df-a5ac-f1a5eec9da69",
+   "nom": "hongqi-e-hs7-long-range-111kwh-455km-2025_thumb@2x.jpg",
+   "octets": "20360"
+  },
+  {
+   "id": "91e06d57-4f56-4bcb-8b27-42a87e6e8f2d",
+   "nom": "volvo-ec40-single-motor-er-my26-82kwh-420km-2025_thumb@2x.jpg",
+   "octets": "28483"
+  },
+  {
+   "id": "91faa56e-1d3e-400b-9d16-326c47d31b07",
+   "nom": "abarth-500e-hatchback-42kwh-225km-2023_thumb@2x.jpg",
+   "octets": "44773"
+  },
+  {
+   "id": "92362203-ba64-449c-bd17-dc2373e6c2f7",
+   "nom": "volvo-ec40-twin-motor-performance-my26-82kwh-400km-2025_thumb@2x.jpg",
+   "octets": "28483"
+  },
+  {
+   "id": "927a610f-a189-49b1-b552-82ef4472a8f2",
+   "nom": "citroen-e-c4-x-50kwh-290km-2024_thumb@2x.jpg",
+   "octets": "37012"
+  },
+  {
+   "id": "92e9240d-de49-465d-b3f1-4400552d03e6",
+   "nom": "mitsubishi-eclipse-cross-my26-92kwh-480km-2025_thumb@2x.jpg",
+   "octets": "30768"
+  },
+  {
+   "id": "92f14c6a-c02b-4cc3-8737-80ae56bb26e6",
+   "nom": "ford-mustang-mach-e-er-awd-my24-99kwh-445km-2024-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "9317b270-1d2f-4eee-9b03-d9e402364981",
+   "nom": "toyota-urban-cruiser-611-awd-61kwh-310km-2025_thumb@2x.jpg",
+   "octets": "26325"
+  },
+  {
+   "id": "93c6cc71-f15d-4f21-898d-17cba344f738",
+   "nom": "polestar-2-long-range-single-motor-my26-82kwh-475km-2025_thumb@2x.jpg",
+   "octets": "34664"
+  },
+  {
+   "id": "9401feb7-636b-4b2f-a9da-0580192e8745",
+   "nom": "porsche-taycan-turbo-s-cross-turismo-105kwh-485km-2024_thumb@2x.jpg",
+   "octets": "38469"
+  },
+  {
+   "id": "9445ed59-68bb-4edc-938a-a3d56b14214c",
+   "nom": "audi-q4-e-tron-55-quattro-82kwh-395km-2023-2025_thumb@2x.jpg",
+   "octets": "39322"
+  },
+  {
+   "id": "947ade8c-5754-4c93-983b-f4221dbc1146",
+   "nom": "ford-explorer-extended-range-rwd-82kwh-435km-2024_thumb@2x.jpg",
+   "octets": "32891"
+  },
+  {
+   "id": "94e7de92-4e15-419c-89ed-b28196c2a552",
+   "nom": "peugeot-e-traveller-l2-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "35070"
+  },
+  {
+   "id": "95849dca-13a6-450d-a42f-f5574d311cf8",
+   "nom": "smart-1-pure-49kwh-250km-2024_thumb@2x.jpg",
+   "octets": "30540"
+  },
+  {
+   "id": "96637cff-c3c5-4e59-9e32-00ab7738eea3",
+   "nom": "peugeot-e-5008-dual-motor-77kwh-355km-2025_thumb@2x.jpg",
+   "octets": "33891"
+  },
+  {
+   "id": "96893ce0-1135-480e-b016-16e1ab465792",
+   "nom": "opel-grandland-electric-101kwh-490km-2025_thumb@2x.jpg",
+   "octets": "25928"
+  },
+  {
+   "id": "96c5a632-56a2-465a-a2ec-7e0daa4bd33a",
+   "nom": "audi-q4-sportback-e-tron-40-63kwh-340km-2025_thumb@2x.jpg",
+   "octets": "35110"
+  },
+  {
+   "id": "96f6ab4a-7107-4fe9-b2e7-a48d3c9dfcd8",
+   "nom": "fiat-600e-54kwh-310km-2023_thumb@2x.jpg",
+   "octets": "47647"
+  },
+  {
+   "id": "973bd17c-c11b-4ef2-8fe0-2f4af02614ac",
+   "nom": "kia-ev4-hatchback-814-81kwh-475km-2025_thumb@2x.jpg",
+   "octets": "30261"
+  },
+  {
+   "id": "975347a9-c6dd-4796-9b48-572643b495d3",
+   "nom": "tesla-model-y-premium-awd-juniper-82kwh-475km-2025_thumb@2x.jpg",
+   "octets": "29117"
+  },
+  {
+   "id": "97b5cf0b-368c-4470-ad37-ed3f92ee5190",
+   "nom": "mercedes-benz-eqa-250-70kwh-395km-2023_thumb@2x.jpg",
+   "octets": "35970"
+  },
+  {
+   "id": "98367720-be09-47d1-a566-3a9caca98091",
+   "nom": "bmw-ix-xdrive60-115kwh-525km-2025_thumb@2x.jpg",
+   "octets": "26130"
+  },
+  {
+   "id": "986bee56-4ebc-4003-909a-8336a360f2cc",
+   "nom": "abarth-600e-turismo-54kwh-280km-2024_thumb@2x.jpg",
+   "octets": "34151"
+  },
+  {
+   "id": "9894703c-ad00-452b-b07a-ab09a12b27f2",
+   "nom": "peugeot-e-traveller-l3-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "35070"
+  },
+  {
+   "id": "992d1247-3b16-4b25-a549-46cb9bc1f9f5",
+   "nom": "gwm-ora-03-63kwh-340km-2024_thumb@2x.jpg",
+   "octets": "37155"
+  },
+  {
+   "id": "99344fe1-9e41-48c9-9646-e63474e35aea",
+   "nom": "bmw-ix3-50-xdrive-my26-115kwh-610km-2025_thumb@2x.jpg",
+   "octets": "35306"
+  },
+  {
+   "id": "999f7517-4869-407d-ac06-fbabd6e3811f",
+   "nom": "mercedes-benz-cla-250-90kwh-585km-2025_thumb@2x.jpg",
+   "octets": "40613"
+  },
+  {
+   "id": "99a7781a-445e-42a0-bfda-e707081ba270",
+   "nom": "citroen-e-c3-aircross-extended-range-54kwh-290km-2025_thumb@2x.jpg",
+   "octets": "27390"
+  },
+  {
+   "id": "99e23444-fd74-4ad0-8502-a048ec9c76e5",
+   "nom": "mercedes-benz-eqt-200-standard-48kwh-225km-2023_thumb@2x.jpg",
+   "octets": "33642"
+  },
+  {
+   "id": "99ef6827-8363-4add-a6f2-3b22c00b2488",
+   "nom": "togg-t10f-long-range-rwd-88kwh-490km-2025_thumb@2x.jpg",
+   "octets": "40482"
+  },
+  {
+   "id": "9a4059ac-79a6-438c-9157-92ee310f9d00",
+   "nom": "bmw-i5-edrive40-sedan-my25-84kwh-480km-2025_thumb@2x.jpg",
+   "octets": "40580"
+  },
+  {
+   "id": "9a7938b0-b5b1-47d4-898d-d3e7a05e3d97",
+   "nom": "byd-dolphin-604-my25-62kwh-350km-2025_thumb@2x.jpg",
+   "octets": "22969"
+  },
+  {
+   "id": "9a9d011b-f12a-4bce-8a90-3bf4b215d9b3",
+   "nom": "ds-automobiles-n8-awd-long-range-101kwh-530km-2024_thumb@2x.jpg",
+   "octets": "34680"
+  },
+  {
+   "id": "9acc9f85-d96e-4164-bc61-0e3fb4e1f1ef",
+   "nom": "alpine-a290-electric-220hp-55kwh-305km-2024_thumb@2x.jpg",
+   "octets": "27067"
+  },
+  {
+   "id": "9b5d5b35-811f-40f7-b62f-f52e2a927b29",
+   "nom": "kgm-torres-evx-806-my26-81kwh-400km-2025_thumb@2x.jpg",
+   "octets": "33235"
+  },
+  {
+   "id": "9bfc0289-9765-4511-9b95-405f3c525e4f",
+   "nom": "genesis-gv60-pure-my25-84kwh-425km-2025_thumb@2x.jpg",
+   "octets": "25909"
+  },
+  {
+   "id": "9c97930b-1122-4cd5-9b81-ad2911b28571",
+   "nom": "zeekr-001-privilege-awd-100kwh-480km-2023_thumb@2x.jpg",
+   "octets": "42858"
+  },
+  {
+   "id": "9cb87435-d4de-4557-9bba-aef552c9a6bf",
+   "nom": "togg-t10x-long-range-rwd-88kwh-440km-2025_thumb@2x.jpg",
+   "octets": "43283"
+  },
+  {
+   "id": "9d4f3677-93fb-4955-8a2e-3319c4bbeeb3",
+   "nom": "skoda-enyaq-coupe-85-my25-82kwh-470km-2025_thumb@2x.jpg",
+   "octets": "40483"
+  },
+  {
+   "id": "9db857ad-a77d-40ff-b1e1-4c1c17617269",
+   "nom": "fiat-500e-cabrio-24kwh-135km-2022_thumb@2x.jpg",
+   "octets": "27823"
+  },
+  {
+   "id": "9de259ab-0f24-4e70-a8af-2889ed2bc88b",
+   "nom": "nio-el6-long-range-100kwh-435km-2023_thumb@2x.jpg",
+   "octets": "36317"
+  },
+  {
+   "id": "9dff682c-9f05-43be-b641-5a8403dcace4",
+   "nom": "lotus-emeya-600-102kwh-520km-2025_thumb@2x.jpg",
+   "octets": "30606"
+  },
+  {
+   "id": "9e05b390-0c24-4590-8e10-b99b73fad84e",
+   "nom": "opel-astra-sports-tourer-electric-54kwh-310km-2023_thumb@2x.jpg",
+   "octets": "32402"
+  },
+  {
+   "id": "9ee6dc55-694b-4007-934c-c7942b129f39",
+   "nom": "audi-a6-sportback-e-tron-performance-100kwh-600km-2024_thumb@2x.jpg",
+   "octets": "34463"
+  },
+  {
+   "id": "9f006f46-4a4b-4722-9dea-fa49dcdd5aed",
+   "nom": "alpine-a290-electric-220hp-55kwh-305km-2024_thumb@2x.jpg",
+   "octets": "27067"
+  },
+  {
+   "id": "9f995a71-f0ba-41dc-940d-c9a4146b8966",
+   "nom": "kia-ev6-gt-84kwh-395km-2025_thumb@2x.jpg",
+   "octets": "27552"
+  },
+  {
+   "id": "9feffd59-e0bc-422a-8059-a22837115e73",
+   "nom": "audi-q6-sportback-e-tron-quattro-100kwh-500km-2024_thumb@2x.jpg",
+   "octets": "35294"
+  },
+  {
+   "id": "a023ceeb-053b-41c6-be83-b63d3ce6e08b",
+   "nom": "ford-explorer-extended-range-awd-84kwh-440km-2024_thumb@2x.jpg",
+   "octets": "32891"
+  },
+  {
+   "id": "a07b002e-4406-47eb-9294-283ef93cca21",
+   "nom": "volkswagen-id4-pro-my26-82kwh-445km-2025_thumb@2x.jpg",
+   "octets": "47198"
+  },
+  {
+   "id": "a190338d-018d-4a2f-9f83-6132d3f8d0b6",
+   "nom": "mercedes-benz-eqs-580-4matic-125kwh-640km-2024_thumb@2x.jpg",
+   "octets": "28176"
+  },
+  {
+   "id": "a2995f69-f955-47c0-9d20-377725ccc8d2",
+   "nom": "lexus-rz-500e-my26-77kwh-395km-2025_thumb@2x.jpg",
+   "octets": "38760"
+  },
+  {
+   "id": "a2a948d5-1aa3-4b89-b867-8b8ba18cec3a",
+   "nom": "audi-a6-avant-e-tron-performance-100kwh-575km-2024_thumb@2x.jpg",
+   "octets": "28630"
+  },
+  {
+   "id": "a302e4af-8987-4dc9-be0f-97fb7ac99c36",
+   "nom": "ford-capri-extended-range-rwd-82kwh-455km-2024_thumb@2x.jpg",
+   "octets": "25890"
+  },
+  {
+   "id": "a3932b63-da18-4bad-9bc6-1211cc84447a",
+   "nom": "citroen-e-c3-standard-range-44kwh-255km-2024_thumb@2x.jpg",
+   "octets": "48412"
+  },
+  {
+   "id": "a43d5cc9-ddb3-4da5-b89d-4e26462f58d6",
+   "nom": "xpeng-g9-rwd-standard-range-my25-79kwh-410km-2025_thumb@2x.jpg",
+   "octets": "33216"
+  },
+  {
+   "id": "a45b56ec-9036-4a78-b98e-129183921af7",
+   "nom": "tesla-model-3-premium-rwd-highland-82kwh-580km-2025_thumb@2x.jpg",
+   "octets": "29448"
+  },
+  {
+   "id": "a48e44fb-ee90-4978-b56c-df371148fafc",
+   "nom": "audi-q6-sportback-e-tron-quattro-100kwh-500km-2024_thumb@2x.jpg",
+   "octets": "35294"
+  },
+  {
+   "id": "a4ca5965-f132-4733-9cd5-5a30b5f09eb2",
+   "nom": "peugeot-e-308-sw-my26-58kwh-340km-2025_thumb@2x.jpg",
+   "octets": "28759"
+  },
+  {
+   "id": "a5bb6164-1615-4e63-93c4-cc94d484bcdd",
+   "nom": "peugeot-e-2008-54kwh-300km-2023_thumb@2x.jpg",
+   "octets": "31032"
+  },
+  {
+   "id": "a64f13bd-e2f8-49db-bec0-a42a3ec68e65",
+   "nom": "ford-explorer-extended-range-rwd-82kwh-435km-2024_thumb@2x.jpg",
+   "octets": "32891"
+  },
+  {
+   "id": "a7025cd8-dfed-456c-8488-4f845177c185",
+   "nom": "ford-mustang-mach-e-er-awd-my25-99kwh-435km-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "a724a21f-d7c7-46d0-a6a7-4581a652cefb",
+   "nom": "byd-seal-825-rwd-design-84kwh-480km-2023_thumb@2x.jpg",
+   "octets": "37452"
+  },
+  {
+   "id": "a8187015-900d-4d2e-9354-355479af20ae",
+   "nom": "mg-mg4-electric-xpower-64kwh-320km-2023_thumb@2x.jpg",
+   "octets": "53608"
+  },
+  {
+   "id": "a88ccd63-d901-45a3-a889-3d48bc3a531d",
+   "nom": "audi-e-tron-gt-rs-performance-105kwh-525km-2024_thumb@2x.jpg",
+   "octets": "30834"
+  },
+  {
+   "id": "a904a0d2-b69a-47d2-967b-d710aa73e402",
+   "nom": "xpeng-g9-rwd-long-range-my25-93kwh-480km-2025_thumb@2x.jpg",
+   "octets": "33216"
+  },
+  {
+   "id": "a9405373-79b4-4705-9542-8df8f21668a0",
+   "nom": "bmw-i5-m60-xdrive-sedan-my25-84kwh-430km-2025_thumb@2x.jpg",
+   "octets": "32177"
+  },
+  {
+   "id": "a9979e2d-aab4-408f-b0f9-2681325d3c19",
+   "nom": "mg-im5-performance-100kwh-490km-2025_thumb@2x.jpg",
+   "octets": "55686"
+  },
+  {
+   "id": "a9b06064-d871-4a22-a119-35f0b2ac9087",
+   "nom": "porsche-taycan-turbo-s-sport-turismo-105kwh-505km-2024_thumb@2x.jpg",
+   "octets": "36386"
+  },
+  {
+   "id": "a9b3c6b4-63b0-459b-85c4-c6ce9a8f2128",
+   "nom": "volkswagen-id7-tourer-pro-my26-82kwh-470km-2025_thumb@2x.jpg",
+   "octets": "47760"
+  },
+  {
+   "id": "a9b6319e-c68f-4e26-a851-552bfde8c0b3",
+   "nom": "opel-astra-electric-54kwh-320km-2023_thumb@2x.jpg",
+   "octets": "31314"
+  },
+  {
+   "id": "a9d0920b-fd3c-4e0d-895f-941c8c18c656",
+   "nom": "citroen-e-c3-aircross-comfort-range-44kwh-240km-2024_thumb@2x.jpg",
+   "octets": "27390"
+  },
+  {
+   "id": "aa17f480-6c7f-4bc0-91c4-ae13d3059fda",
+   "nom": "xpeng-g9-awd-performance-my25-93kwh-465km-2025_thumb@2x.jpg",
+   "octets": "33216"
+  },
+  {
+   "id": "aa4fae30-3fda-4626-846a-e7b5e7307f5e",
+   "nom": "gwm-ora-03-gt-63kwh-325km-2024_thumb@2x.jpg",
+   "octets": "37155"
+  },
+  {
+   "id": "aae8c47f-edc5-45c2-8006-aff954b6ad43",
+   "nom": "dongfeng-box-314-31kwh-190km-2025_thumb@2x.jpg",
+   "octets": "34100"
+  },
+  {
+   "id": "ab3bd5f8-bc2e-4fa6-a8f4-23452f09633d",
+   "nom": "cadillac-optiq-500-e4-my26-79kwh-365km-2025_thumb@2x.jpg",
+   "octets": "35244"
+  },
+  {
+   "id": "abb8bbac-132d-42ae-bb7b-5c9ba7b9c7bf",
+   "nom": "toyota-proace-verso-l-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "28450"
+  },
+  {
+   "id": "ac1162e4-b940-4d5c-9bb3-6df020e42f09",
+   "nom": "audi-sq6-suv-e-tron-100kwh-470km-2024_thumb@2x.jpg",
+   "octets": "40011"
+  },
+  {
+   "id": "ac1cd195-3fe1-4bf4-8f81-3618e44d68d1",
+   "nom": "honda-eny1-69kwh-335km-2023_thumb@2x.jpg",
+   "octets": "45591"
+  },
+  {
+   "id": "acd84638-98bd-45c1-aa4c-4669aef335f4",
+   "nom": "audi-sq6-sportback-e-tron-100kwh-495km-2024_thumb@2x.jpg",
+   "octets": "43924"
+  },
+  {
+   "id": "acdf8554-74e7-4f1e-b30d-5c8548cdf7de",
+   "nom": "byd-seal-614-rwd-comfort-63kwh-365km-2025_thumb@2x.jpg",
+   "octets": "37452"
+  },
+  {
+   "id": "ad9a65fc-e3df-4e1f-97e4-e30d01b814e7",
+   "nom": "voyah-courage-rwd-80kwh-395km-2025_thumb@2x.jpg",
+   "octets": "29690"
+  },
+  {
+   "id": "addd7a4c-de77-4882-a8c7-2c5bd46684f9",
+   "nom": "volvo-ex40-twin-motor-my26-82kwh-385km-2025_thumb@2x.jpg",
+   "octets": "23811"
+  },
+  {
+   "id": "ade7baea-010d-4386-9017-aced4dec56fa",
+   "nom": "toyota-urban-cruiser-611-awd-61kwh-310km-2025_thumb@2x.jpg",
+   "octets": "26325"
+  },
+  {
+   "id": "ae1560bb-3504-4a90-92f1-6bd74452b922",
+   "nom": "citroen-e-berlingo-m-52kwh-235km-2024_thumb@2x.jpg",
+   "octets": "42529"
+  },
+  {
+   "id": "ae19364b-0c73-4bc5-a7db-4454b9ab2ca8",
+   "nom": "polestar-3-dual-motor-my26-106kwh-500km-2025_thumb@2x.jpg",
+   "octets": "24691"
+  },
+  {
+   "id": "ae7e82c5-b19e-45bd-8e07-26d91d68e66e",
+   "nom": "byd-seal-825-awd-excellence-84kwh-445km-2023_thumb@2x.jpg",
+   "octets": "37452"
+  },
+  {
+   "id": "af8d44c3-b812-4431-a48b-e1100eaf9e27",
+   "nom": "hyundai-ioniq-6-standard-range-2wd-53kwh-335km-2023_thumb@2x.jpg",
+   "octets": "38342"
+  },
+  {
+   "id": "afac730e-7c70-49aa-833b-9718bc347b0b",
+   "nom": "kia-ev9-998-awd-gt-100kwh-420km-2025_thumb@2x.jpg",
+   "octets": "31273"
+  },
+  {
+   "id": "afad3a75-7ccf-44b6-9b55-321c919831ef",
+   "nom": "abarth-500e-convertible-42kwh-225km-2023_thumb@2x.jpg",
+   "octets": "38750"
+  },
+  {
+   "id": "afd8a26e-8fda-44a4-9681-f916c1eb2080",
+   "nom": "volvo-ex90-twin-motor-my26-106kwh-480km-2025_thumb@2x.jpg",
+   "octets": "36709"
+  },
+  {
+   "id": "afeab543-7e6c-44ed-9795-c3d5c624473a",
+   "nom": "audi-q4-e-tron-45-quattro-82kwh-395km-2023_thumb@2x.jpg",
+   "octets": "39322"
+  },
+  {
+   "id": "b0080b80-c712-405a-8415-01d67ce4739a",
+   "nom": "mini-aceman-se-54kwh-290km-2024_thumb@2x.jpg",
+   "octets": "44937"
+  },
+  {
+   "id": "b05b5265-1097-4273-aae9-a3881992f071",
+   "nom": "jaecoo-5-ev-61kwh-325km-2025_thumb@2x.jpg",
+   "octets": "24706"
+  },
+  {
+   "id": "b09dccdb-4c05-4497-9c8d-0c344d93f898",
+   "nom": "hyundai-ioniq-5-rwd-my24-63kwh-345km-2024_thumb@2x.jpg",
+   "octets": "27717"
+  },
+  {
+   "id": "b128babd-6e0b-4730-8faf-aab5646f3bf4",
+   "nom": "audi-a6-avant-e-tron-quattro-100kwh-560km-2024_thumb@2x.jpg",
+   "octets": "28630"
+  },
+  {
+   "id": "b2303df9-aea8-4b55-9cbc-bfb4fe8ca698",
+   "nom": "xpeng-p7-awd-performance-86kwh-460km-2023-2025_thumb@2x.jpg",
+   "octets": "40398"
+  },
+  {
+   "id": "b27da30e-7a2c-4dee-9824-d5632ab17b3b",
+   "nom": "cupra-born-vz-84kwh-465km-2024_thumb@2x.jpg",
+   "octets": "24487"
+  },
+  {
+   "id": "b2b1a5af-1cd7-49f5-8e69-904b03be3708",
+   "nom": "polestar-3-long-range-dual-motor-my23-25-111kwh-515km-2022-2025_thumb@2x.jpg",
+   "octets": "30967"
+  },
+  {
+   "id": "b2c1d678-2208-426b-b312-e28b0915dd34",
+   "nom": "tesla-model-3-long-range-rwd-highland-82kwh-580km-2025-2025_thumb@2x.jpg",
+   "octets": "29448"
+  },
+  {
+   "id": "b358e97e-ae60-4abb-a8f0-5bddbc7db8f8",
+   "nom": "vinfast-vf-8-plus-extended-range-90kwh-400km-2023_thumb@2x.jpg",
+   "octets": "38606"
+  },
+  {
+   "id": "b3afa8e5-d48c-4f71-921a-0aef463e4c8a",
+   "nom": "bmw-ix1-xdrive30-66kwh-380km-2022_thumb@2x.jpg",
+   "octets": "37858"
+  },
+  {
+   "id": "b3f665c7-0864-49b2-bc5c-34a4b4a2c29e",
+   "nom": "togg-t10f-standard-range-rwd-52kwh-295km-2025_thumb@2x.jpg",
+   "octets": "40482"
+  },
+  {
+   "id": "b43b960a-5bb5-4040-9329-0e94d4345464",
+   "nom": "xpeng-g6-awd-performance-my25-81kwh-425km-2025_thumb@2x.jpg",
+   "octets": "34655"
+  },
+  {
+   "id": "b4dfd9ab-bcae-4d14-929a-346922ba3550",
+   "nom": "fiat-grande-panda-44kwh-260km-2024_thumb@2x.jpg",
+   "octets": "35672"
+  },
+  {
+   "id": "b4fe0dcd-72b0-44d2-85f6-b05f16e9d050",
+   "nom": "zeekr-7x-long-range-rwd-100kwh-490km-2025_thumb@2x.jpg",
+   "octets": "31958"
+  },
+  {
+   "id": "b54cc096-b66c-4c96-bcfc-d01580b02c21",
+   "nom": "cupra-born-170kw-84kwh-470km-2025_thumb@2x.jpg",
+   "octets": "29842"
+  },
+  {
+   "id": "b563ffa8-fa2e-4432-8d58-cef873f20660",
+   "nom": "geely-ex5-62kwh-330km-2026_thumb@2x.jpg",
+   "octets": "26120"
+  },
+  {
+   "id": "b572e18b-41ba-4346-a907-c09f610cc176",
+   "nom": "audi-q4-e-tron-40-63kwh-325km-2025_thumb@2x.jpg",
+   "octets": "39322"
+  },
+  {
+   "id": "b57ad283-c029-4970-92bf-e8ce460e6559",
+   "nom": "bmw-i7-edrive50-106kwh-520km-2023_thumb@2x.jpg",
+   "octets": "33707"
+  },
+  {
+   "id": "b64c5721-956b-45a4-af8b-de8a4e14a216",
+   "nom": "suzuki-e-vitara-2wd-49kwh-270km-2025_thumb@2x.jpg",
+   "octets": "40528"
+  },
+  {
+   "id": "b683ffb1-b612-49b1-b30f-9f1e369fb183",
+   "nom": "hyundai-ioniq-5-n-my24-84kwh-390km-2023_thumb@2x.jpg",
+   "octets": "25210"
+  },
+  {
+   "id": "b6a63d1b-aac6-4132-851b-52770e3a8006",
+   "nom": "alfa-romeo-junior-elettrica-veloce-54kwh-310km-2024_thumb@2x.jpg",
+   "octets": "31620"
+  },
+  {
+   "id": "b6b41407-6411-43b7-ac9c-10b21a8561f4",
+   "nom": "audi-q6-suv-e-tron-83kwh-395km-2024_thumb@2x.jpg",
+   "octets": "40294"
+  },
+  {
+   "id": "b70056c0-0550-4184-bfea-3249bb99a12b",
+   "nom": "citroen-c5-aircross-long-range-101kwh-485km-2025_thumb@2x.jpg",
+   "octets": "25681"
+  },
+  {
+   "id": "b73645ec-b039-4bb3-b798-38640ff08893",
+   "nom": "fiat-500e-hatchback-24kwh-135km-2020_thumb@2x.jpg",
+   "octets": "44273"
+  },
+  {
+   "id": "b777f1c5-31a6-4bbe-b37b-ab7c483d8afd",
+   "nom": "nissan-micra-extended-range-55kwh-330km-2025_thumb@2x.jpg",
+   "octets": "33142"
+  },
+  {
+   "id": "b781697d-0c28-44f8-b231-95a2dafdbba8",
+   "nom": "skoda-elroq-60-my25-63kwh-350km-2024_thumb@2x.jpg",
+   "octets": "29976"
+  },
+  {
+   "id": "b8f90e63-23c9-449e-b865-cb52f0bd411a",
+   "nom": "kia-ev9-998-awd-gt-line-100kwh-425km-2023_thumb@2x.jpg",
+   "octets": "39546"
+  },
+  {
+   "id": "b991e320-0c97-4acf-ad65-e0b4cb9df3da",
+   "nom": "bmw-ix2-xdrive30-66kwh-385km-2023_thumb@2x.jpg",
+   "octets": "36779"
+  },
+  {
+   "id": "b9b2b2ba-b2e5-4f26-95ad-80216649805e",
+   "nom": "lotus-emeya-900-102kwh-465km-2025_thumb@2x.jpg",
+   "octets": "30606"
+  },
+  {
+   "id": "b9f7c9f4-ef03-4fd8-b43f-6255cdc79772",
+   "nom": "hyundai-kona-electric-68kwh-390km-2023_thumb@2x.jpg",
+   "octets": "35624"
+  },
+  {
+   "id": "b9fb4565-8868-4420-ac63-bf9697e08d84",
+   "nom": "volkswagen-e-transporter-kombi-l2-210kw-68kwh-250km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "ba474642-90c0-4141-9389-7bcb3b8164d8",
+   "nom": "ford-mustang-mach-e-rally-my24-99kwh-410km-2024-2025_thumb@2x.jpg",
+   "octets": "37409"
+  },
+  {
+   "id": "babeb408-03de-4d5f-81c4-924ca3a795f1",
+   "nom": "ds-automobiles-n8-fwd-long-range-101kwh-545km-2024_thumb@2x.jpg",
+   "octets": "34680"
+  },
+  {
+   "id": "bae3fde9-2b2f-4abd-ac4f-3755b10208e7",
+   "nom": "volkswagen-e-transporter-kombi-l1-210kw-68kwh-255km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "baee0d8a-c9cf-498e-892b-9bb750672831",
+   "nom": "volkswagen-id4-pro-4motion-my26-82kwh-435km-2025_thumb@2x.jpg",
+   "octets": "47198"
+  },
+  {
+   "id": "bb406435-f0d2-4ecf-af80-2c75271f1b98",
+   "nom": "mercedes-benz-evito-tourer-extra-long-66kwh-215km-2024_thumb@2x.jpg",
+   "octets": "33767"
+  },
+  {
+   "id": "bb8d363c-f8b2-4371-8ec9-1e7b2ddd6d8a",
+   "nom": "byd-dolphin-surf-432-boost-46kwh-270km-2025_thumb@2x.jpg",
+   "octets": "24171"
+  },
+  {
+   "id": "bb95e093-6e29-47a1-965e-297b492f8154",
+   "nom": "volkswagen-id4-pure-my26-55kwh-285km-2025_thumb@2x.jpg",
+   "octets": "47198"
+  },
+  {
+   "id": "bbb30c93-00c4-4a82-9822-55631e1b0ebb",
+   "nom": "tesla-model-y-premium-rwd-juniper-78kwh-470km-2025_thumb@2x.jpg",
+   "octets": "29117"
+  },
+  {
+   "id": "bbb5397a-e632-4c0b-a639-ab0cf4e68922",
+   "nom": "mg-cyberster-trophy-77kwh-425km-2024_thumb@2x.jpg",
+   "octets": "24952"
+  },
+  {
+   "id": "bbdbbe94-4d88-4591-8801-4a60a567e2ff",
+   "nom": "ford-mustang-mach-e-sr-rwd-my24-78kwh-385km-2024-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "bbeb1450-a04c-4282-aea6-1eecf294a6dc",
+   "nom": "bmw-i4-edrive40-84kwh-525km-2025_thumb@2x.jpg",
+   "octets": "37342"
+  },
+  {
+   "id": "bd15a973-07e5-4f42-af00-f9b4dde1cae0",
+   "nom": "nio-et5-touring-standard-range-75kwh-400km-2023_thumb@2x.jpg",
+   "octets": "34970"
+  },
+  {
+   "id": "bd3943c3-85f0-41a7-898c-d760a4df5978",
+   "nom": "fiat-500e-cabrio-42kwh-230km-2020_thumb@2x.jpg",
+   "octets": "27823"
+  },
+  {
+   "id": "bda4878a-85f3-41d6-a648-6e714a91729b",
+   "nom": "togg-t10f-long-range-awd-88kwh-465km-2025_thumb@2x.jpg",
+   "octets": "40482"
+  },
+  {
+   "id": "bdf3484e-3415-4cd1-98b3-440f4089149a",
+   "nom": "porsche-taycan-89kwh-495km-2024-2025_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "be40eff5-9bdf-400d-a053-2bab6c3eba37",
+   "nom": "volkswagen-id7-tourer-gtx-my26-91kwh-500km-2025_thumb@2x.jpg",
+   "octets": "46967"
+  },
+  {
+   "id": "be4eb8dd-f1d7-4693-950b-775e22de6cca",
+   "nom": "gwm-ora-07-pure-67kwh-350km-2024_thumb@2x.jpg",
+   "octets": "34902"
+  },
+  {
+   "id": "be786357-f692-47d2-a331-50d670d0b223",
+   "nom": "mercedes-benz-evito-tourer-long-66kwh-220km-2024_thumb@2x.jpg",
+   "octets": "33767"
+  },
+  {
+   "id": "be878b73-2cc5-4a0d-aac8-0cc2c3b6e333",
+   "nom": "peugeot-e-rifter-m-52kwh-235km-2024_thumb@2x.jpg",
+   "octets": "39030"
+  },
+  {
+   "id": "bec5bd35-75ef-4e9b-9255-667027888df7",
+   "nom": "genesis-gv60-sport-my25-84kwh-410km-2025_thumb@2x.jpg",
+   "octets": "25909"
+  },
+  {
+   "id": "bef566b0-17b6-4053-a853-799f5b7ad85f",
+   "nom": "skoda-enyaq-rs-my26-84kwh-460km-2025_thumb@2x.jpg",
+   "octets": "39344"
+  },
+  {
+   "id": "c019746d-a654-47b0-99f6-dc03867999c6",
+   "nom": "hyundai-ioniq-6-long-range-2wd-77kwh-495km-2022_thumb@2x.jpg",
+   "octets": "38342"
+  },
+  {
+   "id": "c03eb0fc-26a9-4fad-b8d6-d7efcefca8a9",
+   "nom": "volkswagen-e-caravelle-l2-210kw-68kwh-245km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "c1221d63-3e31-480a-bd5c-de6a03921273",
+   "nom": "kia-niro-ev-68kwh-385km-2022_thumb@2x.jpg",
+   "octets": "32798"
+  },
+  {
+   "id": "c243c7db-822b-43d9-b8c2-2545063969df",
+   "nom": "lucid-air-pure-rwd-my26-88kwh-580km-2025_thumb@2x.jpg",
+   "octets": "42656"
+  },
+  {
+   "id": "c2468b0b-6d43-4385-b806-fe6876f9985d",
+   "nom": "hongqi-e-hs7-long-range-111kwh-455km-2025_thumb@2x.jpg",
+   "octets": "20360"
+  },
+  {
+   "id": "c2976733-56a4-427a-99c7-66c899713333",
+   "nom": "volkswagen-e-transporter-kombi-l2-160kw-68kwh-250km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "c2eb4d37-361f-42fb-8176-51e4cf5a3497",
+   "nom": "citroen-e-spacetourer-xl-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "39807"
+  },
+  {
+   "id": "c303c431-bd6c-4979-a337-f8fab183ad1c",
+   "nom": "mercedes-benz-eqa-300-4matic-70kwh-350km-2023_thumb@2x.jpg",
+   "octets": "35970"
+  },
+  {
+   "id": "c340c86d-8a47-4342-8b78-995f3eb0a3f0",
+   "nom": "kia-pv5-passenger-515-my26-52kwh-230km-2025_thumb@2x.jpg",
+   "octets": "37104"
+  },
+  {
+   "id": "c3c2ee70-bff7-4269-a31b-e41395da650a",
+   "nom": "opel-grandland-electric-77kwh-370km-2024_thumb@2x.jpg",
+   "octets": "25928"
+  },
+  {
+   "id": "c3ed27d8-7c26-4b8c-8223-c65bd60e2677",
+   "nom": "changan-deepal-s05-rwd-69kwh-385km-2025_thumb@2x.jpg",
+   "octets": "34915"
+  },
+  {
+   "id": "c410207f-ec96-49e4-98a3-a1b95e041761",
+   "nom": "fiat-500e-31-24kwh-135km-2022_thumb@2x.jpg",
+   "octets": "42076"
+  },
+  {
+   "id": "c45daf3f-c280-4f8a-bbdf-80b8c2271244",
+   "nom": "volvo-es90-twin-motor-performance-my26-106kwh-535km-2025_thumb@2x.jpg",
+   "octets": "34110"
+  },
+  {
+   "id": "c478b692-8506-47cb-9269-6ac5ad527c92",
+   "nom": "opel-combo-electric-xl-52kwh-230km-2024_thumb@2x.jpg",
+   "octets": "27385"
+  },
+  {
+   "id": "c4bf5e82-4074-4b9e-a853-320716b46b9c",
+   "nom": "ds-automobiles-n8-fwd-80kwh-415km-2024_thumb@2x.jpg",
+   "octets": "34680"
+  },
+  {
+   "id": "c4ded5b5-d12c-4699-a160-c00fe26e1da5",
+   "nom": "tesla-model-s-awd-my26-100kwh-590km-2025_thumb@2x.jpg",
+   "octets": "41163"
+  },
+  {
+   "id": "c5401a9e-f913-47ce-a040-31ecf8eb3a0e",
+   "nom": "mercedes-benz-eqs-450-125kwh-685km-2024_thumb@2x.jpg",
+   "octets": "28176"
+  },
+  {
+   "id": "c5663e30-b6f0-4128-9cef-6baa6a1b2f10",
+   "nom": "byd-atto-2-51kwh-245km-2025_thumb@2x.jpg",
+   "octets": "36218"
+  },
+  {
+   "id": "c5772268-411d-494b-b474-58b2ca1495a4",
+   "nom": "porsche-taycan-gts-105kwh-535km-2024_thumb@2x.jpg",
+   "octets": "40736"
+  },
+  {
+   "id": "c59e87df-355c-49d2-8b7b-bd010f9e7729",
+   "nom": "geely-ex5-62kwh-330km-2026_thumb@2x.jpg",
+   "octets": "26120"
+  },
+  {
+   "id": "c5c80cd2-4020-4350-aed1-c585a7a85ee9",
+   "nom": "maserati-granturismo-folgore-92kwh-420km-2024_thumb@2x.jpg",
+   "octets": "21239"
+  },
+  {
+   "id": "c6848101-b70f-4e7a-8a00-b17ee18b90a9",
+   "nom": "lynk-and-co-02-69kwh-370km-2024_thumb@2x.jpg",
+   "octets": "30168"
+  },
+  {
+   "id": "c694f8a2-36b6-45c9-9930-66afda9a2b89",
+   "nom": "volvo-ex40-single-motor-er-my26-82kwh-400km-2025_thumb@2x.jpg",
+   "octets": "23811"
+  },
+  {
+   "id": "c70a5452-9f71-4b2c-be29-9cbb4063eaad",
+   "nom": "smart-1-pro-49kwh-250km-2023_thumb@2x.jpg",
+   "octets": "30540"
+  },
+  {
+   "id": "c720168c-0d21-49a0-86c6-91aca26d6a33",
+   "nom": "zeekr-001-performance-awd-100kwh-480km-2023_thumb@2x.jpg",
+   "octets": "42858"
+  },
+  {
+   "id": "c80f0564-5b3e-4177-ac40-7ff507ea62d4",
+   "nom": "audi-q4-sportback-e-tron-45-quattro-82kwh-410km-2023_thumb@2x.jpg",
+   "octets": "35110"
+  },
+  {
+   "id": "c847c25c-2372-4835-95cb-3f6226e31733",
+   "nom": "audi-sq6-suv-e-tron-100kwh-470km-2024_thumb@2x.jpg",
+   "octets": "40011"
+  },
+  {
+   "id": "c8ee25d6-d6db-4c90-a5f2-6ddab6b9e96b",
+   "nom": "audi-q6-sportback-e-tron-83kwh-410km-2024_thumb@2x.jpg",
+   "octets": "35294"
+  },
+  {
+   "id": "c8ffce17-5daf-4894-988c-f65fb867cf82",
+   "nom": "honda-eny1-69kwh-335km-2023_thumb@2x.jpg",
+   "octets": "45591"
+  },
+  {
+   "id": "c93356be-d9fa-402b-84fd-998fd3d31e8a",
+   "nom": "volkswagen-id7-pro-s-my26-91kwh-525km-2025_thumb@2x.jpg",
+   "octets": "31132"
+  },
+  {
+   "id": "c9f2c8f9-8927-414e-bf5e-8c94688e8523",
+   "nom": "nissan-leaf-extended-range-my26-79kwh-455km-2025_thumb@2x.jpg",
+   "octets": "30064"
+  },
+  {
+   "id": "caa1ca33-a5a5-404d-bb2b-04b3ee6d9838",
+   "nom": "porsche-taycan-4s-plus-sport-turismo-105kwh-510km-2024_thumb@2x.jpg",
+   "octets": "36386"
+  },
+  {
+   "id": "cae12d8e-517a-4c62-9501-a0e94b0b4c9d",
+   "nom": "cupra-born-170kw-84kwh-470km-2025_thumb@2x.jpg",
+   "octets": "29842"
+  },
+  {
+   "id": "cb7f6a26-7d76-46fc-a2e0-58ca327ed23e",
+   "nom": "volkswagen-id-buzz-nwb-gtx-84kwh-360km-2024_thumb@2x.jpg",
+   "octets": "51798"
+  },
+  {
+   "id": "cb7fa918-3df4-4f2c-8612-aac86ba16f68",
+   "nom": "audi-q4-e-tron-45-82kwh-420km-2023_thumb@2x.jpg",
+   "octets": "39322"
+  },
+  {
+   "id": "cb9d8a75-793c-4c5c-bf16-b5f73ab66f5a",
+   "nom": "volvo-ex30-twin-motor-performance-my24-26-69kwh-340km-2023_thumb@2x.jpg",
+   "octets": "24562"
+  },
+  {
+   "id": "cbcb20c6-eba6-47b7-a9fd-91a41b18762c",
+   "nom": "leapmotor-c10-rwd-819-84kwh-410km-2025_thumb@2x.jpg",
+   "octets": "39129"
+  },
+  {
+   "id": "cbd8b692-ba37-4a8b-9f81-7f7a895bd5b1",
+   "nom": "genesis-g80-electrified-my25-94kwh-450km-2025_thumb@2x.jpg",
+   "octets": "55697"
+  },
+  {
+   "id": "cc059f80-a77a-406d-a9d9-d39e43dcc087",
+   "nom": "lancia-ypsilon-my25-54kwh-325km-2025_thumb@2x.jpg",
+   "octets": "30725"
+  },
+  {
+   "id": "ccdd416d-809b-450f-9aff-d0ddfa140740",
+   "nom": "mercedes-benz-glb-350-4matic-90kwh-460km-2025_thumb@2x.jpg",
+   "octets": "30417"
+  },
+  {
+   "id": "ccf89ef6-ef6f-4b0a-bd11-ca73ee540bb7",
+   "nom": "byd-atto-2-648-65kwh-310km-2025_thumb@2x.jpg",
+   "octets": "36218"
+  },
+  {
+   "id": "cd43eb7a-9a63-4ab5-a4f6-efef3e9f61c0",
+   "nom": "volvo-ex90-twin-motor-performance-my26-106kwh-465km-2025_thumb@2x.jpg",
+   "octets": "36709"
+  },
+  {
+   "id": "cd4729a6-cd18-48b9-a24a-d85831bdf669",
+   "nom": "hongqi-eh7-long-range-111kwh-550km-2025_thumb@2x.jpg",
+   "octets": "42005"
+  },
+  {
+   "id": "ce229c59-b704-4098-ae78-8c429214e4d8",
+   "nom": "hyundai-ioniq-9-long-range-awd-110kwh-495km-2025_thumb@2x.jpg",
+   "octets": "37521"
+  },
+  {
+   "id": "ce6fc964-715d-4d96-bd9c-4286af011d22",
+   "nom": "zeekr-x-core-rwd-my25-51kwh-270km-2025_thumb@2x.jpg",
+   "octets": "22255"
+  },
+  {
+   "id": "cea7913e-c232-4abd-a3a5-9f834fb4e915",
+   "nom": "audi-q4-e-tron-55-quattro-82kwh-395km-2023-2025_thumb@2x.jpg",
+   "octets": "39322"
+  },
+  {
+   "id": "cf463b47-cda3-4935-ad06-8f8cb86ae10b",
+   "nom": "bmw-i7-xdrive60-106kwh-510km-2022_thumb@2x.jpg",
+   "octets": "33707"
+  },
+  {
+   "id": "cfa3e88d-1b91-4534-a2ea-630adc325f92",
+   "nom": "peugeot-e-traveller-l3-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "35070"
+  },
+  {
+   "id": "d0190de5-c503-4134-b17a-ccce3b55c99e",
+   "nom": "tesla-model-x-plaid-my26-100kwh-475km-2025_thumb@2x.jpg",
+   "octets": "41899"
+  },
+  {
+   "id": "d037cf73-f588-4638-840f-8f021775a2b1",
+   "nom": "volkswagen-e-transporter-kombi-l1-160kw-68kwh-255km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "d0da44d2-b5a7-47ff-a7f8-6a18d371a766",
+   "nom": "cadillac-lyriq-v-my26-95kwh-400km-2025_thumb@2x.jpg",
+   "octets": "31783"
+  },
+  {
+   "id": "d0ffdb25-a0ae-4afa-8dd8-34fe29f9ab89",
+   "nom": "bmw-i4-edrive40-84kwh-525km-2025_thumb@2x.jpg",
+   "octets": "37342"
+  },
+  {
+   "id": "d14f2cab-1ac1-44ba-ad5b-668e1c42173b",
+   "nom": "smart-3-brabus-66kwh-350km-2024_thumb@2x.jpg",
+   "octets": "33588"
+  },
+  {
+   "id": "d15cddf3-d140-4584-b98d-84d95c1678f4",
+   "nom": "opel-mokka-electric-gse-54kwh-280km-2025_thumb@2x.jpg",
+   "octets": "27354"
+  },
+  {
+   "id": "d1ae9195-7d64-44e0-b722-24eb946b31c5",
+   "nom": "changan-deepal-s07-standard-80kwh-410km-2025_thumb@2x.jpg",
+   "octets": "42537"
+  },
+  {
+   "id": "d1e12783-5777-4801-9ece-135375ac946d",
+   "nom": "audi-a6-avant-e-tron-quattro-100kwh-560km-2024_thumb@2x.jpg",
+   "octets": "28630"
+  },
+  {
+   "id": "d1e6413b-c9eb-4fde-a034-b42553a686d6",
+   "nom": "audi-s6-sportback-e-tron-100kwh-555km-2024_thumb@2x.jpg",
+   "octets": "34559"
+  },
+  {
+   "id": "d2486ffc-c5d9-41f9-b34d-8e349e3578c2",
+   "nom": "hyundai-inster-long-range-49kwh-300km-2024_thumb@2x.jpg",
+   "octets": "35775"
+  },
+  {
+   "id": "d27416c6-d7cf-432c-8fb3-5e91fe039a7f",
+   "nom": "porsche-taycan-4s-89kwh-490km-2024-2025_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "d2bb9c8e-293f-4fa6-bd8d-f4a38f173cf2",
+   "nom": "mg-im5-long-range-100kwh-530km-2025_thumb@2x.jpg",
+   "octets": "55686"
+  },
+  {
+   "id": "d2e7f37b-6480-4424-a32f-de1cac961270",
+   "nom": "mini-aceman-jcw-54kwh-280km-2024_thumb@2x.jpg",
+   "octets": "35487"
+  },
+  {
+   "id": "d334da0d-e097-481a-85a0-8f1935361c68",
+   "nom": "volkswagen-id-buzz-nwb-pure-63kwh-265km-2024_thumb@2x.jpg",
+   "octets": "41847"
+  },
+  {
+   "id": "d35b52cc-44a8-446c-908f-01e799b8e870",
+   "nom": "elaris-beo-86kwh-390km-2023_thumb@2x.jpg",
+   "octets": "22448"
+  },
+  {
+   "id": "d45efb58-e80c-470d-a937-9786e1472d35",
+   "nom": "audi-s6-sportback-e-tron-100kwh-555km-2024_thumb@2x.jpg",
+   "octets": "34559"
+  },
+  {
+   "id": "d53539e5-fda0-494d-b911-267cbc37661b",
+   "nom": "porsche-taycan-turbo-sport-turismo-105kwh-505km-2024_thumb@2x.jpg",
+   "octets": "36386"
+  },
+  {
+   "id": "d5f2b18e-40fc-4d17-9277-cfd4dbdeaae6",
+   "nom": "audi-q6-sportback-e-tron-performance-100kwh-510km-2024_thumb@2x.jpg",
+   "octets": "35294"
+  },
+  {
+   "id": "d62837b9-873c-4814-b2ea-60838d83fcf4",
+   "nom": "abarth-500e-convertible-42kwh-225km-2023_thumb@2x.jpg",
+   "octets": "38750"
+  },
+  {
+   "id": "d6b6c573-a34a-4580-ba3b-aed7dd2a4417",
+   "nom": "byd-seal-825-awd-excellence-84kwh-445km-2023_thumb@2x.jpg",
+   "octets": "37452"
+  },
+  {
+   "id": "d6ece7b5-43b8-4e5b-b214-a999776cdb7f",
+   "nom": "ford-mustang-mach-e-sr-rwd-my25-78kwh-380km-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "d71e805b-873e-4a10-b2f4-5677229da68b",
+   "nom": "porsche-taycan-turbo-s-105kwh-525km-2024_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "d77d7686-3ded-4dac-ad6d-3584103594e6",
+   "nom": "cadillac-lyriq-600-e4-my24-107kwh-460km-2024_thumb@2x.jpg",
+   "octets": "38136"
+  },
+  {
+   "id": "d78373fc-81a2-4092-96f8-57898c33933e",
+   "nom": "citroen-e-c3-urban-range-30kwh-175km-2025_thumb@2x.jpg",
+   "octets": "48412"
+  },
+  {
+   "id": "d7a7acf1-b9be-422a-bf56-b383bd8208dc",
+   "nom": "mercedes-benz-cla-shooting-brake-350-4matic-90kwh-555km-2025_thumb@2x.jpg",
+   "octets": "34375"
+  },
+  {
+   "id": "d7b34f81-858b-4b13-a30e-9327c3adee52",
+   "nom": "opel-zafira-electric-xl-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "27009"
+  },
+  {
+   "id": "d80c3eec-5816-48e2-88a8-4082dcf173f0",
+   "nom": "lancia-ypsilon-hf-my25-54kwh-305km-2025_thumb@2x.jpg",
+   "octets": "33574"
+  },
+  {
+   "id": "d870a71b-e419-460f-9a61-cd2e7e373846",
+   "nom": "cupra-born-150kw-63kwh-360km-2025_thumb@2x.jpg",
+   "octets": "29842"
+  },
+  {
+   "id": "d9ac190b-2438-44fb-9aaa-f10e1ab4d69a",
+   "nom": "xpeng-g6-rwd-standard-range-my25-68kwh-380km-2025_thumb@2x.jpg",
+   "octets": "34655"
+  },
+  {
+   "id": "da30596a-ab0b-420b-9d0e-be69b13e9ee2",
+   "nom": "bmw-ix2-edrive20-66kwh-395km-2024_thumb@2x.jpg",
+   "octets": "36779"
+  },
+  {
+   "id": "da4484ab-0827-40a3-8004-1b2a36b13808",
+   "nom": "kia-ev6-long-range-awd-84kwh-440km-2024_thumb@2x.jpg",
+   "octets": "20472"
+  },
+  {
+   "id": "db234096-eb39-4833-96ca-c03d15675394",
+   "nom": "byd-seal-u-718-comfort-73kwh-360km-2024_thumb@2x.jpg",
+   "octets": "33985"
+  },
+  {
+   "id": "db29f8f6-0c41-410c-8583-8c153d3238f5",
+   "nom": "kia-ev5-814-my26-81kwh-400km-2025_thumb@2x.jpg",
+   "octets": "31268"
+  },
+  {
+   "id": "db41f876-3555-4e79-b736-ee7ff6b9e912",
+   "nom": "bmw-ix2-edrive20-66kwh-395km-2024_thumb@2x.jpg",
+   "octets": "36779"
+  },
+  {
+   "id": "db44bfb7-9d99-4911-b6a1-cf360ec5db99",
+   "nom": "bmw-i4-xdrive40-84kwh-490km-2025_thumb@2x.jpg",
+   "octets": "37342"
+  },
+  {
+   "id": "db8cc3f4-acb7-40f7-a835-5524d2117471",
+   "nom": "mercedes-benz-eqe-suv-300-my25-100kwh-450km-2025_thumb@2x.jpg",
+   "octets": "31883"
+  },
+  {
+   "id": "dbac6bc2-99f4-48ca-aa19-185047545b57",
+   "nom": "hyundai-ioniq-6-long-range-awd-77kwh-440km-2022_thumb@2x.jpg",
+   "octets": "38342"
+  },
+  {
+   "id": "dbac9360-00c2-449b-9c38-455f4d3dbd58",
+   "nom": "alpine-a390-gt-94kwh-470km-2025_thumb@2x.jpg",
+   "octets": "36161"
+  },
+  {
+   "id": "dbe43838-91f4-4482-a4bc-36889ab24605",
+   "nom": "cupra-tavascan-vz-82kwh-425km-2024_thumb@2x.jpg",
+   "octets": "29440"
+  },
+  {
+   "id": "dbe7997f-3152-4568-b608-c178ec12702c",
+   "nom": "kgm-torres-evx-my24-25-73kwh-370km-2024-2025_thumb@2x.jpg",
+   "octets": "33235"
+  },
+  {
+   "id": "dcb02b76-bf5e-4536-89a9-39b287278bb8",
+   "nom": "opel-frontera-electric-44kwh-240km-2024_thumb@2x.jpg",
+   "octets": "22504"
+  },
+  {
+   "id": "dcbd3ff7-76b2-43f8-b001-552a8683bd8d",
+   "nom": "mercedes-benz-eqe-300-my25-98kwh-525km-2025_thumb@2x.jpg",
+   "octets": "32070"
+  },
+  {
+   "id": "dcc9ddb2-99af-4857-a25f-6b47a2338458",
+   "nom": "volvo-ex40-twin-motor-performance-my26-82kwh-385km-2025_thumb@2x.jpg",
+   "octets": "23811"
+  },
+  {
+   "id": "dcf9468e-9bc1-48f4-a9ca-d13a0d78acdc",
+   "nom": "fiat-500e-31-42kwh-235km-2020_thumb@2x.jpg",
+   "octets": "42076"
+  },
+  {
+   "id": "dd22dc23-a04e-4110-8b75-b7e1987139fc",
+   "nom": "porsche-macan-4s-electric-my26-100kwh-470km-2025_thumb@2x.jpg",
+   "octets": "44739"
+  },
+  {
+   "id": "dd4da13a-aa69-46c0-a30a-991128740c35",
+   "nom": "mercedes-benz-g-580-124kwh-395km-2024_thumb@2x.jpg",
+   "octets": "30255"
+  },
+  {
+   "id": "dd870382-f4e6-4bc2-9f2b-92b6c258cab6",
+   "nom": "peugeot-e-3008-dual-motor-77kwh-365km-2025_thumb@2x.jpg",
+   "octets": "32250"
+  },
+  {
+   "id": "de7b49b8-acac-4ad9-a260-03920e9d76c3",
+   "nom": "abarth-500e-hatchback-42kwh-225km-2023_thumb@2x.jpg",
+   "octets": "44773"
+  },
+  {
+   "id": "ded1e9da-3209-4069-ad48-49092b3b2005",
+   "nom": "genesis-gv70-electrified-my25-84kwh-385km-2025_thumb@2x.jpg",
+   "octets": "46179"
+  },
+  {
+   "id": "def68eec-f76e-4c2f-8725-6ab392ee3177",
+   "nom": "mercedes-benz-eqe-suv-350-4matic-my25-100kwh-435km-2025_thumb@2x.jpg",
+   "octets": "31883"
+  },
+  {
+   "id": "df4e9ff7-300a-4d70-a38c-9a89d973a99b",
+   "nom": "audi-sq6-sportback-e-tron-100kwh-495km-2024_thumb@2x.jpg",
+   "octets": "43924"
+  },
+  {
+   "id": "dfc50420-456e-45d2-872e-43f59cb761bb",
+   "nom": "dacia-spring-electric-70-24kwh-165km-2025_thumb@2x.jpg",
+   "octets": "34454"
+  },
+  {
+   "id": "dfe351e0-28ca-4212-b772-4baccbf61c34",
+   "nom": "toyota-c-hr-my26-77kwh-430km-2025_thumb@2x.jpg",
+   "octets": "32694"
+  },
+  {
+   "id": "e0653de7-0ee8-4c59-b89d-c76cebcb47c2",
+   "nom": "bmw-ix3-50-xdrive-my26-115kwh-610km-2025_thumb@2x.jpg",
+   "octets": "35306"
+  },
+  {
+   "id": "e16e266d-45e2-4bb5-ba55-4d383cdd15f3",
+   "nom": "volkswagen-id-buzz-lwb-gtx-91kwh-380km-2024_thumb@2x.jpg",
+   "octets": "51798"
+  },
+  {
+   "id": "e1c78620-d625-435c-bfa6-1a22af2177d9",
+   "nom": "ford-e-tourneo-custom-l1-210kw-68kwh-235km-2023_thumb@2x.jpg",
+   "octets": "40705"
+  },
+  {
+   "id": "e1d24899-c752-491f-9b53-474bdaf8fa0d",
+   "nom": "byd-dolphin-604-my25-62kwh-350km-2025_thumb@2x.jpg",
+   "octets": "22969"
+  },
+  {
+   "id": "e1e1e26e-8183-432f-a5e1-c7b52671273f",
+   "nom": "audi-e-tron-gt-quattro-105kwh-540km-2025_thumb@2x.jpg",
+   "octets": "33781"
+  },
+  {
+   "id": "e2768850-f358-4dc8-944a-7b411b46ef8c",
+   "nom": "audi-q6-suv-e-tron-quattro-100kwh-480km-2024_thumb@2x.jpg",
+   "octets": "40294"
+  },
+  {
+   "id": "e306b2dd-5b49-4373-96c1-7298f036fac4",
+   "nom": "skoda-elroq-85-my25-82kwh-450km-2024_thumb@2x.jpg",
+   "octets": "29976"
+  },
+  {
+   "id": "e352e87b-ac2a-47aa-909c-62446640fd49",
+   "nom": "alpine-a390-gts-94kwh-470km-2026_thumb@2x.jpg",
+   "octets": "36161"
+  },
+  {
+   "id": "e3abc66f-7a60-4dd4-8d8e-2cd5e28bda49",
+   "nom": "kia-pv5-passenger-712-my26-71kwh-315km-2025_thumb@2x.jpg",
+   "octets": "37104"
+  },
+  {
+   "id": "e3deb549-47c0-4b55-ad82-93bb575541c5",
+   "nom": "polestar-2-long-range-dual-motor-my26-82kwh-455km-2025_thumb@2x.jpg",
+   "octets": "34664"
+  },
+  {
+   "id": "e3efed24-cb50-4b70-8e63-7398160d490b",
+   "nom": "lucid-air-sapphire-my25-26-118kwh-610km-2025_thumb@2x.jpg",
+   "octets": "41697"
+  },
+  {
+   "id": "e410379a-4167-4155-a95e-68b6e1a00724",
+   "nom": "porsche-cayenne-electric-my26-113kwh-520km-2025_thumb@2x.jpg",
+   "octets": "36798"
+  },
+  {
+   "id": "e41a2a8e-8f61-4bac-add4-09c66b9f889b",
+   "nom": "peugeot-e-traveller-l2-75kwh-265km-2024_thumb@2x.jpg",
+   "octets": "35070"
+  },
+  {
+   "id": "e4bab522-4a14-46be-a87c-1926538c4037",
+   "nom": "ds-automobiles-n8-fwd-long-range-101kwh-545km-2024_thumb@2x.jpg",
+   "octets": "34680"
+  },
+  {
+   "id": "e579b869-24c8-4d76-a15a-c15efa1afb54",
+   "nom": "firefly-firefly-42kwh-240km-2025_thumb@2x.jpg",
+   "octets": "22686"
+  },
+  {
+   "id": "e590e617-e307-4f37-adce-9d56c24e8b79",
+   "nom": "byd-sealion-7-913-awd-excellence-93kwh-440km-2024_thumb@2x.jpg",
+   "octets": "34383"
+  },
+  {
+   "id": "e5cd85e7-680e-4107-aff5-05182cdee521",
+   "nom": "ford-mustang-mach-e-rally-my25-99kwh-415km-2025_thumb@2x.jpg",
+   "octets": "37409"
+  },
+  {
+   "id": "e633d8bc-ba19-4dde-878a-7431fb3d7819",
+   "nom": "peugeot-e-5008-long-range-101kwh-485km-2024_thumb@2x.jpg",
+   "octets": "33891"
+  },
+  {
+   "id": "e63499d5-1258-4e9c-bbf8-536996fbe839",
+   "nom": "tesla-model-s-plaid-my26-100kwh-565km-2025_thumb@2x.jpg",
+   "octets": "41163"
+  },
+  {
+   "id": "e71d852c-1ec8-42e0-bdf8-d50f3729b1ac",
+   "nom": "porsche-taycan-turbo-gt-105kwh-475km-2024_thumb@2x.jpg",
+   "octets": "30017"
+  },
+  {
+   "id": "e7cdbef1-6f55-47b3-a861-bad1abd30bb5",
+   "nom": "bmw-ix-m70-xdrive-115kwh-500km-2025_thumb@2x.jpg",
+   "octets": "22752"
+  },
+  {
+   "id": "e7ef71af-6599-46bb-8e39-7e138458c828",
+   "nom": "lexus-ux-300e-73kwh-340km-2023_thumb@2x.jpg",
+   "octets": "32087"
+  },
+  {
+   "id": "e7f4a8a6-d635-499b-87a3-c46cc6fd4925",
+   "nom": "nio-el6-standard-range-75kwh-365km-2023_thumb@2x.jpg",
+   "octets": "36317"
+  },
+  {
+   "id": "e8626eb7-bdbf-40a3-8b89-a566434c7b6f",
+   "nom": "hyundai-ioniq-5-awd-my24-84kwh-445km-2024_thumb@2x.jpg",
+   "octets": "27717"
+  },
+  {
+   "id": "e86901e6-4a0d-47c6-8ed0-6a3ba21dbc7c",
+   "nom": "ford-mustang-mach-e-er-awd-my24-99kwh-445km-2024-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "e8d871eb-a0e0-4f28-90a3-5e0e5037d8f4",
+   "nom": "skoda-enyaq-coupe-rs-my25-84kwh-470km-2025-2025_thumb@2x.jpg",
+   "octets": "36695"
+  },
+  {
+   "id": "e9bd3fd7-d734-4e30-9b91-3036e6dd7601",
+   "nom": "citroen-e-c3-aircross-comfort-range-44kwh-240km-2024_thumb@2x.jpg",
+   "octets": "27390"
+  },
+  {
+   "id": "e9cee160-bf85-43e8-ae82-194d6bb11e80",
+   "nom": "mini-cooper-jcw-54kwh-290km-2024_thumb@2x.jpg",
+   "octets": "30506"
+  },
+  {
+   "id": "ea250a8a-ba01-4a1d-87c8-fe25f67e1f82",
+   "nom": "zeekr-x-privilege-awd-my25-69kwh-350km-2025_thumb@2x.jpg",
+   "octets": "22255"
+  },
+  {
+   "id": "ea39c7b3-f9b2-4897-9485-b5cf476baf97",
+   "nom": "smart-5-pro-my25-76kwh-370km-2025_thumb@2x.jpg",
+   "octets": "39175"
+  },
+  {
+   "id": "ead0aafd-dc87-448d-a56c-bd1c63e60f5b",
+   "nom": "ford-e-tourneo-custom-l1-160kw-68kwh-235km-2023_thumb@2x.jpg",
+   "octets": "40705"
+  },
+  {
+   "id": "ebb2106f-2152-4952-9cb1-95f76c63dc6b",
+   "nom": "skoda-elroq-85x-my26-82kwh-445km-2025_thumb@2x.jpg",
+   "octets": "29976"
+  },
+  {
+   "id": "ed038a53-aead-44b7-9261-c57f2baccb70",
+   "nom": "zeekr-7x-premium-rwd-75kwh-375km-2025_thumb@2x.jpg",
+   "octets": "31958"
+  },
+  {
+   "id": "ed08ebd2-f9b6-4863-9672-c0c39d63b138",
+   "nom": "audi-a6-avant-e-tron-83kwh-465km-2024_thumb@2x.jpg",
+   "octets": "28630"
+  },
+  {
+   "id": "ed433381-19b3-48d0-9ffe-b5270d6d2eb5",
+   "nom": "mercedes-benz-cla-shooting-brake-250-90kwh-565km-2025_thumb@2x.jpg",
+   "octets": "34375"
+  },
+  {
+   "id": "edca6bc2-1046-4e89-8c27-c660bb3c6d4f",
+   "nom": "byd-seal-825-rwd-design-84kwh-480km-2023_thumb@2x.jpg",
+   "octets": "37452"
+  },
+  {
+   "id": "ee27e639-8549-43b1-8aa3-73109248f4d5",
+   "nom": "ford-explorer-extended-range-awd-84kwh-440km-2024_thumb@2x.jpg",
+   "octets": "32891"
+  },
+  {
+   "id": "ef2c982a-c0f3-4174-9759-93b00601e1e5",
+   "nom": "fiat-500e-hatchback-42kwh-235km-2020_thumb@2x.jpg",
+   "octets": "44273"
+  },
+  {
+   "id": "ef91c4f8-4d8d-4dc4-babe-789c1103b846",
+   "nom": "bmw-i7-m70-xdrive-106kwh-490km-2023_thumb@2x.jpg",
+   "octets": "34334"
+  },
+  {
+   "id": "f01b4321-1a35-41e0-9cbd-9ef9e5bf5d9c",
+   "nom": "nio-et5-touring-long-range-100kwh-485km-2023_thumb@2x.jpg",
+   "octets": "34970"
+  },
+  {
+   "id": "f0431f0c-841f-487d-8530-143de4e84540",
+   "nom": "lotus-eletre-600-112kwh-495km-2025_thumb@2x.jpg",
+   "octets": "25349"
+  },
+  {
+   "id": "f04c58a6-aa0a-4ba7-80c3-6657ea793e8a",
+   "nom": "ford-mustang-mach-e-er-rwd-my25-99kwh-475km-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "f0667452-d10e-4c99-b071-9cea13369b8a",
+   "nom": "kgm-musso-ev-4wd-83kwh-360km-2025_thumb@2x.jpg",
+   "octets": "27574"
+  },
+  {
+   "id": "f11e75bc-7395-41b8-9bee-f4e9b4dac5f5",
+   "nom": "mg-mg4-electric-77kwh-425km-2023_thumb@2x.jpg",
+   "octets": "34771"
+  },
+  {
+   "id": "f1355e7d-679e-4dda-8933-87f6e02b4eac",
+   "nom": "audi-a6-avant-e-tron-performance-100kwh-575km-2024_thumb@2x.jpg",
+   "octets": "28630"
+  },
+  {
+   "id": "f1703242-895f-4309-ac3a-7dcbeea92527",
+   "nom": "elaris-beo-86kwh-390km-2023_thumb@2x.jpg",
+   "octets": "22448"
+  },
+  {
+   "id": "f1bfc34f-af6b-4014-a28d-b3702700ae00",
+   "nom": "citroen-e-c4-50kwh-285km-2024_thumb@2x.jpg",
+   "octets": "33836"
+  },
+  {
+   "id": "f22f6b03-be75-4678-8919-159de67ea6a1",
+   "nom": "alpine-a390-gt-94kwh-470km-2025_thumb@2x.jpg",
+   "octets": "36161"
+  },
+  {
+   "id": "f24742f8-a3f5-4833-9aa6-e0a18f2afe11",
+   "nom": "porsche-macan-4-electric-my26-100kwh-470km-2025_thumb@2x.jpg",
+   "octets": "29736"
+  },
+  {
+   "id": "f2475a36-c752-4d0b-8fc8-1d0ec202441d",
+   "nom": "mercedes-benz-eqe-suv-amg-53-4matic-my25-100kwh-420km-2025_thumb@2x.jpg",
+   "octets": "37091"
+  },
+  {
+   "id": "f25b8dff-8e32-4f45-a449-32d8dda6a973",
+   "nom": "gwm-ora-07-pro-67kwh-350km-2024_thumb@2x.jpg",
+   "octets": "34902"
+  },
+  {
+   "id": "f408b040-31fc-4596-a752-6f1dd9a32df1",
+   "nom": "citroen-e-c4-54kwh-325km-2024_thumb@2x.jpg",
+   "octets": "33836"
+  },
+  {
+   "id": "f53bd114-0dd5-4afa-9411-cdc3004eb160",
+   "nom": "bmw-ix-m70-xdrive-115kwh-500km-2025_thumb@2x.jpg",
+   "octets": "22752"
+  },
+  {
+   "id": "f5c44356-e9e5-4b15-9737-ebd1ae4a22fc",
+   "nom": "bmw-i7-xdrive60-106kwh-510km-2022_thumb@2x.jpg",
+   "octets": "33707"
+  },
+  {
+   "id": "f5d5c1e3-b5bd-43b1-93af-c06731e9fe2a",
+   "nom": "skoda-elroq-rs-my26-84kwh-455km-2025_thumb@2x.jpg",
+   "octets": "28040"
+  },
+  {
+   "id": "f5dbda94-735a-4e9b-9701-457ffc4653c9",
+   "nom": "mercedes-benz-glc-400-4matic-100kwh-500km-2025_thumb@2x.jpg",
+   "octets": "34235"
+  },
+  {
+   "id": "f6319fbd-2b43-4a3a-93d7-f92420f49f03",
+   "nom": "hongqi-e-hs9-120kwh-455km-2023_thumb@2x.jpg",
+   "octets": "27960"
+  },
+  {
+   "id": "f637dd93-4ea6-4aaf-9508-9710fd3f9a30",
+   "nom": "leapmotor-c10-rwd-699-72kwh-355km-2024_thumb@2x.jpg",
+   "octets": "39129"
+  },
+  {
+   "id": "f65b593d-bdb8-44b5-923b-041ed8195f29",
+   "nom": "opel-mokka-electric-54kwh-285km-2024_thumb@2x.jpg",
+   "octets": "24653"
+  },
+  {
+   "id": "f72c82b3-d4a7-408e-a175-50f2ae977403",
+   "nom": "ford-e-tourneo-custom-l1-210kw-68kwh-235km-2023_thumb@2x.jpg",
+   "octets": "40705"
+  },
+  {
+   "id": "f7330841-f2fe-4b09-9079-b6b3447e2a1c",
+   "nom": "smart-1-premium-66kwh-335km-2023_thumb@2x.jpg",
+   "octets": "30540"
+  },
+  {
+   "id": "f8734d87-c57b-44a2-b836-71805ab02bd6",
+   "nom": "ford-e-tourneo-courier-54kwh-200km-2024_thumb@2x.jpg",
+   "octets": "39105"
+  },
+  {
+   "id": "f907c59a-c653-46c0-ac72-bcf4057e5bad",
+   "nom": "bmw-i4-edrive35-70kwh-435km-2025_thumb@2x.jpg",
+   "octets": "37342"
+  },
+  {
+   "id": "f90fce25-a08c-4344-9add-1fa73b224bf0",
+   "nom": "citroen-c5-aircross-comfort-range-80kwh-375km-2025_thumb@2x.jpg",
+   "octets": "25681"
+  },
+  {
+   "id": "f92a1272-1255-4f6c-82fd-b2057a9a8c2e",
+   "nom": "porsche-taycan-turbo-s-105kwh-525km-2024_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "f94aa9aa-ad36-4b03-bcc3-b17ba23e1cc5",
+   "nom": "ford-mustang-mach-e-gt-my25-99kwh-435km-2025_thumb@2x.jpg",
+   "octets": "43382"
+  },
+  {
+   "id": "fa0d0ef7-7882-4e78-8bba-d0a55c10bf1d",
+   "nom": "changan-deepal-s07-standard-80kwh-410km-2025_thumb@2x.jpg",
+   "octets": "42537"
+  },
+  {
+   "id": "fa88862e-a103-4edf-8dbf-91da3c59ea22",
+   "nom": "lucid-air-grand-touring-my25-26-117kwh-720km-2024_thumb@2x.jpg",
+   "octets": "42656"
+  },
+  {
+   "id": "fae113c6-084d-4f76-99bd-815067c76069",
+   "nom": "toyota-proace-verso-m-50kwh-180km-2024_thumb@2x.jpg",
+   "octets": "28450"
+  },
+  {
+   "id": "fb9efed1-227c-46e4-953e-00b2b54be8c2",
+   "nom": "gwm-ora-07-gt-86kwh-430km-2024_thumb@2x.jpg",
+   "octets": "34902"
+  },
+  {
+   "id": "fc876707-d410-4886-ba0c-3f0f3d03f4d3",
+   "nom": "genesis-gv70-electrified-my25-84kwh-385km-2025_thumb@2x.jpg",
+   "octets": "46179"
+  },
+  {
+   "id": "fcfc088c-2112-4d53-9773-fcb8775550d8",
+   "nom": "nissan-ariya-e-4orce-225kw-91kwh-405km-2022_thumb@2x.jpg",
+   "octets": "30949"
+  },
+  {
+   "id": "fd55bc48-0dc6-4736-8e83-61238b168915",
+   "nom": "mercedes-benz-eqv-250-extra-long-66kwh-210km-2024_thumb@2x.jpg",
+   "octets": "34534"
+  },
+  {
+   "id": "fdc31173-4454-4b88-aa17-60b14485b252",
+   "nom": "tesla-model-3-long-range-awd-highland-82kwh-555km-2025-2025_thumb@2x.jpg",
+   "octets": "29448"
+  },
+  {
+   "id": "fe3e9195-41e2-4ea2-911c-ee73893afed7",
+   "nom": "volkswagen-id7-tourer-pro-s-my26-91kwh-520km-2025_thumb@2x.jpg",
+   "octets": "47760"
+  },
+  {
+   "id": "fe4206cd-50a0-45de-b1e7-89446779c855",
+   "nom": "bmw-i4-xdrive40-84kwh-490km-2025_thumb@2x.jpg",
+   "octets": "37342"
+  },
+  {
+   "id": "fe49c105-a2ee-4fd9-a161-cbca10a392d4",
+   "nom": "toyota-bz4x-touring-awd-747-my26-75kwh-385km-2026_thumb@2x.jpg",
+   "octets": "39685"
+  },
+  {
+   "id": "fe51998a-01a5-43ea-a1c3-f3605893db96",
+   "nom": "ford-capri-extended-range-rwd-82kwh-455km-2024_thumb@2x.jpg",
+   "octets": "25890"
+  },
+  {
+   "id": "fe5a8981-86c2-42f9-8c83-0b835a4a9ad7",
+   "nom": "volkswagen-e-transporter-kombi-l2-100kw-68kwh-250km-2025_thumb@2x.jpg",
+   "octets": "34118"
+  },
+  {
+   "id": "feb5e197-fd43-47ce-b974-8ae9338c3bd5",
+   "nom": "ford-e-tourneo-custom-l2-160kw-68kwh-235km-2023_thumb@2x.jpg",
+   "octets": "40705"
+  },
+  {
+   "id": "ff728462-a5b5-461a-97ac-ac1f33397d3d",
+   "nom": "hyundai-inster-standard-range-42kwh-255km-2024_thumb@2x.jpg",
+   "octets": "35775"
+  },
+  {
+   "id": "ff822f10-a8f5-451a-8ed3-e923325c2041",
+   "nom": "porsche-taycan-4-plus-105kwh-565km-2024_thumb@2x.jpg",
+   "octets": "42848"
+  },
+  {
+   "id": "ff9477c5-6df8-491a-83d5-31a82d6e1b75",
+   "nom": "byd-seal-u-design-89kwh-425km-2024_thumb@2x.jpg",
+   "octets": "33985"
+  },
+  {
+   "id": "ffc7c258-c45e-4e8e-801d-89cd93126333",
+   "nom": "nissan-ariya-66kwh-335km-2022_thumb@2x.jpg",
+   "octets": "30949"
+  },
+  {
+   "id": "ffdd8800-7cd1-4feb-bb30-6f4247a30250",
+   "nom": "audi-a6-avant-e-tron-83kwh-465km-2024_thumb@2x.jpg",
+   "octets": "28630"
+  }
+ ]
+}

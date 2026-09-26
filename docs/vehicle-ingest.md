@@ -259,7 +259,14 @@ identity matching or field comparison broke.
 - **`images` sets one thumbnail, not a gallery.** `evdb_images_urls` holds ~8 images per
   vehicle; the command uses the first and ignores the rest.
 - **`images` leaves the superseded files in Directus.** They are the rollback, and
-  nothing cleans them up automatically.
+  nothing cleans them up automatically. The 2026-09-13 batch was cleaned out by hand
+  on 2026-09-26: 740 of the 741 old 448px files deleted, 24.5 MB freed, manifest in
+  `docs/operations/2026-09-26-suppression-thumbnails-448.json`. One was kept —
+  `smart-5-premium-my25-…_thumb@2x.jpg` is still the thumbnail of a vehicle EV
+  Database publishes no image for, so deleting it would have left that record with
+  no picture at all. **Before any such cleanup, intersect the file ids with the
+  `thumbnail` of every vehicle and brand.** Filtering on width alone would have
+  broken that one record silently.
 
 ## Manual actions required (outside this repo)
 
