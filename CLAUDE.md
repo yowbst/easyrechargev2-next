@@ -84,6 +84,10 @@ MCP server env vars (see `docs/mcp-setup.md`):
 Vercel Cron env vars:
 - `CRON_SECRET` — bearer token for Vercel Cron authentication at `/api/cron/reconcile-billing`; generate with `openssl rand -base64 32` and set in Vercel project env vars (Production + Preview)
 
+ChatGPT Ads (OpenAI Measurement Pixel + Conversions API):
+- Browser pixel: Pixel ID in Directus `site_settings.global_config.openai_ads.pixel_id` (no ID → nothing loads). Loaded by `components/OpenAIPixel.tsx`, consent-gated (measures only after the cookie banner is accepted), `debug` outside production. Events in `lib/openaiAds.ts`: `page_viewed` on quote start ("ECP/BATTERY Quote Form Started"), `lead_created` on the quote success page ("ECP/BATTERY Quote Form Submitted"; the products differ by URL), `event_id` = submission id.
+- `OPENAI_ADS_API_KEY` / `OPENAI_ADS_PIXEL_ID` — server-side Conversions API (`lib/openai-ads/conversions.ts`): one `lead_created` per production, non-test, dispatched lead that carries an `oppref` (proxy `_oppref` cookie) or `obref`; same `id` as the pixel for dedup. Either var missing = no-op. Production only.
+
 Partner invoicing — Google Docs env vars (used by `src/lib/billing/google-docs.ts`):
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` — service account credentials (Drive + Docs API scopes) used to copy the invoice template and substitute placeholders; the key is a PEM private key with literal `\n` escapes
 - `GOOGLE_INVOICE_TEMPLATE_DOC_ID` — Doc id of the placeholder template (`{{invoice_number}}` etc.) that gets copied per invoice

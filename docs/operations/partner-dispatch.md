@@ -239,6 +239,8 @@ conversion mapping.
 
 **Battery in Make (done 2026-10-03):** leads without PV are never dispatched, so they never reach the Data Manager `events:ingest` route. Dispatched battery leads are uploaded to their own conversion action: `productDestinationId` = `{{if(1.submission.product = "battery"; "7817425833"; "7076158233")}}` (7817425833 = "BATTERY Quote Form Submitted (API)", 7076158233 = charger).
 
+**Product shown to the lead and the partner (2026-10-03):** `submission.ref` carries the product in the lead's language — `P / BATTERIE / NAME / NPA Locality / date`, `P / BORNE / …` (de: `LADESTATION`) — so every subject, SMS and the Attio deal name show it. Lead confirmation e-mails and SMS (fr/de/en) name it in their first sentence with `{{if(1.submission.product = "battery"; …; …)}}`; the partner e-mail already did. The request page (`quote-view`) shows it in its title and a "Produit" field (`pages.quote-view` content keys `products.<key>`, `sections.metadata.product`).
+
 **When a second product launches:**
 1. Create its offline conversion action in the Ads UI (primary, own category).
 2. In the Make scenario, add a router switching on `submission.product` (or an

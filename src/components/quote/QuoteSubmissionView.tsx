@@ -265,6 +265,9 @@ export function QuoteSubmissionView({
   const isBattery = submission.product === "battery";
   const sectionIds = isBattery ? BATTERY_SECTION_IDS : ECP_SECTION_IDS;
   const tb = (key: string) => dictionary[`pages.quote-battery.${key}`] ?? "";
+  const productLabel =
+    tv(`products.${isBattery ? "battery" : "ecp"}`) ||
+    (isBattery ? "Batterie solaire" : "Borne de recharge");
 
   return (
     <div
@@ -296,7 +299,7 @@ export function QuoteSubmissionView({
           <div className="print:hidden print-span-all">
             <div className="flex items-center justify-between gap-4">
               <h1 className="text-lg font-semibold truncate">
-                {tv("header.title") || "Demande de devis"}
+                {tv("header.title") || "Demande de devis"} {"\u2014"} {productLabel}
               </h1>
               <div className="flex items-center gap-1 shrink-0">
                 <Popover>
@@ -372,8 +375,7 @@ export function QuoteSubmissionView({
           <div className="hidden print:flex print:items-center print:justify-between print:pb-1 print:border-b print:border-gray-300 print-span-all">
             <div>
               <h1 className="text-sm font-bold">
-                {tv("header.printTitle") ||
-                  "Demande de devis \u2014 easyRecharge"}
+                {tv("header.title") || "Demande de devis"} {"\u2014"} {productLabel}
               </h1>
               <p className="text-[7pt] text-gray-500">
                 ID : {submission.id} &bull;{" "}
@@ -397,6 +399,10 @@ export function QuoteSubmissionView({
             title={tv("sections.metadata.title") || "M\u00e9tadonn\u00e9es"}
             printVisible={printSections.metadata}
           >
+            <Field
+              label={tv("sections.metadata.product") || "Produit"}
+              value={productLabel}
+            />
             <Field
               label={tv("sections.metadata.formType") || "Type de formulaire"}
               value={

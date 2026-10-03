@@ -34,6 +34,9 @@ const AD_CLICK_PARAMS: Record<
   ScCid: { cookie: "_sccid", maxAgeDays: 90 },
   epik: { cookie: "_epik", maxAgeDays: 90 },
   rdt_cid: { cookie: "_rdt_cid", maxAgeDays: 90 },
+  // ChatGPT Ads click reference. Server-set copy (Safari ITP caps the
+  // pixel's own JS-set __oppref at 7 days) for the Conversions API.
+  oppref: { cookie: "_oppref", maxAgeDays: 30 },
 };
 
 // ── LLM / AI referrer detection ────────────────────────────────────────

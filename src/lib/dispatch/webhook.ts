@@ -2,6 +2,7 @@ import { after } from "next/server";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { directusFetch } from "@/lib/directus";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
+import { productRefLabel } from "@/lib/products";
 import type { DispatchResult } from "./types";
 
 export type WebhookTrigger = "quote_submission" | "manual_dispatch";
@@ -68,11 +69,15 @@ export interface QuoteWebhookParts {
 }
 
 /**
- * Human-readable reference shown in partner emails/SMS. Format:
- *   P / {UPPER(trim(lastName))} / {postalCode} {locality} / {YYYY-MM-DD}
+ * Human-readable reference shown in lead and partner emails/SMS and as the
+ * Attio deal name. Format:
+ *   P / {PRODUCT} / {UPPER(trim(lastName))} / {postalCode} {locality} / {YYYY-MM-DD}
+ * {PRODUCT} is in the lead's language (BORNE | LADESTATION, BATTERIE).
  * Missing pieces render as empty segments; the skeleton is always present.
  */
 export function buildQuoteRef(input: {
+  product: string;
+  language: string | null;
   lastName: string | null;
   postalCode: string | null;
   locality: string | null;
@@ -82,7 +87,7 @@ export function buildQuoteRef(input: {
   const postal = (input.postalCode ?? "").trim();
   const loc = (input.locality ?? "").trim();
   const date = (input.submittedAt ?? "").slice(0, 10);
-  return `P / ${last} / ${postal} ${loc} / ${date}`;
+  return `P / ${productRefLabel(input.product, input.language)} / ${last} / ${postal} ${loc} / ${date}`;
 }
 
 export function buildQuoteWebhookPayload(parts: QuoteWebhookParts) {
@@ -92,6 +97,8 @@ export function buildQuoteWebhookPayload(parts: QuoteWebhookParts) {
   const locality = typeof data.locality === "string" ? data.locality : "";
 
   const ref = buildQuoteRef({
+    product: parts.submission.product,
+    language: parts.user.language,
     lastName: parts.user.lastName,
     postalCode,
     locality,

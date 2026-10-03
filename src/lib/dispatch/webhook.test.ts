@@ -48,3 +48,22 @@ describe("buildQuoteWebhookPayload product passthrough", () => {
     expect(buildQuoteWebhookPayload(parts("solar")).submission.product).toBe("solar");
   });
 });
+
+describe("quote ref", () => {
+  const ref = (product: string, language: string | null) => {
+    const p = parts(product);
+    return buildQuoteWebhookPayload({ ...p, user: { ...p.user, language } }).submission.ref;
+  };
+
+  it("names the product in the lead's language", () => {
+    expect(ref("battery", "fr")).toBe("P / BATTERIE / B / 1000 Lausanne / 2026-07-25");
+    expect(ref("ecp", "fr")).toBe("P / BORNE / B / 1000 Lausanne / 2026-07-25");
+    expect(ref("ecp", "de")).toBe("P / LADESTATION / B / 1000 Lausanne / 2026-07-25");
+    expect(ref("battery", "de")).toBe("P / BATTERIE / B / 1000 Lausanne / 2026-07-25");
+  });
+
+  it("falls back to French and to the charger for unknown values", () => {
+    expect(ref("ecp", null)).toBe("P / BORNE / B / 1000 Lausanne / 2026-07-25");
+    expect(ref("solar", "en")).toBe("P / BORNE / B / 1000 Lausanne / 2026-07-25");
+  });
+});

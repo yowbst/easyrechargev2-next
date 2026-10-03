@@ -6,6 +6,7 @@ import { runDispatch, normalizeCanton, notDispatchableResult, type DispatchResul
 import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
 import { getQuoteWebhookUrl, parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
 import { normalizeProduct } from "@/lib/products";
+import { sendOpenAILeadConversion } from "@/lib/openai-ads/conversions";
 
 export async function POST(req: Request) {
   try {
@@ -178,6 +179,8 @@ export async function POST(req: Request) {
       });
 
       await fireQuoteWebhook(webhookUrl, payload, { submissionId: submission.id, distinctId: phDistinctId });
+      // ChatGPT Ads Conversions API — no-op unless configured and eligible.
+      after(() => sendOpenAILeadConversion(payload));
     }
 
     return NextResponse.json({ success: true, submissionId: submission.id, dispatchable });
