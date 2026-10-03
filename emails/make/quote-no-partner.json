@@ -1,0 +1,64 @@
+{
+  "$comment": "Lead confirmation when no partner covers the region (Make route 'dispatched = 0 · with PV').",
+  "modules": { "fr": 65, "de": 71, "en": 74 },
+  "fr": {
+    "subject": "Votre demande de devis – Réf. %ref% | easyRecharge",
+    "preheader": "Aucun partenaire n'est actif dans votre région pour le moment. Voici comment avancer.",
+    "eyebrow": "Votre demande",
+    "title": "Votre demande de devis est bien reçue.",
+    "greeting": "Bonjour %firstName%,",
+    "paragraphs": [
+      "Merci pour votre demande de devis %forProductFr%, soumise le %date%.",
+      "Malheureusement, nous n'avons à ce jour aucun partenaire actif dans votre région. Nous vous recommandons de contacter directement un installateur-électricien local en lui transférant cet e-mail."
+    ],
+    "detailsTitle": "Récapitulatif",
+    "details": [
+      { "label": "Référence", "value": "%ref%" },
+      { "label": "Produit", "value": "%productFr%" },
+      { "label": "Adresse", "value": "%place%" }
+    ],
+    "cta": { "label": "Voir ma demande", "url": "%requestUrl%" },
+    "secondary": { "label": "Trouver un installateur-électricien local", "url": "%installerSearchFr%" },
+    "reason": "Vous recevez cet e-mail suite à votre demande de devis sur easyRecharge."
+  },
+  "de": {
+    "subject": "Ihre Offertanfrage – Ref. %ref% | easyRecharge",
+    "preheader": "In Ihrer Region ist derzeit kein Partner aktiv. So kommen Sie weiter.",
+    "eyebrow": "Ihre Anfrage",
+    "title": "Ihre Offertanfrage ist eingegangen.",
+    "greeting": "Guten Tag %firstName%,",
+    "paragraphs": [
+      "Vielen Dank für Ihre Offertanfrage %forProductDe%, eingereicht am %date%.",
+      "Leider haben wir derzeit keinen aktiven Partner in Ihrer Region. Wir empfehlen Ihnen, sich direkt an einen lokalen Elektroinstallateur zu wenden und ihm diese E-Mail weiterzuleiten."
+    ],
+    "detailsTitle": "Zusammenfassung",
+    "details": [
+      { "label": "Referenz", "value": "%ref%" },
+      { "label": "Produkt", "value": "%productDe%" },
+      { "label": "Adresse", "value": "%place%" }
+    ],
+    "cta": { "label": "Meine Anfrage ansehen", "url": "%requestUrl%" },
+    "secondary": { "label": "Lokalen Elektroinstallateur finden", "url": "%installerSearchDe%" },
+    "reason": "Sie erhalten diese E-Mail aufgrund Ihrer Offertanfrage bei easyRecharge."
+  },
+  "en": {
+    "subject": "Your quote request – Ref. %ref% | easyRecharge",
+    "preheader": "No partner is active in your region yet. Here is how to move forward.",
+    "eyebrow": "Your request",
+    "title": "We have received your quote request.",
+    "greeting": "Hello %firstName%,",
+    "paragraphs": [
+      "Thank you for your quote request %forProductEn%, submitted on %date%.",
+      "Unfortunately, we currently do not have an active partner in your region. We recommend contacting a local electrical installer directly and forwarding this email to them."
+    ],
+    "detailsTitle": "Summary",
+    "details": [
+      { "label": "Reference", "value": "%ref%" },
+      { "label": "Product", "value": "%productEn%" },
+      { "label": "Address", "value": "%place%" }
+    ],
+    "cta": { "label": "View my request", "url": "%requestUrl%" },
+    "secondary": { "label": "Find a local electrical installer", "url": "%installerSearchFr%" },
+    "reason": "You are receiving this email following your quote request on easyRecharge."
+  }
+}

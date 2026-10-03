@@ -48,3 +48,7 @@ next-env.d.ts
 
 # Git worktrees for isolated feature work
 /.worktrees/
+
+# Built e-mails and Make blueprint backups (npm run emails)
+/emails/dist/
+/emails/.backups/

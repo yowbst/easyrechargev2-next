@@ -1,0 +1,45 @@
+{
+  "$comment": "Shared per-language blocks merged under every email's data. Strings may use {first_contact} and {quote_delivery_timeline}, filled from Directus global_config.slas at build time.",
+  "fr": {
+    "lang": "fr",
+    "brand": { "logoUrl": "https://easyrecharge.ch/email/logo-white.png" },
+    "links": { "site": "https://easyrecharge.ch/fr" },
+    "signoff": "Belle journée,",
+    "signature": "L'équipe easyRecharge",
+    "company": { "name": "easyRecharge", "address": "Ch. de Sorécot 33, 1033 Cheseaux/Lausanne" },
+    "help": { "title": "Une question ?", "body": "Répondez simplement à cet e-mail, nous vous répondons volontiers." },
+    "footerLinks": [
+      { "label": "easyrecharge.ch", "url": "https://easyrecharge.ch/fr" },
+      { "label": "Protection des données", "url": "https://easyrecharge.ch/fr/politique-de-confidentialite" },
+      { "label": "Mentions légales", "url": "https://easyrecharge.ch/fr/mentions-legales" }
+    ]
+  },
+  "de": {
+    "lang": "de",
+    "brand": { "logoUrl": "https://easyrecharge.ch/email/logo-white.png" },
+    "links": { "site": "https://easyrecharge.ch/de" },
+    "signoff": "Freundliche Grüsse",
+    "signature": "Ihr easyRecharge-Team",
+    "company": { "name": "easyRecharge", "address": "Ch. de Sorécot 33, 1033 Cheseaux/Lausanne" },
+    "help": { "title": "Eine Frage?", "body": "Antworten Sie einfach auf diese E-Mail, wir helfen Ihnen gerne weiter." },
+    "footerLinks": [
+      { "label": "easyrecharge.ch", "url": "https://easyrecharge.ch/de" },
+      { "label": "Datenschutz", "url": "https://easyrecharge.ch/de/datenschutzrichtlinie" },
+      { "label": "Impressum", "url": "https://easyrecharge.ch/de/impressum" }
+    ]
+  },
+  "en": {
+    "lang": "en",
+    "brand": { "logoUrl": "https://easyrecharge.ch/email/logo-white.png" },
+    "links": { "site": "https://easyrecharge.ch/fr" },
+    "signoff": "Best regards,",
+    "signature": "The easyRecharge team",
+    "company": { "name": "easyRecharge", "address": "Ch. de Sorécot 33, 1033 Cheseaux/Lausanne" },
+    "help": { "title": "A question?", "body": "Simply reply to this email, we will be glad to help." },
+    "footerLinks": [
+      { "label": "easyrecharge.ch", "url": "https://easyrecharge.ch/fr" },
+      { "label": "Privacy policy", "url": "https://easyrecharge.ch/fr/politique-de-confidentialite" },
+      { "label": "Legal notice", "url": "https://easyrecharge.ch/fr/mentions-legales" }
+    ]
+  }
+}

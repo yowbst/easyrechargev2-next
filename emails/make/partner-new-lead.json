@@ -1,0 +1,24 @@
+{
+  "$comment": "New-lead notification to the dispatched partner (Make module 'New Lead Notif. -> Partner'). French only, like today.",
+  "modules": { "fr": 61 },
+  "fr": {
+    "subject": "[ NEW ] %productShortFr% – Demande de devis – Réf. %ref%",
+    "preheader": "Une nouvelle demande correspond à votre zone. Contactez le demandeur sous {first_contact}\u00a0h.",
+    "audienceLabel": "Partenaire",
+    "eyebrow": "Nouveau lead",
+    "title": "Nouvelle demande à %locality%.",
+    "greeting": "Bonjour,",
+    "paragraphs": [
+      "Une nouvelle demande de devis %forProductFr% a été soumise dans votre zone d'intervention. Toutes les informations sont disponibles sur la page de la demande."
+    ],
+    "detailsTitle": "La demande",
+    "details": [
+      { "label": "Produit", "value": "%productFr%" },
+      { "label": "Lieu", "value": "%place%" },
+      { "label": "Référence", "value": "%ref%" }
+    ],
+    "note": { "title": "À noter :", "body": "le demandeur est informé que vous prendrez contact sous {first_contact}\u00a0h, puis que vous transmettrez votre devis sous {quote_delivery_timeline} jours." },
+    "cta": { "label": "Consulter la demande", "url": "%requestUrl%?view=partner" },
+    "reason": "Vous recevez cet e-mail en tant que partenaire installateur easyRecharge."
+  }
+}
