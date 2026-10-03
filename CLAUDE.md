@@ -118,7 +118,7 @@ src/app/
 **Route resolution** is in `src/lib/route-resolver.ts`. Each page calls `resolveSlugRoute()`, `resolveSub1Route()`, or `resolveSub2Route()` which looks up the Directus page registry to determine the page type, then renders the appropriate component.
 
 Route types per level:
-- **[slug]:** `cms-page | quote | contact | blog-listing | vehicles-listing`
+- **[slug]:** `cms-page | quote (charger) | quote-battery (battery, via QuoteShell) | contact | blog-listing | vehicles-listing`
 - **[slug]/[sub1]:** `vehicle-detail | vehicle-brands | blog-listing | quote-success | quote-submission`
 - **[slug]/[sub1]/[sub2]:** `blog-post | vehicle-brand-detail | vehicle-model-detail`
 
@@ -350,6 +350,7 @@ Form submission routes create a session → user → submission chain in Directu
 | `Hero.tsx` | Server | Hero section with image/text |
 | `quote/QuoteForm.tsx` | Client | 7-step form wizard (~1800 LOC) |
 | `ContactForm.tsx` | Client | Contact form with address autocomplete |
+| `quote-shell/QuoteShell.tsx` | Client | Product-agnostic quote funnel (battery); charger still on QuoteForm |
 | `MiniQuoteForm.tsx` | Client | Compact embedded quote form |
 | `MiniQuoteCard.tsx` | Client | Quote CTA card |
 | `SwissMap.tsx` | Client | Interactive SVG canton map |

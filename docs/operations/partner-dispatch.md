@@ -116,6 +116,18 @@ Each (`partner`, lead category, `environment`) row in the new `partner_lead_pric
 | `tenant`        | `exists` / `in-progress`  | `tenant_solar`       |
 | `tenant`        | `none` / blank            | `tenant_no_solar`    |
 
+Battery funnel (`product = battery`):
+
+| `housingStatus` | `pvPower` (kWc) | → `lead_category` |
+|---|---|---|
+| `owner` | ≥ 10 | `owner_pv_large` |
+| `owner` | < 10, `na`, missing | `owner_pv_small` |
+| `co-owner` | ≥ 10 | `co_owner_pv_large` |
+| `co-owner` | < 10, `na`, missing | `co_owner_pv_small` |
+| any, with `solarEquipment = none` (or tenant) | — | `no_pv` — stored, never dispatched, no ledger row; PostHog `dispatch_not_dispatchable` |
+
+Dedup is per product: a charger lead and a battery lead from the same e-mail are both dispatched.
+
 Missing rows fall back to gift dispatch (`gift=true`, `price_chf=null`, loud warning log). The price is snapshotted onto `partner_dispatches.price_chf` at dispatch time and survives later price changes.
 
 Note: `partners.billable_rate` is unrelated — it is a quality-rate metric for Google Ads, not a CHF price.
