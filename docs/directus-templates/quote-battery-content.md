@@ -454,10 +454,7 @@ CTA à ajouter à la fin du tableau `ctas` de chaque langue de la page `quote-su
 Chaque écriture Directus passe par le MCP easyrecharge et attend ton accord explicite sur le payload affiché. Les champs JSON sont toujours envoyés en entier.
 
 - [ ] **Relire les textes et les slugs** (fr, et de par un locuteur natif), puis valider ce fichier.
-- [ ] **PORTE DE LANCEMENT — Make, conversions Ads serveur (à faire avant de publier la page `quote-battery`).**
-  - Dans le scénario Make, ne pas envoyer l'événement `quote_submit` à Data Manager (`events:ingest`) quand `submission.leadCategory === "no_pv"` (de façon équivalente : `dispatch.summary.reasons` contient `not_dispatchable`).
-  - Associer `submission.product = "battery"` à sa propre action de conversion, pour qu'un lead batterie ne soit jamais remonté comme conversion borne (`productDestinationId` de la borne).
-  - Tant que ces deux points ne sont pas en place et vérifiés sur une soumission de test, la page `quote-battery` reste non publiée.
+- [x] **PORTE DE LANCEMENT — Make (fait le 2026-10-03).** Les leads sans PV ne passent jamais par l'envoi Ads (jamais dispatchés) et reçoivent leurs propres e-mails (fr/de/en). Les leads batterie dispatchés sont remontés sur l'action `7817425833` « BATTERY Quote Form Submitted (API) », la borne reste sur `7076158233`. Attio est isolé sur sa propre route.
 - [x] **Créer les pages (Étape 4)** — fait le 2026-10-03, publiées en `noindex` pour les tests.
   - `quote-battery` : **`type = "app"`**, slugs ci-dessus, contenu des sections 1 et 2, `config = { "product": "battery", "steps": [] }`, bloc hero partagé avec `quote`.
   - `quote-battery-success` : **`type = "static"`**, `block_hero` avec le texte de succès de la borne et la CTA vers la borne (section 5).
