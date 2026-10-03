@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     // Resolve partner dispatch. Gated by DISPATCH_MODE env var (off|shadow|live).
     // Returns a payload-ready object embedded in the Make webhook below.
     // runDispatch never throws — failures are logged and surface as an empty result.
-    const leadCategory = deriveLeadCategory(quoteData);
+    const leadCategory = deriveLeadCategory(product, quoteData);
 
     const dispatchResult: DispatchResult = await runDispatch({
       submissionId: submission.id,

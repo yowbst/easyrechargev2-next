@@ -15,12 +15,20 @@ export type DispatchStatus =
 export type LegalForm = "corporation" | "llc" | "gp" | "sp";
 
 export type LeadCategory =
+  // ecp (charger)
   | "owner_no_solar"
   | "owner_solar"
   | "co_owner_no_solar"
   | "co_owner_solar"
   | "tenant_no_solar"
-  | "tenant_solar";
+  | "tenant_solar"
+  // battery
+  | "owner_pv_small"
+  | "owner_pv_large"
+  | "co_owner_pv_small"
+  | "co_owner_pv_large"
+  /** Battery visitor without PV: stored, never dispatched nor invoiced. */
+  | "no_pv";
 
 export type DispatchStage =
   | "new"
@@ -119,6 +127,11 @@ export const LEAD_CATEGORIES: LeadCategory[] = [
   "co_owner_solar",
   "tenant_no_solar",
   "tenant_solar",
+  "owner_pv_small",
+  "owner_pv_large",
+  "co_owner_pv_small",
+  "co_owner_pv_large",
+  "no_pv",
 ];
 
 export interface Canton {

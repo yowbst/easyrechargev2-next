@@ -64,7 +64,7 @@ export async function manualDispatch(
   const product = normalizeProduct(submission.product);
   const email = user?.email ?? null;
   const locale = user?.language === "de" ? "de" : "fr";
-  const leadCategory = deriveLeadCategory(data);
+  const leadCategory = deriveLeadCategory(product, data);
   const rawCanton = typeof data.canton === "string" ? data.canton : null;
 
   const dispatchResult = await runDispatch({

@@ -290,7 +290,7 @@ async function seed() {
         stage_entered_at: history[history.length - 1].at,
         stage_history: history,
         price_chf: PRICE_CHF,
-        lead_category: deriveLeadCategory(data),
+        lead_category: deriveLeadCategory("ecp", data),
         product: "ecp",
         gift: false,
         // A worked lead is billed; a disqualified one never is.
