@@ -2,13 +2,15 @@
 // distinct lead vertical (own quote funnel, own partner pricing column in
 // pricing_policy.settings.prices[product][category], own Google Ads
 // conversion actions). Adding one:
-//   1. Append the key to PRODUCTS below.
-//   2. Add global_config.google_ads.conversions.<key> in Directus.
-//   3. Add the product's price column to partner pricing policies.
-//   4. Map the product to its Ads conversion action in the Make scenario
+//   1. Append the key to PRODUCTS and its Directus page to FUNNEL_ROUTES.
+//   2. Register its ProductFunnel in src/components/quote-shell/funnels.ts
+//      and its categories in src/lib/dispatch/categorize.ts.
+//   3. Add global_config.google_ads.conversions.<key> in Directus.
+//   4. Add the product's price column to partner pricing policies.
+//   5. Map the product to its Ads conversion action in the Make scenario
 //      (module "events:ingest", productDestinationId — see
 //      docs/operations/partner-dispatch.md).
-export const PRODUCTS = ["ecp"] as const;
+export const PRODUCTS = ["ecp", "battery"] as const;
 
 export type Product = (typeof PRODUCTS)[number];
 
@@ -22,4 +24,41 @@ export function isProduct(raw: unknown): raw is Product {
  * valid product key, falling back to the default. Never throws. */
 export function normalizeProduct(raw: unknown): Product {
   return isProduct(raw) ? raw : DEFAULT_PRODUCT;
+}
+
+/** Directus page route_id → product of the quote funnel that page hosts. */
+export const FUNNEL_ROUTES = {
+  quote: "ecp",
+  "quote-battery": "battery",
+} as const satisfies Record<string, Product>;
+
+export type FunnelRouteId = keyof typeof FUNNEL_ROUTES;
+
+export function isFunnelRoute(routeId: string): routeId is FunnelRouteId {
+  return Object.prototype.hasOwnProperty.call(FUNNEL_ROUTES, routeId);
+}
+
+export function funnelRouteFor(product: Product): FunnelRouteId {
+  const entry = (Object.entries(FUNNEL_ROUTES) as [FunnelRouteId, Product][])
+    .find(([, p]) => p === product);
+  if (!entry) throw new Error(`No funnel route for product "${product}"`);
+  return entry[0];
+}
+
+/**
+ * Directus pages holding the success-page copy for a product, most specific
+ * first. The charger page is the fallback, so a new product only translates
+ * what differs.
+ */
+export function successPageIds(product: Product): string[] {
+  return product === "ecp"
+    ? ["quote-success"]
+    : [`${funnelRouteFor(product)}-success`, "quote-success"];
+}
+
+/** Same as successPageIds, for the submission view page. */
+export function viewPageIds(product: Product): string[] {
+  return product === "ecp"
+    ? ["quote-view"]
+    : [`${funnelRouteFor(product)}-view`, "quote-view"];
 }
