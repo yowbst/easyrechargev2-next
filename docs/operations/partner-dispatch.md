@@ -194,6 +194,9 @@ while `DISPATCH_MODE=off`, or that had no partner at the time):
   billing) — the webhook fires with empty `targets`.
 - Refuses with `409` if the submission already has a `dispatched` row. Add
   `?force=1` to dispatch anyway (can double-bill / double-email).
+- Refuses with `422 not_dispatchable` when the stored lead is never sent to a
+  partner (battery visitor without PV, category `no_pv`). `?force=1` also
+  bypasses this guard.
 
 ## Google Ads conversions via the Data Manager API (token endpoint)
 
