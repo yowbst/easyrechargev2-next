@@ -4,11 +4,12 @@
  */
 
 import { fetchPageRegistry, type PageRegistryEntry } from "./directus-queries";
+import { FUNNEL_ROUTES, isFunnelRoute, type Product } from "./products";
 import { getRouteSlug, type AppLangSlug } from "./i18n/config";
 
 export type SlugRoute =
   | { type: "cms-page"; routeId: string; entry: PageRegistryEntry }
-  | { type: "quote"; routeId: string; entry: PageRegistryEntry }
+  | { type: "quote"; routeId: string; entry: PageRegistryEntry; product: Product }
   | { type: "contact"; routeId: string; entry: PageRegistryEntry }
   | { type: "blog-listing"; routeId: string; entry: PageRegistryEntry }
   | { type: "vehicles-listing"; routeId: string; entry: PageRegistryEntry }
@@ -19,7 +20,7 @@ export type Sub1Route =
   | { type: "vehicle-detail"; slug: string; vehiclesEntry: PageRegistryEntry }
   | { type: "vehicle-brands"; vehiclesEntry: PageRegistryEntry }
   | { type: "blog-listing"; routeId: string; entry: PageRegistryEntry }
-  | { type: "quote-success"; quoteEntry: PageRegistryEntry }
+  | { type: "quote-success"; quoteEntry: PageRegistryEntry; product: Product }
   | { type: "quote-submission"; submissionId: string; quoteEntry: PageRegistryEntry }
   | { type: "locality-redirect"; localitySlug: string; localitiesEntry: PageRegistryEntry }
   | null;
@@ -45,9 +46,11 @@ export async function resolveSlugRoute(
 
   if (!entry) return null;
 
-  const INTERACTIVE_PAGES = new Set(["quote", "contact"]);
-  if (INTERACTIVE_PAGES.has(entry.id)) {
-    return { type: entry.id as "quote" | "contact", routeId: entry.id, entry };
+  if (isFunnelRoute(entry.id)) {
+    return { type: "quote", routeId: entry.id, entry, product: FUNNEL_ROUTES[entry.id] };
+  }
+  if (entry.id === "contact") {
+    return { type: "contact", routeId: entry.id, entry };
   }
 
   if (entry.id === "blog") {
@@ -91,12 +94,12 @@ export async function resolveSub1Route(
 
   // Quote: /{lang}/{quoteSlug}/{sub1}
   // sub1 is either a confirmation segment or a submission UUID
-  if (entry.id === "quote") {
+  if (isFunnelRoute(entry.id)) {
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (UUID_RE.test(sub1)) {
       return { type: "quote-submission", submissionId: sub1, quoteEntry: entry };
     }
-    return { type: "quote-success", quoteEntry: entry };
+    return { type: "quote-success", quoteEntry: entry, product: FUNNEL_ROUTES[entry.id] };
   }
 
   // Blog category page: /{lang}/{blogSlug}/{categorySlug} — render as blog listing

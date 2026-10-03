@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { usePostHog } from "@/components/PostHogProvider";
@@ -9,6 +9,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { resolveRouteId, resolveRouteLinks } from "@/lib/pageConfig";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
+import { matchesShowWhen } from "@/lib/cta-conditions";
+import type { Product } from "@/lib/products";
 
 interface QuoteSuccessProps {
   lang: string;
@@ -19,6 +21,7 @@ interface QuoteSuccessProps {
     type?: string;
     variant?: string;
     page_route_id?: string;
+    show_when?: unknown;
   }>;
   slaVars: {
     first_contact: number | string;
@@ -26,6 +29,9 @@ interface QuoteSuccessProps {
   };
   quoteSlug: string;
   pageRegistry: PageRegistryEntry[];
+  product: Product;
+  /** Directus pages holding this page's copy, most specific first. */
+  dictPageIds: string[];
 }
 
 export function QuoteSuccess({
@@ -36,6 +42,8 @@ export function QuoteSuccess({
   slaVars,
   quoteSlug,
   pageRegistry,
+  product,
+  dictPageIds,
 }: QuoteSuccessProps) {
   const searchParams = useSearchParams();
   const [firstName, setFirstName] = useState("");
@@ -49,12 +57,16 @@ export function QuoteSuccess({
   const ph = usePostHog();
   useEffect(() => {
     if (submissionId) {
-      ph?.capture("quote_success_viewed", { form_type: "quote", locale: lang, submission_id: submissionId });
+      ph?.capture("quote_success_viewed", { form_type: "quote", product, locale: lang, submission_id: submissionId });
     }
-  }, [ph, submissionId, lang]);
+  }, [ph, submissionId, lang, product]);
 
   const d = (key: string, vars?: Record<string, string | number>) => {
-    let val = dictionary[key] ?? "";
+    let val = "";
+    for (const id of dictPageIds) {
+      const v = dictionary[`pages.${id}.${key}`];
+      if (v) { val = v; break; }
+    }
     if (vars) {
       for (const [k, v] of Object.entries(vars)) {
         val = val.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
@@ -63,21 +75,38 @@ export function QuoteSuccess({
     return val;
   };
 
-  const title = useMemo(() => {
-    const raw = d("pages.quote-success.blocks.hero.headline", { firstName });
-    if (firstName) return raw;
-    // No firstName: strip leading punctuation/whitespace, then capitalize
-    return raw
-      .replace(/^[\s,;:!?]+/, "")
-      .replace(/^./, (c) => c.toUpperCase());
-  }, [dictionary, firstName]);
+  const needsLeadData = ctas.some((c) => c.show_when !== undefined && c.show_when !== null);
+  const [leadData, setLeadData] = useState<Record<string, unknown> | null>(null);
+  useEffect(() => {
+    if (!needsLeadData || !submissionId) return;
+    let cancelled = false;
+    fetch(`/api/form-submissions/${submissionId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        const data = json?.data?.submission?.data;
+        if (!cancelled && data && typeof data === "object") setLeadData(data as Record<string, unknown>);
+      })
+      .catch(() => { /* conditional CTAs stay hidden */ });
+    return () => { cancelled = true; };
+  }, [needsLeadData, submissionId]);
 
-  const subtitle = d("pages.quote-success.blocks.hero.subheadline", {
+  // Keep each CTA's original index: its label key is cta.<index>.label.
+  const visibleCtas = ctas
+    .map((cta, i) => ({ cta, i }))
+    .filter(({ cta }) => matchesShowWhen(cta.show_when, leadData));
+
+  const rawTitle = d("blocks.hero.headline", { firstName });
+  // No firstName: strip leading punctuation/whitespace, then capitalize
+  const title = firstName
+    ? rawTitle
+    : rawTitle.replace(/^[\s,;:!?]+/, "").replace(/^./, (c) => c.toUpperCase());
+
+  const subtitle = d("blocks.hero.subheadline", {
     first_contact: slaVars.first_contact,
     quote_delivery_timeline: slaVars.quote_delivery_timeline,
   });
 
-  const heroBody = d("pages.quote-success.blocks.hero.body", {
+  const heroBody = d("blocks.hero.body", {
     first_contact: slaVars.first_contact,
     quote_delivery_timeline: slaVars.quote_delivery_timeline,
     firstName,
@@ -127,9 +156,9 @@ export function QuoteSuccess({
                 />
               )}
 
-              {ctas.length > 0 && (
+              {visibleCtas.length > 0 && (
                 <div className="flex flex-wrap gap-3">
-                  {ctas.map((cta, i) => (
+                  {visibleCtas.map(({ cta, i }) => (
                     <Link
                       key={i}
                       href={(() => {
@@ -159,7 +188,7 @@ export function QuoteSuccess({
                       )}
                     >
                       {d(
-                        `pages.quote-success.blocks.hero.cta.${i}.label`,
+                        `blocks.hero.cta.${i}.label`,
                       ) || cta.label || ""}
                     </Link>
                   ))}
