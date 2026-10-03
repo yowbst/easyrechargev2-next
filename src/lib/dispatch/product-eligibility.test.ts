@@ -28,21 +28,36 @@ const unexpanded = area("p-string", "pol-1");
 const nullBattery = area("p-null", { id: "pol-3", settings: { prices: { battery: null } } });
 
 describe("filterAreasForProduct", () => {
-  it("returns every area unchanged for the charger, partners without a policy included", async () => {
+  const legacy = area("p-legacy", null);
+  const both = { ...area("p-both", null), partner: { id: "p-both", slug: "p-both", products: [
+    { product: "ecp", status: "active", monthly_quota: 30 },
+    { product: "battery", status: "active", monthly_quota: 10 },
+  ] } } as unknown as PartnerArea;
+  const batteryOnly = { ...area("p-bat", null), partner: { id: "p-bat", slug: "p-bat", products: [
+    { product: "battery", status: "active", monthly_quota: 10 },
+  ] } } as unknown as PartnerArea;
+  const batteryPaused = { ...area("p-paused", null), partner: { id: "p-paused", slug: "p-paused", products: [
+    { product: "ecp", status: "active", monthly_quota: 30 },
+    { product: "battery", status: "paused", monthly_quota: 10 },
+  ] } } as unknown as PartnerArea;
+
+  it("keeps legacy partners (no product rows) for the charger only", async () => {
     const { filterAreasForProduct } = await import("./queries");
-    const areas = [withBattery, chargerOnly, noPolicy, unexpanded];
-    expect(filterAreasForProduct(areas, "ecp")).toBe(areas);
+    expect(filterAreasForProduct([legacy, withBattery, chargerOnly, noPolicy, unexpanded], "ecp")).toHaveLength(5);
+    expect(filterAreasForProduct([legacy, withBattery, chargerOnly, noPolicy, unexpanded], "battery")).toEqual([]);
   });
 
-  it("keeps only partners whose policy prices the battery", async () => {
+  it("follows the active product rows", async () => {
     const { filterAreasForProduct } = await import("./queries");
-    const out = filterAreasForProduct([withBattery, chargerOnly, noPolicy, nullBattery], "battery");
-    expect(out.map((a) => a.partner.id)).toEqual(["p-battery"]);
+    const areas = [both, batteryOnly, batteryPaused];
+    expect(filterAreasForProduct(areas, "battery").map((a) => a.partner.id)).toEqual(["p-both", "p-bat"]);
+    expect(filterAreasForProduct(areas, "ecp").map((a) => a.partner.id)).toEqual(["p-both", "p-paused"]);
   });
 
-  it("excludes a policy that was not expanded (string id)", async () => {
+  it("does not use the pricing policy to decide eligibility", async () => {
     const { filterAreasForProduct } = await import("./queries");
-    expect(filterAreasForProduct([unexpanded], "battery")).toEqual([]);
+    // withBattery prices the battery but has no battery product row.
+    expect(filterAreasForProduct([withBattery, nullBattery], "battery")).toEqual([]);
   });
 });
 

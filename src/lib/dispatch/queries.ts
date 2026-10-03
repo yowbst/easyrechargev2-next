@@ -1,5 +1,5 @@
 import { directusFetch } from "@/lib/directus";
-import { DEFAULT_PRODUCT } from "@/lib/products";
+import { partnerProductConfig } from "./partner-products";
 import type {
   Environment,
   PartnerArea,
@@ -24,6 +24,10 @@ const PARTNER_AREA_FIELDS = [
   "partner.slug",
   "partner.notification_email",
   "partner.monthly_quota",
+  // Products this partner receives, with a monthly quota each.
+  "partner.products.product",
+  "partner.products.status",
+  "partner.products.monthly_quota",
   "partner.priority",
   "partner.language",
   "partner.billable_rate",
@@ -75,22 +79,12 @@ export async function fetchPartnerAreasForCanton(
 }
 
 /**
- * Keep the areas whose partner can receive a lead of this product.
- *
- * The charger (default product) is unchanged: every area is kept, and a
- * partner without a pricing policy still receives charger leads as gifts.
- * Any other product goes only to partners whose policy prices it, i.e.
- * `pricing_policy.settings.prices[product]` is an object. A policy that was
- * not expanded (string id) cannot prove that and is excluded.
+ * Keep the areas whose partner receives this product: an active
+ * `partner_products` row for it, or — for the charger only — no product rows
+ * at all yet (legacy partners). See partnerProductConfig.
  */
 export function filterAreasForProduct(areas: PartnerArea[], product: string): PartnerArea[] {
-  if (product === DEFAULT_PRODUCT) return areas;
-  return areas.filter((a) => {
-    const policy = a.partner.pricing_policy;
-    if (!policy || typeof policy !== "object") return false;
-    const prices = policy.settings?.prices?.[product];
-    return typeof prices === "object" && prices !== null;
-  });
+  return areas.filter((a) => partnerProductConfig(a.partner, product) !== null);
 }
 
 /**

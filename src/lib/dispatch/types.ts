@@ -140,13 +140,26 @@ export interface Canton {
   is_active: boolean;
 }
 
+export type PartnerProductStatus = "active" | "paused";
+
+/** One `partner_products` row: does this partner receive the product, and how many per month. */
+export interface PartnerProduct {
+  product: string;
+  status: PartnerProductStatus;
+  /** 0 or null = unlimited. */
+  monthly_quota: number | null;
+}
+
 export interface Partner {
   id: string;
   status: PartnerStatus;
   name: string;
   slug: string;
   notification_email: string;
+  /** Legacy charger quota, used while the partner has no `products` rows. */
   monthly_quota: number;
+  /** O2M `partner_products`. Empty or absent = charger only (legacy). */
+  products?: PartnerProduct[] | null;
   priority: number;
   language: Language;
   billable_rate: number;

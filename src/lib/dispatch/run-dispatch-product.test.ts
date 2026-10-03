@@ -32,7 +32,7 @@ vi.mock("./queries", async (orig) => ({
 
 afterEach(() => vi.clearAllMocks());
 
-function area(id: string, pricing_policy: unknown): PartnerArea {
+function area(id: string, pricing_policy: unknown, products?: unknown[]): PartnerArea {
   return {
     id: `area-${id}`,
     mode: "shared",
@@ -42,7 +42,7 @@ function area(id: string, pricing_policy: unknown): PartnerArea {
     partner: {
       id, slug: id, name: id, status: "active", notification_email: `${id}@x.ch`,
       monthly_quota: 10, priority: 1, language: "fr", billable_rate: 1,
-      environment: "production", pricing_policy,
+      environment: "production", pricing_policy, products,
     },
   } as unknown as PartnerArea;
 }
@@ -59,7 +59,7 @@ const run = async (product: string, leadCategory: string) => {
 };
 
 describe("runDispatch — product eligibility", () => {
-  it("never sends a battery lead to a partner whose policy has no battery prices", async () => {
+  it("never sends a battery lead to a partner without an active battery product", async () => {
     h.fetchAreas.mockResolvedValueOnce([chargerOnly, noPolicy]);
     const res = await run("battery", "owner_pv_small");
 
@@ -74,7 +74,11 @@ describe("runDispatch — product eligibility", () => {
   });
 
   it("counts battery quotas on battery rows only", async () => {
-    const battery = area("p-battery", { id: "pol-b", settings: { prices: { battery: { owner_pv_small: 80 } } } });
+    const battery = area(
+      "p-battery",
+      { id: "pol-b", settings: { prices: { battery: { owner_pv_small: 80 } } } },
+      [{ product: "battery", status: "active", monthly_quota: 10 }],
+    );
     h.fetchAreas.mockResolvedValueOnce([battery, chargerOnly]);
     const res = await run("battery", "owner_pv_small");
 
@@ -82,7 +86,7 @@ describe("runDispatch — product eligibility", () => {
     expect(res.targets.map((t) => t.partnerSlug)).toEqual(["p-battery"]);
   });
 
-  it("still sends charger leads to partners without a policy (as gifts)", async () => {
+  it("still sends charger leads to legacy partners without product rows nor policy (as gifts)", async () => {
     h.fetchAreas.mockResolvedValueOnce([noPolicy]);
     const res = await run("ecp", "owner_solar");
 

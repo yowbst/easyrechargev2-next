@@ -17,7 +17,7 @@ Master record per installer partner. Multiple rows per partner are allowed, one 
 | `name` | string | Display name shown in admin and in PostHog (e.g. `E-ME Énergies`). |
 | `slug` | string | Stable identifier for logs and ledger queries (e.g. `eme-energies`). |
 | `notification_email` | string | Where Make sends the lead email. |
-| `monthly_quota` | integer | Max leads per UTC calendar month across this partner's areas. `0` = unlimited. |
+| `monthly_quota` | integer | Legacy charger quota: max charger leads per UTC calendar month, used while the partner has no `partner_products` rows. `0` = unlimited. |
 | `priority` | integer | Tie-breaker, lower wins. Default `100`. |
 | `language` | dropdown | `fr` / `de`. Surfaces on `dispatch.targets[].language` so Make can branch on email language later. |
 | `billable_rate` | decimal | `0.0`–`1.0`. Per-partner fraction of leads that are billable. Feeds Google Ads `conversionValue = 40 × billable_rate`. Default `1.0`. |
@@ -38,6 +38,24 @@ Master record per installer partner. Multiple rows per partner are allowed, one 
 | `canton` | M2O → `canton` | Partner's registered canton. Same `canton` collection used by `partner_areas`. **Not** required to match the partner's `partner_areas` — a partner can be HQ'd in one canton and cover several others. |
 
 Note: `language` dropdown actually offers `fr` / `de` / `en` (the resolver only consumes `fr` and `de` today via the webhook payload — `en` is reserved for future English-speaking partners).
+
+## `partner_products`
+
+One row per partner × product: which lead verticals a partner receives and how many per month. O2M alias `products` on `partners` (edited inline on the partner form).
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `partner` | M2O → `partners` | Required. On delete: cascade. |
+| `product` | dropdown (string) | `ecp` / `battery` (keys of `PRODUCTS` in `src/lib/products.ts`). Unique together with `partner`. |
+| `status` | dropdown (string) | `active` (receives the product) / `paused`. |
+| `monthly_quota` | integer | Max leads of this product per UTC calendar month. `0` or empty = unlimited. Over quota still dispatches, as a gift. |
+
+Rules (`src/lib/dispatch/partner-products.ts`):
+- A partner with no rows is charger-only with `partners.monthly_quota` (legacy, no migration needed).
+- Once a partner has any row, every product it receives — the charger included — needs an active row.
+- `partner_areas.quota_override` only overrides the charger quota.
+- Cantons are shared across products: `partner_areas` has no product.
 
 ## `partner_areas`
 

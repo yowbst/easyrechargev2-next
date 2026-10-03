@@ -165,6 +165,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
       leadCategory: input.leadCategory,
       partnerPrices,
       dedupPartnerIds,
+      product,
     });
     baseResult.summary.resolved = resolved.targets.length;
     baseResult.summary.reasons = resolved.reasons;

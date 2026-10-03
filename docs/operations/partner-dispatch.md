@@ -129,7 +129,7 @@ Battery funnel (`product = battery`):
 
 Dedup is per product: a charger lead and a battery lead from the same e-mail are both dispatched.
 
-Battery eligibility: a partner receives battery leads only if its pricing policy has a `prices.battery` column; quotas are counted per product. A partner without a policy (or whose policy has no `battery` column) keeps receiving charger leads exactly as before, gifts included, and never receives a battery lead. When the canton has partners but none prices the battery, the lead gets reason `no_partner_for_product`: empty `targets`, no ledger row, PostHog `dispatch_no_partner_for_product`.
+Products and quotas per partner: the `partner_products` collection holds one row per partner × product (`status` active/paused, `monthly_quota`, `0` = unlimited). A partner receives a product only with an active row for it, and quotas are counted per product. A partner with no rows yet is served as before: charger only, quota = `partners.monthly_quota`. Once a partner has any row, the charger needs its own row too. `partner_areas.quota_override` applies to the charger only. Prices stay in the pricing policy: an active product without a price row is dispatched as a gift (`no_price_row`). When the canton has partners but none receives the product, the lead gets reason `no_partner_for_product`: empty `targets`, no ledger row, PostHog `dispatch_no_partner_for_product`.
 
 Missing rows fall back to gift dispatch (`gift=true`, `price_chf=null`, loud warning log). The price is snapshotted onto `partner_dispatches.price_chf` at dispatch time and survives later price changes.
 
