@@ -72,3 +72,28 @@ describe("countDispatchesThisMonth", () => {
     expect(url).toContain("filter[product][_eq]=battery");
   });
 });
+
+describe("fetchPartnerAreasForCanton — partner_products not readable yet", () => {
+  it("falls back to the legacy fields when Directus refuses the product rows", async () => {
+    const { directusFetch } = await import("@/lib/directus");
+    const { fetchPartnerAreasForCanton } = await import("./queries");
+    vi.mocked(directusFetch)
+      .mockRejectedValueOnce(new Error("Directus 403: You don't have permission to access this."))
+      .mockResolvedValueOnce({ data: [withBattery] });
+
+    const out = await fetchPartnerAreasForCanton("VD", "production");
+
+    expect(out).toEqual([withBattery]);
+    const urls = vi.mocked(directusFetch).mock.calls.map((c) => decodeURIComponent(String(c[0])));
+    expect(urls[0]).toContain("partner.products.product");
+    expect(urls[1]).not.toContain("partner.products");
+  });
+
+  it("does not hide other errors", async () => {
+    const { directusFetch } = await import("@/lib/directus");
+    const { fetchPartnerAreasForCanton } = await import("./queries");
+    vi.mocked(directusFetch).mockRejectedValueOnce(new Error("Directus 500: boom"));
+
+    await expect(fetchPartnerAreasForCanton("VD", "production")).rejects.toThrow("Directus 500");
+  });
+});

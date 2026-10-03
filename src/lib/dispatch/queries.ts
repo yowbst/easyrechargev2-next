@@ -24,10 +24,6 @@ const PARTNER_AREA_FIELDS = [
   "partner.slug",
   "partner.notification_email",
   "partner.monthly_quota",
-  // Products this partner receives, with a monthly quota each.
-  "partner.products.product",
-  "partner.products.status",
-  "partner.products.monthly_quota",
   "partner.priority",
   "partner.language",
   "partner.billable_rate",
@@ -52,6 +48,13 @@ const PARTNER_AREA_FIELDS = [
   "partner.pricing_policy.settings",
 ].join(",");
 
+// Products this partner receives, with a monthly quota each (partner_products).
+const PARTNER_PRODUCT_FIELDS = [
+  "partner.products.product",
+  "partner.products.status",
+  "partner.products.monthly_quota",
+].join(",");
+
 /**
  * Fetch partner_areas for a canton, joined with their partner and the canton row.
  * Filters out paused partners, partners outside the current environment, and
@@ -62,20 +65,34 @@ export async function fetchPartnerAreasForCanton(
   cantonCode: string,
   environment: Environment,
 ): Promise<PartnerArea[]> {
-  const params = new URLSearchParams();
-  params.set("fields", PARTNER_AREA_FIELDS);
-  params.set("filter[canton][code][_eq]", cantonCode);
-  params.set("filter[canton][is_active][_eq]", "true");
-  params.set("filter[partner][status][_eq]", "active");
-  params.set("filter[partner][environment][_eq]", environment);
-  params.set("filter[status][_eq]", "published");
-  params.set("limit", "100");
+  const query = (fields: string) => {
+    const params = new URLSearchParams();
+    params.set("fields", fields);
+    params.set("filter[canton][code][_eq]", cantonCode);
+    params.set("filter[canton][is_active][_eq]", "true");
+    params.set("filter[partner][status][_eq]", "active");
+    params.set("filter[partner][environment][_eq]", environment);
+    params.set("filter[status][_eq]", "published");
+    params.set("limit", "100");
+    return directusFetch<{ data: PartnerArea[] }>(
+      `/items/partner_areas?${params}`,
+      { next: { revalidate: 0 } },
+    );
+  };
 
-  const res = await directusFetch<{ data: PartnerArea[] }>(
-    `/items/partner_areas?${params}`,
-    { next: { revalidate: 0 } },
-  );
-  return res?.data ?? [];
+  try {
+    const res = await query(`${PARTNER_AREA_FIELDS},${PARTNER_PRODUCT_FIELDS}`);
+    return res?.data ?? [];
+  } catch (err) {
+    // Directus refuses the whole query when a requested relation is not
+    // readable (partner_products missing, or the token lacks permission).
+    // Without the product rows every partner is served as before the battery
+    // launch — charger only — instead of no lead being dispatched at all.
+    if (!(err instanceof Error) || !err.message.startsWith("Directus 403")) throw err;
+    console.warn("[dispatch] partner_products not readable — falling back to charger-only partners");
+    const res = await query(PARTNER_AREA_FIELDS);
+    return res?.data ?? [];
+  }
 }
 
 /**
