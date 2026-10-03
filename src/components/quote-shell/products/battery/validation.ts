@@ -8,7 +8,7 @@ export const hasNoPv = (d: Data) => d.solarEquipment === "none";
 
 /** "12,5" / "12.5" / "12'000" → number; empty, zero, negative or garbage → null. */
 export function parseDecimal(raw: string): number | null {
-  const s = raw.trim().replace(/[''\s]/g, "").replace(",", ".");
+  const s = raw.trim().replace(/['''\s]/g, "").replace(",", ".");
   if (!s) return null;
   const n = Number(s);
   return Number.isFinite(n) && n > 0 ? n : null;

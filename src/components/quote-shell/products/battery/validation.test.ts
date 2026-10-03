@@ -12,6 +12,7 @@ describe("parseDecimal (Review Focus 2)", () => {
     expect(parseDecimal("12.5")).toBe(12.5);
     expect(parseDecimal(" 8 ")).toBe(8);
     expect(parseDecimal("12'000")).toBe(12000);
+    expect(parseDecimal("12'000")).toBe(12000);
   });
 
   it("rejects zero, negatives and garbage", () => {
