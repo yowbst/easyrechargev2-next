@@ -135,6 +135,8 @@ const DISPATCH_FIELDS = [
   "id",
   "dispatched_at",
   "status",
+  "product",
+  "lead_category",
   "canton",
   "mode_used",
   "month_bucket",
@@ -150,6 +152,8 @@ export interface DispatchRow {
   id: string;
   dispatched_at: string;
   status: string;
+  product: string | null;
+  lead_category: string | null;
   canton: string;
   mode_used: string;
   month_bucket: string;
@@ -168,6 +172,7 @@ export async function listDispatches(
     canton?: string | null;
     status?: string | null;
     partner?: string | null;
+    product?: string | null;
     env?: string | null;
   } = {},
 ): Promise<{ count: number; environment: string; rows: DispatchRow[] }> {
@@ -187,6 +192,7 @@ export async function listDispatches(
   if (canton) params.set("filter[canton][_eq]", canton.toUpperCase());
   if (status) params.set("filter[status][_eq]", status);
   if (partner) params.set("filter[partner][slug][_eq]", partner);
+  if (opts.product) params.set("filter[product][_eq]", opts.product);
 
   const res = await directusFetch<{ data: DispatchRow[] }>(
     `/items/partner_dispatches?${params}`,

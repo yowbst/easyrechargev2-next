@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getMonthlyBilling, listDispatches, reconcileBilling } from "@/lib/dispatch/admin";
 import { manualDispatch } from "@/lib/dispatch/manual-dispatch";
+import { PRODUCTS } from "@/lib/products";
 import { run } from "./helpers";
 
 export function registerAdminTools(server: McpServer) {
@@ -45,12 +46,13 @@ export function registerAdminTools(server: McpServer) {
     {
       title: "List partner dispatches",
       description:
-        "Partner dispatch ledger, newest first. env defaults to the current deploy environment; pass 'all' to disable the filter.",
+        "Partner dispatch ledger, newest first, with product and lead category per row. Battery leads without PV are never dispatched, so they have no row. env defaults to the current deploy environment; pass 'all' to disable the filter.",
       inputSchema: {
         limit: z.number().int().min(1).max(200).default(20),
         canton: z.string().optional(),
         status: z.string().optional().describe("dispatched | skipped_quota | skipped_no_partner | skipped_test | skipped_dedup"),
         partner: z.string().optional().describe("Partner slug"),
+        product: z.enum(PRODUCTS).optional().describe("ecp (charger) | battery"),
         env: z.enum(["development", "staging", "production", "all"]).optional(),
       },
       annotations: { readOnlyHint: true },

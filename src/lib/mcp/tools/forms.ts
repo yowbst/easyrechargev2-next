@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { PRODUCTS } from "@/lib/products";
 import { run } from "./helpers";
 
 function appOrigin(): string {
@@ -26,8 +27,9 @@ export function registerFormTools(server: McpServer) {
     {
       title: "Submit quote request",
       description:
-        "Create a real quote submission (persists to Directus, may dispatch to partners per DISPATCH_MODE, and fires the Make webhook → customer/partner emails). Use test-flagged emails for testing.",
+        "Create a real quote submission (persists to Directus, may dispatch to partners per DISPATCH_MODE, and fires the Make webhook → customer/partner emails). Use test-flagged emails for testing. product=battery leads with solarEquipment=none are stored but never dispatched (response dispatchable=false).",
       inputSchema: {
+        product: z.enum(PRODUCTS).optional().describe("ecp (charger, default) | battery"),
         firstName: z.string(),
         lastName: z.string(),
         email: z.string(),
@@ -38,7 +40,9 @@ export function registerFormTools(server: McpServer) {
         extra: z
           .record(z.string(), z.unknown())
           .optional()
-          .describe("Additional quote fields stored in submission data: canton, postalCode, locality, housingStatus, solarEquipment, …"),
+          .describe(
+            "Additional quote fields stored in submission data: canton, postalCode, locality, housingStatus, housingType, solarEquipment, deadline, comment, … Battery adds pvPower (kWc), inverterBrand, existingBattery, householdCount, householdSize, annualConsumption, heatPump, evCount, evPlanned, hasCharger.",
+          ),
       },
       annotations: submitAnnotations,
     },

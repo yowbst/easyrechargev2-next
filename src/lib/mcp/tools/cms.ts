@@ -10,6 +10,7 @@ import {
   fetchVehiclesByBrand,
 } from "@/lib/directus-queries";
 import { storage } from "@/lib/directus-storage";
+import { PRODUCTS } from "@/lib/products";
 import { slugToDirectusLocale } from "@/lib/i18n/config";
 import { hasChargingSubsidy, searchLocalitiesDirectus } from "@/lib/localities-server";
 import { run } from "./helpers";
@@ -97,6 +98,7 @@ export function registerCmsTools(server: McpServer) {
       inputSchema: {
         limit: z.number().int().min(1).max(200).default(20),
         formType: z.enum(["quote", "contact", "mini-quote-card"]).optional(),
+        product: z.enum(PRODUCTS).optional().describe("Quote product: ecp (charger) | battery"),
         status: z.string().optional(),
         environment: z.enum(["development", "staging", "production", "all"]).optional(),
       },

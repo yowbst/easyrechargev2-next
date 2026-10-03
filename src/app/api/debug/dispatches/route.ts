@@ -19,6 +19,7 @@ export async function GET(req: Request) {
   const status = searchParams.get("status");
   const envParam = searchParams.get("env");
   const partner = searchParams.get("partner");
+  const product = searchParams.get("product");
 
   try {
     const result = await listDispatches({
@@ -26,6 +27,7 @@ export async function GET(req: Request) {
       canton,
       status,
       partner,
+      product,
       env: envParam,
     });
     return NextResponse.json(result);
