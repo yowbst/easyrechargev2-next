@@ -95,7 +95,52 @@ export async function fetchLayout(locale: string = DIRECTUS_DEFAULT_LOCALE) {
 
   // site_settings is a singleton — Directus returns { data: {...} } not { data: [{...}] }
   const raw = result?.data;
-  return (Array.isArray(raw) ? raw[0] : raw) ?? null;
+  const layout = (Array.isArray(raw) ? raw[0] : raw) ?? null;
+  return layout ? withLiveNavCounts(layout, locale) : null;
+}
+
+/**
+ * Header nav item key → what its "(n)" counts. The Directus value in
+ * header_config.nav_counts decides whether a count is shown at all; the
+ * number itself is always the live count (Directus value only as fallback
+ * when the count query fails).
+ */
+const NAV_COUNT_SOURCES: Record<string, (locale: string) => Promise<number | null>> = {
+  "header-vehicles": () => countItems("vehicles", { "[status][_eq]": "published" }, "vehicles"),
+  // Same scope as the blog listing: published and translated in this language.
+  "header-blog": (locale) =>
+    countItems(
+      "blog_posts",
+      { "[status][_eq]": "published", "[translations][languages_code][_eq]": locale },
+      "blog-posts",
+    ),
+};
+
+async function countItems(collection: string, filter: AnyRecord, tag: string): Promise<number | null> {
+  const params = new URLSearchParams({ "aggregate[count]": "id" });
+  for (const [key, value] of Object.entries(filter)) params.set(`filter${key}`, String(value));
+  try {
+    const result = await directusFetch<{ data: { count?: { id?: string | number } }[] }>(
+      `/items/${collection}?${params}`,
+      { next: { revalidate: 3600, tags: [tag] } },
+    );
+    const n = Number(result?.data?.[0]?.count?.id);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+async function withLiveNavCounts(layout: AnyRecord, locale: string): Promise<AnyRecord> {
+  const configured: Record<string, number> | undefined = layout.header_config?.nav_counts;
+  if (!configured) return layout;
+  const keys = Object.keys(configured).filter((key) => key in NAV_COUNT_SOURCES);
+  const live = await Promise.all(keys.map((key) => NAV_COUNT_SOURCES[key](locale)));
+  const navCounts = { ...configured };
+  keys.forEach((key, i) => {
+    if (live[i] != null) navCounts[key] = live[i];
+  });
+  return { ...layout, header_config: { ...layout.header_config, nav_counts: navCounts } };
 }
 
 // ─── Pages ───────────────────────────────────────────────
