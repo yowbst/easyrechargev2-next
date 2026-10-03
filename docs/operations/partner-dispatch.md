@@ -97,6 +97,7 @@ Build a Trends view filtered by `environment` to monitor each stage of cutover.
 |---|---|---|
 | `exclusive_over_quota` | The exclusive partner is exhausted for the month | Lead is still dispatched (gift). Ledger row has `gift=true`, `price_chf=null`. |
 | `no_partner_for_canton` | After exclusive + shared, still no candidate | Empty `dispatch.targets`. No ledger row (coverage gaps are PostHog-only). |
+| `no_partner_for_product` | The canton has partners, but none whose pricing policy prices this product (non-charger products only) | Same surface as `no_partner_for_canton`: empty `dispatch.targets`, no ledger row. |
 | `unknown_canton` | Submission has a canton value that can't be normalized | Resolver short-circuits; same surface as `no_partner_for_canton`. |
 
 ---
@@ -127,6 +128,8 @@ Battery funnel (`product = battery`):
 | any, with `solarEquipment = none` (or tenant) | — | `no_pv` — stored, never dispatched, no ledger row; PostHog `dispatch_not_dispatchable` |
 
 Dedup is per product: a charger lead and a battery lead from the same e-mail are both dispatched.
+
+Battery eligibility: a partner receives battery leads only if its pricing policy has a `prices.battery` column; quotas are counted per product. A partner without a policy (or whose policy has no `battery` column) keeps receiving charger leads exactly as before, gifts included, and never receives a battery lead. When the canton has partners but none prices the battery, the lead gets reason `no_partner_for_product`: empty `targets`, no ledger row, PostHog `dispatch_no_partner_for_product`.
 
 Missing rows fall back to gift dispatch (`gift=true`, `price_chf=null`, loud warning log). The price is snapshotted onto `partner_dispatches.price_chf` at dispatch time and survives later price changes.
 

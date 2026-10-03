@@ -4,6 +4,7 @@ import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 import { after } from "next/server";
 import {
   fetchPartnerAreasForCanton,
+  filterAreasForProduct,
   countDispatchesThisMonth,
   recordDispatch,
   fetchDispatchConfig,
@@ -113,9 +114,15 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
     const isTest = computeIsTest(input.email, environment, config.test_email_patterns);
     baseResult.isTest = isTest;
 
-    const areas = await fetchPartnerAreasForCanton(canton, environment);
+    const product = input.product ?? "ecp";
+    const cantonAreas = await fetchPartnerAreasForCanton(canton, environment);
+    // Charger: unchanged list. Other products: only partners whose pricing
+    // policy prices that product (see filterAreasForProduct).
+    const areas = filterAreasForProduct(cantonAreas, product);
     if (areas.length === 0) {
-      baseResult.summary.reasons.push("no_partner_for_canton");
+      baseResult.summary.reasons.push(
+        cantonAreas.length === 0 ? "no_partner_for_canton" : "no_partner_for_product",
+      );
       fireDispatchEvents(
         {
           submissionId: input.submissionId,
@@ -123,7 +130,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
           locale: input.locale,
           environment,
           isTest,
-          product: input.product ?? "ecp",
+          product,
         },
         mode,
         [],
@@ -133,14 +140,13 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
     }
 
     const partnerIds = areas.map((a) => a.partner.id);
-    const product = input.product ?? "ecp";
 
     // Prices live in partner.pricing_policy.settings.prices[product][category],
     // pulled via PARTNER_AREA_FIELDS — pure function, no extra fetch.
     const partnerPrices = buildPartnerLeadPrices(areas, product);
 
     const [counts, dedupPartnerIds] = await Promise.all([
-      countDispatchesThisMonth(partnerIds, environment),
+      countDispatchesThisMonth(partnerIds, environment, product),
       input.email
         ? findRecentDispatchesByEmail(
             input.email,
@@ -318,7 +324,11 @@ function fireDispatchEvents(
       });
     }
     for (const reason of reasons) {
-      if (reason === "exclusive_over_quota" || reason === "no_partner_for_canton") {
+      if (
+        reason === "exclusive_over_quota" ||
+        reason === "no_partner_for_canton" ||
+        reason === "no_partner_for_product"
+      ) {
         ph.capture({
           distinctId: ctx.submissionId,
           event: `dispatch_${reason}`,

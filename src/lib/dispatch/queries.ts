@@ -1,4 +1,5 @@
 import { directusFetch } from "@/lib/directus";
+import { DEFAULT_PRODUCT } from "@/lib/products";
 import type {
   Environment,
   PartnerArea,
@@ -74,12 +75,33 @@ export async function fetchPartnerAreasForCanton(
 }
 
 /**
- * Count `dispatched` ledger rows for the given partners in the current UTC month.
+ * Keep the areas whose partner can receive a lead of this product.
+ *
+ * The charger (default product) is unchanged: every area is kept, and a
+ * partner without a pricing policy still receives charger leads as gifts.
+ * Any other product goes only to partners whose policy prices it, i.e.
+ * `pricing_policy.settings.prices[product]` is an object. A policy that was
+ * not expanded (string id) cannot prove that and is excluded.
+ */
+export function filterAreasForProduct(areas: PartnerArea[], product: string): PartnerArea[] {
+  if (product === DEFAULT_PRODUCT) return areas;
+  return areas.filter((a) => {
+    const policy = a.partner.pricing_policy;
+    if (!policy || typeof policy !== "object") return false;
+    const prices = policy.settings?.prices?.[product];
+    return typeof prices === "object" && prices !== null;
+  });
+}
+
+/**
+ * Count `dispatched` ledger rows for the given partners in the current UTC month,
+ * for one product (quotas are counted per product).
  * One Directus call, grouped by partner.
  */
 export async function countDispatchesThisMonth(
   partnerIds: string[],
   environment: Environment,
+  product: string,
 ): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (partnerIds.length === 0) return counts;
@@ -90,6 +112,7 @@ export async function countDispatchesThisMonth(
   params.set("filter[month_bucket][_eq]", currentMonthBucket());
   params.set("filter[status][_eq]", "dispatched");
   params.set("filter[environment][_eq]", environment);
+  params.set("filter[product][_eq]", product);
   params.set("filter[partner][_in]", partnerIds.join(","));
 
   type Row = { partner: string; count: { id: string | number } };
