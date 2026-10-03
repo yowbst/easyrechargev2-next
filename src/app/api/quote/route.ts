@@ -2,8 +2,8 @@ import { NextResponse, after } from "next/server";
 import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
-import { runDispatch, normalizeCanton, type DispatchResult } from "@/lib/dispatch";
-import { deriveLeadCategory } from "@/lib/dispatch/categorize";
+import { runDispatch, normalizeCanton, notDispatchableResult, type DispatchResult } from "@/lib/dispatch";
+import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
 import { getQuoteWebhookUrl, parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
 import { normalizeProduct } from "@/lib/products";
 
@@ -89,15 +89,31 @@ export async function POST(req: Request) {
     // Returns a payload-ready object embedded in the Make webhook below.
     // runDispatch never throws — failures are logged and surface as an empty result.
     const leadCategory = deriveLeadCategory(product, quoteData);
+    const dispatchable = isDispatchable(leadCategory);
+    const rawCanton = normalizedCanton ?? (typeof quoteData.canton === "string" ? quoteData.canton : null);
 
-    const dispatchResult: DispatchResult = await runDispatch({
-      submissionId: submission.id,
-      rawCanton: normalizedCanton ?? (typeof quoteData.canton === "string" ? quoteData.canton : null),
-      email,
-      locale: (lang === "de" ? "de" : "fr"),
-      leadCategory,
-      product,
-    });
+    let dispatchResult: DispatchResult;
+    if (dispatchable) {
+      dispatchResult = await runDispatch({
+        submissionId: submission.id,
+        rawCanton,
+        email,
+        locale: (lang === "de" ? "de" : "fr"),
+        leadCategory,
+        product,
+      });
+    } else {
+      dispatchResult = notDispatchableResult(rawCanton);
+      try {
+        const posthog = getPostHogServer();
+        posthog.capture({
+          distinctId: phIds.phDistinctId ?? "anonymous",
+          event: "dispatch_not_dispatchable",
+          properties: { product, lead_category: leadCategory, submission_id: submission.id, canton: dispatchResult.canton },
+        });
+        after(() => posthog.flush());
+      } catch { /* analytics never blocks a submission */ }
+    }
 
     // Identify user in PostHog server-side (client may not have loaded yet)
     try {
@@ -164,7 +180,7 @@ export async function POST(req: Request) {
       await fireQuoteWebhook(webhookUrl, payload, { submissionId: submission.id, distinctId: phDistinctId });
     }
 
-    return NextResponse.json({ success: true, submissionId: submission.id });
+    return NextResponse.json({ success: true, submissionId: submission.id, dispatchable });
   } catch (error) {
     console.error("[Quote] Submission error:", error);
     serverLog("ERROR", "Quote submission failed", { route: "quote", error: error instanceof Error ? error.message : String(error) });

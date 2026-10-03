@@ -336,3 +336,22 @@ function fireDispatchEvents(
     /* telemetry never breaks the request */
   }
 }
+
+/**
+ * Dispatch block for a lead that is stored but never sent to a partner
+ * (battery visitor without PV). No ledger row: `partner_dispatches.partner`
+ * is required, and leads without a partner are tracked in PostHog only, like
+ * coverage gaps. Make still receives the block, so the visitor confirmation
+ * e-mail goes out and no partner e-mail fires.
+ */
+export function notDispatchableResult(rawCanton: string | null): DispatchResult {
+  return {
+    mode: getDispatchMode(),
+    canton: normalizeCanton(rawCanton) ?? "",
+    isTest: getEnvironment() !== "production",
+    billableRate: null,
+    summary: { resolved: 0, dispatched: 0, skipped: 0, skippedDedup: 0, reasons: ["not_dispatchable"] },
+    dedup: { skippedPartnerSlugs: [], windowDays: 0 },
+    targets: [],
+  };
+}
