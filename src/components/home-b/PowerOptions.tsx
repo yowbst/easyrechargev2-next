@@ -37,7 +37,7 @@ export function PowerOptions({
       <Container>
         <div className="rounded-xl bg-b-sand p-8 md:p-11">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-x-12 gap-y-3">
-            <h2 className="font-heading text-[clamp(1.5rem,3vw,2rem)] font-semibold leading-[1.1] tracking-[-0.035em]">
+            <h2 className="type-h2">
               {title}
             </h2>
             {aside && (

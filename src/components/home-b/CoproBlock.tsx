@@ -37,7 +37,7 @@ export function CoproBlock({
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
             <SectionTitle>{title}</SectionTitle>
             {lede && (
-              <p className="mt-4 text-[17px] leading-[1.65] text-muted-foreground">
+              <p className="type-body mt-4 text-muted-foreground">
                 {lede}
               </p>
             )}
@@ -68,7 +68,11 @@ export function CoproBlock({
             )}
           </div>
 
-          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-b-inset">
+          {/* 16:10 rather than the design's 4:3. The photograph is 1.83:1, and a
+              4:3 crop would cut ~27% off each side — taking with it the row of
+              wall chargers along the right-hand wall, which is the whole point
+              of the picture. */}
+          <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-b-inset">
             {image ? (
               <Image
                 src={image}
