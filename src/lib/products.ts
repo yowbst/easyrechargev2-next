@@ -26,6 +26,17 @@ export function normalizeProduct(raw: unknown): Product {
   return isProduct(raw) ? raw : DEFAULT_PRODUCT;
 }
 
+/** Product segment of the human-readable quote ref, in the lead's language. */
+const REF_LABELS: Record<Product, { fr: string; de: string }> = {
+  ecp: { fr: "BORNE", de: "LADESTATION" },
+  battery: { fr: "BATTERIE", de: "BATTERIE" },
+};
+
+export function productRefLabel(product: unknown, language: unknown): string {
+  const labels = REF_LABELS[normalizeProduct(product)];
+  return language === "de" ? labels.de : labels.fr;
+}
+
 /** Directus page route_id → product of the quote funnel that page hosts. */
 export const FUNNEL_ROUTES = {
   quote: "ecp",
