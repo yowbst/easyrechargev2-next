@@ -99,7 +99,7 @@ function ExactOrBuckets({ step, field, exactField, unit, icon, allowNa, data, se
     <div id={`q-${field}`}>
       {exact || field === "annualConsumption" ? (
         <>
-          <FieldLabel icon={icon} label={tq(`${k}.label`)} tooltip={tqOpt(`${k}.tooltip`)} image={tooltipImageUrl(pageConfig, step, field)} htmlFor={`${field}-exact`} />
+          <FieldLabel icon={icon} label={tq(`${k}.label`)} tooltip={tqOpt(`${k}.tooltip`)} image={tooltipImageUrl(pageConfig, step, field)} htmlFor={exact ? `${field}-exact` : undefined} />
           {exact && (
             <div className="flex items-center gap-2">
               <Input
