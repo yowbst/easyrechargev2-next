@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Vehicle ingest scrape artifacts (multi-MB, not source)
 /data/
+
+# Git worktrees for isolated feature work
+/.worktrees/
