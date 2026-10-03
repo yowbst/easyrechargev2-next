@@ -84,10 +84,14 @@ Conventions carried over from the charger funnel:
   a sibling boolean (`pvPowerExact`, `annualConsumptionExact`) records that the
   value was typed, for the calculator's precision message.
 - Every step has a `firstUnansweredField` validator mirroring its reveal logic.
-- Typical consumption profiles per household size and housing type live in
-  `pages.quote-battery.config.consumption_profiles`, with the source cited in the
-  config. They are not used by the funnel itself; they are stored here so the
-  calculator (B) and the partner e-mail can share them.
+- Typical consumption profiles per household size are **not** part of this
+  sub-project: the funnel does not use them. They move to the calculator (B), with
+  a cited source.
+- Option cards use native-button components (`IconButtonGroup`,
+  `RangeButtonGroup`), never the Base UI `RadioGroup`: no `forwardCardClick` shim,
+  no synthetic double clicks in autocapture. `RangeButtonGroup` gains
+  `allowNa` (default `true`, charger unchanged) for questions without
+  "don't know" (household count, EV count).
 
 ## Category derivation
 
@@ -130,20 +134,36 @@ Conventions carried over from the charger funnel:
     `homeBattery in [none]` → CTA to `quote-battery`;
   - on `quote-battery-success`: `evCount ≥ 1` and `hasCharger = no`, or
     `evPlanned = yes` → CTA to `quote`.
-  The submission data is already fetched by the success page for the first name;
-  no new request. Answer handoff between funnels is sub-project D (see below).
+  The success page today only reads `firstName` from the query string. When at
+  least one CTA carries `show_when`, it fetches the submission once
+  (`GET /api/form-submissions/{id}`, already used by the submission view); a CTA
+  with `show_when` stays hidden until the data is loaded, and stays hidden if the
+  fetch fails or the condition is malformed. Answer handoff between funnels is
+  sub-project D (see below).
+- **Submission view and partner link.** The partner dashboard links every lead to
+  `/{lang}/demande-devis/{id}?view=partner`, and `QuoteSubmissionView` hardcodes
+  the charger sections. The view picks its sections from `submission.product`
+  (battery: installation and consumption sections instead of housing, parking,
+  charger, vehicle), and the `[sub1]` submission route merges the
+  `quote-battery` / `quote-battery-view` dictionaries over the charger ones. The
+  partner link therefore keeps working unchanged for battery leads.
 
 ## Server chain
 
 - `src/lib/dispatch/types.ts`: add the five battery categories to the `LeadCategory`
-  union **and** `LEAD_CATEGORIES`; add `skipped_not_dispatchable` to `DispatchStatus`.
+  union **and** `LEAD_CATEGORIES`. `DispatchStatus` is unchanged.
   Directus translations `category.<key>` (fr-FR, de-DE) ship in the same change,
   per the enum checklist in memory.
-- `/api/quote`: compute the category with the product; if not dispatchable, write
-  one ledger row `skipped_not_dispatchable`, skip `runDispatch`, still fire the Make
-  webhook with `dispatch.targets: []` so the visitor confirmation e-mail goes out.
-  The client does not fire the Ads `quote_submit` conversion for `no_pv`
-  submissions (the submit response carries `dispatchable: false`).
+- `/api/quote`: compute the category with the product; if not dispatchable, skip
+  `runDispatch` and write **no ledger row** (`partner_dispatches.partner` is
+  required, and coverage gaps are already PostHog-only by convention — see
+  `docs/directus-partners-schema.md`). Capture a server PostHog event
+  `dispatch_not_dispatchable`, and still fire the Make webhook with a dispatch block
+  whose `targets` is empty and `summary.reasons` is `["not_dispatchable"]`, so the
+  visitor confirmation e-mail goes out. The response carries `dispatchable: false`;
+  the client then fires no Ads `quote_submit` conversion and appends `nd=1` to the
+  success URL, which makes the success-page fallback conversion
+  (`GoogleAdsConversion`) a no-op too.
 - **Dispatch dedup per product.** `findRecentDispatchesByEmail` filters the ledger
   on partner, environment, window and e-mail only; a charger lead followed by a
   battery lead within the window would be skipped at a partner who does both. Add
