@@ -26,6 +26,7 @@ ROI analysis service (C) marketed from it.
 | Form implementation | New product-agnostic `QuoteShell` + battery steps. `QuoteForm.tsx` (EV charger) is not modified; its migration onto the shell is a later, separate change. |
 | Design | The funnel opts into direction B via `data-direction-b` and reuses the charger funnel's components re-tokenised. No new component family. |
 | Consumption input | Proxy by household count and household size, with an optional exact kWh entry. Typical profiles live in Directus page config, sourced from a cited public reference. |
+| Cross-sell | Only after submission, on the success page, conditional on the lead's own answers, in both directions. Nothing is added before the contact step. |
 
 ## Current state (from codebase exploration)
 
@@ -71,7 +72,7 @@ Nine to twelve answers depending on branches, one step fewer than the charger fu
 | 0 | Welcome | none | Promise, trust figures. Reserved slot for the calculator hook (B). |
 | 1 | Housing | `housingStatus` owner / co-owner / tenant · `housingType` house / apartment · `solarEquipment` exists / in-progress / none | Price category. Tenant → soft exit message, no capture. `none` → short message, then straight to Contact; category `no_pv`. |
 | 2 | PV installation | `pvPower` buckets < 6 / 6–10 / 10–20 / > 20 kWc / don't know, plus "I know the exact value" → numeric kWc · `inverterBrand` solaredge / fronius / huawei / sma / other / unknown · `existingBattery` none / exists-wants-extension | Price category (10 kWc threshold); DC vs AC coupling hint for the partner. Hidden when `solarEquipment = none`. |
-| 3 | Consumption & project | `householdCount` 1 / 2 / 3 / 4+ · `householdSize` 1 / 2 / 3–4 / 5+ (only when one household) · `annualConsumption` optional numeric kWh behind "I know my annual consumption" · `heatPump` yes / no · `evCount` 0 / 1 / 2 / 3+ vehicles charging on this installation · `evPlanned` yes / no (revealed when `evCount = 0`) · `deadline` asap / 2-3mo / 3-6mo / 6+mo | Calculator inputs (B), scoring. `deadline` is the existing urgency factor. Hidden when `solarEquipment = none`. |
+| 3 | Consumption & project | `householdCount` 1 / 2 / 3 / 4+ · `householdSize` 1 / 2 / 3–4 / 5+ (only when one household) · `annualConsumption` optional numeric kWh behind "I know my annual consumption" · `heatPump` yes / no · `evCount` 0 / 1 / 2 / 3+ vehicles charging on this installation · `evPlanned` yes / no (revealed when `evCount = 0`) · `hasCharger` yes / no (revealed when `evCount ≥ 1`) · `deadline` asap / 2-3mo / 3-6mo / 6+mo | Calculator inputs (B), scoring. `deadline` is the existing urgency factor. `hasCharger` decides the charger cross-sell on the success page. Hidden when `solarEquipment = none`. |
 | 4 | Contact | address first, then identity and phone | Shell step, identical to the charger. Address yields the canton. |
 | 5 | Finalize | `approval` (co-owners only), `comment`, `acceptTerms` | Shell step. |
 
@@ -121,6 +122,16 @@ Conventions carried over from the charger funnel:
   keeps reading the legacy un-suffixed key until it migrates.
 - Sitemap, hreflang and the language switcher read the page registry and need no
   change.
+- **Cross-sell CTA on the success page.** `QuoteSuccess` already renders CTAs from
+  Directus (`cta.page_route_id`). Each CTA gains an optional `show_when` condition
+  evaluated against the submission data (`field`, `in: [values]`, all conditions
+  must hold). Two rules ship in Directus:
+  - on `quote-success` (charger): `solarEquipment in [exists, in-progress]` and
+    `homeBattery in [none]` → CTA to `quote-battery`;
+  - on `quote-battery-success`: `evCount ≥ 1` and `hasCharger = no`, or
+    `evPlanned = yes` → CTA to `quote`.
+  The submission data is already fetched by the success page for the first name;
+  no new request. Answer handoff between funnels is sub-project D (see below).
 
 ## Server chain
 
@@ -133,6 +144,12 @@ Conventions carried over from the charger funnel:
   webhook with `dispatch.targets: []` so the visitor confirmation e-mail goes out.
   The client does not fire the Ads `quote_submit` conversion for `no_pv`
   submissions (the submit response carries `dispatchable: false`).
+- **Dispatch dedup per product.** `findRecentDispatchesByEmail` filters the ledger
+  on partner, environment, window and e-mail only; a charger lead followed by a
+  battery lead within the window would be skipped at a partner who does both. Add
+  `filter[product][_eq]` (the `partner_dispatches.product` column already exists)
+  and pass `product` from `runDispatch`. Test: same e-mail, same partner, two
+  products inside the window → both dispatched.
 - Pricing: `prices.battery.<category>` in partner pricing policies. No code change.
   Missing rows behave as today (gift, `no_price_row` warning).
 - Scoring becomes per product. Battery factors: `ownership`, `authorization`,
@@ -188,7 +205,8 @@ welcome step only.
 ## Testing
 
 - Vitest: `products/battery/validation.ts` (tenant exit, no-PV branch, one vs many
-  households, exact entries, `evPlanned` reveal); `deriveLeadCategory` per product
+  households, exact entries, `evPlanned` and `hasCharger` reveals); success-page
+  `show_when` evaluation; `deriveLeadCategory` per product
   incl. threshold and unknown; battery scoring; `/api/quote` `no_pv` short-circuit
   (ledger row, no dispatch, webhook with empty targets).
 - Browser: replay the July headless-Chrome option-card click test on the new funnel
@@ -206,6 +224,24 @@ welcome step only.
 4. Adapt the Make scenario.
 5. Run the staging end-to-end checks.
 6. Production. `DISPATCH_MODE` is global, so the battery funnel is live immediately.
+
+## Follow-ups and parallel work
+
+- **Sub-project D — answer handoff between funnels (bounded, right after A).** A
+  cross-sold visitor starts the second funnel with identity, address and housing
+  prefilled from the first submission (same mechanism as the mini-quote session
+  token, extended to the shared fields), skipping the contact step. The shell is
+  built with a `prefill` input so D is additive.
+- **Content (Directus, in parallel with the code).** Pillar page
+  `/fr/batterie-solaire` (+ de) built from existing blocks: calculator hook (B),
+  how it works, price expectations, FAQ, CTA to the funnel. A blog category
+  "batterie" with three to five guides at launch. A secondary block and a nav
+  entry on the home; no new home page.
+- **solarcharge.ch.** 301 to the pillar page via a host-conditioned redirect in
+  `next.config.ts` once the domain is attached to the Vercel project. Revisit as a
+  content microsite only if the pillar page shows a brand-fit problem.
+- **Make.** A delayed follow-up to charger leads with solar and no battery, reusing
+  the same signals as the on-site cross-sell.
 
 ## Out of scope
 
