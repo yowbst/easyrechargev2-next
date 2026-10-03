@@ -209,7 +209,7 @@ class DirectusStorage {
   }
 
   async listSubmissions(
-    opts: { limit?: number; formType?: string; status?: string; environment?: string } = {},
+    opts: { limit?: number; formType?: string; product?: string; status?: string; environment?: string } = {},
   ): Promise<FormSubmission[]> {
     const params = new URLSearchParams();
     params.set("fields", "*,user.*,session.*");
@@ -218,6 +218,7 @@ class DirectusStorage {
     const env = opts.environment ?? getEnvironment();
     if (env !== "all") params.set("filter[environment][_eq]", env);
     if (opts.formType) params.set("filter[form_type][_eq]", opts.formType);
+    if (opts.product) params.set("filter[product][_eq]", opts.product);
     if (opts.status) params.set("filter[status][_eq]", opts.status);
     const res = await directusFetch<{ data: FormSubmission[] }>(`/items/form_submissions?${params.toString()}`, {
       next: { revalidate: 0 },

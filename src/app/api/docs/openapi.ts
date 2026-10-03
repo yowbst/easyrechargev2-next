@@ -20,7 +20,7 @@ export function getOpenApiSpec() {
           tags: ["Forms"],
           summary: "Submit a quote request",
           description:
-            "Creates a form session, user, and submission in Directus. Resolves partner dispatch (when DISPATCH_MODE is set), records ledger rows in partner_dispatches, then fires the configured Make webhook with `submission.dispatch` populated.",
+            "Creates a form session, user, and submission in Directus. Resolves partner dispatch (when DISPATCH_MODE is set), records ledger rows in partner_dispatches, then fires the configured Make webhook with `submission.dispatch` populated. `product` selects the funnel (`ecp` charger, default; `battery`). A battery lead without PV (`solarEquipment: none`) is stored and sent to Make, but never dispatched: no ledger row, `dispatchable: false`.",
           requestBody: {
             required: true,
             content: {
@@ -42,6 +42,10 @@ export function getOpenApiSpec() {
                         type: "string",
                         format: "uuid",
                         example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                      },
+                      dispatchable: {
+                        type: "boolean",
+                        description: "False for leads that are never sent to partners (battery without PV).",
                       },
                     },
                   },
@@ -382,9 +386,15 @@ export function getOpenApiSpec() {
               in: "query",
               schema: {
                 type: "string",
-                enum: ["dispatched", "skipped_quota", "skipped_test"],
+                enum: ["dispatched", "skipped_no_partner", "skipped_test", "skipped_dedup", "skipped_quota"],
               },
               description: "Filter by ledger status.",
+            },
+            {
+              name: "product",
+              in: "query",
+              schema: { type: "string", enum: ["ecp", "battery"] },
+              description: "Filter by product.",
             },
             {
               name: "partner",
@@ -537,8 +547,14 @@ export function getOpenApiSpec() {
             lang: { type: "string", enum: ["fr", "de"], example: "fr" },
             acceptTerms: { type: "boolean" },
             miniQuoteSessionToken: { type: "string", format: "uuid", description: "When the user came from a MiniQuote, this links both submissions under the same session." },
+            product: {
+              type: "string",
+              enum: ["ecp", "battery"],
+              default: "ecp",
+              description: "Quote funnel. Drives the lead category, partner eligibility (`partner_products`), price and Ads conversion action.",
+            },
             // Housing
-            housingStatus: { type: "string", enum: ["owner", "tenant"] },
+            housingStatus: { type: "string", enum: ["owner", "co-owner", "tenant"] },
             housingType: { type: "string" },
             solarEquipment: { type: "string" },
             homeBattery: { type: "string" },
@@ -561,6 +577,19 @@ export function getOpenApiSpec() {
             vehicleModel: { type: "string" },
             vehicleTripDistance: { type: "number" },
             vehicleChargingHours: { type: "number" },
+            // Battery (product = battery)
+            pvPower: { type: ["number", "string"], description: "PV size in kWc, or `na` when unknown (counts as < 10 kWc)." },
+            pvPowerExact: { type: "boolean", description: "True when pvPower was typed rather than picked from a range." },
+            inverterBrand: { type: "string", enum: ["solaredge", "fronius", "huawei", "sma", "other", "unknown"] },
+            existingBattery: { type: "string", enum: ["none", "extend"] },
+            householdCount: { type: "number", description: "Households sharing the installation (4 = 4+)." },
+            householdSize: { type: "number", description: "People in a single household (3.5 = 3–4, 5 = 5+)." },
+            annualConsumption: { type: "number", description: "kWh per year, optional." },
+            annualConsumptionExact: { type: "boolean" },
+            heatPump: { type: "string", enum: ["yes", "no"] },
+            evCount: { type: "number", description: "Electric vehicles (3 = 3+)." },
+            evPlanned: { type: "string", enum: ["yes", "no"], description: "Asked when evCount = 0." },
+            hasCharger: { type: "string", enum: ["yes", "no"], description: "Asked when evCount ≥ 1." },
             // Address
             addressMode: { type: "string", enum: ["google", "manual"] },
             address: { type: "string", description: "Full address when addressMode=google" },
@@ -696,7 +725,14 @@ export function getOpenApiSpec() {
             dispatched_at: { type: "string", format: "date-time" },
             status: {
               type: "string",
-              enum: ["dispatched", "skipped_quota", "skipped_test"],
+              enum: ["dispatched", "skipped_no_partner", "skipped_test", "skipped_dedup", "skipped_quota"],
+              description: "`skipped_quota` is legacy (read-only); new rows never use it.",
+            },
+            product: { type: "string", enum: ["ecp", "battery"] },
+            lead_category: {
+              type: ["string", "null"],
+              example: "owner_pv_small",
+              description: "Pricing category. Charger: owner|co_owner|tenant × solar|no_solar. Battery: owner|co_owner × pv_small|pv_large (10 kWc threshold).",
             },
             canton: { type: "string", example: "VD", description: "Snapshot of the 2-letter code at dispatch time." },
             mode_used: { type: "string", enum: ["exclusive", "shared"] },
