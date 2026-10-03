@@ -28,3 +28,12 @@ export function parseQuoteDraft(raw: string | null, now: number): Record<string,
     return null;
   }
 }
+
+/**
+ * Draft key per product. The charger keeps the legacy key (live drafts in
+ * visitors' tabs stay readable); other products are namespaced so two funnels
+ * opened in one tab never fill each other's answers.
+ */
+export function quoteDraftKey(product: string): string {
+  return product === "ecp" ? QUOTE_DRAFT_KEY : `${QUOTE_DRAFT_KEY}:${product}`;
+}

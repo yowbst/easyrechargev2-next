@@ -26,3 +26,12 @@ describe("quoteDraft", () => {
     expect(parseQuoteDraft('{"v":99,"t":1,"data":{}}', NOW)).toBeNull();
   });
 });
+
+describe("quoteDraftKey", () => {
+  it("keeps the charger on the legacy key and namespaces other products (Review Focus 4)", async () => {
+    const { quoteDraftKey, QUOTE_DRAFT_KEY } = await import("./quoteDraft");
+    expect(quoteDraftKey("ecp")).toBe(QUOTE_DRAFT_KEY);
+    expect(quoteDraftKey("battery")).toBe(`${QUOTE_DRAFT_KEY}:battery`);
+    expect(quoteDraftKey("battery")).not.toBe(quoteDraftKey("ecp"));
+  });
+});

@@ -17,6 +17,8 @@ interface RangeButtonGroupProps {
   tooltipImage?: string;
   className?: string;
   testId?: string;
+  /** Show the "don't know" button. Off for questions everyone can answer. */
+  allowNa?: boolean;
 }
 
 /** Tap-button bucket picker that replaced SliderWithCheckbox: one tap =
@@ -33,6 +35,7 @@ export function RangeButtonGroup({
   tooltipImage,
   className = "",
   testId,
+  allowNa = true,
 }: RangeButtonGroupProps) {
   const isNA = value === "na";
   const cols = options.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4";
@@ -71,19 +74,21 @@ export function RangeButtonGroup({
       {/* Same visual grammar as the bucket buttons (bordered, centered,
           selected = primary tint + ring) so it reads as a tappable option —
           the earlier muted left-aligned style looked like an empty input. */}
-      <button
-        type="button"
-        aria-pressed={isNA}
-        className={`w-full mt-2 py-2.5 px-3 rounded-lg border text-sm font-medium text-center transition-all ${
-          isNA
-            ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/30"
-            : "border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
-        }`}
-        onClick={() => onChange("na")}
-        data-testid={testId ? `bucket-${testId}-na` : undefined}
-      >
-        {naLabel}
-      </button>
+      {allowNa && (
+        <button
+          type="button"
+          aria-pressed={isNA}
+          className={`w-full mt-2 py-2.5 px-3 rounded-lg border text-sm font-medium text-center transition-all ${
+            isNA
+              ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/30"
+              : "border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => onChange("na")}
+          data-testid={testId ? `bucket-${testId}-na` : undefined}
+        >
+          {naLabel}
+        </button>
+      )}
     </div>
   );
 }
