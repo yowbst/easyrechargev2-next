@@ -454,15 +454,19 @@ CTA à ajouter à la fin du tableau `ctas` de chaque langue de la page `quote-su
 Chaque écriture Directus passe par le MCP easyrecharge et attend ton accord explicite sur le payload affiché. Les champs JSON sont toujours envoyés en entier.
 
 - [ ] **Relire les textes et les slugs** (fr, et de par un locuteur natif), puis valider ce fichier.
+- [ ] **PORTE DE LANCEMENT — Make, conversions Ads serveur (à faire avant de publier la page `quote-battery`).**
+  - Dans le scénario Make, ne pas envoyer l'événement `quote_submit` à Data Manager (`events:ingest`) quand `submission.leadCategory === "no_pv"` (de façon équivalente : `dispatch.summary.reasons` contient `not_dispatchable`).
+  - Associer `submission.product = "battery"` à sa propre action de conversion, pour qu'un lead batterie ne soit jamais remonté comme conversion borne (`productDestinationId` de la borne).
+  - Tant que ces deux points ne sont pas en place et vérifiés sur une soumission de test, la page `quote-battery` reste non publiée.
 - [ ] **Créer les pages (Étape 4).**
   - Page `route_id = "quote-battery"`, publiée, slugs ci-dessus, contenu des sections 1 et 2, `config = { "product": "battery", "steps": [] }`.
   - Page `route_id = "quote-battery-success"`, publiée, avec un `block_hero` dont les traductions reprennent le texte de succès de la borne adapté à la batterie, plus la CTA vers la borne (section 5).
   - Sur `quote-success`, ajouter la CTA vers la batterie (section 5) au tableau `ctas` de chaque langue.
   - Ajouter les clés de la section 3 et les titres de la section 4 à leurs pages.
-- [ ] **Prix partenaires (Étape 5).** Communiquer le prix CHF de chaque catégorie batterie, par politique tarifaire ; il sera écrit en `settings.prices.battery = { "owner_pv_small": …, "owner_pv_large": …, "co_owner_pv_small": …, "co_owner_pv_large": … }` (`settings` envoyé en entier). `no_pv` n'a pas de prix (jamais dispatché). Les partenaires qui doivent recevoir des leads batterie ont besoin de `partner_areas` pour leurs cantons, comme pour la borne (`docs/operations/partner-dispatch.md`, « Adding a partner »).
+- [ ] **Prix partenaires (Étape 5).** Communiquer le prix CHF de chaque catégorie batterie, par politique tarifaire ; il sera écrit en `settings.prices.battery = { "owner_pv_small": …, "owner_pv_large": …, "co_owner_pv_small": …, "co_owner_pv_large": … }` (`settings` envoyé en entier). `no_pv` n'a pas de prix (jamais dispatché). Seuls les partenaires dont la politique a une colonne `prices.battery` reçoivent des leads batterie (les autres continuent de recevoir la borne). Ils ont aussi besoin de `partner_areas` pour leurs cantons, comme pour la borne (`docs/operations/partner-dispatch.md`, « Adding a partner »).
 - [ ] **Google Ads (Étape 6).** Créer les actions de conversion batterie dans Google Ads, puis communiquer les labels ; ils seront écrits en `global_config.google_ads.conversions.battery = { "quote_start": { "label": "…" }, "quote_submit": { "label": "…" } }` (`global_config.google_ads` envoyé en entier). Tant qu'ils sont absents, les conversions restent inertes par conception.
 - [ ] **Make (Étape 7, hors dépôt).**
   - Router l'e-mail partenaire sur `product = battery` vers un modèle batterie (champs : pvPower, pvPowerExact, inverterBrand, existingBattery, householdCount, householdSize, annualConsumption, heatPump, evCount, evPlanned, hasCharger, deadline).
-  - Associer `battery` à son action de conversion Ads.
+  - Associer `battery` à son action de conversion Ads (voir la porte de lancement ci-dessus).
   - Vérifier que l'e-mail de confirmation au visiteur part quand `dispatch.summary.reasons` contient `not_dispatchable`, et qu'aucun e-mail partenaire n'est envoyé.
-  - Confirm Make ignores `dispatch.mode` when `targets` is empty and `reasons` contains `not_dispatchable`.
+  - Vérifier que Make ignore `dispatch.mode` quand `targets` est vide et que `reasons` contient `not_dispatchable`.

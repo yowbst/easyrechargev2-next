@@ -237,6 +237,8 @@ server-validated field. `submission.data.product` also exists (raw client
 input inside the form-data blob) and must never be used for routing or
 conversion mapping.
 
+**Battery launch gate:** before the `quote-battery` Directus page is published, Make must skip the Data Manager `events:ingest` `quote_submit` upload when `submission.leadCategory === "no_pv"` (equivalently `dispatch.summary.reasons` contains `not_dispatchable`) and map `battery` to its own conversion action, so battery leads are never reported as charger conversions (checklist in `docs/directus-templates/quote-battery-content.md`, section 6).
+
 **When a second product launches:**
 1. Create its offline conversion action in the Ads UI (primary, own category).
 2. In the Make scenario, add a router switching on `submission.product` (or an
