@@ -21,7 +21,7 @@ import type { PublicQuoteConfig } from "@/lib/public-config";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 import type { Product } from "@/lib/products";
 import { makeShellT } from "./dictionary";
-import { CONTACT, FINALIZE, WELCOME, clampToFirstIncomplete, stepSequence } from "./navigation";
+import { CONTACT, FINALIZE, WELCOME, clampToFirstIncomplete, firstBlockingStep, stepSequence } from "./navigation";
 import { stepConfig } from "./pageConfig";
 import { getFunnel } from "./funnels";
 import { WelcomeStep } from "./WelcomeStep";
@@ -73,6 +73,14 @@ export function QuoteShell({
     if (id === FINALIZE) return sharedFirstUnanswered(6, d as unknown as StepFields);
     return funnel.firstUnansweredField(id, d);
   };
+  const exitsAt = (id: string, d: FormValues): boolean =>
+    funnel.steps.find((s) => s.id === id)?.exit?.(d) ?? false;
+
+  // Latest answers for the popstate listener, registered once.
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   const seq = stepSequence(funnel.steps, data);
   const index = Math.max(0, seq.indexOf(stepId));
@@ -114,11 +122,17 @@ export function QuoteShell({
     return () => clearTimeout(id);
   }, [data, draftKey]);
 
-  // Browser back/forward.
+  // Browser back/forward: never land past a step whose answers are missing
+  // (answers may have changed since that history entry was pushed).
   useEffect(() => {
-    const onPop = () => setStepId(new URLSearchParams(window.location.search).get("step") ?? WELCOME);
+    const onPop = () => {
+      const d = dataRef.current;
+      const urlStep = new URLSearchParams(window.location.search).get("step");
+      setStepId(clampToFirstIncomplete(stepSequence(funnel.steps, d), urlStep, (id) => missingFor(id, d)));
+    };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const eventProps = () => ({
@@ -176,8 +190,18 @@ export function QuoteShell({
   };
 
   const submit = async () => {
-    if (missingField) {
-      nudgeField(missingField);
+    // Every step must be complete and none may exit the funnel (tenant), not
+    // only the current one: browser history can skip a step that changed.
+    const blocking = firstBlockingStep(seq, (id) => missingFor(id, data), (id) => exitsAt(id, data));
+    if (blocking) {
+      const field = missingFor(blocking, data);
+      if (blocking === currentId) {
+        if (field) nudgeField(field);
+        return;
+      }
+      goToStep(blocking);
+      // Nudge once the blocking step is rendered and the scroll to top is done.
+      if (field) window.setTimeout(() => nudgeField(field), 350);
       return;
     }
     setIsSubmitting(true);

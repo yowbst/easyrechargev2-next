@@ -26,3 +26,18 @@ export function clampToFirstIncomplete(
   }
   return seq[target];
 }
+
+/**
+ * The step that must be revisited before the funnel may be submitted: the
+ * first step after welcome that misses an answer or exits the funnel (tenant).
+ * Null when nothing blocks. Browser history can bring a visitor to finalize
+ * past a step whose answers changed, so the submit button checks the whole
+ * sequence, not only the current step.
+ */
+export function firstBlockingStep(
+  seq: string[],
+  missing: (stepId: string) => string | null,
+  exits: (stepId: string) => boolean,
+): string | null {
+  return seq.slice(1).find((id) => exits(id) || missing(id) !== null) ?? null;
+}

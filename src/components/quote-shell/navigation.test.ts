@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CONTACT, FINALIZE, WELCOME, clampToFirstIncomplete, stepSequence } from "./navigation";
+import { CONTACT, FINALIZE, WELCOME, clampToFirstIncomplete, firstBlockingStep, stepSequence } from "./navigation";
 
 const steps = [
   { id: "housing" },
@@ -33,5 +33,32 @@ describe("clampToFirstIncomplete", () => {
   it("starts at welcome for an unknown or absent step", () => {
     expect(clampToFirstIncomplete(seq, "parking", () => null)).toBe(WELCOME);
     expect(clampToFirstIncomplete(seq, null, () => null)).toBe(WELCOME);
+  });
+});
+
+describe("firstBlockingStep", () => {
+  const noExit = () => false;
+
+  it("finds the PV step left empty after switching solar back on (browser history)", () => {
+    const data = { housingStatus: "owner", solarEquipment: "exists" };
+    const seq = stepSequence(steps, data);
+    const missing = (id: string) => (id === "pv" ? "pvPower" : null);
+    expect(firstBlockingStep(seq, missing, noExit)).toBe("pv");
+  });
+
+  it("stops at an exit step (tenant), even when every answer is there", () => {
+    const seq = [WELCOME, "housing", "pv", CONTACT, FINALIZE];
+    expect(firstBlockingStep(seq, () => null, (id) => id === "housing")).toBe("housing");
+  });
+
+  it("returns the earliest blocking step in sequence order", () => {
+    const seq = [WELCOME, "housing", "pv", CONTACT, FINALIZE];
+    const missing = (id: string) => (id === CONTACT ? "email" : null);
+    expect(firstBlockingStep(seq, missing, (id) => id === "pv")).toBe("pv");
+  });
+
+  it("never blocks on welcome, and returns null when everything is complete", () => {
+    const seq = [WELCOME, "housing", CONTACT, FINALIZE];
+    expect(firstBlockingStep(seq, (id) => (id === WELCOME ? "x" : null), noExit)).toBeNull();
   });
 });
