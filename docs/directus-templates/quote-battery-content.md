@@ -458,12 +458,13 @@ Chaque écriture Directus passe par le MCP easyrecharge et attend ton accord exp
   - Dans le scénario Make, ne pas envoyer l'événement `quote_submit` à Data Manager (`events:ingest`) quand `submission.leadCategory === "no_pv"` (de façon équivalente : `dispatch.summary.reasons` contient `not_dispatchable`).
   - Associer `submission.product = "battery"` à sa propre action de conversion, pour qu'un lead batterie ne soit jamais remonté comme conversion borne (`productDestinationId` de la borne).
   - Tant que ces deux points ne sont pas en place et vérifiés sur une soumission de test, la page `quote-battery` reste non publiée.
-- [ ] **Créer les pages (Étape 4).**
-  - Page `route_id = "quote-battery"`, publiée, slugs ci-dessus, contenu des sections 1 et 2, `config = { "product": "battery", "steps": [] }`.
-  - Page `route_id = "quote-battery-success"`, publiée, avec un `block_hero` dont les traductions reprennent le texte de succès de la borne adapté à la batterie, plus la CTA vers la borne (section 5).
-  - Sur `quote-success`, ajouter la CTA vers la batterie (section 5) au tableau `ctas` de chaque langue.
-  - Ajouter les clés de la section 3 et les titres de la section 4 à leurs pages.
-- [ ] **Prix partenaires (Étape 5).** Communiquer le prix CHF de chaque catégorie batterie, par politique tarifaire ; il sera écrit en `settings.prices.battery = { "owner_pv_small": …, "owner_pv_large": …, "co_owner_pv_small": …, "co_owner_pv_large": … }` (`settings` envoyé en entier). `no_pv` n'a pas de prix (jamais dispatché). Seuls les partenaires dont la politique a une colonne `prices.battery` reçoivent des leads batterie (les autres continuent de recevoir la borne). Ils ont aussi besoin de `partner_areas` pour leurs cantons, comme pour la borne (`docs/operations/partner-dispatch.md`, « Adding a partner »).
+- [x] **Créer les pages (Étape 4)** — fait le 2026-10-03, publiées en `noindex` pour les tests.
+  - `quote-battery` : **`type = "app"`**, slugs ci-dessus, contenu des sections 1 et 2, `config = { "product": "battery", "steps": [] }`, bloc hero partagé avec `quote`.
+  - `quote-battery-success` : **`type = "static"`**, `block_hero` avec le texte de succès de la borne et la CTA vers la borne (section 5).
+  - Sans `type` `app` ou `static`, `fetchPageRegistry` ignore la page (404). Le registre est mis en cache 1 h : purger le Data Cache Vercel ou attendre.
+- [ ] **Au lancement :** lever le `noindex` des deux pages ; sur `quote-success`, ajouter la CTA vers la batterie (section 5) au tableau `ctas` de chaque langue (pas avant : l'ancien code ignore `show_when` et l'afficherait à tous).
+- [ ] **Traductions partenaires :** ajouter les clés de la section 3 (catégories, facteurs de score) et les titres de la section 4 à leurs pages.
+- [x] **Prix partenaires (Étape 5)** — 60 CHF pour les 4 catégories, dans les 3 politiques « Standard ». L'éligibilité se règle dans `partner_products` (une ligne par installateur × produit, statut et quota) : E-ME reçoit la batterie en développement et staging ; **ligne batterie de production à créer au lancement**.
 - [ ] **Google Ads (Étape 6).** Créer les actions de conversion batterie dans Google Ads, puis communiquer les labels ; ils seront écrits en `global_config.google_ads.conversions.battery = { "quote_start": { "label": "…" }, "quote_submit": { "label": "…" } }` (`global_config.google_ads` envoyé en entier). Tant qu'ils sont absents, les conversions restent inertes par conception.
 - [ ] **Make (Étape 7, hors dépôt).**
   - Router l'e-mail partenaire sur `product = battery` vers un modèle batterie (champs : pvPower, pvPowerExact, inverterBrand, existingBattery, householdCount, householdSize, annualConsumption, heatPump, evCount, evPlanned, hasCharger, deadline).
