@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { isValidLang, slugToDirectusLocale, getRouteSlug } from "@/lib/i18n/config";
 import { GoogleAdsConversion } from "@/components/GoogleAdsConversion";
+import { OpenAIConversion } from "@/components/OpenAIConversion";
 import { adsSendTo } from "@/lib/googleAds";
 import { successPageIds, viewPageIds } from "@/lib/products";
 import { resolveSub1Route } from "@/lib/route-resolver";
@@ -1091,6 +1092,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     return (
       <Suspense>
         <GoogleAdsConversion sendTo={adsConversionSendTo} />
+        <OpenAIConversion />
         <QuoteSuccessClient
           lang={lang}
           dictionary={dictionary}

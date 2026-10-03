@@ -18,6 +18,8 @@ export interface Attribution {
   sccid: string | null;
   epik: string | null;
   rdt_cid: string | null;
+  oppref: string | null;
+  obref: string | null;
   landingPage: string | null;
   utm: Record<string, string> | null;
 }
@@ -43,6 +45,9 @@ export function getAttribution(): Attribution {
     sccid: getCookie("_sccid"),
     epik: getCookie("_epik"),
     rdt_cid: getCookie("_rdt_cid"),
+    oppref: getCookie("_oppref") ?? getCookie("__oppref"),
+    // Browser reference set by the ChatGPT Ads pixel (only with consent).
+    obref: getCookie("__obref"),
     landingPage: getCookie("_landing_page"),
     utm,
   };
@@ -88,6 +93,9 @@ function inferUtmFromClickIds(attr: Attribution): Record<string, string> | null 
     utm.utm_medium = utm.utm_medium || "cpc";
   } else if (attr.rdt_cid) {
     utm.utm_source = utm.utm_source || "reddit";
+    utm.utm_medium = utm.utm_medium || "cpc";
+  } else if (attr.oppref) {
+    utm.utm_source = utm.utm_source || "chatgpt";
     utm.utm_medium = utm.utm_medium || "cpc";
   }
 

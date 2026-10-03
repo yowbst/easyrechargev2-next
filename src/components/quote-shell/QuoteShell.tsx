@@ -15,6 +15,7 @@ import { usePostHog } from "@/components/PostHogProvider";
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { getAttributionCompact } from "@/lib/attribution";
 import { adsSendTo, fireAdsConversion } from "@/lib/googleAds";
+import { measureQuoteStarted } from "@/lib/openaiAds";
 import { formatPhoneE164 } from "@/lib/phone-utils";
 import { parseQuoteDraft, quoteDraftKey, serializeQuoteDraft } from "@/lib/quoteDraft";
 import type { PublicQuoteConfig } from "@/lib/public-config";
@@ -156,6 +157,7 @@ export function QuoteShell({
       if (currentId === WELCOME) {
         const startSendTo = adsSendTo(gc.google_ads, "quote_start", product);
         if (startSendTo) fireAdsConversion(startSendTo);
+        measureQuoteStarted(product);
       }
     }
     ph?.capture("quote_step_viewed", { ...eventProps(), step: nextIndex, step_name: nextId });

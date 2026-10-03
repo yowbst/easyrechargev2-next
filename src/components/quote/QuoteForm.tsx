@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SUPPORTED_COUNTRIES, validatePhone, formatPhoneE164 } from "@/lib/phone-utils";
 import { adsSendTo, fireAdsConversion, type GoogleAdsConfig } from "@/lib/googleAds";
+import { measureQuoteStarted } from "@/lib/openaiAds";
 import { normalizeProduct } from "@/lib/products";
 import { normalizeName, suggestEmailCorrection } from "@/lib/form-hygiene";
 import { NAV_BAR_CLEARANCE } from "@/lib/dropdownPlacement";
@@ -444,6 +445,7 @@ export function QuoteForm({ lang, dictionary, quoteSlug, pageConfig = {}, heroIm
       if (step === 0) {
         const startSendTo = adsSendTo(gc.google_ads, "quote_start", product);
         if (startSendTo) fireAdsConversion(startSendTo);
+        measureQuoteStarted(product);
       }
     }
     ph?.capture("quote_step_viewed", { ...quoteEventProps(), step: nextStep, step_name: stepNames[nextStep] });
