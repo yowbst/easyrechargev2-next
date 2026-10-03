@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="{{lang}}" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>{{subject}}</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+<style>
+  body { margin:0 !important; padding:0 !important; width:100% !important; -webkit-text-size-adjust:100%; }
+  a { color:#0F7A3D; }
+  @media only screen and (max-width:620px) {
+    .wrap { width:100% !important; }
+    .px { padding-left:24px !important; padding-right:24px !important; }
+    .h1 { font-size:26px !important; line-height:32px !important; }
+    .stack { display:block !important; width:100% !important; text-align:left !important; }
+    .stack-gap { padding-top:6px !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .bg-page { background:#14211B !important; }
+    .bg-card { background:#1C2B24 !important; }
+    .bg-inset { background:#24352D !important; }
+    .ink { color:#ECE8DF !important; }
+    .ink2 { color:#C3CBC5 !important; }
+  }
+</style>
+</head>
+<body class="bg-page" style="margin:0; padding:0; background:#F0EDE5;">
+<div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F0EDE5; opacity:0;">{{preheader}}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F0EDE5" class="bg-page" style="background:#F0EDE5;">
+<tr><td align="center" style="padding:32px 12px;">
+<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px;">
+
+  <!-- HEADER -->
+  <tr><td class="px" bgcolor="#07231A" style="background:#07231A; border-radius:12px 12px 0 0; padding:22px 40px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td class="stack" valign="middle" style="width:60%;">
+        <a href="{{links.site}}" style="text-decoration:none;"><img src="{{brand.logoUrl}}" width="150" height="30" alt="easyRecharge" style="display:block; border:0; width:150px; height:30px; font-family:Arial, Helvetica, sans-serif; font-size:20px; font-weight:bold; color:#F3F1EB;"></a>
+      </td>
+      {{#if audienceLabel}}
+      <td class="stack stack-gap" valign="middle" align="right" style="font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:18px; mso-line-height-rule:exactly; font-weight:bold; letter-spacing:1px; text-transform:uppercase; color:#3DDC84;">{{audienceLabel}}</td>
+      {{/if}}
+    </tr></table>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:40px 40px 8px;">
+    {{#if eyebrow}}<p style="margin:0 0 12px; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:18px; mso-line-height-rule:exactly; font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; color:#465550;" class="ink2">{{eyebrow}}</p>{{/if}}
+    <h1 class="h1 ink" style="margin:0 0 20px; font-family:Arial, Helvetica, sans-serif; font-size:30px; line-height:36px; mso-line-height-rule:exactly; font-weight:bold; letter-spacing:-0.5px; color:#14231C;">{{title}}</h1>
+    <p class="ink" style="margin:0 0 16px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:25px; mso-line-height-rule:exactly; color:#14231C;">{{greeting}}</p>
+    {{#each paragraphs}}
+    <p class="ink2" style="margin:0 0 16px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:25px; mso-line-height-rule:exactly; color:#3F4F47;">{{this}}</p>
+    {{/each}}
+  </td></tr>
+
+  {{#if details}}
+  <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:8px 40px 8px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#E9E4D8" class="bg-inset" style="background:#E9E4D8; border-radius:8px;">
+      {{#if detailsTitle}}<tr><td colspan="2" style="padding:18px 22px 4px; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:18px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; color:#465550;" class="ink2">{{detailsTitle}}</td></tr>{{/if}}
+      {{#each details}}
+      <tr>
+        <td class="stack ink2" valign="top" style="width:42%; padding:12px 12px 12px 22px; border-bottom:1px solid #D6CFBF; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; mso-line-height-rule:exactly; color:#465550;">{{label}}</td>
+        <td class="stack ink" valign="top" style="padding:12px 22px 12px 12px; border-bottom:1px solid #D6CFBF; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:20px; mso-line-height-rule:exactly; font-weight:bold; color:#14231C;">{{value}}</td>
+      </tr>
+      {{/each}}
+      <tr><td colspan="2" style="height:8px; line-height:8px; font-size:0;">&nbsp;</td></tr>
+    </table>
+  </td></tr>
+  {{/if}}
+
+  {{#if steps}}
+  <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:24px 40px 0;">
+    {{#if stepsTitle}}<p class="ink" style="margin:0 0 14px; font-family:Arial, Helvetica, sans-serif; font-size:18px; line-height:24px; font-weight:bold; color:#14231C;">{{stepsTitle}}</p>{{/if}}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      {{#each steps}}
+      <tr>
+        <td valign="top" style="width:44px; padding:0 0 16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" valign="middle" bgcolor="#16A34A" style="width:30px; height:30px; background:#16A34A; border-radius:6px; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:30px; mso-line-height-rule:exactly; font-weight:bold; color:#04150C;">{{n}}</td></tr></table>
+        </td>
+        <td valign="top" style="padding:4px 0 16px; font-family:Arial, Helvetica, sans-serif;">
+          <p class="ink" style="margin:0 0 4px; font-size:16px; line-height:22px; font-weight:bold; color:#14231C;">{{title}}</p>
+          <p class="ink2" style="margin:0; font-size:15px; line-height:22px; color:#3F4F47;">{{body}}</p>
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+  </td></tr>
+  {{/if}}
+
+  {{#if note}}
+  <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:8px 40px 8px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#E2DCCE" class="bg-inset ink" style="background:#E2DCCE; border-radius:8px; padding:16px 20px; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px; mso-line-height-rule:exactly; color:#14231C;"><strong>{{note.title}}</strong> {{note.body}}</td></tr></table>
+  </td></tr>
+  {{/if}}
+
+  {{#if cta}}
+  <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:24px 40px 8px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#16A34A" style="background:#16A34A; border-radius:6px;">
+      <!--[if mso]><v:roundrect href="{{cta.url}}" style="height:52px; v-text-anchor:middle; width:280px;" arcsize="12%" stroke="f" fillcolor="#16A34A"><w:anchorlock/><center style="color:#04150C; font-family:Arial, sans-serif; font-size:16px; font-weight:bold;">{{cta.label}}</center></v:roundrect><![endif]-->
+      <!--[if !mso]><!--><a href="{{cta.url}}" style="display:inline-block; padding:16px 28px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:20px; font-weight:bold; color:#04150C; text-decoration:none; border-radius:6px;">{{cta.label}}&nbsp;&rarr;</a><!--<![endif]-->
+    </td></tr></table>
+    {{#if secondary}}<p style="margin:16px 0 0; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px;"><a href="{{secondary.url}}" style="color:#0F7A3D; text-decoration:underline;">{{secondary.label}}</a></p>{{/if}}
+  </td></tr>
+  {{/if}}
+
+  <!-- SIGNATURE -->
+  <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:28px 40px 36px; border-radius:0 0 12px 12px;">
+    <p class="ink2" style="margin:0 0 4px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:24px; color:#3F4F47;">{{signoff}}</p>
+    <p class="ink" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:24px; font-weight:bold; color:#14231C;">{{signature}}</p>
+  </td></tr>
+
+  <!-- HELP -->
+  <tr><td style="height:12px; line-height:12px; font-size:0;">&nbsp;</td></tr>
+  <tr><td class="px bg-inset" bgcolor="#E2DCCE" style="background:#E2DCCE; border-radius:12px; padding:20px 40px;">
+    <p class="ink" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px; mso-line-height-rule:exactly; color:#14231C;"><strong>{{help.title}}</strong> {{help.body}} {{#if company.phone}}<a href="tel:{{company.phoneHref}}" style="color:#0F7A3D; text-decoration:underline;">{{company.phone}}</a>{{/if}}</p>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td class="px" align="center" style="padding:28px 40px 8px; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:22px; mso-line-height-rule:exactly; color:#465550;">
+    <p class="ink2" style="margin:0 0 12px;">{{#each footerLinks}}<a href="{{url}}" style="color:#14231C; text-decoration:underline;" class="ink">{{label}}</a>{{#unless @last}}&nbsp;&nbsp;·&nbsp;&nbsp;{{/unless}}{{/each}}</p>
+    <p class="ink2" style="margin:0 0 12px;">{{company.name}} · {{company.address}}</p>
+    <p class="ink2" style="margin:0 0 12px;">{{reason}}{{#if unsubscribeUrl}} <a href="{{unsubscribeUrl}}" style="color:#465550; text-decoration:underline;" class="ink2">{{unsubscribeLabel}}</a>{{/if}}</p>
+  </td></tr>
+
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+</td></tr>
+</table>
+</body>
+</html>

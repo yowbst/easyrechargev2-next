@@ -1,0 +1,79 @@
+{
+  "$comment": "Lead confirmation when the request was sent to a partner (Make route 'dispatched > 0').",
+  "modules": { "fr": 59, "de": 77, "en": 80 },
+  "fr": {
+    "subject": "Votre demande de devis – Réf. %ref% | easyRecharge",
+    "preheader": "%partner% vous contacte sous {first_contact}\u00a0h. Voici la suite.",
+    "eyebrow": "Votre demande",
+    "title": "Votre demande de devis est bien reçue.",
+    "greeting": "Bonjour %firstName%,",
+    "paragraphs": [
+      "Merci pour votre demande de devis %forProductFr%, soumise le %date%. Nous la transmettons tout de suite à notre partenaire %partner%."
+    ],
+    "detailsTitle": "Récapitulatif",
+    "details": [
+      { "label": "Référence", "value": "%ref%" },
+      { "label": "Produit", "value": "%productFr%" },
+      { "label": "Adresse", "value": "%place%" },
+      { "label": "Partenaire", "value": "%partner%" }
+    ],
+    "stepsTitle": "La suite",
+    "steps": [
+      { "n": "1", "title": "%partner% vous contacte", "body": "Dans un délai de {first_contact}\u00a0h, par téléphone (%phone%) ou par e-mail (%email%)." },
+      { "n": "2", "title": "Échange sur votre projet", "body": "Selon sa complexité, le partenaire peut proposer une visite sur place." },
+      { "n": "3", "title": "Votre devis", "body": "Vous recevez son devis sous {quote_delivery_timeline} jours après ce premier contact." }
+    ],
+    "cta": { "label": "Voir ma demande", "url": "%requestUrl%?view=client" },
+    "reason": "Vous recevez cet e-mail suite à votre demande de devis sur easyRecharge."
+  },
+  "de": {
+    "subject": "Ihre Offertanfrage – Ref. %ref% | easyRecharge",
+    "preheader": "%partner% meldet sich innerhalb von {first_contact} Stunden. So geht es weiter.",
+    "eyebrow": "Ihre Anfrage",
+    "title": "Ihre Offertanfrage ist eingegangen.",
+    "greeting": "Guten Tag %firstName%,",
+    "paragraphs": [
+      "Vielen Dank für Ihre Offertanfrage %forProductDe%, eingereicht am %date%. Wir leiten sie umgehend an unseren Partner %partner% weiter."
+    ],
+    "detailsTitle": "Zusammenfassung",
+    "details": [
+      { "label": "Referenz", "value": "%ref%" },
+      { "label": "Produkt", "value": "%productDe%" },
+      { "label": "Adresse", "value": "%place%" },
+      { "label": "Partner", "value": "%partner%" }
+    ],
+    "stepsTitle": "So geht es weiter",
+    "steps": [
+      { "n": "1", "title": "%partner% kontaktiert Sie", "body": "Innerhalb von {first_contact} Stunden, telefonisch (%phone%) oder per E-Mail (%email%)." },
+      { "n": "2", "title": "Austausch zu Ihrem Projekt", "body": "Je nach Komplexität kann der Partner einen Besuch vor Ort vorschlagen." },
+      { "n": "3", "title": "Ihre Offerte", "body": "Sie erhalten seine Offerte innerhalb von {quote_delivery_timeline} Tagen nach diesem ersten Kontakt." }
+    ],
+    "cta": { "label": "Meine Anfrage ansehen", "url": "%requestUrl%?view=client" },
+    "reason": "Sie erhalten diese E-Mail aufgrund Ihrer Offertanfrage bei easyRecharge."
+  },
+  "en": {
+    "subject": "Your quote request – Ref. %ref% | easyRecharge",
+    "preheader": "%partner% will contact you within {first_contact}\u00a0hours. Here is what happens next.",
+    "eyebrow": "Your request",
+    "title": "We have received your quote request.",
+    "greeting": "Hello %firstName%,",
+    "paragraphs": [
+      "Thank you for your quote request %forProductEn%, submitted on %date%. We are forwarding it right away to our partner %partner%."
+    ],
+    "detailsTitle": "Summary",
+    "details": [
+      { "label": "Reference", "value": "%ref%" },
+      { "label": "Product", "value": "%productEn%" },
+      { "label": "Address", "value": "%place%" },
+      { "label": "Partner", "value": "%partner%" }
+    ],
+    "stepsTitle": "What happens next",
+    "steps": [
+      { "n": "1", "title": "%partner% contacts you", "body": "Within {first_contact}\u00a0hours, by phone (%phone%) or by email (%email%)." },
+      { "n": "2", "title": "Discussing your project", "body": "Depending on its complexity, the partner may suggest an on-site visit." },
+      { "n": "3", "title": "Your quote", "body": "You receive their quote within {quote_delivery_timeline} days of this first contact." }
+    ],
+    "cta": { "label": "View my request", "url": "%requestUrl%?view=client" },
+    "reason": "You are receiving this email following your quote request on easyRecharge."
+  }
+}

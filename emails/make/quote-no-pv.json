@@ -1,0 +1,61 @@
+{
+  "$comment": "Battery request without a solar installation: stored, never dispatched (Make route 'no PV').",
+  "modules": { "fr": 98, "de": 99, "en": 101 },
+  "fr": {
+    "subject": "Votre demande de devis – Réf. %ref% | easyRecharge",
+    "preheader": "Une batterie se dimensionne avec une installation solaire. Nous revenons vers vous.",
+    "eyebrow": "Votre demande",
+    "title": "Votre demande de devis est bien reçue.",
+    "greeting": "Bonjour %firstName%,",
+    "paragraphs": [
+      "Merci pour votre demande de devis pour une batterie solaire, soumise le %date%.",
+      "Une batterie domestique se dimensionne avec une installation solaire. Comme vous n'en avez pas encore, nous ne transmettons pas votre demande à un installateur pour l'instant : nous reviendrons vers vous pour un projet solaire avec batterie."
+    ],
+    "detailsTitle": "Récapitulatif",
+    "details": [
+      { "label": "Référence", "value": "%ref%" },
+      { "label": "Produit", "value": "%productFr%" },
+      { "label": "Adresse", "value": "%place%" }
+    ],
+    "cta": { "label": "Voir ma demande", "url": "%requestUrl%" },
+    "reason": "Vous recevez cet e-mail suite à votre demande de devis sur easyRecharge."
+  },
+  "de": {
+    "subject": "Ihre Offertanfrage – Ref. %ref% | easyRecharge",
+    "preheader": "Ein Batteriespeicher wird zusammen mit einer Solaranlage geplant. Wir melden uns.",
+    "eyebrow": "Ihre Anfrage",
+    "title": "Ihre Offertanfrage ist eingegangen.",
+    "greeting": "Guten Tag %firstName%,",
+    "paragraphs": [
+      "Vielen Dank für Ihre Offertanfrage für eine Solarbatterie, eingereicht am %date%.",
+      "Ein Batteriespeicher wird zusammen mit einer Solaranlage geplant. Da Sie noch keine haben, leiten wir Ihre Anfrage vorerst nicht an einen Installateur weiter: Wir melden uns bei Ihnen für ein Solarprojekt mit Speicher."
+    ],
+    "detailsTitle": "Zusammenfassung",
+    "details": [
+      { "label": "Referenz", "value": "%ref%" },
+      { "label": "Produkt", "value": "%productDe%" },
+      { "label": "Adresse", "value": "%place%" }
+    ],
+    "cta": { "label": "Meine Anfrage ansehen", "url": "%requestUrl%" },
+    "reason": "Sie erhalten diese E-Mail aufgrund Ihrer Offertanfrage bei easyRecharge."
+  },
+  "en": {
+    "subject": "Your quote request – Ref. %ref% | easyRecharge",
+    "preheader": "A home battery is sized together with a solar installation. We will get back to you.",
+    "eyebrow": "Your request",
+    "title": "We have received your quote request.",
+    "greeting": "Hello %firstName%,",
+    "paragraphs": [
+      "Thank you for your quote request for a solar battery, submitted on %date%.",
+      "A home battery is sized together with a solar installation. As you do not have one yet, we are not forwarding your request to an installer for now: we will get back to you about a solar project with a battery."
+    ],
+    "detailsTitle": "Summary",
+    "details": [
+      { "label": "Reference", "value": "%ref%" },
+      { "label": "Product", "value": "%productEn%" },
+      { "label": "Address", "value": "%place%" }
+    ],
+    "cta": { "label": "View my request", "url": "%requestUrl%" },
+    "reason": "You are receiving this email following your quote request on easyRecharge."
+  }
+}
