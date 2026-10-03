@@ -1,5 +1,6 @@
 import { directusFetch } from "@/lib/directus";
 import type { CmsVehicle } from "./types";
+import type { ThumbnailCandidate } from "./images";
 
 const PAGE = 200;
 
@@ -56,4 +57,38 @@ export async function fetchBrandRowBySlug(
 export async function fetchBrandIdBySlug(slug: string): Promise<string | null> {
   const row = await fetchBrandRowBySlug(slug);
   return row?.id ?? null;
+}
+
+/**
+ * Both thumbnail fields are required: the skip test reads the width AND the
+ * filename, because width alone would loop forever on an undersized source.
+ */
+export function buildThumbnailQuery(
+  status: "draft" | "published" | undefined,
+  limit: number,
+  offset: number,
+): string {
+  const parts = [
+    "fields=id,slug,name,evdb_images_urls,thumbnail.width,thumbnail.filename_download",
+    `limit=${limit}`,
+    `offset=${offset}`,
+    "sort=id",
+  ];
+  if (status) parts.push(`filter[status][_eq]=${status}`);
+  return `/items/vehicles?${parts.join("&")}`;
+}
+
+export async function fetchVehiclesForThumbnails(
+  status?: "draft" | "published",
+): Promise<ThumbnailCandidate[]> {
+  const out: ThumbnailCandidate[] = [];
+  for (let offset = 0; ; offset += PAGE) {
+    const res = await directusFetch<{ data: ThumbnailCandidate[] }>(
+      buildThumbnailQuery(status, PAGE, offset),
+      { next: { revalidate: 0 } },
+    );
+    const batch = res.data ?? [];
+    out.push(...batch);
+    if (batch.length < PAGE) return out;
+  }
 }

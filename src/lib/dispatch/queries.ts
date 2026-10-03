@@ -1,4 +1,5 @@
 import { directusFetch } from "@/lib/directus";
+import { partnerProductConfig } from "./partner-products";
 import type {
   Environment,
   PartnerArea,
@@ -47,6 +48,13 @@ const PARTNER_AREA_FIELDS = [
   "partner.pricing_policy.settings",
 ].join(",");
 
+// Products this partner receives, with a monthly quota each (partner_products).
+const PARTNER_PRODUCT_FIELDS = [
+  "partner.products.product",
+  "partner.products.status",
+  "partner.products.monthly_quota",
+].join(",");
+
 /**
  * Fetch partner_areas for a canton, joined with their partner and the canton row.
  * Filters out paused partners, partners outside the current environment, and
@@ -57,29 +65,54 @@ export async function fetchPartnerAreasForCanton(
   cantonCode: string,
   environment: Environment,
 ): Promise<PartnerArea[]> {
-  const params = new URLSearchParams();
-  params.set("fields", PARTNER_AREA_FIELDS);
-  params.set("filter[canton][code][_eq]", cantonCode);
-  params.set("filter[canton][is_active][_eq]", "true");
-  params.set("filter[partner][status][_eq]", "active");
-  params.set("filter[partner][environment][_eq]", environment);
-  params.set("filter[status][_eq]", "published");
-  params.set("limit", "100");
+  const query = (fields: string) => {
+    const params = new URLSearchParams();
+    params.set("fields", fields);
+    params.set("filter[canton][code][_eq]", cantonCode);
+    params.set("filter[canton][is_active][_eq]", "true");
+    params.set("filter[partner][status][_eq]", "active");
+    params.set("filter[partner][environment][_eq]", environment);
+    params.set("filter[status][_eq]", "published");
+    params.set("limit", "100");
+    return directusFetch<{ data: PartnerArea[] }>(
+      `/items/partner_areas?${params}`,
+      { next: { revalidate: 0 } },
+    );
+  };
 
-  const res = await directusFetch<{ data: PartnerArea[] }>(
-    `/items/partner_areas?${params}`,
-    { next: { revalidate: 0 } },
-  );
-  return res?.data ?? [];
+  try {
+    const res = await query(`${PARTNER_AREA_FIELDS},${PARTNER_PRODUCT_FIELDS}`);
+    return res?.data ?? [];
+  } catch (err) {
+    // Directus refuses the whole query when a requested relation is not
+    // readable (partner_products missing, or the token lacks permission).
+    // Without the product rows every partner is served as before the battery
+    // launch — charger only — instead of no lead being dispatched at all.
+    if (!(err instanceof Error) || !err.message.startsWith("Directus 403")) throw err;
+    console.warn("[dispatch] partner_products not readable — falling back to charger-only partners");
+    const res = await query(PARTNER_AREA_FIELDS);
+    return res?.data ?? [];
+  }
 }
 
 /**
- * Count `dispatched` ledger rows for the given partners in the current UTC month.
+ * Keep the areas whose partner receives this product: an active
+ * `partner_products` row for it, or — for the charger only — no product rows
+ * at all yet (legacy partners). See partnerProductConfig.
+ */
+export function filterAreasForProduct(areas: PartnerArea[], product: string): PartnerArea[] {
+  return areas.filter((a) => partnerProductConfig(a.partner, product) !== null);
+}
+
+/**
+ * Count `dispatched` ledger rows for the given partners in the current UTC month,
+ * for one product (quotas are counted per product).
  * One Directus call, grouped by partner.
  */
 export async function countDispatchesThisMonth(
   partnerIds: string[],
   environment: Environment,
+  product: string,
 ): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (partnerIds.length === 0) return counts;
@@ -90,6 +123,7 @@ export async function countDispatchesThisMonth(
   params.set("filter[month_bucket][_eq]", currentMonthBucket());
   params.set("filter[status][_eq]", "dispatched");
   params.set("filter[environment][_eq]", environment);
+  params.set("filter[product][_eq]", product);
   params.set("filter[partner][_in]", partnerIds.join(","));
 
   type Row = { partner: string; count: { id: string | number } };
@@ -253,15 +287,16 @@ export function buildPartnerLeadPrices(
 }
 
 /**
- * Return the set of partner IDs that have received a dispatch (or skipped_dedup
- * ledger row) for this email within the last `dedupWindowDays`. Used by the
- * resolver to pre-empt reason (b) — repeat dispatches to the same partner.
+ * Return the set of partner IDs that have received a dispatch of the same product
+ * (or skipped_dedup ledger row) for this email within the last `dedupWindowDays`.
+ * Used by the resolver to pre-empt reason (b) — repeat dispatches to the same partner.
  */
 export async function findRecentDispatchesByEmail(
   email: string,
   candidatePartnerIds: string[],
   environment: Environment,
   dedupWindowDays: number,
+  product: string,
 ): Promise<Set<string>> {
   const out = new Set<string>();
   if (!email || candidatePartnerIds.length === 0 || dedupWindowDays <= 0) return out;
@@ -272,6 +307,9 @@ export async function findRecentDispatchesByEmail(
   params.set("fields", "partner");
   params.set("filter[partner][_in]", candidatePartnerIds.join(","));
   params.set("filter[environment][_eq]", environment);
+  // Per product: a visitor who asks for a charger, then a battery, is two
+  // projects for a partner who does both — not a duplicate.
+  params.set("filter[product][_eq]", product);
   params.set("filter[dispatched_at][_gte]", since);
   params.set("filter[submission][user][email][_eq]", email);
   params.set("filter[status][_in]", "dispatched,skipped_dedup");

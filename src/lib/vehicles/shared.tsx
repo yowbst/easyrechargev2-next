@@ -1,21 +1,49 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Car } from "lucide-react";
+/**
+ * Every Simple Icons logo that matches a manufacturer in the CMS, by exact
+ * name (accents and punctuation stripped). Regenerate after adding a brand:
+ *
+ *   grep -oE "\bSi[A-Za-z0-9]+\b" node_modules/react-icons/si/index.d.ts \
+ *     | sort -u | grep -i <brand>
+ *
+ * Named imports, deliberately: `react-icons/si` is 4.9 MB for 3364 icons and
+ * declares `sideEffects: false`, so these tree-shake to the handful actually
+ * used. A namespace import with a dynamic lookup would read nicely and ship
+ * the whole 4.9 MB.
+ *
+ * 31 of the 67 manufacturers have no Simple Icons logo at all — mostly the
+ * Chinese makes and the recent arrivals (BYD, NIO, XPENG, Zeekr, Leapmotor,
+ * GAC, JAC…). For those, `icon_svg` on the brand record is the only path, and
+ * it is the more durable one anyway: it takes precedence here and does not
+ * depend on a third-party catalogue that keeps changing.
+ */
 import {
-  SiTesla, SiBmw, SiAudi, SiVolkswagen, SiPorsche, SiVolvo,
-  SiFord, SiToyota, SiHyundai, SiKia, SiNissan, SiRenault,
-  SiPeugeot, SiCitroen, SiFiat, SiOpel, SiSkoda, SiMazda,
-  SiHonda, SiSubaru, SiMini, SiSmart, SiSeat, SiDacia,
-  SiMg, SiPolestar, SiLucid,
+  SiAlfaromeo, SiAudi, SiBmw, SiCadillac, SiCitroen, SiDacia,
+  SiDsautomobiles, SiFerrari, SiFiat, SiFord, SiHonda, SiHyundai,
+  SiJeep, SiKia, SiLandrover, SiLucid, SiMaserati, SiMazda,
+  SiMg, SiMini, SiMitsubishi, SiNissan, SiOpel, SiPeugeot,
+  SiPolestar, SiPorsche, SiRenault, SiRollsroyce, SiSeat, SiSkoda,
+  SiSmart, SiSubaru, SiSuzuki, SiTesla, SiToyota, SiVolkswagen,
+  SiVolvo,
 } from "react-icons/si";
 
 const SI_BRAND_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  SiTesla, SiBmw, SiAudi, SiVolkswagen, SiPorsche, SiVolvo,
-  SiFord, SiToyota, SiHyundai, SiKia, SiNissan, SiRenault,
-  SiPeugeot, SiCitroen, SiFiat, SiOpel, SiSkoda, SiMazda,
-  SiHonda, SiSubaru, SiMini, SiSmart, SiSeat, SiDacia,
-  SiMg, SiPolestar, SiLucid,
+  SiAlfaromeo, SiAudi, SiBmw, SiCadillac, SiCitroen, SiDacia,
+  SiDsautomobiles, SiFerrari, SiFiat, SiFord, SiHonda, SiHyundai,
+  SiJeep, SiKia, SiLandrover, SiLucid, SiMaserati, SiMazda,
+  SiMg, SiMini, SiMitsubishi, SiNissan, SiOpel, SiPeugeot,
+  SiPolestar, SiPorsche, SiRenault, SiRollsroyce, SiSeat, SiSkoda,
+  SiSmart, SiSubaru, SiSuzuki, SiTesla, SiToyota, SiVolkswagen,
+  SiVolvo,
 };
+
+/**
+ * Names already reported, so a page rendering 100 cards warns once, not 100
+ * times. Development only — a missing logo must never break a render.
+ */
+const reportedMissingIcons = new Set<string>();
 import { DIRECTUS_URL } from "@/lib/directus";
 import { t } from "@/lib/i18n/dictionaries";
 import { GetQuote } from "@/components/GetQuote";
@@ -42,7 +70,22 @@ export function BrandIcon({
     );
   }
   if (iconName) {
-    const Icon = SI_BRAND_ICONS[iconName] || Car;
+    const Icon = SI_BRAND_ICONS[iconName];
+    if (!Icon) {
+      // Falling through to the generic car is correct — a missing logo must
+      // never break a page. Saying so is what was missing: an icon_simple
+      // that names an icon we do not import rendered a car silently, and 37
+      // of 67 brands sat in that state without anyone noticing.
+      if (process.env.NODE_ENV !== "production" && !reportedMissingIcons.has(iconName)) {
+        reportedMissingIcons.add(iconName);
+        console.warn(
+          `[BrandIcon] icon_simple "${iconName}" is not in SI_BRAND_ICONS — ` +
+            `rendering the generic car. Either add the import in ` +
+            `src/lib/vehicles/shared.tsx, or set icon_svg on the brand.`,
+        );
+      }
+      return <Car className={className} />;
+    }
     return <Icon className={className} />;
   }
   return <Car className={className} />;
@@ -110,9 +153,14 @@ export function VehicleDetailView({
               {brandName}
             </Link>
           )}
-          <h1 className="text-3xl md:text-4xl font-heading font-bold mt-1 mb-6">
-            {vehicleName}
-          </h1>
+          <div className="flex flex-wrap items-center gap-3 mt-1 mb-6">
+            <h1 className="text-3xl md:text-4xl font-heading font-bold">{vehicleName}</h1>
+            {vehicle.is_available === false && (
+              <span className="rounded-md border border-border bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                {d("common.vehicle.discontinued")}
+              </span>
+            )}
+          </div>
 
           <dl className="grid grid-cols-2 gap-4 text-sm">
             {battery && (

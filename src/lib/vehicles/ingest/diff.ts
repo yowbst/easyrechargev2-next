@@ -230,8 +230,15 @@ export function assertPlanSane(
     if (ratio < minScrapeRatio) {
       throw new Error(
         `Scrape returned ${plan.scrapeCount} rows against ${plan.cmsCount} in the CMS ` +
-          `(${(ratio * 100).toFixed(0)}%, floor ${(minScrapeRatio * 100).toFixed(0)}%). ` +
-          `This looks like a failed scrape, not a shrinking market.`,
+          `(${(ratio * 100).toFixed(0)}%, floor ${(minScrapeRatio * 100).toFixed(0)}%).\n` +
+          `Two very different causes look identical here:\n` +
+          `  1. A failed or truncated scrape. Check the raw snapshot before going further.\n` +
+          `  2. The normal state of this catalogue. EV Database lists only vehicles still ` +
+          `on sale, while the CMS also keeps every model that has been withdrawn — so the ` +
+          `ratio sits permanently under this floor and will keep doing so. Those records ` +
+          `show up as GONE and are never deleted.\n` +
+          `Once you have confirmed it is (2), re-run with --partial. That disables this ` +
+          `floor only; the change-ratio ceiling stays armed.`,
       );
     }
   }

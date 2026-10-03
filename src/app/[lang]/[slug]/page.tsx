@@ -1,3 +1,5 @@
+import { FUNNEL_ROUTES, isFunnelRoute } from "@/lib/products";
+import { QuoteShell } from "@/components/quote-shell/QuoteShell";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { pickPublicQuoteConfig } from "@/lib/public-config";
@@ -143,7 +145,11 @@ export default async function SlugPage({ params }: SlugPageProps) {
 
   const layoutDict = layoutData ? extractLayoutDictionary(layoutData) : {};
   const pageDict = extractPageDictionary(entry.id, page, locale);
-  const dictionary = { ...layoutDict, ...pageDict };
+  // A non-charger funnel reads the charger page's keys for its shared steps
+  // (contact, finalize, navigation). Merged before the SLA interpolation below.
+  const fallbackPage = isFunnelRoute(entry.id) && entry.id !== "quote" ? await fetchPage("quote", locale) : null;
+  const fallbackDict = fallbackPage ? extractPageDictionary("quote", fallbackPage, locale) : {};
+  const dictionary = { ...layoutDict, ...fallbackDict, ...pageDict };
 
   // Pre-interpolate global config SLA values into dictionary strings
   const gc = layoutData?.global_config || {};
@@ -164,8 +170,8 @@ export default async function SlugPage({ params }: SlugPageProps) {
   const registry = await fetchPageRegistry();
 
   // Interactive pages: render dedicated form components
-  if (INTERACTIVE_PAGES.has(entry.id)) {
-    if (entry.id === "quote") {
+  if (INTERACTIVE_PAGES.has(entry.id) || isFunnelRoute(entry.id)) {
+    if (isFunnelRoute(entry.id)) {
       const logoSrc = layoutData?.logo_color ? `${DIRECTUS_URL}/assets/${layoutData.logo_color}` : "/logo-color.svg";
       const logoDarkSrc = layoutData?.logo_white ? `${DIRECTUS_URL}/assets/${layoutData.logo_white}` : "/logo-white.svg";
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -178,6 +184,23 @@ export default async function SlugPage({ params }: SlugPageProps) {
       // dispatch config, and anything handed to a client component is serialised
       // into the page the browser receives.
       const globalConfig = pickPublicQuoteConfig(layoutData?.global_config);
+      const product = FUNNEL_ROUTES[entry.id];
+      if (product !== "ecp") {
+        return (
+          <QuoteShell
+            product={product}
+            lang={lang}
+            dictionary={dictionary}
+            quoteSlug={slug}
+            logoSrc={logoSrc}
+            logoDarkSrc={logoDarkSrc}
+            heroImage={quoteHeroImage}
+            pageConfig={quotePageConfig}
+            globalConfig={globalConfig}
+            pageRegistry={registry}
+          />
+        );
+      }
       return (
         <QuoteForm
           lang={lang}

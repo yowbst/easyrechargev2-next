@@ -67,13 +67,13 @@ export function PartnerDateFilter({ dictionary }: { dictionary: PartnerDict }) {
           <button
             type="button"
             aria-label={t("filter.label")}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-muted ${
+            className={`inline-flex h-10 items-center gap-2 rounded-md border bg-card px-3.5 text-sm font-medium transition-colors hover:bg-muted ${
               active ? "border-primary text-primary" : "text-muted-foreground"
             }`}
           />
         }
       >
-        <CalendarRange className="h-3.5 w-3.5 shrink-0" />
+        <CalendarRange className="h-[15px] w-[15px] shrink-0" />
         <span className="hidden sm:inline">{triggerLabel}</span>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64 gap-3">

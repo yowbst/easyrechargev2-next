@@ -27,8 +27,14 @@ interface FlagSpec {
 }
 
 export const COMMAND_FLAGS: Record<string, FlagSpec[]> = {
-  scrape: [{ name: "limit", takesValue: true }],
-  clean: [{ name: "in", takesValue: true }],
+  scrape: [
+    { name: "limit", takesValue: true },
+    { name: "only", takesValue: true },
+  ],
+  clean: [
+    { name: "in", takesValue: true },
+    { name: "include-unavailable", takesValue: false },
+  ],
   brands: [
     { name: "in", takesValue: true },
     { name: "dry-run", takesValue: false },
@@ -36,9 +42,15 @@ export const COMMAND_FLAGS: Record<string, FlagSpec[]> = {
   plan: [
     { name: "in", takesValue: true },
     { name: "max-change-ratio", takesValue: true },
+    { name: "partial", takesValue: false },
   ],
   apply: [
     { name: "plan", takesValue: true },
+    { name: "dry-run", takesValue: false },
+  ],
+  images: [
+    { name: "status", takesValue: true },
+    { name: "limit", takesValue: true },
     { name: "dry-run", takesValue: false },
   ],
 };
@@ -97,14 +109,45 @@ export function validateFlags(command: string, argv: string[]): void {
  * Returns `undefined` when the flag was not passed, so `assertPlanSane`'s
  * own default (0.3) applies untouched.
  */
+/**
+ * Upper bound for the override. The change ratio is
+ * (creates + updates) / cmsCount, which is NOT capped at 1: a refresh that
+ * adds more vehicles than the CMS holds legitimately exceeds 100%. The real
+ * 2026-09-13 run measured 117% (268 creates + 388 updates against 562
+ * records), and an earlier ceiling of 1 wrongly blocked it.
+ *
+ * 10 is far above any plausible refresh while still catching the mistake this
+ * guard mainly exists to catch: typing "30" for 30% instead of 0.3.
+ */
+const MAX_CHANGE_RATIO_CEILING = 10;
+
 export function parseMaxChangeRatio(raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined;
   const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0 || n > 1) {
+  if (!Number.isFinite(n) || n <= 0 || n > MAX_CHANGE_RATIO_CEILING) {
     throw new Error(
-      `--max-change-ratio must be a finite number in (0, 1] — a fraction of the CMS catalogue, ` +
-        `not a percentage (e.g. 0.3, not 30). Got "${raw}".`,
+      `--max-change-ratio must be a finite number in (0, ${MAX_CHANGE_RATIO_CEILING}] — a fraction ` +
+        `of the CMS catalogue, not a percentage (e.g. 1.2, not 120). Got "${raw}".`,
     );
+  }
+  return n;
+}
+
+/**
+ * Parses `--limit`, or throws.
+ *
+ * Both commands that take it consume it as `slice(0, limit)`, which is silent
+ * about anything it dislikes: `--limit abc` yields NaN and slices to an empty
+ * list (zero work, no message), and `--limit 2.5` floors to 2 without saying
+ * so. A flag that quietly changes how much work happens — or makes all of it
+ * disappear — is the defect this pipeline has already shipped three times.
+ * Demand a whole positive number and say so loudly otherwise.
+ */
+export function parseLimit(raw: string | undefined): number | undefined {
+  if (raw === undefined) return undefined;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) {
+    throw new Error(`--limit must be a whole number greater than zero. Got "${raw}".`);
   }
   return n;
 }
@@ -135,4 +178,61 @@ export function diffBrandFields(
     if (!deepEqual(existing[key], next)) changes[key] = next;
   }
   return changes;
+}
+
+/**
+ * Splits the `unmatched` list returned by `mergeListAndDetails` by cause.
+ *
+ * A LIST row lands in `unmatched` when it has no DETAILS record — but that
+ * happens for two very different reasons, and conflating them produces a
+ * badly misleading warning. With `--limit 2` against a 656-vehicle
+ * catalogue, 654 rows are unmatched purely because DETAILS was never run
+ * for them; reporting those as "could not be merged" reads like a mass
+ * failure when nothing is wrong at all.
+ *
+ * `skippedByLimit` holds rows whose URL was never submitted to DETAILS.
+ * `unresolved` holds everything else: a row that WAS scraped and still has
+ * no DETAILS match, or one dropped for a blank make. Those are the only
+ * ones worth a warning. A row with no `car_url` at all arrives here as an
+ * empty string and is always treated as unresolved — it can never be
+ * explained away by the limit.
+ */
+export function partitionUnmatched(
+  unmatched: string[],
+  targets: string[],
+): { skippedByLimit: string[]; unresolved: string[] } {
+  const targeted = new Set(targets);
+  const skippedByLimit: string[] = [];
+  const unresolved: string[] = [];
+
+  for (const url of unmatched) {
+    if (url && !targeted.has(url)) skippedByLimit.push(url);
+    else unresolved.push(url || "(row with no car_url)");
+  }
+
+  return { skippedByLimit, unresolved };
+}
+
+/**
+ * Chooses which LIST rows go on to the (billable) DETAILS stage.
+ *
+ * Default: only vehicles currently "Available to order", because those are
+ * the only ones `clean` keeps — scraping the rest is pure cost.
+ *
+ * With `onlyUrls`, availability is ignored and the explicit set wins. That is
+ * how discontinued records already in the CMS get repaired: they are absent
+ * from every normal run by definition, so their data freezes at whatever it
+ * was when they were last available. The 2026-09-13 run left 174 such
+ * vehicles carrying acceleration values 10x too large, inherited from the
+ * original January import.
+ */
+export function pickScrapeTargets<T extends Record<string, unknown>>(
+  list: T[],
+  isAvailable: (row: T) => boolean,
+  onlyUrls?: Set<string>,
+): T[] {
+  if (onlyUrls) {
+    return list.filter((r) => typeof r.car_url === "string" && onlyUrls.has(r.car_url));
+  }
+  return list.filter(isAvailable);
 }

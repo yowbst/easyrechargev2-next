@@ -27,7 +27,7 @@ export function LeadCountLabel({
   const unit = t(count === 1 ? "header.lead" : "header.leads");
 
   return (
-    <p className="text-xs text-muted-foreground">
+    <p className="text-sm text-muted-foreground">
       {filtering && total !== null
         ? t("header.filtered", { visible: count, total: overall })
         : `${count} ${unit}`}

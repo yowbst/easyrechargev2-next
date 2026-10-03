@@ -12,22 +12,36 @@
  * chargers — a bonus on top of full marks, which is what the clamp is for.
  */
 
+import { normalizeProduct, type Product } from "@/lib/products";
+import { PV_LARGE_THRESHOLD_KWC, pvSizeKwc } from "./categorize";
+
 export const SCORING_FACTOR_KEYS = [
   "ownership",
   "authorization",
   "urgency",
+  // ecp only
   "volume",
   "solar_upsell",
+  // battery only
+  "pv_size",
+  "load",
 ] as const;
 
 export type ScoringFactorKey = (typeof SCORING_FACTOR_KEYS)[number];
 
+/**
+ * One weight table for every product. A factor that does not apply to a
+ * product returns a null sub-score and drops out of numerator and denominator,
+ * so charger scores are unchanged by the battery weights and vice versa.
+ */
 export const DEFAULT_SCORING_WEIGHTS: Record<ScoringFactorKey, number> = {
   ownership: 0.2,
   authorization: 0.2,
   urgency: 0.25,
   volume: 0.2,
   solar_upsell: 0.15,
+  pv_size: 0.15,
+  load: 0.2,
 };
 
 /** Lower bound (inclusive) for each band; below `warm` is "cold". */
@@ -78,6 +92,7 @@ const str = (v: unknown): string | null =>
 /** Per-factor 0..1 sub-score, or null when the source field is absent. */
 function subScores(
   data: Record<string, unknown>,
+  product: Product,
 ): Record<ScoringFactorKey, number | null> {
   const housing = str(data.housingStatus);
   const approval = str(data.approval);
@@ -114,16 +129,20 @@ function subScores(
             ? 0.2
             : null;
 
+  const isBattery = product === "battery";
+
   // One charger is the normal case (87% of real submissions) and is already
   // worth having, so it scores full marks rather than being penalised. Two or
   // more is a bonus above full — hence a sub-score over 1, which is why the
   // final score is clamped.
-  const volume =
-    parking === "1" ? 1 : parking === "2" || parking === "3+" ? 1.5 : null;
+  const volume = isBattery
+    ? null
+    : parking === "1" ? 1 : parking === "2" || parking === "3+" ? 1.5 : null;
 
   // No solar yet = biggest upsell opportunity.
-  const solar_upsell =
-    solar === "none"
+  const solar_upsell = isBattery
+    ? null
+    : solar === "none"
       ? 1
       : solar === "in-progress"
         ? 0.5
@@ -131,7 +150,28 @@ function subScores(
           ? 0.2
           : null;
 
-  return { ownership, authorization, urgency, volume, solar_upsell };
+  const pv_size = isBattery ? pvSizeScore(data.pvPower) : null;
+  const load = isBattery ? loadScore(data) : null;
+
+  return { ownership, authorization, urgency, volume, solar_upsell, pv_size, load };
+}
+
+/** Large installation = full marks; small or unknown size = 0.6; absent = null. */
+function pvSizeScore(raw: unknown): number | null {
+  if (raw === undefined || raw === null || raw === "") return null;
+  return pvSizeKwc(raw) >= PV_LARGE_THRESHOLD_KWC ? 1 : 0.6;
+}
+
+/** Evening/night demand a battery can serve: EVs first, then a heat pump. */
+function loadScore(data: Record<string, unknown>): number | null {
+  const ev = typeof data.evCount === "number" ? data.evCount : null;
+  const heat = str(data.heatPump);
+  const planned = str(data.evPlanned);
+  if (ev === null && heat === null && planned === null) return null;
+  if (ev !== null && ev >= 3) return 1;
+  if ((ev !== null && ev >= 1) || heat === "yes") return 0.8;
+  if (planned === "yes") return 0.5;
+  return 0.3;
 }
 
 /** Merge a partner's weight override over the defaults (absent ⇒ defaults). */
@@ -152,8 +192,9 @@ export function scoreLead(
   data: Record<string, unknown> | null | undefined,
   weights: Record<ScoringFactorKey, number>,
   bands: ScoreBands = SCORE_BANDS,
+  product: string | null = "ecp",
 ): LeadScore {
-  const subs = subScores(data ?? {});
+  const subs = subScores(data ?? {}, normalizeProduct(product));
   let num = 0;
   let den = 0;
   const breakdown: ScoreBreakdownItem[] = [];

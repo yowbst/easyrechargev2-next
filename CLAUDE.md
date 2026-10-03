@@ -15,11 +15,13 @@ npm test             # Vitest unit tests
 
 npm run ingest -- plan  --in <file>   # Diff EVDB snapshot vs CMS (read-only)
 npm run ingest -- apply --plan <file> # Apply a reviewed plan (writes)
+npm run ingest -- images              # Upload 1536px thumbnails (writes)
 ```
 
 `ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
 before `plan`/`apply` — see `docs/vehicle-ingest.md` for the full runbook, sequence, and
-gotchas.
+gotchas. `images` downloads every thumbnail through a Bright Data proxy zone and refuses
+to start when that zone is not configured — it never falls back to a direct download.
 
 ## Deploy
 
@@ -116,7 +118,7 @@ src/app/
 **Route resolution** is in `src/lib/route-resolver.ts`. Each page calls `resolveSlugRoute()`, `resolveSub1Route()`, or `resolveSub2Route()` which looks up the Directus page registry to determine the page type, then renders the appropriate component.
 
 Route types per level:
-- **[slug]:** `cms-page | quote | contact | blog-listing | vehicles-listing`
+- **[slug]:** `cms-page | quote (charger) | quote-battery (battery, via QuoteShell) | contact | blog-listing | vehicles-listing`
 - **[slug]/[sub1]:** `vehicle-detail | vehicle-brands | blog-listing | quote-success | quote-submission`
 - **[slug]/[sub1]/[sub2]:** `blog-post | vehicle-brand-detail | vehicle-model-detail`
 
@@ -348,6 +350,7 @@ Form submission routes create a session → user → submission chain in Directu
 | `Hero.tsx` | Server | Hero section with image/text |
 | `quote/QuoteForm.tsx` | Client | 7-step form wizard (~1800 LOC) |
 | `ContactForm.tsx` | Client | Contact form with address autocomplete |
+| `quote-shell/QuoteShell.tsx` | Client | Product-agnostic quote funnel (battery); charger still on QuoteForm |
 | `MiniQuoteForm.tsx` | Client | Compact embedded quote form |
 | `MiniQuoteCard.tsx` | Client | Quote CTA card |
 | `SwissMap.tsx` | Client | Interactive SVG canton map |

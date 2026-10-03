@@ -30,6 +30,9 @@ export async function POST(
     if (result.error === "not_found") {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
+    if (result.error === "not_dispatchable") {
+      return NextResponse.json({ error: "not_dispatchable" }, { status: 422 });
+    }
     return NextResponse.json(
       { error: "already_dispatched", existing: result.existing },
       { status: 409 },

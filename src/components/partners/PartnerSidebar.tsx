@@ -23,7 +23,6 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -42,6 +41,7 @@ import type { FilterState } from "@/lib/partner-filter-params";
 import { PartnerDateFilter } from "./PartnerDateFilter";
 import { PartnerSortControl } from "./PartnerSortControl";
 import { PartnerFacetFilter } from "./PartnerFacetFilter";
+import { ActiveFilterChips } from "./ActiveFilterChips";
 import { LeadCountLabel } from "./LeadCountLabel";
 
 export type PartnerNav = "leads" | "stats" | "invoices";
@@ -58,6 +58,26 @@ export interface StatsTabAnchor {
 const STATS_TAB_ICONS: Record<string, LucideIcon> = {
   general: LayoutDashboard,
   performance: Activity,
+};
+
+// Shared shape for the top-level nav rows: 44px targets, 15px label — the
+// design's sidebar is a primary surface, not a compact utility rail.
+const NAV_BUTTON =
+  "h-11 gap-3 rounded-lg px-3 text-[15px] font-medium text-sidebar-foreground/80 " +
+  "data-active:font-semibold data-active:text-sidebar-foreground " +
+  "data-active:[&_svg]:text-sidebar-primary [&_svg]:size-[18px] " +
+  "group-data-[collapsible=icon]:size-11!";
+
+const SUB_BUTTON =
+  "h-9 gap-2.5 rounded-md px-2.5 text-sm text-sidebar-foreground/75 " +
+  "data-active:bg-sidebar-accent/60 data-active:font-semibold " +
+  "data-active:text-sidebar-foreground";
+
+/** Which dictionary key titles the main column, per section. */
+const NAV_TITLE_KEY: Record<PartnerNav, string> = {
+  leads: "sidebar.leads",
+  stats: "sidebar.nav.stats",
+  invoices: "sidebar.nav.billing",
 };
 
 export function PartnerSidebar({
@@ -127,15 +147,17 @@ export function PartnerSidebar({
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7">
-              <span className="text-sm font-semibold">
-                {partnerName.slice(0, 1)}
+          <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+              <span className="font-heading text-lg font-bold leading-none">
+                {partnerName.slice(0, 1).toUpperCase()}
               </span>
             </div>
             <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-              <p className="truncate text-sm font-semibold">{partnerName}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="truncate text-[15px] font-semibold leading-tight">
+                {partnerName}
+              </p>
+              <p className="mt-0.5 text-[13px] text-sidebar-foreground/60">
                 {t("sidebar.space")}
               </p>
             </div>
@@ -144,43 +166,52 @@ export function PartnerSidebar({
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={activeNav === "leads"}
                   tooltip={t("sidebar.leads")}
-                  className="font-medium"
+                  className={NAV_BUTTON}
                   render={<Link href={`/${lang}/partners/${partnerToken}/leads`} prefetch={false} />}
                 >
-                  <Users className="h-4 w-4" />
+                  <Users />
                   <span>{t("sidebar.leads")}</span>
+                  {/* Inline rather than SidebarMenuBadge: the count is part of
+                      the row's own flex line in the design, and an absolutely
+                      positioned badge would sit on top of the label. */}
+                  <span className="ml-auto inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-sidebar-primary px-2 text-[13px] font-semibold text-sidebar-primary-foreground group-data-[collapsible=icon]:hidden">
+                    {leadCount}
+                  </span>
                 </SidebarMenuButton>
                 {activeNav === "leads" && (
-                  <SidebarMenuSub>
+                  <SidebarMenuSub className="ml-5 gap-0.5 border-sidebar-border py-1 pl-3.5">
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton
                         isActive={leadsAnchor === "open"}
+                        className={SUB_BUTTON}
                         render={<a href="#" />}
                       >
-                        <CircleDashed className="h-3.5 w-3.5 shrink-0" />
+                        <CircleDashed className="size-[15px] shrink-0" />
                         <span>{t("sidebar.nav.open")}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton
                         isActive={leadsAnchor === "leads-disqualified"}
+                        className={SUB_BUTTON}
                         render={<a href="#leads-disqualified" />}
                       >
-                        <Ban className="h-3.5 w-3.5 shrink-0" />
+                        <Ban className="size-[15px] shrink-0" />
                         <span>{t("sidebar.nav.disqualified")}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton
                         isActive={leadsAnchor === "leads-closed"}
+                        className={SUB_BUTTON}
                         render={<a href="#leads-closed" />}
                       >
-                        <Archive className="h-3.5 w-3.5 shrink-0" />
+                        <Archive className="size-[15px] shrink-0" />
                         <span>{t("sidebar.nav.closed")}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
@@ -191,14 +222,14 @@ export function PartnerSidebar({
                 <SidebarMenuButton
                   isActive={activeNav === "stats"}
                   tooltip={t("sidebar.nav.stats")}
-                  className="font-medium"
+                  className={NAV_BUTTON}
                   render={<Link href={`/${lang}/partners/${partnerToken}/stats`} prefetch={false} />}
                 >
-                  <BarChart3 className="h-4 w-4" />
+                  <BarChart3 />
                   <span>{t("sidebar.nav.stats")}</span>
                 </SidebarMenuButton>
                 {activeNav === "stats" && statsTabs && statsTabs.length > 0 && (
-                  <SidebarMenuSub>
+                  <SidebarMenuSub className="ml-5 gap-0.5 border-sidebar-border py-1 pl-3.5">
                     {statsTabs.map((tab) => {
                       const isDefault = tab.key === defaultStatsTab;
                       const href = `/${lang}/partners/${partnerToken}/stats${
@@ -208,12 +239,13 @@ export function PartnerSidebar({
                         <SidebarMenuSubItem key={tab.key}>
                           <SidebarMenuSubButton
                             isActive={activeStatsTab === tab.key}
+                            className={SUB_BUTTON}
                             render={<Link href={href} prefetch={false} />}
                           >
                             {(() => {
                               const TabIcon = STATS_TAB_ICONS[tab.key];
                               return TabIcon ? (
-                                <TabIcon className="h-3.5 w-3.5 shrink-0" />
+                                <TabIcon className="size-[15px] shrink-0" />
                               ) : null;
                             })()}
                             <span>{tab.label}</span>
@@ -229,10 +261,10 @@ export function PartnerSidebar({
                 <SidebarMenuButton
                   isActive={activeNav === "invoices"}
                   tooltip={t("sidebar.nav.billing")}
-                  className="font-medium"
+                  className={NAV_BUTTON}
                   render={<Link href={`/${lang}/partners/${partnerToken}/invoices`} prefetch={false} />}
                 >
-                  <Receipt className="h-4 w-4" />
+                  <Receipt />
                   <span>{t("sidebar.nav.billing")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -243,12 +275,14 @@ export function PartnerSidebar({
                   disabled
                   aria-disabled
                   tooltip={t("sidebar.nav.settings")}
-                  className="font-medium"
+                  className={`${NAV_BUTTON} opacity-40`}
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings />
                   <span>{t("sidebar.nav.settings")}</span>
+                  <span className="ml-auto inline-flex h-[22px] shrink-0 items-center rounded-md border border-sidebar-border px-2 text-[11px] font-medium uppercase tracking-[0.06em] group-data-[collapsible=icon]:hidden">
+                    {t("sidebar.nav.soon")}
+                  </span>
                 </SidebarMenuButton>
-                <SidebarMenuBadge>{t("sidebar.nav.soon")}</SidebarMenuBadge>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
@@ -259,18 +293,18 @@ export function PartnerSidebar({
             <SidebarMenuItem>
               <SidebarMenuButton
                 tooltip={t("sidebar.help")}
+                className={NAV_BUTTON}
                 render={<a href={supportHref} />}
               >
-                <LifeBuoy className="h-4 w-4" />
+                <LifeBuoy />
                 <span>{t("sidebar.help")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          {/* Mobile-only: language switcher + theme toggle live in the
-              sidebar drawer to free the top bar for filters. Desktop keeps
-              them in the header (see SidebarInset below). Also hidden when
-              the desktop sidebar is icon-collapsed. */}
-          <div className="flex items-center gap-2 px-2 pb-1 md:hidden group-data-[collapsible=icon]:hidden">
+          {/* Language + theme sit at the foot of the sidebar on every
+              breakpoint, which keeps the top bar for filters alone. Hidden
+              when the desktop sidebar is icon-collapsed. */}
+          <div className="flex items-center gap-2 px-1 pb-1 group-data-[collapsible=icon]:hidden">
             <PartnerLanguageSwitcher lang={lang} />
             <ThemeToggle />
           </div>
@@ -278,25 +312,26 @@ export function PartnerSidebar({
       </Sidebar>
 
       <SidebarInset>
-        <header className="flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur-sm">
-          <SidebarTrigger className="-ml-1" />
+        <header className="flex flex-wrap items-center gap-3 border-b bg-background px-4 py-2.5 md:px-6">
+          <SidebarTrigger className="-ml-1 size-10" />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-base font-semibold">{partnerName}</h1>
+            {/* The section, not the company: the partner already knows who
+                they are, and the sidebar says so directly above. */}
+            <h1 className="truncate font-heading text-xl font-semibold tracking-tight">
+              {t(NAV_TITLE_KEY[activeNav])}
+            </h1>
             <LeadCountLabel dictionary={dictionary} fallback={leadCount} />
           </div>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
             <PartnerFacetFilter options={facetOptions} dictionary={dictionary} />
             {activeNav === "leads" && <PartnerSortControl dictionary={dictionary} />}
             <PartnerDateFilter dictionary={dictionary} />
-            {/* Lang + theme are mobile-only in the sidebar drawer; show
-                here only from md upwards. */}
-            <div className="hidden items-center gap-1 md:flex">
-              <PartnerLanguageSwitcher lang={lang} />
-              <ThemeToggle />
-            </div>
           </div>
         </header>
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="flex flex-col gap-5 p-4 md:p-6">
+          <ActiveFilterChips options={facetOptions} dictionary={dictionary} />
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
     </PartnerFilterProvider>

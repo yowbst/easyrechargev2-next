@@ -12,10 +12,13 @@
 //                             site silently drops them.
 //   plan    --in <file>       diff against CMS, write data/plans/<date>.json (no writes)
 //   apply   --plan <file>     execute a plan (the only command besides brands that writes)
+//   images                    download 1536px thumbnails through the Bright Data proxy
 //
 // Options: --dry-run, --max-change-ratio <n>, --limit <n>, --help
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { directusFetch } from "@/lib/directus";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { Blob } from "node:buffer";
+import { fetch as undiciFetch, FormData } from "undici";
+import { directusFetch, DIRECTUS_URL } from "@/lib/directus";
 import {
   triggerCollection,
   pollSnapshot,
@@ -32,16 +35,26 @@ import {
   fetchAllCmsVehicles,
   fetchBrandIdBySlug,
   fetchBrandRowBySlug,
+  fetchVehiclesForThumbnails,
 } from "@/lib/vehicles/ingest/queries";
 import { buildPlan, assertPlanSane, summarize } from "@/lib/vehicles/ingest/diff";
 import { applyPlanAndPersist } from "@/lib/vehicles/ingest/upsert";
 import { deriveBrands, buildBrandPayload } from "@/lib/vehicles/ingest/brands";
+import {
+  upgradeThumbnails,
+  assertJpegBytes,
+  type ThumbnailSeams,
+} from "@/lib/vehicles/ingest/images";
+import { readProxyConfig, createDispatcher } from "@/lib/vehicles/ingest/proxy";
 import {
   parseArgs,
   truncateList,
   diffBrandFields,
   validateFlags,
   parseMaxChangeRatio,
+  parseLimit,
+  partitionUnmatched,
+  pickScrapeTargets,
 } from "@/lib/vehicles/ingest/cli-helpers";
 import type { ScrapedVehicle, IngestPlan } from "@/lib/vehicles/ingest/types";
 
@@ -54,11 +67,19 @@ Commands:
   brands  --in <file>       create/update vehicle_brands rows (run before plan/apply)
   plan    --in <file>       diff against CMS, write data/plans/<date>.json (no writes)
   apply   --plan <file>     execute a plan (the only vehicle-writing command)
+  images                    download 1536px thumbnails through the Bright Data proxy
 
 Options:
-  --dry-run                 brands/apply: print intent, perform zero writes
+  --dry-run                 brands/apply/images: print intent, perform zero writes
   --max-change-ratio <n>    plan: override the change-ratio safety ceiling
-  --limit <n>                scrape: cap how many DETAILS URLs are fetched
+  --partial                 plan: this snapshot is knowingly a subset — disables the
+                             scrape-size floor (the change-ratio guard stays active)
+  --limit <n>                scrape: cap how many DETAILS URLs are fetched;
+                             images: cap how many thumbnails are attempted
+  --only <file>              scrape: target these car_urls (one per line), ignoring
+                             availability — used to repair discontinued records
+  --include-unavailable      clean: keep discontinued vehicles instead of dropping them
+  --status <draft|published> images: restrict to one half of the catalogue
   --help                     print this message
 
 Recommended order: scrape -> clean -> brands -> plan -> apply
@@ -66,10 +87,35 @@ Recommended order: scrape -> clean -> brands -> plan -> apply
 
 const { command, flag, has } = parseArgs(process.argv.slice(2));
 
-const today = new Date().toISOString().slice(0, 10);
+/**
+ * Run stamp down to the second, not the day.
+ *
+ * These files used to be named `<date>.json`, so a second run on the same day
+ * silently overwrote the first. That is exactly what happened on 2026-09-13:
+ * the targeted repair pass for the 174 discontinued vehicles destroyed the
+ * main 656-row snapshot, and with it the ability to re-run `clean`/`plan`
+ * without re-scraping — the very thing the runbook tells you these files are
+ * kept for.
+ */
+const runStamp = new Date()
+  .toISOString()
+  .slice(0, 19)
+  .replace("T", "-")
+  .replace(/:/g, "");
+
+/**
+ * Builds the artefact path, and never returns one that already exists. A
+ * scrape costs billable page fetches; refusing to start would be worse than
+ * a suffix, and silently overwriting is what this whole change exists to
+ * stop.
+ */
 const out = (dir: string, file: string) => {
   mkdirSync(`data/${dir}`, { recursive: true });
-  return `data/${dir}/${file}`;
+  const dot = file.lastIndexOf(".");
+  const [base, ext] = dot === -1 ? [file, ""] : [file.slice(0, dot), file.slice(dot)];
+  let candidate = `data/${dir}/${file}`;
+  for (let n = 2; existsSync(candidate); n++) candidate = `data/${dir}/${base}-${n}${ext}`;
+  return candidate;
 };
 
 /** The snapshot files are JSON-lines; plan files are plain JSON. */
@@ -90,6 +136,9 @@ function printTruncated(label: string, lines: string[], max = 10) {
 /** Bright Data recommends chunking bulk inputs; the notebook used 100. */
 const CHUNK = 100;
 
+/** The vehicles folder the existing 562 thumbnails already live in. */
+const VEHICLES_FOLDER_ID = "8d8adba5-b056-49f9-9882-e12c8c6efb55";
+
 async function cmdScrape() {
   // ---- Stage 1: LIST — identity and summary specs, one request for the whole catalogue.
   console.log("Stage 1/2 — triggering LIST collector…");
@@ -105,17 +154,38 @@ async function cmdScrape() {
   // collector returns the whole historical catalogue: the first live run
   // returned 1,405 rows of which 645 were available, so filtering here avoids
   // ~760 billable page scrapes per refresh.
-  const available = list.filter((r) => classifyAvailability(r.availability) === true);
-  console.log(
-    `  ${available.length} available to order (of ${list.length} listed) — ` +
-      `DETAILS runs for the available ones only`,
+  // --only <file> targets an explicit set of car_urls, one per line, and
+  // ignores availability. That is the only way to reach a discontinued
+  // vehicle: it is absent from every normal run, so its record in the CMS
+  // freezes at whatever it held when it was last on sale.
+  const onlyFile = flag("only");
+  const onlyUrls = onlyFile
+    ? new Set(readFileSync(onlyFile, "utf8").split("\n").map((l) => l.trim()).filter(Boolean))
+    : undefined;
+
+  const available = pickScrapeTargets(
+    list,
+    (r) => classifyAvailability(r.availability) === true,
+    onlyUrls,
   );
+
+  if (onlyUrls) {
+    console.log(
+      `  --only ${onlyFile}: ${available.length} of ${onlyUrls.size} requested urls found ` +
+        `in the listing (availability ignored)`,
+    );
+  } else {
+    console.log(
+      `  ${available.length} available to order (of ${list.length} listed) — ` +
+        `DETAILS runs for the available ones only`,
+    );
+  }
 
   const urls = available
     .map((r) => (typeof r.car_url === "string" ? r.car_url : null))
     .filter((u): u is string => Boolean(u));
 
-  const limit = flag("limit") ? Number(flag("limit")) : urls.length;
+  const limit = parseLimit(flag("limit")) ?? urls.length;
   const targets = urls.slice(0, limit);
   if (limit < urls.length) console.log(`  --limit ${limit}: scraping a subset`);
 
@@ -135,14 +205,26 @@ async function cmdScrape() {
   // Join against the AVAILABLE subset, not the full list — otherwise every
   // discontinued row would land in `unmatched` as a spurious drop warning.
   const { merged, unmatched } = mergeListAndDetails(available, details);
-  if (unmatched.length) {
+
+  // Separate "we never asked for it" from "we asked and it failed". Under
+  // --limit almost every unmatched row is the former, and lumping them
+  // together reads like a mass failure when nothing is wrong.
+  const { skippedByLimit, unresolved } = partitionUnmatched(unmatched, targets);
+
+  if (skippedByLimit.length) {
+    console.log(
+      `  ℹ️  ${skippedByLimit.length} available vehicles not scraped — excluded by ` +
+        `--limit ${limit}. Expected, not a data problem.`,
+    );
+  }
+  if (unresolved.length) {
     printTruncated(
-      "⚠️  dropped — could not be merged or had no usable make",
-      unmatched,
+      "⚠️  dropped — scraped but no DETAILS match, or no usable make",
+      unresolved,
     );
   }
 
-  const path = out("raw", `${today}.json`);
+  const path = out("raw", `${runStamp}.json`);
   writeFileSync(path, JSON.stringify(merged, null, 1));
   console.log(`✅ ${merged.length} merged rows → ${path}`);
 }
@@ -152,8 +234,11 @@ async function cmdClean() {
   if (!input) throw new Error("clean requires --in <file>");
 
   const rows = readRows(input);
+  // Repairing a discontinued vehicle requires keeping it: its `available` is
+  // false by definition, and the default filter would drop it here.
+  const keepUnavailable = has("include-unavailable");
   const cleaned = rows
-    .filter((r) => r.available === true)
+    .filter((r) => keepUnavailable || r.available === true)
     .map((r) => ({
       ...r,
       model: cleanModel(String(r.model ?? ""), String(r.make ?? "")),
@@ -161,9 +246,11 @@ async function cmdClean() {
       slug: generateSlug(r),
     }));
 
-  const path = out("clean", `${today}.json`);
+  const path = out("clean", `${runStamp}.json`);
   writeFileSync(path, JSON.stringify(cleaned, null, 1));
-  console.log(`✅ ${cleaned.length} available rows (of ${rows.length}) → ${path}`);
+  console.log(
+    `✅ ${cleaned.length} ${keepUnavailable ? "rows" : "available rows"} (of ${rows.length}) → ${path}`,
+  );
 
   const brands = deriveBrands(cleaned);
   console.log(`   ${brands.length} distinct brands`);
@@ -255,7 +342,21 @@ async function cmdPlan() {
   }
 
   const plan = buildPlan(scraped, cms, { sourceFile: input, brandIds });
-  assertPlanSane(plan, { maxChangeRatio });
+
+  // --partial says "this snapshot is deliberately a subset of the catalogue",
+  // which disables the scrape-size floor ONLY. That floor compares the scrape
+  // against the whole CMS, and the CMS keeps discontinued vehicles forever, so
+  // a targeted repair run trips it by construction. The change-ratio guard
+  // still applies.
+  const partial = has("partial");
+  if (partial) {
+    console.log("  --partial: scrape-size floor disabled (change-ratio guard still active)");
+  }
+
+  assertPlanSane(plan, {
+    maxChangeRatio,
+    ...(partial ? { minScrapeRatio: 0 } : {}),
+  });
 
   const s = summarize(plan);
   console.log(
@@ -287,7 +388,7 @@ async function cmdPlan() {
     plan.entries.filter((x) => x.bucket === "GONE").map((e) => e.slug),
   );
 
-  const path = out("plans", `${today}.json`);
+  const path = out("plans", `${runStamp}.json`);
   writeFileSync(path, JSON.stringify(plan, null, 1));
   console.log(`\n✅ plan → ${path}`);
   console.log(`   review it, then: npm run ingest -- apply --plan ${path}`);
@@ -319,12 +420,104 @@ async function cmdApply() {
   }
 }
 
+async function cmdImages() {
+  const dryRun = has("dry-run");
+  const rawStatus = flag("status");
+  if (rawStatus && rawStatus !== "draft" && rawStatus !== "published") {
+    throw new Error(`--status must be "draft" or "published". Got "${rawStatus}".`);
+  }
+  const status = rawStatus as "draft" | "published" | undefined;
+  const limit = parseLimit(flag("limit"));
+
+  // Fail closed BEFORE reading the CMS: if the proxy is not configured there
+  // is nothing to do, and we must never fall back to a direct download.
+  const proxy = readProxyConfig(process.env);
+  const dispatcher = createDispatcher(proxy);
+  console.log(`  egress via Bright Data zone "${proxy.zone}" (${proxy.host})`);
+
+  const vehicles = await fetchVehiclesForThumbnails(status);
+  console.log(`  ${vehicles.length} vehicles${status ? ` with status ${status}` : ""}`);
+
+  const seams: ThumbnailSeams = {
+    download: async (url) => {
+      const res = await undiciFetch(url, { dispatcher });
+      if (!res.ok) {
+        // Drain the body so the socket returns to the pool instead of being
+        // held until GC — this loop makes 830 of these.
+        await res.body?.cancel().catch(() => {});
+        throw new Error(`download ${res.status} for ${url}`);
+      }
+      const bytes = Buffer.from(await res.arrayBuffer());
+      // An HTTP 200 is not proof of a photo. See assertJpegBytes: writing our
+      // own filename marker over a block page would mark the vehicle done
+      // forever with a broken image.
+      assertJpegBytes(bytes, url);
+      return bytes;
+    },
+    // NOT directusFetch: it sets Content-Type: application/json BEFORE
+    // spreading init.headers, so `headers: {}` cannot remove it and the
+    // multipart boundary would never be sent. Verified by reading
+    // src/lib/directus.ts. This one call goes direct, with the bearer set by
+    // hand and no Content-Type, so FormData sets its own.
+    uploadFile: async (bytes, filename, title) => {
+      const form = new FormData();
+      form.append("folder", VEHICLES_FOLDER_ID);
+      form.append("title", title);
+      form.append("file", new Blob([bytes], { type: "image/jpeg" }), filename);
+
+      const res = await undiciFetch(`${DIRECTUS_URL}/files`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.DIRECTUS_STATIC_TOKEN}` },
+        body: form,
+      });
+      if (!res.ok) throw new Error(`upload ${res.status}: ${(await res.text()).slice(0, 200)}`);
+
+      const json = (await res.json()) as { data: { id: string } };
+      return json.data.id;
+    },
+    attachThumbnail: async (vehicleId, fileId) => {
+      await directusFetch(`/items/vehicles/${vehicleId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ thumbnail: fileId }),
+        next: { revalidate: 0 },
+      });
+    },
+  };
+
+  const r = await upgradeThumbnails(vehicles, seams, {
+    dryRun,
+    limit,
+    onProgress: (done, total) => {
+      if (done % 25 === 0 || done === total) console.log(`  ${done}/${total} …`);
+    },
+  });
+
+  const notAttemptedSuffix = r.notAttempted > 0 ? `, ${r.notAttempted} not attempted (--limit)` : "";
+  console.log(
+    `\n${dryRun ? "[DRY RUN] " : ""}✅ uploaded ${r.uploaded}, skipped ${r.skipped}, failed ${r.failed}${notAttemptedSuffix}`,
+  );
+  if (r.noUrl.length) printTruncated("ℹ️  no source image url upstream", r.noUrl);
+  if (r.failures.length) {
+    printTruncated(
+      "⚠️  failed",
+      r.failures.map((f) => `${f.slug}: ${f.error}`),
+    );
+  }
+  if (r.notAttempted > 0) {
+    console.log(`   ${r.notAttempted} vehicles still need a thumbnail — re-run without --limit to finish.`);
+  }
+  if (!dryRun && r.uploaded > 0) {
+    console.log("   Previous thumbnail files are kept — rollback is a repoint.");
+  }
+}
+
 const commands: Record<string, () => Promise<void>> = {
   scrape: cmdScrape,
   clean: cmdClean,
   brands: cmdBrands,
   plan: cmdPlan,
   apply: cmdApply,
+  images: cmdImages,
 };
 
 async function main() {

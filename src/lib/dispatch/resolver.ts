@@ -1,4 +1,6 @@
 import type { PartnerArea, DispatchTarget, LeadCategory , GiftReason } from "./types";
+import { DEFAULT_PRODUCT } from "@/lib/products";
+import { effectiveQuota as quotaFor } from "./partner-products";
 
 interface ResolvedArea {
   area: PartnerArea;
@@ -28,6 +30,8 @@ export interface ResolverInput {
   partnerPrices: Map<string, Map<string, number>>;
   /** Partner IDs to skip with status `skipped_dedup`. */
   dedupPartnerIds: Set<string>;
+  /** Product of the lead: quotas are per product. Defaults to the charger. */
+  product?: string;
 }
 
 /**
@@ -45,7 +49,7 @@ export interface ResolverInput {
  *      Missing entry or price=0 → priceChf=null, gift=true (loud log).
  */
 export function resolveDispatchTargets(input: ResolverInput): ResolverResult {
-  const { areas, quotaUsed, maxSharedTargets, leadCategory, partnerPrices, dedupPartnerIds } =
+  const { areas, quotaUsed, maxSharedTargets, leadCategory, partnerPrices, dedupPartnerIds, product = DEFAULT_PRODUCT } =
     input;
   const reasons: string[] = [];
   const skippedDedup: SkippedDedupEntry[] = [];
@@ -66,7 +70,7 @@ export function resolveDispatchTargets(input: ResolverInput): ResolverResult {
 
   const enriched: ResolvedArea[] = eligible.map((a) => {
     const effectivePriority = a.priority_override ?? a.partner.priority ?? 100;
-    const effectiveQuota = a.quota_override ?? a.partner.monthly_quota ?? 0;
+    const effectiveQuota = quotaFor(a, product);
     const used = quotaUsed.get(a.partner.id) ?? 0;
     const overQuota = effectiveQuota > 0 && used >= effectiveQuota;
     return { area: a, effectivePriority, effectiveQuota, used, overQuota };

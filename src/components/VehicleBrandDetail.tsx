@@ -160,6 +160,7 @@ export function VehicleBrandDetail({
                     pricePerRange={vehicle.pricePerRange}
                     charging={vehicle.charging}
                     lang={lang}
+                    isAvailable={vehicle.isAvailable}
                     dictionary={dictionary}
                   />
                 ));

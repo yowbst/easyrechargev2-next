@@ -312,7 +312,7 @@ export async function fetchBlogPost(
 
 // Listing pages — only fields needed by transformDirectusVehicle + cards
 const VEHICLE_LIST_FIELDS = [
-  "id", "slug", "model", "thumbnail", "status",
+  "id", "slug", "model", "thumbnail", "status", "is_available",
   "battery", "range", "efficiency", "fastcharge", "price_per_range",
   "charging",
   "brand.id", "brand.name", "brand.icon_simple", "brand.icon_svg", "brand.slug",

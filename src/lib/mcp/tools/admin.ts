@@ -33,7 +33,7 @@ export function registerAdminTools(server: McpServer) {
     {
       title: "Dispatch submission to partners",
       description:
-        "Manually dispatch a stored quote submission to partners in LIVE mode: writes billing ledger rows and sends real partner + customer emails via the Make webhook. force=true bypasses the already-dispatched guard (double-billing risk).",
+        "Manually dispatch a stored quote submission to partners in LIVE mode: writes billing ledger rows and sends real partner + customer emails via the Make webhook. Refuses leads stored as non-dispatchable (battery without PV: error not_dispatchable). force=true bypasses the already-dispatched and not-dispatchable guards (double-billing risk).",
       inputSchema: { submissionId: z.string(), force: z.boolean().default(false) },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     },

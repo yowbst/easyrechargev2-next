@@ -97,6 +97,7 @@ Build a Trends view filtered by `environment` to monitor each stage of cutover.
 |---|---|---|
 | `exclusive_over_quota` | The exclusive partner is exhausted for the month | Lead is still dispatched (gift). Ledger row has `gift=true`, `price_chf=null`. |
 | `no_partner_for_canton` | After exclusive + shared, still no candidate | Empty `dispatch.targets`. No ledger row (coverage gaps are PostHog-only). |
+| `no_partner_for_product` | The canton has partners, but none whose pricing policy prices this product (non-charger products only) | Same surface as `no_partner_for_canton`: empty `dispatch.targets`, no ledger row. |
 | `unknown_canton` | Submission has a canton value that can't be normalized | Resolver short-circuits; same surface as `no_partner_for_canton`. |
 
 ---
@@ -115,6 +116,20 @@ Each (`partner`, lead category, `environment`) row in the new `partner_lead_pric
 | `co-owner`      | `none` / blank            | `co_owner_no_solar`  |
 | `tenant`        | `exists` / `in-progress`  | `tenant_solar`       |
 | `tenant`        | `none` / blank            | `tenant_no_solar`    |
+
+Battery funnel (`product = battery`):
+
+| `housingStatus` | `pvPower` (kWc) | → `lead_category` |
+|---|---|---|
+| `owner` | ≥ 10 | `owner_pv_large` |
+| `owner` | < 10, `na`, missing | `owner_pv_small` |
+| `co-owner` | ≥ 10 | `co_owner_pv_large` |
+| `co-owner` | < 10, `na`, missing | `co_owner_pv_small` |
+| any, with `solarEquipment = none` (or tenant) | — | `no_pv` — stored, never dispatched, no ledger row; PostHog `dispatch_not_dispatchable` |
+
+Dedup is per product: a charger lead and a battery lead from the same e-mail are both dispatched.
+
+Products and quotas per partner: the `partner_products` collection holds one row per partner × product (`status` active/paused, `monthly_quota`, `0` = unlimited). A partner receives a product only with an active row for it, and quotas are counted per product. A partner with no rows yet is served as before: charger only, quota = `partners.monthly_quota`. Once a partner has any row, the charger needs its own row too. `partner_areas.quota_override` applies to the charger only. Prices stay in the pricing policy: an active product without a price row is dispatched as a gift (`no_price_row`). When the canton has partners but none receives the product, the lead gets reason `no_partner_for_product`: empty `targets`, no ledger row, PostHog `dispatch_no_partner_for_product`.
 
 Missing rows fall back to gift dispatch (`gift=true`, `price_chf=null`, loud warning log). The price is snapshotted onto `partner_dispatches.price_chf` at dispatch time and survives later price changes.
 
@@ -179,6 +194,9 @@ while `DISPATCH_MODE=off`, or that had no partner at the time):
   billing) — the webhook fires with empty `targets`.
 - Refuses with `409` if the submission already has a `dispatched` row. Add
   `?force=1` to dispatch anyway (can double-bill / double-email).
+- Refuses with `422 not_dispatchable` when the stored lead is never sent to a
+  partner (battery visitor without PV, category `no_pv`). `?force=1` also
+  bypasses this guard.
 
 ## Google Ads conversions via the Data Manager API (token endpoint)
 
@@ -218,6 +236,8 @@ currently targets one conversion action (`productDestinationId: 7076158233`,
 server-validated field. `submission.data.product` also exists (raw client
 input inside the form-data blob) and must never be used for routing or
 conversion mapping.
+
+**Battery in Make (done 2026-10-03):** leads without PV are never dispatched, so they never reach the Data Manager `events:ingest` route. Dispatched battery leads are uploaded to their own conversion action: `productDestinationId` = `{{if(1.submission.product = "battery"; "7817425833"; "7076158233")}}` (7817425833 = "BATTERY Quote Form Submitted (API)", 7076158233 = charger).
 
 **When a second product launches:**
 1. Create its offline conversion action in the Ads UI (primary, own category).

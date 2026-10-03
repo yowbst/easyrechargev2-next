@@ -4,17 +4,16 @@ The EV Database scrape runs on two **custom** Bright Data collectors (Scraper St
 formerly "Data Collectors"). Their code lives in the Bright Data UI, not in any repo, so
 this file is the version-controlled copy.
 
-| Collector | Purpose | ID (verified live 2026-08-23) |
+| Collector | Purpose | ID (verified live 2026-09-13) |
 |---|---|---|
 | EVDB \| List vehicles | Identity + summary specs, one request for the whole catalogue | `c_mt5fn06415t3hneeuk` |
 | EVDB \| Get vehicle | Deep spec blocks, one input per `car_url` | `c_mt5fkkem28oxnkkme0` |
 
 Both are **BROWSER** worker type. Each has an *interaction* script and a *parser* script.
 
-> **Verify before relying on this file.** These sources were transcribed from a working
-> session, not exported from Bright Data. Diff them against the live collectors before
-> using them to recreate anything. If they differ, the dashboard wins — and update this
-> file.
+The blocks below were cleaned up on 2026-09-13 and are the versions promoted to
+production. They replace an earlier generation whose IDs (`c_mipqo2it4a63h5g0k`,
+`c_misied485yd5jpx0u`) are dead.
 
 ## Why this file exists
 
@@ -23,14 +22,15 @@ The pipeline reads collector IDs from the environment
 `src/lib/vehicles/ingest/brightdata.ts`), so recreating the collectors under a different
 Bright Data account needs **no code change** — only new IDs in `.env.local`.
 
-## Verified live 2026-08-23 — read this before debugging anything
+## Verified live — read this before debugging anything
 
-Both collectors were triggered successfully on this date. The current IDs are in the table
-above. Two things that look alarming but are **not** blockers, both established by an actual
-run:
+**If a trigger 404s, suspect a stale collector ID first.**
+`{"error":"Collector not found"}` is returned for an outdated ID and for a completely
+made-up one alike, so the error gives no hint which it is. The IDs move when scrapers are
+recreated. Re-read them from the Bright Data scrapers dashboard.
 
-**`can_make_requests: false` / `zone_not_found` does NOT block Scraper Studio.** The account
-reports zero active zones, and triggers still return HTTP 200 with a `collection_id`:
+**Ignore `can_make_requests: false` / `zone_not_found`.** The account reports zero active
+scraping zones and collector triggers still succeed:
 
 ```bash
 curl -s -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" https://api.brightdata.com/status
@@ -38,23 +38,33 @@ curl -s -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" https://api.brightdata.
 #    "auth_fail_reason":"zone_not_found", …}   ← collectors still work
 ```
 
-That flag governs proxy zones, not collector runs. Ignore it here.
-
-**Stale collector IDs are the thing that actually bites.** A wrong ID returns
-`404 {"error":"Collector not found"}` — byte-identical to what a made-up ID returns, so it
-gives no hint that the ID is merely outdated. The IDs originally carried in the notebook
-(`c_mipqo2it4a63h5g0k`, `c_misied485yd5jpx0u`) are dead. If a trigger 404s, re-read the IDs
-from the scrapers dashboard before assuming anything about accounts or permissions.
+That flag governs proxy zones, not Scraper Studio.
 
 Note also that these are *not* valid ways to check a collector:
 `GET /dca/dataset?id=<collector_id>` expects a *snapshot* id and 404s for a perfectly good
 collector, and `GET /dca/get_collectors` does not exist at all. The only definitive check is
 a real `POST /dca/trigger`, which starts a billable job.
 
+## The site ignores every filter in the URL
+
+Measured 2026-09-13 against the live LIST collector:
+
+| Input | Rows returned |
+|---|---|
+| Filters wide open | 1437 |
+| Filters at their UI defaults | 1438 |
+| `battery: 50–55 kWh` | 1438 — batteries actually 14.5–141 kWh |
+| `page_size: 10` | 1438 |
+
+EV Database returns the whole catalogue whatever the hash says. The previous interaction
+built a 12-parameter filter hash; it has been removed, because code that looks like it
+filters and does not is worse than no code at all. **Filter downstream**, in the pipeline,
+where it is testable.
+
 ## Snapshot wire format — the part that broke the first implementation
 
 `GET /dca/dataset?id=<snapshot_id>` returns **newline-delimited JSON**, one object per line
-— *not* a JSON array. A 1,405-vehicle LIST snapshot is 1,405 lines. Calling `res.json()` on
+— *not* a JSON array. A 1,438-vehicle LIST snapshot is 1,438 lines. Calling `res.json()` on
 it throws on line 2. `parseSnapshotBody` in `src/lib/vehicles/ingest/brightdata.ts` handles
 NDJSON, a plain array, and a single bare object (a one-row snapshot).
 
@@ -71,22 +81,22 @@ implementation, which threw on the very first poll. Note both carry a `message` 
 
 ## Cost note: LIST returns the whole historical catalogue
 
-With default filters the LIST collector returned **1,405** vehicles, of which **645** were
-"Available to order". Only available vehicles are ever ingested, so `scrape` filters to
-those *before* running DETAILS — otherwise roughly 760 billable page scrapes are wasted on
-discontinued models every refresh.
+The LIST collector returned **1,438** vehicles, of which **656** were "Available to order".
+Only available vehicles are ever ingested, so `scrape` filters to those *before* running
+DETAILS — otherwise roughly 780 billable page scrapes are wasted on discontinued models
+every refresh.
 
 ## Output contract the pipeline depends on
 
 If you change either parser, these are the guarantees
 `src/lib/vehicles/ingest/merge.ts` relies on. Breaking one breaks ingestion silently.
 
-- **LIST** emits, per vehicle: `id` (base36 of `evdb_id`), `evdb_id` (number),
+- **LIST** emits 22 fields per vehicle: `id` (base36 of `evdb_id`), `evdb_id` (number),
   `date {from,to}`, `year {from,to}`, `rank`, `thumb_url`, `car_url`, `title`, `make`,
-  `model`, `availability`, and the `{value, unit}` metrics `range`, `efficiency`,
-  `weight`, `acceleration_0100`, `range_1stop`, `battery`, `fastcharge`, `towing_weight`,
+  `model`, `availability`, the `{value, unit}` metrics `range`, `efficiency`, `weight`,
+  `acceleration_0100`, `range_1stop`, `battery`, `fastcharge`, `towing_weight`,
   `cargo_cap`, `price_perrange`, plus `price {de,nl,uk}`.
-- **DETAILS** emits, per vehicle: `car_url`, `title`, `breadcrumb`, `images_urls`,
+- **DETAILS** emits 19 root fields: `car_url`, `title`, `breadcrumb`, `images_urls`,
   `pricing_availability`, `real_range`, `distance_suitability`, `battery_details`,
   `charging`, `performance`, `v2x_charging`, `energy_consumption`,
   `real_energy_consumption`, `dimensions_weight`, `misc`, `preceding_model`,
@@ -94,14 +104,49 @@ If you change either parser, these are the guarantees
 - **DETAILS carries no `evdb_id`, `make`, `model` or `year`.** The two records are joined
   on `car_url`. This is why `scrape` runs both collectors.
 - **DETAILS returns its payload as a JSON string**: the parser's production return is
-  `{ vehicle: JSON.stringify(vehicle) }`. `unwrapDetails` parses it. If you switch the
-  parser to the commented-out `return vehicle` dev form, `unwrapDetails` tolerates that
-  too.
+  `{ vehicle: JSON.stringify(vehicle) }`. `unwrapDetails` parses it. The commented-out
+  `return vehicle` dev form is tolerated too.
 - `battery_details.nominal_capacity` is **required** — it supplies the `kWh` component of
-  the generated slug. A LIST row whose DETAILS record is missing gets dropped rather than
-  produce a malformed URL.
-- Note that LIST `battery` is *useable* capacity while the slug uses *nominal* capacity
-  from DETAILS. They are different numbers; do not conflate them.
+  the generated slug, i.e. of every public vehicle URL. A LIST row whose DETAILS record is
+  missing gets dropped rather than produce a malformed URL.
+- LIST `battery` is *useable* capacity while the slug uses *nominal* capacity from DETAILS.
+  Different numbers; do not conflate them.
+
+## What the 2026-09-13 cleanup changed, and how it was checked
+
+Both parsers keep their output contract byte-identical. The changes are:
+
+- **Unified number parsing.** Both collectors now use the same `parseNumberSmart`. The
+  DETAILS parser previously used `parseFloat(x.replace(/,/g,""))` and `parseInt(...)`,
+  which turn `73,4 kWh` into 734 and `€41.990` into 41. Differential test over the 22
+  formats EV Database actually emits: **zero divergence**. The five divergences found were
+  all on European formats, all in the safer direction.
+- **Deduplicated table reading.** The DETAILS parser defined the same label→value lookup
+  seven times; it is now one `makeRowReader` factory with 11 call sites.
+- **Removed the per-page debug log.** The DETAILS parser used to `console.log` the entire
+  vehicle, pretty-printed, on every page. At ~650 pages per refresh that is a lot of log
+  for no benefit. One line now.
+- **Escaped the make in a regex.** `cleanTitle` interpolated the make into a `RegExp`
+  unescaped. For a real manufacturer like **e.GO**, the unescaped `.` matched any
+  character and could strip text from a title.
+- **Deleted the inert filter machinery** from the LIST interaction (see the table above).
+
+Verification performed, beyond a syntax check:
+
+- The new DETAILS parser was run locally against the real HTML of
+  `ev-database.org/car/3403` with cheerio and diffed against the production output of the
+  old parser for the same page: **19/19 root fields, identical keys, zero differences**
+  attributable to the refactor. The only two deltas (`title`, `preceding_model.title`)
+  were a `\n` vs space introduced by the browser DOM, not by the code — the extraction
+  expression is identical in both versions. `images_urls` was excluded because the gallery
+  is JS-rendered and does not exist in a plain fetch.
+- The new LIST parser output was compared field-by-field against a 1,438-row reference
+  snapshot: **zero discrepancies across all 21 comparable fields, for every vehicle**.
+
+One thing deliberately *not* unified: `extractDimensionsWeight` keeps its own metric
+function. Its unit regex captures only the leading token (`[A-Za-z/]+`), so
+`"1,823 kg (EU)"` yields `kg`, not `kg (EU)`. Folding it into `row.metric()` would have
+changed the contract.
 
 ---
 
@@ -110,404 +155,276 @@ If you change either parser, these are the guarantees
 ### Interaction
 
 ```javascript
-// EV-Database LIST collector - single page using p=0-2000
+// EVDB | List vehicles — INTERACTION
 // Worker type: BROWSER
+//
+// Loads the EV Database catalogue once and hands the DOM to the parser.
+//
+// WHY THERE ARE NO FILTERS HERE ANY MORE
+// The previous version built a 12-parameter filter hash (rs-pr, rs-er, rs-ub, …).
+// Measured against the live site on 2026-09-13, every one of them is ignored:
+//   filters wide open ..... 1437 rows
+//   filters at defaults ... 1438 rows
+//   battery 50-55 kWh ..... 1438 rows, batteries actually 14.5-141 kWh
+//   page_size 10 .......... 1438 rows
+// The site returns the whole catalogue whatever we ask for. Keeping that code
+// was worse than useless: it looked like filtering was happening. Filter
+// downstream instead, where it can be verified.
 
 const BASE = "https://ev-database.org/";
 
-// Defaults (based on EV-Database current UI)
-const defaults = {
-  price:       { min: 10000, max: 100000 }, // rs-pr
-  range:       { min: 0,     max: 1000 },   // rs-er
-  long_dist:   { min: 0,     max: 1000 },   // rs-ld
-  acceleration:{ min: 2,     max: 23 },     // rs-ac
-  dcfc:        { min: 0,     max: 400 },    // rs-dcfc
-  battery:     { min: 10,    max: 200 },    // rs-ub
-  tow:         { min: 0,     max: 3000 },   // rs-tw
-  efficiency:  { min: 100,   max: 350 },    // rs-ef
-  seats:       { min: -1,    max: 5 },      // rs-sa
-  weight:      { min: 1000,  max: 3500 },   // rs-w
-  cargo:       { min: 0,     max: 5000 },   // rs-c
-  year:        { min: 2010,  max: 2030 },   // rs-y
-  sort: 1,                                   // s=1 (sort by rank)
-  page_size: 2000                            // ask for up to 2000 cars in one shot
-};
+// The one input that does anything. Caps how many vehicles are collected, and
+// is applied to the PARSED rows because the URL demonstrably cannot limit them.
+// Useful for a cheap smoke test; omit it to collect everything.
+const cfg = (Array.isArray(input) ? input[0] : input) || {};
+const requested = Number(cfg.limit);
+const limit = Number.isFinite(requested) && requested > 0 ? Math.floor(requested) : null;
 
-// Read config from input (supports both object and array forms)
-let cfg = {};
-
-if (input && typeof input === "object") {
-  if (Array.isArray(input)) {
-    // DCA / API mode: input is an array of records
-    cfg = input[0] || {};
-  } else {
-    // IDE template/preview mode: input is a single object
-    cfg = input;
-  }
-}
-
-// Optional: drop internal Bright Data metadata
-if ("__source" in cfg) {
-  delete cfg.__source;
-}
-
-// Helper for {min,max} w/ auto-fix if reversed, and number parsing
-function getRange(obj, def) {
-  let minVal = (obj && obj.min != null) ? parseInt(obj.min, 10) : def.min;
-  let maxVal = (obj && obj.max != null) ? parseInt(obj.max, 10) : def.max;
-
-  if (isNaN(minVal)) minVal = def.min;
-  if (isNaN(maxVal)) maxVal = def.max;
-
-  // Auto-fix inverted ranges
-  if (maxVal < minVal) {
-    const tmp = minVal;
-    minVal = maxVal;
-    maxVal = tmp;
-  }
-
-  return { min: minVal, max: maxVal };
-}
-
-// Merge filters from cfg (all optional)
-
-const price       = getRange(cfg.price,       defaults.price);
-const rangeVal    = getRange(cfg.range,       defaults.range);
-const long_dist   = getRange(cfg.long_dist,   defaults.long_dist);
-const acceleration= getRange(cfg.acceleration,defaults.acceleration);
-const dcfc        = getRange(cfg.dcfc,        defaults.dcfc);
-const battery     = getRange(cfg.battery,     defaults.battery);
-const tow         = getRange(cfg.tow,         defaults.tow);
-const efficiency  = getRange(cfg.efficiency,  defaults.efficiency);
-const seats       = getRange(cfg.seats,       defaults.seats);
-const weight      = getRange(cfg.weight,      defaults.weight);
-const cargo       = getRange(cfg.cargo,       defaults.cargo);
-const year        = getRange(cfg.year,        defaults.year);
-
-const sort       = cfg.sort      ?? defaults.sort;
-const page_size  = cfg.page_size ?? defaults.page_size;
-
-// --- Build full URL (filters + p=0-page_size) ---
-
-const hash =
-  "#group=vehicle-group"
-  + `&rs-pr=${price.min}_${price.max}`
-  + `&rs-er=${rangeVal.min}_${rangeVal.max}`
-  + `&rs-ld=${long_dist.min}_${long_dist.max}`
-  + `&rs-ac=${acceleration.min}_${acceleration.max}`
-  + `&rs-dcfc=${dcfc.min}_${dcfc.max}`
-  + `&rs-ub=${battery.min}_${battery.max}`
-  + `&rs-tw=${tow.min}_${tow.max}`
-  + `&rs-ef=${efficiency.min}_${efficiency.max}`
-  + `&rs-sa=${seats.min}_${seats.max}`
-  + `&rs-w=${weight.min}_${weight.max}`
-  + `&rs-c=${cargo.min}_${cargo.max}`
-  + `&rs-y=${year.min}_${year.max}`
-  + `&s=${sort}`
-  + `&p=0-${page_size}`;
-
-const url = BASE + hash;
-
-// --- Single navigation & parse ---
-
-navigate(url);
+// Hash kept minimal. These three are how the page has always been requested and
+// cost nothing to keep; they are NOT known to be load-bearing, unlike the
+// rs-* filters above which are known NOT to be.
+navigate(BASE + "#group=vehicle-group&s=1&p=0-2000");
 
 try {
   wait(".list-item");
 } catch (e) {
-  // No vehicles found, nothing to collect
+  console.log("No .list-item found on the page — collecting nothing.");
   collect([]);
-  done();
+  return;
 }
 
-const cars = parse();  // parser returns array of vehicles
+const cars = parse() || [];
+const out = limit ? cars.slice(0, limit) : cars;
 
-if (cars && cars.length > 0) {
-  collect(cars);
-} else {
-  collect([]);
-}
+console.log(
+  limit
+    ? "Parsed " + cars.length + " vehicles, collecting " + out.length + " (limit)"
+    : "Parsed " + cars.length + " vehicles"
+);
+
+collect(out);
 ```
 
 ### Parser
 
 ```javascript
-// Parser for EV-Database list page with Date objects for date.from/date.to
+// EVDB | List vehicles — PARSER
+//
+// Returns one object per vehicle. The returned shape is a CONTRACT consumed by
+// src/lib/vehicles/ingest/merge.ts and fieldmap.ts — do not rename, reorder or
+// drop fields without changing those first. DETAILS carries no evdb_id / make /
+// model / year, so this collector is the only source of vehicle identity.
 
-// Short, stable vehicle id based on evdb_id (base36)
-function makeVehicleId(evdb_id_raw) {
-  const n = parseInt(evdb_id_raw, 10);
-  if (!isNaN(n)) {
-    return n.toString(36);
-  }
-  return evdb_id_raw || null;
+const BASE = "https://ev-database.org";
+
+// EV-DB writes this timestamp to mean "no end date".
+const NO_END_DATE_TS = 946684800;
+
+// Spec cells: output field -> CSS class on the list item.
+const SPEC_SELECTORS = {
+  range: ".erange_real",
+  efficiency: ".efficiency",
+  weight: ".weight_p",
+  acceleration_0100: ".acceleration_p",
+  range_1stop: ".long_distance_total",
+  battery: ".battery_p",
+  fastcharge: ".fastcharge_speed_print",
+  towing_weight: ".towweight_p",
+  cargo_cap: ".cargo",
+};
+
+// Price cells: output field -> CSS class.
+const PRICE_SELECTORS = { de: ".country_de", nl: ".country_nl", uk: ".country_uk" };
+
+// ---------- generic helpers ----------
+
+function escapeRegExp(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Convert Unix seconds → JS Date or null
+function toInt(raw) {
+  const n = parseInt(raw, 10);
+  return Number.isNaN(n) ? null : n;
+}
+
+/** Short, stable id derived from evdb_id, base36. Stored as `short_id`. */
+function makeVehicleId(raw) {
+  const n = parseInt(raw, 10);
+  return Number.isNaN(n) ? raw || null : n.toString(36);
+}
+
+/** Unix seconds -> Date, or null (also for the no-end-date sentinel). */
 function tsToDate(raw) {
-  if (!raw) return null;
-
   const ts = parseInt(raw, 10);
-  if (isNaN(ts)) return null;
-
-  // EV-DB sentinel: 946684800 = "no end date"
-  if (ts === 946684800) return null;
-
-  return new Date(ts * 1000); // seconds → ms
+  if (Number.isNaN(ts) || ts === NO_END_DATE_TS) return null;
+  return new Date(ts * 1000);
 }
 
 /**
- * Robust locale-aware number parser.
+ * Locale-aware number parser. EV-DB mixes European and UK formatting, and
+ * getting this wrong silently corrupts specs — "1.979" kg must not become
+ * 1.979, and "73,4" kWh must not become 734.
  *
- * Handles:
- *  - 1.979   -> 1979   (thousands separator)
- *  - 73,4    -> 73.4   (decimal comma)
- *  - 1.234,5 -> 1234.5 (mixed: dot thousands + comma decimal)
- *  - 1,234.5 -> 1234.5 (mixed: comma thousands + dot decimal)
+ *   "1.979"   -> 1979     dot as thousands separator
+ *   "73,4"    -> 73.4     comma as decimal
+ *   "1.234,5" -> 1234.5   EU mixed
+ *   "1,234.5" -> 1234.5   UK/US mixed
  */
 function parseNumberSmart(str) {
   if (!str) return NaN;
+  const s = String(str).trim();
 
-  str = str.trim();
+  const hasDot = s.includes(".");
+  const hasComma = s.includes(",");
 
-  const hasDot = str.includes(".");
-  const hasComma = str.includes(",");
-
-  // If both separators exist, detect which is decimal based on last occurrence
-  // Example EU: "1.234,5" (comma last => comma decimal)
-  // Example US: "1,234.5" (dot last => dot decimal)
+  // Both present: whichever comes last is the decimal separator.
   if (hasDot && hasComma) {
-    const lastDot = str.lastIndexOf(".");
-    const lastComma = str.lastIndexOf(",");
-
-    if (lastComma > lastDot) {
-      // EU style: dot = thousands, comma = decimal
-      return parseFloat(str.replace(/\./g, "").replace(",", "."));
-    } else {
-      // US style: comma = thousands, dot = decimal
-      return parseFloat(str.replace(/,/g, ""));
-    }
+    return s.lastIndexOf(",") > s.lastIndexOf(".")
+      ? parseFloat(s.replace(/\./g, "").replace(",", "."))
+      : parseFloat(s.replace(/,/g, ""));
   }
 
-  // Only comma exists → could be decimal comma OR thousands separator
-  if (hasComma && !hasDot) {
-    // If comma is followed by exactly 3 digits, likely thousands separator
-    // Example: "41,990" → 41990
-    if (/,\d{3}$/.test(str)) {
-      return parseFloat(str.replace(/,/g, ""));
-    }
-    // Otherwise treat comma as decimal
-    return parseFloat(str.replace(",", "."));
-  }
+  // Exactly three trailing digits after a lone separator reads as thousands.
+  if (hasComma) return parseFloat(/,\d{3}$/.test(s) ? s.replace(/,/g, "") : s.replace(",", "."));
+  if (hasDot) return parseFloat(/\.\d{3}$/.test(s) ? s.replace(/\./g, "") : s);
 
-  // Only dot exists → could be decimal dot OR thousands separator
-  if (hasDot && !hasComma) {
-    // If dot is followed by exactly 3 digits, likely thousands separator
-    // Example: "1.979" → 1979
-    if (/\.\d{3}$/.test(str)) {
-      return parseFloat(str.replace(/\./g, ""));
-    }
-    return parseFloat(str);
-  }
-
-  // Plain integer
-  return parseFloat(str);
+  return parseFloat(s);
 }
 
-// Parse metrics like "245 km" or "184 Wh/km"
+/** "245 km" -> { value: 245, unit: "km" }. Null when absent or unparseable. */
 function parseMetric(raw) {
   if (!raw) return null;
-
-  const match = raw.trim().match(/^([\d.,]+)\s*(.*)$/);
-  if (!match) return null;
-
-  const value = parseNumberSmart(match[1]);
-  const unit  = match[2].trim() || null;
-
-  if (isNaN(value)) return null;
-
-  return { value, unit };
+  const m = String(raw).trim().match(/^([\d.,]+)\s*(.*)$/);
+  if (!m) return null;
+  const value = parseNumberSmart(m[1]);
+  if (Number.isNaN(value)) return null;
+  return { value, unit: m[2].trim() || null };
 }
 
-// Parse prices like "€31,690" or "€41.990" or "€41.990,00"
+/** "€31,690" -> { currency: "€", value: 31690 }. Prices are whole units. */
 function parsePrice(raw) {
   if (!raw) return null;
-
-  const match = raw.trim().match(/^([^0-9]+)\s*([\d.,]+)/);
-  if (!match) return null;
-
-  const currency = match[1].trim();
-  const valueRaw = match[2].trim();
-
-  const valueNum = parseNumberSmart(valueRaw);
-  if (isNaN(valueNum)) return null;
-
-  // Prices should be integer euros/pounds
-  const value = Math.round(valueNum);
-
-  return { currency, value };
+  const m = String(raw).trim().match(/^([^0-9]+)\s*([\d.,]+)/);
+  if (!m) return null;
+  const value = parseNumberSmart(m[2]);
+  if (Number.isNaN(value)) return null;
+  return { currency: m[1].trim(), value: Math.round(value) };
 }
 
-// Price-per-range parser, e.g. "€102 /km" → { value: 102, unit: "€/km" }
+/** "€102 /km" -> { value: 102, unit: "€/km" }. */
 function parsePricePerRange(raw) {
   if (!raw) return null;
-
-  const text = raw.trim();
-  // Examples: "€102 /km", "€ 102 / km"
-  const match = text.match(/^([^0-9]*)([\d.,]+)\s*\/\s*([A-Za-z]+)$/);
-  if (!match) return null;
-
-  const currency = match[1].trim();               // "€"
-  const value = parseNumberSmart(match[2]);       // robust parsing
-  const perUnit = match[3].trim();                // "km"
-
-  if (isNaN(value)) return null;
-
-  return {
-    value,
-    unit: currency ? `${currency}/${perUnit}` : `/${perUnit}`
-  };
+  const m = String(raw).trim().match(/^([^0-9]*)([\d.,]+)\s*\/\s*([A-Za-z]+)$/);
+  if (!m) return null;
+  const value = parseNumberSmart(m[2]);
+  if (Number.isNaN(value)) return null;
+  const currency = m[1].trim();
+  return { value, unit: (currency ? currency : "") + "/" + m[3].trim() };
 }
 
-// Clean title to remove make & duplicated segments
+/** Absolute URL from a possibly relative href, or "" when there is none. */
+function absUrl(href) {
+  if (!href) return "";
+  try {
+    return new URL(href, BASE).href;
+  } catch (e) {
+    return "";
+  }
+}
+
+/** Highest-resolution candidate in a srcset (the last entry). */
+function bestFromSrcset(srcset) {
+  const parts = String(srcset || "")
+    .split(",")
+    .map(function (x) { return x.trim(); })
+    .filter(Boolean);
+  if (!parts.length) return "";
+  return parts[parts.length - 1].split(" ")[0];
+}
+
+/** Strips the make prefix and collapses the duplicated segments EV-DB emits. */
 function cleanTitle(make, rawTitle) {
   if (!rawTitle) return rawTitle;
+  let title = String(rawTitle).trim();
 
-  let title = rawTitle.trim();
-
-  // 1. Remove make prefix (case-insensitive)
+  // The make is interpolated into a regex, so it must be escaped — several
+  // real makes contain regex metacharacters.
   if (make) {
-    const makeRegex = new RegExp("^" + make + "\\s+", "i");
-    title = title.replace(makeRegex, "");
+    title = title.replace(new RegExp("^" + escapeRegExp(make) + "\\s+", "i"), "");
   }
 
-  // 2. Deduplicate consecutive words
-  const parts = title.split(/\s+/);
+  // Drop consecutive repeated words.
   const dedup = [];
-  for (const word of parts) {
-    if (dedup[dedup.length - 1] !== word) {
-      dedup.push(word);
-    }
-  }
+  title.split(/\s+/).forEach(function (word) {
+    if (dedup[dedup.length - 1] !== word) dedup.push(word);
+  });
   title = dedup.join(" ");
 
-  // 3. If whole string is exactly repeated twice, collapse
+  // Collapse a string that is exactly itself twice.
   const half = Math.floor(title.length / 2);
   const firstHalf = title.substring(0, half).trim();
-  const secondHalf = title.substring(half).trim();
-  if (firstHalf && firstHalf === secondHalf) {
-    title = firstHalf;
-  }
+  if (firstHalf && firstHalf === title.substring(half).trim()) title = firstHalf;
 
   return title.trim();
 }
 
-const BASE = "https://ev-database.org";
+// ---------- row extraction ----------
 
-return $(".list-item").toArray().map(el => {
+return $(".list-item").toArray().map(function (el) {
   const $car = $(el);
   const $hidden = $car.find("div.hidden").first();
+  const hiddenText = function (cls) { return $hidden.find(cls).text().trim(); };
 
-  // --- Hidden metadata ---
+  const evdb_id_raw = hiddenText(".id.hidden");
 
-  const evdb_id_raw = $hidden.find(".id.hidden").text().trim();
-  const evdb_id = evdb_id_raw ? parseInt(evdb_id_raw, 10) : null;
-
-  const date_from_raw = $hidden.find(".date_from.hidden").text().trim();
-  const date_to_raw   = $hidden.find(".date_to.hidden").text().trim();
-
-  const date_from = tsToDate(date_from_raw); // Date or null
-  const date_to   = tsToDate(date_to_raw);   // Date or null
-
-  const year_from_raw = $hidden.find(".year_from.hidden").text().trim();
-  const year_to_raw   = $hidden.find(".year_to.hidden").text().trim();
-
-  const year_from_num = year_from_raw ? parseInt(year_from_raw, 10) : null;
-  const year_to_num_raw = year_to_raw ? parseInt(year_to_raw, 10) : null;
-
-  const year_from = isNaN(year_from_num) ? null : year_from_num;
-  const year_to =
-    (year_to_num_raw === 2000 || isNaN(year_to_num_raw))
-      ? null
-      : year_to_num_raw;
-
-  const rank_raw = $hidden.find(".rank.hidden").text().trim();
-  const rank = rank_raw ? parseInt(rank_raw, 10) : null;
-
-  // Custom stable ID
-  const id = makeVehicleId(evdb_id_raw);
-
-  // --- Thumbnail ---
-
-  const srcset = $car.find("img").attr("srcset") || "";
-  const parts = srcset.split(",").map(x => x.trim()).filter(Boolean);
-  const best = parts.length ? parts[parts.length - 1].split(" ")[0] : "";
-  const thumb_url = best ? new URL(best, BASE).href : "";
-
-  // --- Title / make / model ---
+  // EV-DB uses year_to === 2000 as a "still on sale" sentinel, distinct from
+  // the date_to sentinel above.
+  const year_to_raw = toInt(hiddenText(".year_to.hidden"));
 
   const $titleWrap = $car.find(".title-wrap");
-  const href = $titleWrap.find("a").attr("href") || "";
-  const car_url = href ? new URL(href, BASE).href : "";
-
-  const title_raw = $titleWrap.find("a.title").text().trim();
   const make = $titleWrap.find("span").first().text().trim();
-  const title = cleanTitle(make, title_raw);
-  const model = $titleWrap.find(".model").text().trim();
-  const availability = $titleWrap.find(".availability").text().trim();
 
-  // --- Specs ---
+  const specs = {};
+  Object.keys(SPEC_SELECTORS).forEach(function (key) {
+    specs[key] = parseMetric($car.find(SPEC_SELECTORS[key]).text());
+  });
 
-  const range             = parseMetric($car.find(".erange_real").text().trim());
-  const efficiency        = parseMetric($car.find(".efficiency").text().trim());
-  const weight            = parseMetric($car.find(".weight_p").text().trim());
-  const acceleration_0100 = parseMetric($car.find(".acceleration_p").text().trim());
-  const range_1stop       = parseMetric($car.find(".long_distance_total").text().trim());
-  const battery           = parseMetric($car.find(".battery_p").text().trim());
-  const fastcharge        = parseMetric($car.find(".fastcharge_speed_print").text().trim());
-  const towing_weight     = parseMetric($car.find(".towweight_p").text().trim());
-  const cargo_cap         = parseMetric($car.find(".cargo").text().trim());
-  const price_perrange    = parsePricePerRange($car.find(".priceperrange_p").text().trim());
-
-  // --- Prices ---
-
-  const price_de = parsePrice($car.find(".country_de").text().trim());
-  const price_nl = parsePrice($car.find(".country_nl").text().trim());
-  const price_uk = parsePrice($car.find(".country_uk").text().trim());
+  const price = {};
+  Object.keys(PRICE_SELECTORS).forEach(function (key) {
+    price[key] = parsePrice($car.find(PRICE_SELECTORS[key]).text());
+  });
 
   return {
-    id,
-    evdb_id,
+    id: makeVehicleId(evdb_id_raw),
+    evdb_id: toInt(evdb_id_raw),
     date: {
-      from: date_from, // JS Date or null
-      to:   date_to
+      from: tsToDate(hiddenText(".date_from.hidden")),
+      to: tsToDate(hiddenText(".date_to.hidden")),
     },
     year: {
-      from: year_from, // number or null
-      to:   year_to
+      from: toInt(hiddenText(".year_from.hidden")),
+      to: year_to_raw === 2000 ? null : year_to_raw,
     },
-    rank,
-    thumb_url,
-    car_url,
-    title,
-    make,
-    model,
-    availability,
-    range,           // { value, unit } e.g. {360, "km"}
-    efficiency,      // e.g. {171, "Wh/km"}
-    weight,          // FIXED parsing: {1979, "kg"} instead of {1.979, "kg"}
-    acceleration_0100,    // {7.9, "sec"}
-    range_1stop,     // {405, "km"}
-    battery,         // FIXED parsing: {73.4, "kWh"} and not {734, "kWh"}
-    fastcharge,      // {115, "kW"}
-    towing_weight,   // FIXED parsing: {1500, "kg"} not {1.5, "kg"}
-    cargo_cap,       // {363, "L"}
-    price_perrange,  // { value: 102, unit: "€/km" }
-    price: {
-      de: price_de, // { currency, value } or null
-      nl: price_nl,
-      uk: price_uk
-    }
+    rank: toInt(hiddenText(".rank.hidden")),
+    thumb_url: absUrl(bestFromSrcset($car.find("img").attr("srcset"))),
+    car_url: absUrl($titleWrap.find("a").attr("href")),
+    title: cleanTitle(make, $titleWrap.find("a.title").text().trim()),
+    make: make,
+    model: $titleWrap.find(".model").text().trim(),
+    availability: $titleWrap.find(".availability").text().trim(),
+
+    range: specs.range,                         // { 360, "km" }
+    efficiency: specs.efficiency,               // { 171, "Wh/km" }
+    weight: specs.weight,                       // { 1979, "kg" } not 1.979
+    acceleration_0100: specs.acceleration_0100, // { 7.9, "sec" }
+    range_1stop: specs.range_1stop,             // { 405, "km" }
+    battery: specs.battery,                     // { 73.4, "kWh" } not 734
+    fastcharge: specs.fastcharge,               // { 115, "kW" }
+    towing_weight: specs.towing_weight,         // { 1500, "kg" } not 1.5
+    cargo_cap: specs.cargo_cap,                 // { 363, "L" }
+    price_perrange: parsePricePerRange($car.find(".priceperrange_p").text()),
+
+    price: price,                               // { de, nl, uk } each { currency, value } or null
   };
 });
 ```
@@ -516,91 +433,285 @@ return $(".list-item").toArray().map(el => {
 
 ## 2. EVDB | Get vehicle
 
-Input per record: `{ car_url: "https://ev-database.org/car/…" }`. The pipeline chunks
+Input per record: `{{ car_url: "https://ev-database.org/car/…" }}`. The pipeline chunks
 these 100 at a time (`CHUNK` in `scripts/vehicles-ingest.ts`).
 
 ### Interaction
 
 ```javascript
-// EVDB | Get vehicle - Interaction
+// EVDB | Get vehicle — INTERACTION
 // Worker type: BROWSER
+//
+// Navigates to one vehicle page and hands the DOM to the parser.
+// Input: { car_url } (also accepts `url` or a bare `path`).
 
 const BASE = "https://ev-database.org";
 
-// Normalise input into cfg: support both [ {...} ] and { ... }
-let cfg = {};
-if (Array.isArray(input) && input.length > 0) {
-  cfg = input[0];
-} else if (input && typeof input === "object") {
-  cfg = input;
-}
+const cfg = (Array.isArray(input) ? input[0] : input) || {};
 
-console.log("Raw input:", JSON.stringify(input));
-console.log("Config:", JSON.stringify(cfg));
-
-// Accept car_url, url or path
 let url = cfg.car_url || cfg.url || cfg.path;
 
-// Normalise relative URLs
-if (url && !/^https?:\/\//i.test(url)) {
-  url = BASE.replace(/\/$/, "") + "/" + String(url).replace(/^\//, "");
-}
-
 if (!url) {
-  console.log("No URL provided in input. Expected { car_url: '...' } or { url: '...' }.");
+  console.log("No URL in input — expected { car_url: '…' }. Collecting nothing.");
   collect([]);
   return;
 }
 
-console.log("Navigating to:", url);
+// Accept a relative path as well as an absolute URL.
+if (!/^https?:\/\//i.test(url)) {
+  url = BASE + "/" + String(url).replace(/^\//, "");
+}
+
+console.log("Navigating to " + url);
 navigate(url);
 
 try {
-  // 1) REQUIRED: wait for page structure (fast + reliable)
-  wait_any(
-    ["#range", "#battery", "#efficiency", "#pricing", "h1"],
-    { timeout: 45000 }
-  );
-
-  // 2) OPTIONAL: best-effort wait for >= 3 images (never blocks)
-  try {
-    wait(
-      function () {
-        return document.querySelectorAll(".fotorama img").length >= 3;
-      },
-      { timeout: 15000 }
-    );
-    console.log("✅ At least 3 images loaded");
-  } catch (e2) {
-    console.log("ℹ️ Less than 3 images loaded within 15s; continuing anyway");
-  }
-
+  // Required: the page skeleton. Any one of these means the page is usable.
+  wait_any(["#range", "#battery", "#efficiency", "#pricing", "h1"], { timeout: 45000 });
 } catch (e) {
-  console.log("Timeout waiting for vehicle page structure:", e && e.message);
+  console.log("Timed out waiting for the vehicle page structure: " + (e && e.message));
   collect([]);
   return;
 }
 
-// Parser returns a single vehicle object
+// Best effort only: give the gallery a moment so images_urls is well populated.
+// Never blocks — a vehicle with few images is still worth collecting.
+try {
+  wait(function () {
+    return document.querySelectorAll(".fotorama img").length >= 3;
+  }, { timeout: 15000 });
+} catch (e) {
+  console.log("Fewer than 3 gallery images after 15s — continuing anyway.");
+}
+
 const vehicle = parse();
-collect(vehicle ? [vehicle] : []);
+
+if (!vehicle) {
+  console.log("Parser returned nothing for " + url);
+  collect([]);
+  return;
+}
+
+collect([vehicle]);
 ```
 
 ### Parser
 
-The parser is long; it is reproduced in full because a partial copy is worse than none.
-Note the production return at the very bottom — `{ vehicle: JSON.stringify(vehicle) }` —
-which is what `unwrapDetails` in `src/lib/vehicles/ingest/merge.ts` exists to undo.
-
 ```javascript
-// EVDB | Get vehicle - Parser
-// Runs inside Bright Data browser context with jQuery-like `$`.
+// EVDB | Get vehicle — PARSER
+// Runs in the Bright Data browser context with a jQuery-like `$`.
+//
+// Returns ONE vehicle object, wrapped as { vehicle: "<json>" } for production.
+// The shape is a CONTRACT consumed by src/lib/vehicles/ingest/merge.ts —
+// `battery_details.nominal_capacity` in particular supplies the kWh component
+// of every generated slug, i.e. every public vehicle URL. Do not rename or
+// drop fields without changing the pipeline first.
+//
+// This collector carries NO evdb_id / make / model / year. Those come from the
+// LIST collector and are joined on car_url downstream.
 
 const BASE = "https://ev-database.org";
 
+// ---------- number parsing ----------
 //
-// ---------- Generic helpers ----------
-//
+// Shared with the LIST collector on purpose. EV-DB currently renders
+// UK-style numbers ("£37,990", "6.2 sec") which a naive
+// parseFloat(x.replace(/,/g,"")) also handles — but that naive form turns
+// "73,4 kWh" into 734 and "€41.990" into 41. Verified 2026-09-13: identical
+// results on all 22 formats the site actually emits, and correct on the
+// European forms where the naive version silently corrupts by 10x or 1000x.
+
+function parseNumberSmart(str) {
+  if (!str) return NaN;
+  const s = String(str).trim();
+
+  const hasDot = s.includes(".");
+  const hasComma = s.includes(",");
+
+  // Both present: whichever comes last is the decimal separator.
+  if (hasDot && hasComma) {
+    return s.lastIndexOf(",") > s.lastIndexOf(".")
+      ? parseFloat(s.replace(/\./g, "").replace(",", "."))
+      : parseFloat(s.replace(/,/g, ""));
+  }
+
+  // Exactly three trailing digits after a lone separator reads as thousands.
+  if (hasComma) return parseFloat(/,\d{3}$/.test(s) ? s.replace(/,/g, "") : s.replace(",", "."));
+  if (hasDot) return parseFloat(/\.\d{3}$/.test(s) ? s.replace(/\./g, "") : s);
+
+  return parseFloat(s);
+}
+
+/** "245 km" -> { value: 245, unit: "km" } */
+function parseMetric(raw) {
+  if (!raw) return null;
+  const m = String(raw).trim().match(/^([\d.,]+)\s*(.*)$/);
+  if (!m) return null;
+  const value = parseNumberSmart(m[1]);
+  if (Number.isNaN(value)) return null;
+  return { value, unit: m[2].trim() || null };
+}
+
+/** "£37,990" -> { currency: "£", value: 37990 } */
+function parsePrice(raw) {
+  if (!raw) return null;
+  const m = String(raw).trim().match(/^([^0-9]+)\s*([\d.,]+)/);
+  if (!m) return null;
+  const value = parseNumberSmart(m[2]);
+  if (Number.isNaN(value)) return null;
+  return { currency: m[1].trim(), value: Math.round(value) };
+}
+
+/** "€102 /km" -> { value: 102, unit: "€/km" } */
+function parsePricePerRange(raw) {
+  if (!raw) return null;
+  const m = String(raw).trim().match(/^([^0-9]*)([\d.,]+)\s*\/\s*([A-Za-z]+)$/);
+  if (!m) return null;
+  const value = parseNumberSmart(m[2]);
+  if (Number.isNaN(value)) return null;
+  const currency = m[1].trim();
+  return { value, unit: (currency ? currency : "") + "/" + m[3].trim() };
+}
+
+/** "1h 30m", "1:30", "90 min" -> minutes as a bare Number. */
+function timeToMinutes(raw) {
+  if (!raw) return null;
+  const text = String(raw).trim();
+
+  let total = 0;
+  const h = text.match(/(\d+)\s*h(?:ours?)?/i);
+  if (h) total += parseInt(h[1], 10) * 60;
+  const mm = text.match(/(\d+)\s*m(?:in(?:utes)?)?/i);
+  if (mm) total += parseInt(mm[1], 10);
+  if (total > 0) return total;
+
+  const colon = text.match(/(\d+):(\d+)/);
+  if (colon) {
+    const hh = parseInt(colon[1], 10);
+    const mi = parseInt(colon[2], 10);
+    if (!Number.isNaN(hh) && !Number.isNaN(mi)) return hh * 60 + mi;
+  }
+
+  const bare = text.match(/(\d+(?:\.\d+)?)/);
+  if (bare) {
+    const v = parseFloat(bare[1]);
+    if (!Number.isNaN(v)) return Math.round(v);
+  }
+  return null;
+}
+
+/** Same idea, but returns { unit: "min", value } and assumes hours as a last resort. */
+function parseTimeToMinutes(raw) {
+  if (!raw) return { unit: "min", value: null };
+  const txt = String(raw).toLowerCase().trim();
+
+  const colon = txt.match(/(\d+)\s*[:h]\s*(\d{1,2})?/);
+  if (colon) {
+    const h = parseInt(colon[1], 10) || 0;
+    const m = parseInt(colon[2] || "0", 10) || 0;
+    return { unit: "min", value: h * 60 + m };
+  }
+
+  const hMatch = txt.match(/(\d+(?:[.,]\d+)?)\s*h/);
+  const mMatch = txt.match(/(\d+(?:[.,]\d+)?)\s*m/);
+  let total = 0;
+  let found = false;
+
+  if (hMatch) {
+    const h = parseFloat(hMatch[1].replace(",", "."));
+    if (Number.isFinite(h)) { total += h * 60; found = true; }
+  }
+  if (mMatch) {
+    const m = parseFloat(mMatch[1].replace(",", "."));
+    if (Number.isFinite(m)) { total += m; found = true; }
+  }
+  if (found) return { unit: "min", value: total };
+
+  const plain = parseFloat(txt.replace(",", "."));
+  return { unit: "min", value: Number.isFinite(plain) ? plain * 60 : null };
+}
+
+/** Label "Charge Time (0->440 km)" + value "9h45m" -> minutes plus the range. */
+function parseChargeTimeWithRange(labelRaw, valueRaw) {
+  if (!labelRaw || !valueRaw) return null;
+  const value = timeToMinutes(valueRaw);
+  if (value == null) return null;
+
+  const m = String(labelRaw).trim().match(/(\d+)\s*->\s*(\d+)\s*([A-Za-z]+)/);
+  if (!m) return { value, unit: "min", range: null };
+
+  const unit = m[3] || "km";
+  return {
+    value,
+    unit: "min",
+    range: {
+      from: { value: parseInt(m[1], 10), unit },
+      to: { value: parseInt(m[2], 10), unit },
+    },
+  };
+}
+
+/** "11 kW" -> { unit: "kW", value: 11 }. Always returns an object. */
+function parseNumberAndUnit(raw, fallbackUnit) {
+  const fallback = fallbackUnit || null;
+  if (!raw) return { unit: fallback, value: null };
+
+  const m = String(raw).trim().match(/([\d.,]+)\s*([a-zA-Z/°%]+)?/);
+  if (!m) return { unit: fallback, value: null };
+
+  const num = parseFloat(m[1].replace(",", "."));
+  return {
+    unit: m[2] || fallback,
+    value: Number.isFinite(num) ? num : null,
+  };
+}
+
+/** "230 V / 16 A / 1 phase" or "400V / 3x16A" -> voltage, current, phases. */
+function parseMaxPowerDescriptor(raw) {
+  const out = {
+    voltage: { unit: "V", value: null },
+    current: { unit: "A", value: null },
+    phases: null,
+  };
+  if (!raw) return out;
+
+  const txt = String(raw);
+
+  const v = txt.match(/(\d+(?:[.,]\d+)?)\s*V/i);
+  if (v) {
+    const n = parseFloat(v[1].replace(",", "."));
+    if (Number.isFinite(n)) out.voltage = { unit: "V", value: n };
+  }
+
+  const a = txt.match(/(\d+(?:[.,]\d+)?)\s*A/i);
+  if (a) {
+    const n = parseFloat(a[1].replace(",", "."));
+    if (Number.isFinite(n)) out.current = { unit: "A", value: n };
+  }
+
+  // "1 phase" / "3 phases" first, then infer from "3x16A".
+  const p = txt.match(/(\d+)\s*(phase|phases|φ)/i) || txt.match(/(\d+)\s*x\s*\d+\s*A/i);
+  if (p) {
+    const n = parseInt(p[1], 10);
+    if (Number.isInteger(n)) out.phases = n;
+  }
+
+  return out;
+}
+
+/** "Yes"/"No"/"No Data"/"-" -> boolean / null. Anything else passes through. */
+function normalizeTextValue(raw) {
+  if (raw == null) return null;
+  const txt = String(raw).trim();
+  if (!txt) return null;
+
+  const lower = txt.toLowerCase();
+  if (lower === "yes") return true;
+  if (lower === "no" || lower === "not available") return false;
+  if (lower === "no data" || txt === "-") return null;
+
+  return txt;
+}
 
 function absUrl(path) {
   if (!path) return null;
@@ -611,1421 +722,737 @@ function absUrl(path) {
   }
 }
 
-// Parse metrics like "245 km" or "184 Wh/km"
-function parseMetric(raw) {
-  if (!raw) return null;
-
-  const match = raw.trim().match(/^([\d.,]+)\s*(.*)$/);
-  if (!match) return null;
-
-  const value = parseFloat(match[1].replace(/,/g, ""));
-  if (isNaN(value)) return null;
-
-  const unit = match[2].trim() || null;
-  return { value, unit };
-}
-
-// Parse prices like "€31,690"
-function parsePrice(raw) {
-  if (!raw) return null;
-
-  const match = raw.trim().match(/^([^0-9]+)\s*([\d.,]+)/);
-  if (!match) return null;
-
-  const currency = match[1].trim();
-  const value = parseInt(match[2].replace(/,/g, ""), 10);
-  if (isNaN(value)) return null;
-
-  return { currency, value };
-}
-
-// Price-per-range parser, e.g. "€102 /km" → { value: 102, unit: "€/km" }
-function parsePricePerRange(raw) {
-  if (!raw) return null;
-
-  const text = raw.trim();
-  const match = text.match(/^([^0-9]*)([\d.,]+)\s*\/\s*([A-Za-z]+)$/);
-  if (!match) return null;
-
-  const currency = match[1].trim();
-  const value = parseFloat(match[2].replace(/,/g, ""));
-  if (isNaN(value)) return null;
-
-  const perUnit = match[3].trim();
-  return {
-    value,
-    unit: currency ? `${currency}/${perUnit}` : `/${perUnit}`
-  };
-}
-
-// Convert things like "1h 30m", "9h45m", "1:30", "90 min" → minutes (Number)
-function timeToMinutes(raw) {
-  if (!raw) return null;
-  const text = raw.trim();
-
-  let m;
-  let total = 0;
-
-  // "1h 30m", "1 h", "2 hours 15 min"
-  m = text.match(/(\d+)\s*h(?:ours?)?/i);
-  if (m) total += parseInt(m[1], 10) * 60;
-
-  m = text.match(/(\d+)\s*m(?:in(?:utes)?)?/i);
-  if (m) total += parseInt(m[1], 10);
-
-  if (total > 0) return total;
-
-  // "1:30"
-  m = text.match(/(\d+):(\d+)/);
-  if (m) {
-    const h = parseInt(m[1], 10);
-    const mins = parseInt(m[2], 10);
-    if (!isNaN(h) && !isNaN(mins)) return h * 60 + mins;
-  }
-
-  // Bare number → assume minutes
-  m = text.match(/(\d+(?:\.\d+)?)/);
-  if (m) {
-    const v = parseFloat(m[1]);
-    if (!isNaN(v)) return Math.round(v);
-  }
-
-  return null;
-}
-
-// label: "Charge Time (0->440 km)"
-// valueRaw: "9h45m" or "24 min"
-function parseChargeTimeWithRange(labelRaw, valueRaw) {
-  if (!labelRaw || !valueRaw) return null;
-
-  const label = labelRaw.trim();
-  const value = timeToMinutes(valueRaw);
-  if (value == null) return null;
-
-  const m = label.match(/(\d+)\s*->\s*(\d+)\s*([A-Za-z]+)/);
-  if (!m) {
-    return {
-      value,
-      unit: "min",
-      range: null
-    };
-  }
-
-  const fromVal = parseInt(m[1], 10);
-  const toVal = parseInt(m[2], 10);
-  const unit = m[3] || "km";
-
-  return {
-    value,
-    unit: "min",
-    range: {
-      from: { value: fromVal, unit },
-      to: { value: toVal, unit }
-    }
-  };
-}
-
-function parseNumberAndUnit(raw, fallbackUnit = null) {
-  if (!raw) return { unit: fallbackUnit, value: null };
-
-  const txt = String(raw).trim();
-
-  // Match "11 kW", "7.4kW", "50 km/h", "32 A", etc.
-  const m = txt.match(/([\d.,]+)\s*([a-zA-Z/°%]+)?/);
-  if (!m) return { unit: fallbackUnit, value: null };
-
-  const num = parseFloat(m[1].replace(",", "."));
-  const unit = m[2] || fallbackUnit;
-
-  return {
-    unit: unit || fallbackUnit,
-    value: Number.isFinite(num) ? num : null
-  };
-}
-
-// Example: "230 V / 16 A / 1 phase" or "400V / 3x16A"
-function parseMaxPowerDescriptor(raw) {
-  if (!raw) {
-    return {
-      voltage: { unit: "V", value: null },
-      current: { unit: "A", value: null },
-      phases: null
-    };
-  }
-
-  const txt = String(raw);
-
-  // Voltage
-  let voltage = { unit: "V", value: null };
-  const vMatch = txt.match(/(\d+(?:[.,]\d+)?)\s*V/i);
-  if (vMatch) {
-    const v = parseFloat(vMatch[1].replace(",", "."));
-    if (Number.isFinite(v)) voltage = { unit: "V", value: v };
-  }
-
-  // Current
-  let current = { unit: "A", value: null };
-  const aMatch = txt.match(/(\d+(?:[.,]\d+)?)\s*A/i);
-  if (aMatch) {
-    const a = parseFloat(aMatch[1].replace(",", "."));
-    if (Number.isFinite(a)) current = { unit: "A", value: a };
-  }
-
-  // Phases: try explicit "1 phase"/"3 phases" first
-  let phases = null;
-  const pMatch = txt.match(/(\d+)\s*(phase|phases|φ)/i);
-  if (pMatch) {
-    const p = parseInt(pMatch[1], 10);
-    if (Number.isInteger(p)) phases = p;
-  }
-
-  // Fallback: infer from "3x16A" / "1x10A"
-  if (phases == null) {
-    const xMatch = txt.match(/(\d+)\s*x\s*\d+\s*A/i);
-    if (xMatch) {
-      const p = parseInt(xMatch[1], 10);
-      if (Number.isInteger(p)) phases = p;
-    }
-  }
-
-  return { voltage, current, phases };
-}
-
-// Handle durations like "10 h 30 min", "10:30 h", "12 hours", "8 h"
-function parseTimeToMinutes(raw) {
-  if (!raw) return { unit: "min", value: null };
-
-  const txt = String(raw).toLowerCase().trim();
-
-  // Pattern like "10:30", "7:05h"
-  const colonMatch = txt.match(/(\d+)\s*[:h]\s*(\d{1,2})?/);
-  if (colonMatch) {
-    const h = parseInt(colonMatch[1], 10) || 0;
-    const m = parseInt(colonMatch[2] || "0", 10) || 0;
-    return { unit: "min", value: h * 60 + m };
-  }
-
-  // "10 h 30 min" / "10h 30m"
-  const hMatch = txt.match(/(\d+(?:[.,]\d+)?)\s*h/);
-  const mMatch = txt.match(/(\d+(?:[.,]\d+)?)\s*m/);
-
-  let totalMinutes = 0;
-  let hasSomething = false;
-
-  if (hMatch) {
-    const h = parseFloat(hMatch[1].replace(",", "."));
-    if (Number.isFinite(h)) {
-      totalMinutes += h * 60;
-      hasSomething = true;
-    }
-  }
-
-  if (mMatch) {
-    const m = parseFloat(mMatch[1].replace(",", "."));
-    if (Number.isFinite(m)) {
-      totalMinutes += m;
-      hasSomething = true;
-    }
-  }
-
-  if (hasSomething) return { unit: "min", value: totalMinutes };
-
-  // Fallback: just try to parse a plain number and assume hours
-  const plain = parseFloat(txt.replace(",", "."));
-  if (Number.isFinite(plain)) {
-    return { unit: "min", value: plain * 60 };
-  }
-
-  return { unit: "min", value: null };
-}
-
-// Convert simple "Yes"/"No"/"Not available"/"No Data"/"-" to booleans/null.
-// For anything else, return the original trimmed string.
-function normalizeTextValue(raw) {
-  if (raw == null) return null;
-  const txt = String(raw).trim();
-  if (!txt) return null;
-
-  const lower = txt.toLowerCase();
-
-  if (lower === "yes") return true;
-  if (lower === "no") return false;
-  if (lower === "not available") return false;
-  if (lower === "no data") return null;
-  if (txt === "-") return null;
-
-  return txt;
-}
-
-// Recursively collect all "unit" fields from { unit, value }-style objects
+/** Collects every `unit` string from nested { unit, value } objects. */
 function collectUnits(obj, set) {
   if (!obj || typeof obj !== "object") return;
-
-  // If it looks like a metric object, collect its unit
   if (
     Object.prototype.hasOwnProperty.call(obj, "unit") &&
-    Object.prototype.hasOwnProperty.call(obj, "value")
+    Object.prototype.hasOwnProperty.call(obj, "value") &&
+    typeof obj.unit === "string" &&
+    obj.unit
   ) {
-    const u = obj.unit;
-    if (u && typeof u === "string") {
-      set.add(u.trim());
-    }
+    set.add(obj.unit.trim());
   }
-
-  // Recurse into children
   for (const key in obj) {
     if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
-    const val = obj[key];
-    if (val && typeof val === "object") {
-      collectUnits(val, set);
-    }
+    if (obj[key] && typeof obj[key] === "object") collectUnits(obj[key], set);
   }
 }
 
-// ----- Meta / Open Graph info -----
+// ---------- table reading ----------
+//
+// Every section on the page is a two-column table: a label cell and the value
+// cell next to it. This factory replaced seven near-identical copies of the
+// same lookup. Some labels repeat across sub-sections (there are two
+// "Charge Time" rows, home then fast), hence the optional index.
+
+function makeRowReader($scope) {
+  function labels(re) {
+    return $scope.find("td").filter(function () {
+      return re.test($(this).text());
+    });
+  }
+
+  function cell(re, index) {
+    const $l = labels(re);
+    if (!$l.length) return null;
+    const $label = typeof index === "number" ? $l.eq(index) : $l.first();
+    if (!$label.length) return null;
+    const $value = $label.next("td");
+    return { $label: $label, $value: $value.length ? $value : null };
+  }
+
+  return {
+    labels: labels,
+
+    /** Trimmed text of the value cell, or null. */
+    text: function (re, index) {
+      const c = cell(re, index);
+      if (!c || !c.$value) return null;
+      return c.$value.text().trim();
+    },
+
+    /** { label, value } — needed where the label carries data, e.g. "(0->440 km)". */
+    pair: function (re, index) {
+      const c = cell(re, index);
+      if (!c) return null;
+      return {
+        label: c.$label.text().trim(),
+        value: c.$value ? c.$value.text().trim() : null,
+      };
+    },
+
+    /** Value cell parsed as { value, unit }. */
+    metric: function (re, index) {
+      const c = cell(re, index);
+      if (!c || !c.$value) return null;
+      return parseMetric(c.$value.text());
+    },
+  };
+}
+
+// ---------- section extractors ----------
+
 function extractMetaInfo() {
-  // Basic meta description
-  const description =
-    $('meta[name="description"]').attr("content") || null;
+  const attr = function (sel) { return $(sel).attr("content") || null; };
 
-  // Open Graph
-  const og_title =
-    $('meta[property="og:title"]').attr("content") || null;
-  const og_description =
-    $('meta[property="og:description"]').attr("content") || null;
-  const og_image_raw =
-    $('meta[property="og:image"]').attr("content") || null;
-  const og_url_raw =
-    $('meta[property="og:url"]').attr("content") || null;
-  const og_type =
-    $('meta[property="og:type"]').attr("content") || null;
-  const og_site_name =
-    $('meta[property="og:site_name"]').attr("content") || null;
-
-  // Twitter
-  const twitter_card =
-    $('meta[name="twitter:card"]').attr("content") || null;
-  const twitter_title =
-    $('meta[name="twitter:title"]').attr("content") || null;
-  const twitter_description =
-    $('meta[name="twitter:description"]').attr("content") || null;
-  const twitter_image_raw =
+  const ogImage = attr('meta[property="og:image"]');
+  const ogUrl = attr('meta[property="og:url"]');
+  const twImage =
     $('meta[name="twitter:image"], meta[name="twitter:image:src"]').attr("content") || null;
 
-  // Normalise URLs via absUrl helper
-  const og_image   = og_image_raw ? absUrl(og_image_raw) : null;
-  const og_url     = og_url_raw ? absUrl(og_url_raw) : null;
-  const twitter_image = twitter_image_raw ? absUrl(twitter_image_raw) : null;
-
   const meta = {
-    description,
-    og_title,
-    og_description,
-    og_image,
-    og_url,
-    og_type,
-    og_site_name,
-    twitter_card,
-    twitter_title,
-    twitter_description,
-    twitter_image
+    description: attr('meta[name="description"]'),
+    og_title: attr('meta[property="og:title"]'),
+    og_description: attr('meta[property="og:description"]'),
+    og_image: ogImage ? absUrl(ogImage) : null,
+    og_url: ogUrl ? absUrl(ogUrl) : null,
+    og_type: attr('meta[property="og:type"]'),
+    og_site_name: attr('meta[property="og:site_name"]'),
+    twitter_card: attr('meta[name="twitter:card"]'),
+    twitter_title: attr('meta[name="twitter:title"]'),
+    twitter_description: attr('meta[name="twitter:description"]'),
+    twitter_image: twImage ? absUrl(twImage) : null,
   };
 
-  // If all fields are null/undefined, return null instead of an empty object
-  const hasAny = Object.values(meta).some((v) => v != null && v !== "");
+  const hasAny = Object.keys(meta).some(function (k) {
+    return meta[k] != null && meta[k] !== "";
+  });
   return hasAny ? meta : null;
 }
 
-//
-// ---------- Section extractors ----------
-//
-
-// ----- Real Range -----
 function extractRealRange() {
   const $range = $("#range");
   if (!$range.length) return null;
+  const row = makeRowReader($range);
 
-  const hText = $range.find("h2").text().trim(); // e.g. "315 - 630 km"
   let headline = null;
-
-  const hMatch = hText.match(/([\d.,]+)\s*[-–]\s*([\d.,]+)\s*([A-Za-z/]+)?/);
-  if (hMatch) {
-    const fromNum = hMatch[1];
-    const toNum = hMatch[2];
-    const unit = hMatch[3] || "km";
-
-    headline = {
-      from: parseMetric(`${fromNum} ${unit}`),
-      to: parseMetric(`${toNum} ${unit}`)
-    };
+  const h = $range.find("h2").text().trim().match(/([\d.,]+)\s*[-–]\s*([\d.,]+)\s*([A-Za-z/]+)?/);
+  if (h) {
+    const unit = h[3] || "km";
+    headline = { from: parseMetric(h[1] + " " + unit), to: parseMetric(h[2] + " " + unit) };
   }
-
-  function metricFromRow(labelRegex) {
-    const $labelCell = $range
-      .find("td")
-      .filter(function () {
-        return labelRegex.test($(this).text());
-      })
-      .first();
-
-    if (!$labelCell.length) return null;
-
-    const $valCell = $labelCell.next("td");
-    if (!$valCell.length) return null;
-
-    return parseMetric($valCell.text());
-  }
-
-  const cold = {
-    city: metricFromRow(/City.*Cold.*Weather/i),
-    highway: metricFromRow(/Highway.*Cold.*Weather/i),
-    combined: metricFromRow(/Combined.*Cold.*Weather/i)
-  };
-
-  const mild = {
-    city: metricFromRow(/City.*Mild.*Weather/i),
-    highway: metricFromRow(/Highway.*Mild.*Weather/i),
-    combined: metricFromRow(/Combined.*Mild.*Weather/i)
-  };
 
   return {
-    headline,
-    cold_weather: cold,
-    mild_weather: mild,
-    note: "Indication of real-world range in several situations. Cold weather: 'worst-case' based on -10°C and use of heating. Mild weather: 'best-case' based on 23°C and no use of A/C. For 'Highway' figures a constant speed of 110 km/h is assumed. The actual range will depend on speed, style of driving, weather and route conditions."
+    headline: headline,
+    cold_weather: {
+      city: row.metric(/City.*Cold.*Weather/i),
+      highway: row.metric(/Highway.*Cold.*Weather/i),
+      combined: row.metric(/Combined.*Cold.*Weather/i),
+    },
+    mild_weather: {
+      city: row.metric(/City.*Mild.*Weather/i),
+      highway: row.metric(/Highway.*Mild.*Weather/i),
+      combined: row.metric(/Combined.*Mild.*Weather/i),
+    },
+    note: "Indication of real-world range in several situations. Cold weather: 'worst-case' based on -10°C and use of heating. Mild weather: 'best-case' based on 23°C and no use of A/C. For 'Highway' figures a constant speed of 110 km/h is assumed. The actual range will depend on speed, style of driving, weather and route conditions.",
   };
 }
 
-// ----- Distance Suitability -----
 function extractDistanceSuitability() {
   const $ld = $("#longdistance");
   if (!$ld.length) return null;
+  const row = makeRowReader($ld);
 
-  function numberFromRow(labelRegex, matchIndex) {
-    const $labels = $ld
-      .find("td")
-      .filter(function () {
-        return labelRegex.test($(this).text());
-      });
-    if (!$labels.length) return null;
-
-    const $label = matchIndex != null ? $labels.eq(matchIndex) : $labels.first();
-    const $val = $label.next("td");
-    if (!$val.length) return null;
-
-    const txt = $val.text();
+  // "Charging Stop" appears twice: once as a distance, once as a duration.
+  function distance(re, index) {
+    const txt = row.text(re, index);
+    if (txt == null) return null;
     const m = txt.match(/[\d.,]+/);
     if (!m) return null;
-    const num = parseFloat(m[0].replace(/,/g, ""));
-    return isNaN(num) ? null : num;
+    const n = parseNumberSmart(m[0]);
+    return Number.isNaN(n) ? null : { value: n, unit: "km" };
   }
 
-  function minutesFromRow(labelRegex, matchIndex) {
-    const $labels = $ld
-      .find("td")
-      .filter(function () {
-        return labelRegex.test($(this).text());
-      });
-    if (!$labels.length) return null;
-
-    const $label = matchIndex != null ? $labels.eq(matchIndex) : $labels.first();
-    const $val = $label.next("td");
-    if (!$val.length) return null;
-
-    const mins = timeToMinutes($val.text());
-    return typeof mins === "number" ? mins : null;
+  function duration(re, index) {
+    const txt = row.text(re, index);
+    if (txt == null) return null;
+    const mins = timeToMinutes(txt);
+    return typeof mins === "number" ? { value: mins, unit: "min" } : null;
   }
-
-  function distanceMetric(labelRegex, matchIndex) {
-    const v = numberFromRow(labelRegex, matchIndex);
-    if (v == null) return null;
-    return { value: v, unit: "km" };
-  }
-
-  function durationMetric(labelRegex, matchIndex) {
-    const v = minutesFromRow(labelRegex, matchIndex);
-    if (v == null) return null;
-    return { value: v, unit: "min" };
-  }
-
-  const distance = {
-    first_leg: distanceMetric(/First.*Leg.*Distance/i),
-    charging_stop: distanceMetric(/Charging.*Stop/i, 0),
-    second_leg: distanceMetric(/Second.*Leg.*Distance/i),
-    total: distanceMetric(/Total.*Distance/i)
-  };
-
-  const duration = {
-    first_leg: durationMetric(/First.*Leg.*Duration/i),
-    charging_stop: durationMetric(/Charging.*Stop/i, 1),
-    second_leg: durationMetric(/Second.*Leg.*Duration/i),
-    total: durationMetric(/Total.*Duration/i)
-  };
-
-  const ratingText =
-    $ld.find(".rating-display").text().trim().replace(/\s+/g, "") || null;
 
   return {
-    distance,
-    duration,
-    rating: ratingText,
-    note: "The 'long distance suitability' is a 5-star rating that indicates how suitable a vehicle is for long trips. The rating is based on the 1-Stop Range: the total distance a vehicle can cover with one charging stop of 15 minutes."
+    distance: {
+      first_leg: distance(/First.*Leg.*Distance/i),
+      charging_stop: distance(/Charging.*Stop/i, 0),
+      second_leg: distance(/Second.*Leg.*Distance/i),
+      total: distance(/Total.*Distance/i),
+    },
+    duration: {
+      first_leg: duration(/First.*Leg.*Duration/i),
+      charging_stop: duration(/Charging.*Stop/i, 1),
+      second_leg: duration(/Second.*Leg.*Duration/i),
+      total: duration(/Total.*Duration/i),
+    },
+    rating: $ld.find(".rating-display").text().trim().replace(/\s+/g, "") || null,
+    note: "The 'long distance suitability' is a 5-star rating that indicates how suitable a vehicle is for long trips. The rating is based on the 1-Stop Range: the total distance a vehicle can cover with one charging stop of 15 minutes.",
   };
 }
 
-// ----- Battery -----
 function extractBattery() {
   const $batt = $("#battery");
   if (!$batt.length) return null;
-
-  function rowText(labelRegex) {
-    const $labelTd = $batt
-      .find("td")
-      .filter(function () {
-        return labelRegex.test($(this).text());
-      })
-      .first();
-
-    if (!$labelTd.length) return null;
-
-    const $valTd = $labelTd.next("td");
-    return $valTd.length ? $valTd.text().trim() : null;
-  }
-
-  const nominal_capacity = parseMetric(rowText(/Nominal.*Capacity/i));
-  const useable_capacity = parseMetric(rowText(/Useable.*Capacity/i));
-
-  const architecture = parseMetric(rowText(/Architecture/i));
-  const warranty_period = parseMetric(rowText(/Warranty.*Period/i));
-  const warranty_mileage = parseMetric(rowText(/Warranty.*Mileage/i));
-  const nominal_voltage = parseMetric(rowText(/Nominal.*Voltage/i));
+  const row = makeRowReader($batt);
 
   let nb_of_cells = null;
-  const nbTxt = rowText(/Number.*of.*Cells/i);
+  const nbTxt = row.text(/Number.*of.*Cells/i);
   if (nbTxt) {
     const m = nbTxt.match(/\d+/);
     if (m) nb_of_cells = parseInt(m[0], 10);
   }
 
   return {
-    nominal_capacity,
-    useable_capacity,
-    type: normalizeTextValue(rowText(/Battery.*Type/i)),
-    cathode_material: normalizeTextValue(rowText(/Cathode.*Material/i)),
-    nb_of_cells,
-    pack_configuration: normalizeTextValue(rowText(/Pack.*Configuration/i)),
-    architecture,
-    nominal_voltage,
-    warranty_period,
-    form_factor: normalizeTextValue(rowText(/Form.*Factor/i)),
-    warranty_mileage,
-    name_ref: normalizeTextValue(rowText(/Name.*Reference/i))
+    nominal_capacity: row.metric(/Nominal.*Capacity/i),
+    useable_capacity: row.metric(/Useable.*Capacity/i),
+    type: normalizeTextValue(row.text(/Battery.*Type/i)),
+    cathode_material: normalizeTextValue(row.text(/Cathode.*Material/i)),
+    nb_of_cells: nb_of_cells,
+    pack_configuration: normalizeTextValue(row.text(/Pack.*Configuration/i)),
+    architecture: row.metric(/Architecture/i),
+    nominal_voltage: row.metric(/Nominal.*Voltage/i),
+    warranty_period: row.metric(/Warranty.*Period/i),
+    form_factor: normalizeTextValue(row.text(/Form.*Factor/i)),
+    warranty_mileage: row.metric(/Warranty.*Mileage/i),
+    name_ref: normalizeTextValue(row.text(/Name.*Reference/i)),
   };
 }
 
-// ----- Charging -----
 function extractCharging() {
   const $ch = $("#charging");
   if (!$ch.length) return null;
+  const row = makeRowReader($ch);
 
-  function rowPair(labelRegex, index) {
-    const $labels = $ch
-      .find("td")
-      .filter(function () {
-        return labelRegex.test($(this).text());
-      });
-    if (!$labels.length) return null;
-
-    const $labelTd =
-      typeof index === "number" ? $labels.eq(index) : $labels.first();
-    if (!$labelTd.length) return null;
-
-    const $valTd = $labelTd.next("td");
-    return {
-      label: $labelTd.text().trim(),
-      value: $valTd.length ? $valTd.text().trim() : null
-    };
-  }
-
-  function rowValue(labelRegex, index) {
-    const pair = rowPair(labelRegex, index);
-    return pair ? pair.value : null;
-  }
-
-  const homeCt = rowPair(/Charge\s*Time/i, 0);
-  const fastCt = rowPair(/Charge\s*Time/i, 1);
-
-  const home_charge_port_raw = rowValue(/Charge\s*Port/i, 0);
-  const home_port_location_raw = rowValue(/Port\s*Location/i, 0);
-
-  const fast_charge_port_raw = rowValue(/Charge\s*Port/i, 1);
-  const fast_port_location_raw = rowValue(/Port\s*Location/i, 1);
-
-  const autocharge_supported_raw = rowValue(/Autocharge\s*Supported/i);
-  const plug_charge_supported_raw = rowValue(/Plug.*Charge.*Supported/i);
-  const plug_supported_protocol_raw = rowValue(/Supported.*Protocol/i);
-  const precond_possible_raw = rowValue(/Precon.*Possible/i);
-  const auto_using_navigation_raw = rowValue(/Auto.*using.*Navig/i);
+  // Index 0 is home/destination, index 1 is fast charging.
+  const homeCt = row.pair(/Charge\s*Time/i, 0);
+  const fastCt = row.pair(/Charge\s*Time/i, 1);
 
   return {
     home_destination: {
-      charge_port: normalizeTextValue(home_charge_port_raw),
-      charge_time: homeCt
-        ? parseChargeTimeWithRange(homeCt.label, homeCt.value)
-        : null,
-      port_location: normalizeTextValue(home_port_location_raw),
-      charge_speed: parseMetric(rowValue(/Charge\s*Speed/i, 0)),
-      charge_power: parseMetric(rowValue(/Charge\s*Power/i, 0))
+      charge_port: normalizeTextValue(row.text(/Charge\s*Port/i, 0)),
+      charge_time: homeCt ? parseChargeTimeWithRange(homeCt.label, homeCt.value) : null,
+      port_location: normalizeTextValue(row.text(/Port\s*Location/i, 0)),
+      charge_speed: row.metric(/Charge\s*Speed/i, 0),
+      charge_power: row.metric(/Charge\s*Power/i, 0),
     },
-
     fast_charging: {
-      charge_port: normalizeTextValue(fast_charge_port_raw),
-      charge_time: fastCt
-        ? parseChargeTimeWithRange(fastCt.label, fastCt.value)
-        : null,
-      port_location: normalizeTextValue(fast_port_location_raw),
-      charge_speed: parseMetric(rowValue(/Charge\s*Speed/i, 1)),
-      charge_power_max: parseMetric(rowValue(/Charge\s*Power/i, 1)),
-      charge_power_10_80: parseMetric(rowValue(/Charge\s*Power/i, 2)),
-      autocharge_supported: normalizeTextValue(autocharge_supported_raw)
+      charge_port: normalizeTextValue(row.text(/Charge\s*Port/i, 1)),
+      charge_time: fastCt ? parseChargeTimeWithRange(fastCt.label, fastCt.value) : null,
+      port_location: normalizeTextValue(row.text(/Port\s*Location/i, 1)),
+      charge_speed: row.metric(/Charge\s*Speed/i, 1),
+      charge_power_max: row.metric(/Charge\s*Power/i, 1),
+      charge_power_10_80: row.metric(/Charge\s*Power/i, 2),
+      autocharge_supported: normalizeTextValue(row.text(/Autocharge\s*Supported/i)),
     },
-
     plug_charge: {
-      plug_charge_supported: normalizeTextValue(plug_charge_supported_raw),
-      supported_protocol: normalizeTextValue(plug_supported_protocol_raw)
+      plug_charge_supported: normalizeTextValue(row.text(/Plug.*Charge.*Supported/i)),
+      supported_protocol: normalizeTextValue(row.text(/Supported.*Protocol/i)),
     },
-
     battery_preconditioning: {
-      precond_possible: normalizeTextValue(precond_possible_raw),
-      auto_using_navigation: normalizeTextValue(auto_using_navigation_raw)
-    }
+      precond_possible: normalizeTextValue(row.text(/Precon.*Possible/i)),
+      auto_using_navigation: normalizeTextValue(row.text(/Auto.*using.*Navig/i)),
+    },
   };
 }
 
-// ----- Performance -----
 function extractPerformance() {
   const $perf = $("#performance");
   if (!$perf.length) return null;
+  const row = makeRowReader($perf);
 
-  function rowText(labelRegex) {
-    const $labelTd = $perf
-      .find("td")
-      .filter(function () {
-        return labelRegex.test($(this).text());
-      })
-      .first();
-
-    if (!$labelTd.length) return null;
-
-    const $valTd = $labelTd.next("td");
-    return $valTd.length ? $valTd.text().trim() : null;
-  }
-
-  const acceleration_0_100 = parseMetric(rowText(/Acceleration.*100/i));
-  const top_speed = parseMetric(rowText(/Top.*Speed/i));
-
-  const powerRaw = rowText(/Total.*Power/i);
+  // "Total Power" holds both units in one cell: "225 kW (306 PS)".
+  const powerRaw = row.text(/Total.*Power/i);
   let power_kw = null;
   let power_ps = null;
 
   if (powerRaw) {
-    const kwMatch = powerRaw.match(/([\d.,]+)\s*kW/i);
-    if (kwMatch) {
-      const v = parseFloat(kwMatch[1].replace(/,/g, ""));
-      if (!isNaN(v)) {
-        power_kw = { value: v, unit: "kW" };
-      }
+    const kw = powerRaw.match(/([\d.,]+)\s*kW/i);
+    if (kw) {
+      const v = parseNumberSmart(kw[1]);
+      if (!Number.isNaN(v)) power_kw = { value: v, unit: "kW" };
     }
-
-    const psMatch = powerRaw.match(/([\d.,]+)\s*PS/i);
-    if (psMatch) {
-      const v = parseFloat(psMatch[1].replace(/,/g, ""));
-      if (!isNaN(v)) {
-        power_ps = { value: v, unit: "PS" };
-      }
+    const ps = powerRaw.match(/([\d.,]+)\s*PS/i);
+    if (ps) {
+      const v = parseNumberSmart(ps[1]);
+      if (!Number.isNaN(v)) power_ps = { value: v, unit: "PS" };
     }
   }
 
-  const torque = parseMetric(rowText(/Total.*Torque/i));
-  const drive_type = rowText(/Drive/i) || null;
-
   return {
-    acceleration_0_100,
-    top_speed,
-    power: {
-      kw: power_kw,
-      ps: power_ps
-    },
-    torque,
-    drive_type
+    acceleration_0_100: row.metric(/Acceleration.*100/i),
+    top_speed: row.metric(/Top.*Speed/i),
+    power: { kw: power_kw, ps: power_ps },
+    torque: row.metric(/Total.*Torque/i),
+    drive_type: row.text(/Drive/i) || null,
   };
 }
 
-// ---- V2X / Bidirectional Charging ----
 function extractV2X() {
-  const $v2x = $('#v2x');
+  const $v2x = $("#v2x");
   if (!$v2x.length) return null;
+  const row = makeRowReader($v2x);
 
-  // Simple "label → next <td>" helper
-  function rowText(labelRegex) {
-    const $labelTd = $v2x.find('td').filter(function () {
-      return labelRegex.test($(this).text());
-    }).first();
-
-    if (!$labelTd.length) return null;
-
-    const $valTd = $labelTd.next('td');
-    return $valTd.length ? $valTd.text().trim() : null;
+  // The max output power sits on the row BELOW its "… Supported" label,
+  // in the second cell — not in the cell next to the label.
+  function powerBelow(re) {
+    const $l = row.labels(re).first();
+    if (!$l.length) return null;
+    const $next = $l.closest("tr").next("tr");
+    if (!$next.length) return null;
+    const $cell = $next.find("td").eq(1);
+    if (!$cell.length) return null;
+    return $cell.text().trim() || null;
   }
-
-  // For patterns like:
-  //   row 1: "V2L Supported" | "Yes"
-  //   row 2: "Max Output Power" | "3.7 kW"
-  // → we want the "3.7 kW" from the row *below* the label row, second <td>
-  function powerBelow(labelRegex) {
-    const $labelTd = $v2x.find('td').filter(function () {
-      return labelRegex.test($(this).text());
-    }).first();
-
-    if (!$labelTd.length) return null;
-
-    const $nextRow = $labelTd.closest('tr').next('tr');
-    if (!$nextRow.length) return null;
-
-    const $valTd = $nextRow.find('td').eq(1);
-    if (!$valTd.length) return null;
-
-    const txt = $valTd.text().trim();
-    return txt || null;
-  }
-
-  // ---- Vehicle to Load (V2L) ----
-  const v2lSupportedRaw = rowText(/V2L.*Supported/i);
-  const v2lPowerRaw     = powerBelow(/V2L.*Supported/i);
-
-  const vehicle_to_load = {
-    supported: normalizeTextValue(v2lSupportedRaw),
-    max_output_power: parseMetric(v2lPowerRaw),
-    exterior_outlets: normalizeTextValue(rowText(/Exterior.*Outlet/i)),
-    interior_outlets: normalizeTextValue(rowText(/Interior.*Outlet/i))
-  };
-
-  // ---- Vehicle to Home (V2H) ----
-  const v2hAcSupportedRaw = rowText(/V2H.*via.*AC.*Supported/i);
-  const v2hAcPowerRaw     = powerBelow(/V2H.*via.*AC.*Supported/i);
-
-  const v2hDcSupportedRaw = rowText(/V2H.*via.*DC.*Supported/i);
-  const v2hDcPowerRaw     = powerBelow(/V2H.*via.*DC.*Supported/i);
-
-  const vehicle_to_home = {
-    ac_supported: normalizeTextValue(v2hAcSupportedRaw),
-    ac_max_output_power: parseMetric(v2hAcPowerRaw),
-    dc_supported: normalizeTextValue(v2hDcSupportedRaw),
-    dc_max_output_power: parseMetric(v2hDcPowerRaw)
-  };
-
-  // ---- Vehicle to Grid (V2G) ----
-  const v2gAcSupportedRaw = rowText(/V2G.*via.*AC.*Supported/i);
-  const v2gAcPowerRaw     = powerBelow(/V2G.*via.*AC.*Supported/i);
-
-  const v2gDcSupportedRaw = rowText(/V2G.*via.*DC.*Supported/i);
-  const v2gDcPowerRaw     = powerBelow(/V2G.*via.*DC.*Supported/i);
-
-  const vehicle_to_grid = {
-    ac_supported: normalizeTextValue(v2gAcSupportedRaw),
-    ac_max_output_power: parseMetric(v2gAcPowerRaw),
-    dc_supported: normalizeTextValue(v2gDcSupportedRaw),
-    dc_max_output_power: parseMetric(v2gDcPowerRaw)
-  };
 
   return {
-    vehicle_to_load,
-    vehicle_to_home,
-    vehicle_to_grid
+    vehicle_to_load: {
+      supported: normalizeTextValue(row.text(/V2L.*Supported/i)),
+      max_output_power: parseMetric(powerBelow(/V2L.*Supported/i)),
+      exterior_outlets: normalizeTextValue(row.text(/Exterior.*Outlet/i)),
+      interior_outlets: normalizeTextValue(row.text(/Interior.*Outlet/i)),
+    },
+    vehicle_to_home: {
+      ac_supported: normalizeTextValue(row.text(/V2H.*via.*AC.*Supported/i)),
+      ac_max_output_power: parseMetric(powerBelow(/V2H.*via.*AC.*Supported/i)),
+      dc_supported: normalizeTextValue(row.text(/V2H.*via.*DC.*Supported/i)),
+      dc_max_output_power: parseMetric(powerBelow(/V2H.*via.*DC.*Supported/i)),
+    },
+    vehicle_to_grid: {
+      ac_supported: normalizeTextValue(row.text(/V2G.*via.*AC.*Supported/i)),
+      ac_max_output_power: parseMetric(powerBelow(/V2G.*via.*AC.*Supported/i)),
+      dc_supported: normalizeTextValue(row.text(/V2G.*via.*DC.*Supported/i)),
+      dc_max_output_power: parseMetric(powerBelow(/V2G.*via.*DC.*Supported/i)),
+    },
   };
 }
 
-// ---- Energy Consumption ----
 function extractEnergyConsumption() {
-  const $eff = $('#efficiency');
+  const $eff = $("#efficiency");
   if (!$eff.length) return null;
+  const row = makeRowReader($eff);
 
-  // Generic: for a list of label <td>s (same label in multiple groups),
-  // get the metric from the row at given index.
-  function metricFromList($labels, index) {
+  // The same labels repeat once per rating block: EVDB real range, then the
+  // optional WLTP TEL and TEH blocks. Position selects the block.
+  const ranges = row.labels(/Range/i);
+  const cons = row.labels(/Vehicle.*Consumption/i);
+  const rated = row.labels(/Rated.*Consumption/i);
+  const co2 = row.labels(/CO2.*Emissions/i);
+  const fuelEq = row.labels(/Vehicle.*Fuel.*Equivalent/i);
+
+  function at($labels, index) {
     if (!$labels.length || index >= $labels.length) return null;
-
-    const $labelTd = $labels.eq(index);
-    const $valTd = $labelTd.next('td');
-    if (!$valTd.length) return null;
-
-    return parseMetric($valTd.text());
+    const $value = $labels.eq(index).next("td");
+    return $value.length ? parseMetric($value.text()) : null;
   }
 
-  // Collect label cells by type
-  const $rangeTds      = $eff.find('td').filter(function () {
-    return /Range/i.test($(this).text());
-  });
-  const $vehConsTds    = $eff.find('td').filter(function () {
-    return /Vehicle.*Consumption/i.test($(this).text());
-  });
-  const $ratedConsTds  = $eff.find('td').filter(function () {
-    return /Rated.*Consumption/i.test($(this).text());
-  });
-  const $co2Tds        = $eff.find('td').filter(function () {
-    return /CO2.*Emissions/i.test($(this).text());
-  });
-  const $vehFuelEqTds  = $eff.find('td').filter(function () {
-    return /Vehicle.*Fuel.*Equivalent/i.test($(this).text());
-  });
-
-  // --- EVDB real range block (first group, index 0) ---
-  const evdb_real_range = {
-    // "610 km"
-    range:                   metricFromList($rangeTds, 0),
-    // "178 Wh/km"
-    vehicle_consumption:     metricFromList($vehConsTds, 0),
-    // "0 g/km"
-    co2_emissions:           metricFromList($co2Tds, 0),
-    // "2.0 l/100km"
-    vehicle_fuel_equivalent: metricFromList($vehFuelEqTds, 0)
-  };
-
-  // --- Optional WLTP TEL (second group, index 1) ---
-  let wltp_ratings_tel = null;
-  if ($rangeTds.length > 1) {
-    wltp_ratings_tel = {
-      range:                 metricFromList($rangeTds, 1),
-      vehicle_consumption:   metricFromList($vehConsTds, 1),
-      rated_consumption:     metricFromList($ratedConsTds, 0),
-      co2_emissions:         metricFromList($co2Tds, 1)
-    };
-  }
-
-  // --- Optional WLTP TEH (third group, index 2) ---
-  let wltp_ratings_teh = null;
-  if ($rangeTds.length > 2) {
-    wltp_ratings_teh = {
-      range:                 metricFromList($rangeTds, 2),
-      vehicle_consumption:   metricFromList($vehConsTds, 2),
-      co2_emissions:         metricFromList($co2Tds, 2)
-    };
-  }
-
-  return {
-    evdb_real_range,
+  const out = {
+    evdb_real_range: {
+      range: at(ranges, 0),
+      vehicle_consumption: at(cons, 0),
+      co2_emissions: at(co2, 0),
+      vehicle_fuel_equivalent: at(fuelEq, 0),
+    },
     note: "TEL = Test Energy Low | TEH = Test Energy High. Rated = official figures as published by manufacturer. Rated consumption and fuel equivalency figures include charging losses. Vehicle = calculated battery energy consumption used by the vehicle for propulsion and on-board systems.",
-    ...(wltp_ratings_tel ? { wltp_ratings_tel } : {}),
-    ...(wltp_ratings_teh ? { wltp_ratings_teh } : {})
   };
-}
 
-// ---- Real Energy Consumption ----
-function extractRealEnergyConsumption() {
-  const $sec = $('#real-consumption');
-  if (!$sec.length) return null;
-
-  // Generic: metric from table row matching a label
-  function metricFromRow(labelRegex) {
-    const $labelTd = $sec.find('td').filter(function () {
-      return labelRegex.test($(this).text());
-    }).first();
-
-    if (!$labelTd.length) return null;
-
-    const $valTd = $labelTd.next('td');
-    if (!$valTd.length) return null;
-
-    return parseMetric($valTd.text());
+  if (ranges.length > 1) {
+    out.wltp_ratings_tel = {
+      range: at(ranges, 1),
+      vehicle_consumption: at(cons, 1),
+      rated_consumption: at(rated, 0),
+      co2_emissions: at(co2, 1),
+    };
   }
 
-  const cold_weather = {
-    // becomes { value: 186, unit: 'Wh/km' } etc.
-    city:     metricFromRow(/City.*Cold.*Weather/i),
-    highway:  metricFromRow(/Highway.*Cold.*Weather/i),
-    combined: metricFromRow(/Combined.*Cold.*Weather/i)
-  };
+  if (ranges.length > 2) {
+    out.wltp_ratings_teh = {
+      range: at(ranges, 2),
+      vehicle_consumption: at(cons, 2),
+      co2_emissions: at(co2, 2),
+    };
+  }
 
-  const mild_weather = {
-    city:     metricFromRow(/City.*Mild.*Weather/i),
-    highway:  metricFromRow(/Highway.*Mild.*Weather/i),
-    combined: metricFromRow(/Combined.*Mild.*Weather/i)
-  };
+  return out;
+}
 
-  // Headline like "125 - 247 Wh/km" → from_whkm / to_whkm as metric objects
-  const hText = $sec.find('h2').text().trim();
+function extractRealEnergyConsumption() {
+  const $sec = $("#real-consumption");
+  if (!$sec.length) return null;
+  const row = makeRowReader($sec);
+
   let from = null;
-  let to   = null;
-
-  const hMatch = hText.match(/([\d.,]+)\s*[-–]\s*([\d.,]+)\s*([A-Za-z/]+)?/);
-  if (hMatch) {
-    const fromNum = hMatch[1];
-    const toNum   = hMatch[2];
-    const unit    = hMatch[3] || 'Wh/km';
-
-    from = parseMetric(`${fromNum} ${unit}`);
-    to   = parseMetric(`${toNum} ${unit}`);
+  let to = null;
+  const h = $sec.find("h2").text().trim().match(/([\d.,]+)\s*[-–]\s*([\d.,]+)\s*([A-Za-z/]+)?/);
+  if (h) {
+    const unit = h[3] || "Wh/km";
+    from = parseMetric(h[1] + " " + unit);
+    to = parseMetric(h[2] + " " + unit);
   }
 
   return {
-    cold_weather,
-    mild_weather,
-    from,
-    to,
-    note: "Indication of real-world energy use in several situations. Cold weather: 'worst-case' based on -10°C and use of heating. Mild weather: 'best-case' based on 23°C and no use of A/C. For 'Highway' figures a constant speed of 110 km/h is assumed. The energy use will depend on speed, style of driving, climate and route conditions."
+    cold_weather: {
+      city: row.metric(/City.*Cold.*Weather/i),
+      highway: row.metric(/Highway.*Cold.*Weather/i),
+      combined: row.metric(/Combined.*Cold.*Weather/i),
+    },
+    mild_weather: {
+      city: row.metric(/City.*Mild.*Weather/i),
+      highway: row.metric(/Highway.*Mild.*Weather/i),
+      combined: row.metric(/Combined.*Mild.*Weather/i),
+    },
+    from: from,
+    to: to,
+    note: "Indication of real-world energy use in several situations. Cold weather: 'worst-case' based on -10°C and use of heating. Mild weather: 'best-case' based on 23°C and no use of A/C. For 'Highway' figures a constant speed of 110 km/h is assumed. The energy use will depend on speed, style of driving, climate and route conditions.",
   };
 }
 
-// ----- Dimensions & Weight -----
 function extractDimensionsWeight() {
   const $dim = $("#dimensions");
   if (!$dim.length) return null;
+  const row = makeRowReader($dim);
 
-  // Extract {value, unit} from a row
-  function metricFromRow(labelRegex) {
-    const $labelTd = $dim
-      .find("td")
-      .filter(function () {
-        return labelRegex.test($(this).text());
-      })
-      .first();
-
-    if (!$labelTd.length) return null;
-
-    const $valTd = $labelTd.next("td");
-    if (!$valTd.length) return null;
-
-    const raw = $valTd.text().trim();
+  // Deliberately NOT row.metric(): this section takes only the leading unit
+  // token ([A-Za-z/]+) rather than the rest of the cell, so a value like
+  // "1,823 kg (EU)" yields unit "kg", not "kg (EU)".
+  function dim(re) {
+    const raw = row.text(re);
     if (!raw) return null;
-
-    // Extract number and unit
     const m = raw.match(/^([\d.,]+)\s*([A-Za-z/]+)?/);
     if (!m) return null;
-
-    const value = parseFloat(m[1].replace(/,/g, ""));
-    if (isNaN(value)) return null;
-
-    const unit = m[2] ? m[2].trim() : null;
-
-    return { value, unit };
+    const value = parseNumberSmart(m[1]);
+    if (Number.isNaN(value)) return null;
+    return { value: value, unit: m[2] ? m[2].trim() : null };
   }
 
   return {
-    length:                    metricFromRow(/Length/i),
-    width:                     metricFromRow(/Width(?!.*mirrors)/i),
-    width_with_mirrors:        metricFromRow(/Width.*mirrors/i),
-    height:                    metricFromRow(/Height/i),
-    wheelbase:                 metricFromRow(/Wheelbase/i),
-    weight_unladen_eu:         metricFromRow(/Weight.*Unladen/i),
-    gross_vehicle_weight_gvwr: metricFromRow(/Gross.*Vehicle.*Weight/i),
-    max_payload:               metricFromRow(/Max.*Payload/i),
-    cargo_volume:              metricFromRow(/Cargo.*Volume(?!.*Max|.*Frunk)/i),
-    cargo_volume_max:          metricFromRow(/Cargo.*Volume.*Max/i),
-    cargo_volume_frunk:        metricFromRow(/Cargo.*Volume.*Frunk/i),
-    roof_load:                 metricFromRow(/Roof.*Load/i),
-    towing_weight_unbraked:    metricFromRow(/Towing.*Unbraked/i),
-    towing_weight_braked:      metricFromRow(/Towing.*Braked/i),
-    vertical_load_max:         metricFromRow(/Vertical.*Load/i),
-    tow_hitch_possible: (function () {
-      const $label = $dim
-        .find("td")
-        .filter(function () {
-          return /Tow.*Hitch.*Possible/i.test($(this).text());
-        })
-        .first();
-      if (!$label.length) return null;
-      const txt = ($label.next("td").text() || "").trim();
-      return normalizeTextValue(txt);
-    })()
+    length: dim(/Length/i),
+    width: dim(/Width(?!.*mirrors)/i),
+    width_with_mirrors: dim(/Width.*mirrors/i),
+    height: dim(/Height/i),
+    wheelbase: dim(/Wheelbase/i),
+    weight_unladen_eu: dim(/Weight.*Unladen/i),
+    gross_vehicle_weight_gvwr: dim(/Gross.*Vehicle.*Weight/i),
+    max_payload: dim(/Max.*Payload/i),
+    cargo_volume: dim(/Cargo.*Volume(?!.*Max|.*Frunk)/i),
+    cargo_volume_max: dim(/Cargo.*Volume.*Max/i),
+    cargo_volume_frunk: dim(/Cargo.*Volume.*Frunk/i),
+    roof_load: dim(/Roof.*Load/i),
+    towing_weight_unbraked: dim(/Towing.*Unbraked/i),
+    towing_weight_braked: dim(/Towing.*Braked/i),
+    vertical_load_max: dim(/Vertical.*Load/i),
+    tow_hitch_possible: normalizeTextValue(row.text(/Tow.*Hitch.*Possible/i)),
   };
 }
 
-// ----- Miscellaneous -----
 function extractMisc() {
-  // Use body as root — Bright Data environment allows this
-  const $root = $('body');
+  // These rows are scattered outside any single section, so the scope is the
+  // whole body. Kept as-is: narrowing it risks losing fields.
+  const row = makeRowReader($("body"));
 
-  function rowText(labelRegex) {
-    const $labelTd = $root
-      .find("td")
-      .filter(function () {
-        return labelRegex.test($(this).text());
-      })
-      .first();
-
-    if (!$labelTd.length) return null;
-
-    const $valTd = $labelTd.next("td");
-    return $valTd.length ? $valTd.text().trim() : null;
-  }
+  const isofixTxt = row.text(/Isofix/i);
+  const segment = row.text(/Segment/i) || null;
+  const seatsTxt = row.text(/Seats/i);
+  const seatsMatch = seatsTxt ? seatsTxt.match(/(\d+)/) : null;
+  const isofixMatch = isofixTxt ? isofixTxt.match(/(\d+)/) : null;
 
   return {
-    seats: (function () {
-      const txt = rowText(/Seats/i);
-      if (!txt) return null;
-      const m = txt.match(/(\d+)/);
-      return m ? parseInt(m[1], 10) : null;
-    })(),
-
-    isofix: (function () {
-      const txt = rowText(/Isofix/i);
-      return txt ? txt.split(",")[0].trim() : null;
-    })(),
-
-    isofix_seats: (function () {
-      const txt = rowText(/Isofix/i);
-      if (!txt) return null;
-      const m = txt.match(/(\d+)/);
-      return m ? parseInt(m[1], 10) : null;
-    })(),
-
-    // ✅ turning circle now parsed as metric {value, unit}
-    turning_circle: (function () {
-      const txt = rowText(/Turning.*Circle/i);
-      return parseMetric(txt);   // e.g. "12.1 m" → { value: 12.1, unit: "m" }
-    })(),
-
-    platform: normalizeTextValue(rowText(/Platform/i)),
-    ev_dedicated_platform: normalizeTextValue(rowText(/EV.*Dedicated.*Platform/i)),
-    car_body: normalizeTextValue(rowText(/Car.*Body/i)),
-    segment: rowText(/Segment/i) || null,
-    segment_1l: (function () {
-      const s = rowText(/Segment/i);
-      return s ? s.split("-")[0].trim() : null;
-    })(),
-    roof_rails: normalizeTextValue(rowText(/Roof.*Rails/i)),
-    heat_pump: normalizeTextValue(rowText(/Heat.*pump.*HP/i)),
-    hp_std_equipment: normalizeTextValue(rowText(/HP.*Standard.*Equipment/i))
+    seats: seatsMatch ? parseInt(seatsMatch[1], 10) : null,
+    isofix: isofixTxt ? isofixTxt.split(",")[0].trim() : null,
+    isofix_seats: isofixMatch ? parseInt(isofixMatch[1], 10) : null,
+    turning_circle: parseMetric(row.text(/Turning.*Circle/i)),
+    platform: normalizeTextValue(row.text(/Platform/i)),
+    ev_dedicated_platform: normalizeTextValue(row.text(/EV.*Dedicated.*Platform/i)),
+    car_body: normalizeTextValue(row.text(/Car.*Body/i)),
+    segment: segment,
+    segment_1l: segment ? segment.split("-")[0].trim() : null,
+    roof_rails: normalizeTextValue(row.text(/Roof.*Rails/i)),
+    heat_pump: normalizeTextValue(row.text(/Heat.*pump.*HP/i)),
+    hp_std_equipment: normalizeTextValue(row.text(/HP.*Standard.*Equipment/i)),
   };
 }
 
-// ----- Preceding model -----
 function extractPrecedingModel() {
-  // Try the old root first, then fall back to the whole document
-  let $root = $("#detailed-data");
-  if (!$root.length) {
-    $root = $("body");
-  }
+  const $root = $("#detailed-data").length ? $("#detailed-data") : $("body");
 
-  // Find the <h3> whose text is "Preceding model"
-  let $heading = $root
-    .find("h3")
-    .filter(function () {
-      return /Preceding model/i.test($(this).text());
-    })
-    .first();
+  let $heading = $root.find("h3").filter(function () {
+    return /Preceding model/i.test($(this).text());
+  }).first();
 
-  // If not found under #detailed-data, search globally as a fallback
   if (!$heading.length) {
-    $heading = $("h3")
-      .filter(function () {
-        return /Preceding model/i.test($(this).text());
-      })
-      .first();
+    $heading = $("h3").filter(function () {
+      return /Preceding model/i.test($(this).text());
+    }).first();
   }
-
   if (!$heading.length) return null;
 
-  // The info box wrapper in the new markup
-  const $box =
-    $heading.closest(".info-box").length
-      ? $heading.closest(".info-box")
-      : $heading.parent();
-
+  const $box = $heading.closest(".info-box").length ? $heading.closest(".info-box") : $heading.parent();
   if (!$box.length) return null;
 
-  // Description text:
-  // in the new layout, the first <p> is the description
-  // and the second <p.align-center> wraps the link & image
-  const $descP = $box.find("p").not(".align-center").first();
-  const description = ($descP.text() || "").trim() || null;
-
-  // Link to the preceding model
   const $link = $box.find("a[href*='/car/']").first();
-
   let url = null;
   let evdb_id = null;
   let title = null;
 
   if ($link.length) {
     const href = $link.attr("href") || "";
-
-    // Full absolute URL – relies on existing helper
     url = absUrl(href);
 
-    // Extract numeric EVDB id from /car/1535/...
     const m = href.match(/\/car\/(\d+)/);
-    if (m) {
-      evdb_id = m[1];
-    }
+    if (m) evdb_id = m[1];
 
-    // Build title from link text, minus the "Preceding model" prefix
+    // Drop the image so its alt text does not leak into the title.
     const $clone = $link.clone();
-    $clone.find("img").remove(); // strip image to avoid alt text/noise
-    const linkText = $clone.text().trim();
-    title = linkText.replace(/^\s*Preceding model\s*/i, "").trim() || null;
+    $clone.find("img").remove();
+    title = $clone.text().trim().replace(/^\s*Preceding model\s*/i, "").trim() || null;
   }
 
-  // Thumbnail
   let thumb_url = null;
   const $img = $box.find("img").first();
   if ($img.length) {
-    // Prefer srcset if available, otherwise src
     let src = $img.attr("srcset") || $img.attr("src") || "";
-
     if (src) {
-      // If srcset, take the first candidate before any " 2x", etc.
       if (src.indexOf(",") !== -1 || src.indexOf(" ") !== -1) {
-        const first = src.split(",")[0].trim();
-        src = first.split(" ")[0];
+        src = src.split(",")[0].trim().split(" ")[0];
       }
-
       thumb_url = absUrl(src);
     }
   }
 
   return {
-    description, // raw text about range/accel/efficiency differences etc.
-    url,
-    evdb_id,
-    title,
-    thumb_url
+    description: ($box.find("p").not(".align-center").first().text() || "").trim() || null,
+    url: url,
+    evdb_id: evdb_id,
+    title: title,
+    thumb_url: thumb_url,
   };
 }
 
 function extractHomeDestinationChargingDetails() {
-  // Section wrapper
   const $section = $("#charge-table");
   if (!$section.length) return null;
 
-  const heading =
-    $section.find("h2").first().text().trim() || null; // "Home and Destination Charging (0 -> 100%)"
-
+  const heading = $section.find("h2").first().text().trim() || null;
   const $infoBox = $section.find(".info-box").first();
+
   if (!$infoBox.length) {
     return {
-      heading,
+      heading: heading,
       intro_text: null,
       europe_heading: null,
       europe_text: null,
       type2_title: null,
       type2_image_url: null,
       footnote: null,
-      type2_plug: []
+      type2_plug: [],
     };
   }
-
-  // --- Intro paragraphs & "Europe" text ---
-
-  const $directParagraphs = $infoBox.children("p");
-  const intro_text =
-    ($directParagraphs.eq(0).text() || "").trim() || null;
 
   let europe_heading = null;
   let europe_text = null;
-
-  const $europeH3 = $infoBox
-    .find("h3")
-    .filter(function () {
-      return /Europe/i.test($(this).text());
-    })
-    .first();
+  const $europeH3 = $infoBox.find("h3").filter(function () {
+    return /Europe/i.test($(this).text());
+  }).first();
 
   if ($europeH3.length) {
     europe_heading = $europeH3.text().trim() || null;
-    const $pAfterEurope = $europeH3.nextAll("p").first();
-    europe_text = ($pAfterEurope.text() || "").trim() || null;
+    europe_text = ($europeH3.nextAll("p").first().text() || "").trim() || null;
   }
 
-  // --- Type 2 header + image ---
+  const $standardTable = $infoBox.find("table.charging-table-standard").first();
 
   let type2_title = null;
   let type2_image_url = null;
-
-  const $type2Block = $infoBox.find("table.charging-table-standard").first();
-  if ($type2Block.length) {
-    const $wrapperDiv = $type2Block.closest("div");
-    const $titleTable = $wrapperDiv.find("table").first(); // the table with th+img
-
-    const $th = $titleTable.find("th").first();
-    if ($th.length) {
-      type2_title = $th.text().trim() || null;
-    }
-
-    const $img = $titleTable.find("img").first();
-    if ($img.length) {
-      const imgSrc = $img.attr("src") || "";
-      type2_image_url = imgSrc ? absUrl(imgSrc) : null;
-    }
+  if ($standardTable.length) {
+    const $titleTable = $standardTable.closest("div").find("table").first();
+    type2_title = $titleTable.find("th").first().text().trim() || null;
+    const imgSrc = $titleTable.find("img").first().attr("src") || "";
+    type2_image_url = imgSrc ? absUrl(imgSrc) : null;
   }
 
-  // --- Type 2 (Mennekes) charging table itself ---
-
   const type2_plug = [];
-  const $standardTable = $infoBox.find("table.charging-table-standard").first();
-
   if ($standardTable.length) {
-    // Header row
     const headers = [];
-    const $headerRow = $standardTable.find("tr").first();
-    $headerRow.find("th, td").each(function () {
+    $standardTable.find("tr").first().find("th, td").each(function () {
       headers.push(($(this).text() || "").trim());
     });
 
-    // Map header → column index
-    const findCol = (patterns) => {
-      const idx = headers.findIndex((hRaw) => {
-        const h = hRaw.toLowerCase();
-        return patterns.some((p) => p.test(h));
+    // First header matching any of the patterns wins, so order matters:
+    // "Max. Power" must be found before the plain "Power" column.
+    function findCol(patterns) {
+      const idx = headers.findIndex(function (h) {
+        return patterns.some(function (p) { return p.test(h.toLowerCase()); });
       });
       return idx >= 0 ? idx : null;
-    };
+    }
 
-    const idxChargingPoint = findCol([/charging\s*point/i]);
+    const idxPoint = findCol([/charging\s*point/i]);
     const idxMaxPower = findCol([/max/i, /voltage/i, /power/i]);
     const idxPower = findCol([/^power$/i]);
     const idxTime = findCol([/^time$/i, /0\s*-\s*100/i, /duration/i]);
     const idxRate = findCol([/^rate$/i, /km\/h/i, /range/i]);
 
-    // Data rows
     $standardTable.find("tr").slice(1).each(function () {
       const cells = [];
-      $(this)
-        .find("th, td")
-        .each(function () {
-          cells.push(($(this).text() || "").trim());
-        });
+      $(this).find("th, td").each(function () {
+        cells.push(($(this).text() || "").trim());
+      });
+      if (!cells.some(function (v) { return v && v.length; })) return;
 
-      if (!cells.some((v) => v && v.length)) return;
+      const at = function (idx) { return idx != null ? cells[idx] : ""; };
+      const pointRaw = at(idxPoint);
 
-      const chargingPointRaw =
-        idxChargingPoint != null ? cells[idxChargingPoint] : "";
-      const maxPowerRaw = idxMaxPower != null ? cells[idxMaxPower] : "";
-      const powerRaw = idxPower != null ? cells[idxPower] : "";
-      const timeRaw = idxTime != null ? cells[idxTime] : "";
-      const rateRaw = idxRate != null ? cells[idxRate] : "";
-
-      // Slug for charging point type (e.g. "Wall Plug (2.3 kW)" → "wall-plug")
-      const type = chargingPointRaw
-        ? chargingPointRaw
+      // "Wall Plug (2.3 kW)" -> "wall-plug"
+      const type = pointRaw
+        ? pointRaw
             .toLowerCase()
-            .replace(/\s*\(.+\)\s*$/, "") // drop text in parentheses
+            .replace(/\s*\(.+\)\s*$/, "")
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-+|-+$/g, "")
         : null;
 
-      const power = parseNumberAndUnit(powerRaw, "kW");
-      const max_power = parseMaxPowerDescriptor(maxPowerRaw);
-      const time = parseTimeToMinutes(timeRaw); // { unit: "min", value: ... }
-      const rate = parseNumberAndUnit(rateRaw, "km/h");
+      const power = parseNumberAndUnit(at(idxPower), "kW");
 
       type2_plug.push({
-        charging_point: {
-          type,       // e.g. "wall-plug", "1-phase-16a", "3-phase-16a"
-          power       // { unit: "kW", value: 2.3 }
-        },
-        max_power,    // { voltage: { unit, value }, current: { unit, value }, phases }
-        power,        // duplicated at top level as per your requested structure
-        time,         // { unit: "min", value: XXX }
-        rate          // { unit: "km/h", value: XXX }
+        charging_point: { type: type, power: power },
+        max_power: parseMaxPowerDescriptor(at(idxMaxPower)),
+        power: power,
+        time: parseTimeToMinutes(at(idxTime)),
+        rate: parseNumberAndUnit(at(idxRate), "km/h"),
       });
     });
   }
 
-  // Footnote under the table († = Limited by on-board charger...)
-  const footnote =
-    ($infoBox.find("p.f-12").first().text() || "").trim() || null;
-
   return {
-    heading,
-    intro_text,
-    europe_heading,
-    europe_text,
-    type2_title,
-    type2_image_url,
-    footnote,
-    type2_plug
+    heading: heading,
+    intro_text: ($infoBox.children("p").eq(0).text() || "").trim() || null,
+    europe_heading: europe_heading,
+    europe_text: europe_text,
+    type2_title: type2_title,
+    type2_image_url: type2_image_url,
+    footnote: ($infoBox.find("p.f-12").first().text() || "").trim() || null,
+    type2_plug: type2_plug,
   };
 }
 
-//
-// ---------- Main parser ----------
-//
+// ---------- main ----------
 
-return (() => {
-  // Get car_url from input first — the correct source
-  const inputUrl =
-    (typeof input !== "undefined" &&
-    Array.isArray(input) &&
-    input[0] &&
-    (input[0].car_url || input[0].url || null)) || null;
-
-  // Safe fallbacks for environments without window/location
-  const fallbackUrl =
+return (function () {
+  // car_url must come from the input: it is the key the LIST and DETAILS
+  // snapshots are joined on downstream. The page-derived values are fallbacks.
+  const cfg = (typeof input !== "undefined" && Array.isArray(input) && input[0]) || {};
+  const car_url =
+    cfg.car_url ||
+    cfg.url ||
     $("link[rel='canonical']").attr("href") ||
     $("meta[property='og:url']").attr("content") ||
-    (typeof location !== "undefined" && location.href ? location.href : null);
+    (typeof location !== "undefined" && location.href ? location.href : null) ||
+    null;
 
-  // Final URL used by the parser
-  const car_url = inputUrl || fallbackUrl || null;
+  let breadcrumb =
+    $("nav[aria-label='breadcrumb'], .breadcrumb-nav, ol.breadcrumb")
+      .find("li.breadcrumb-item.active, li.active")
+      .last()
+      .text()
+      .trim() || null;
 
-  const title = $("h1").first().text().trim() || null;
-
-  // Breadcrumb
-  let breadcrumb = null;
-  const $crumbNav = $(
-    "nav[aria-label='breadcrumb'], .breadcrumb-nav, ol.breadcrumb"
-  );
-  if ($crumbNav.length) {
-    breadcrumb =
-      $crumbNav
-        .find("li.breadcrumb-item.active, li.active")
-        .last()
-        .text()
-        .trim() || null;
-  }
   if (!breadcrumb) {
-    breadcrumb =
-      $("li.breadcrumb-item.active").last().text().trim() || null;
+    breadcrumb = $("li.breadcrumb-item.active").last().text().trim() || null;
   }
 
-  // Images
+  // Gallery. "-thumb" is stripped to get the full-size asset.
   let images_urls = [];
   const $fotorama = $(".fotorama");
-
   if ($fotorama.length) {
     images_urls = $fotorama
       .find("img")
-      .map((_, img) => {
+      .map(function (_, img) {
         const $img = $(img);
         const srcset = $img.attr("srcset") || "";
-        let urlStr = null;
-
-        if (srcset) {
-          const first = srcset.split(",")[0].trim();
-          urlStr = first.split(" ")[0];
-        }
-
-        if (!urlStr) {
-          urlStr = $img.attr("src") || "";
-        }
-
-        if (!urlStr) return null;
-
-        urlStr = urlStr.replace(/-thumb(?=\.)/, "");
-        return absUrl(urlStr);
+        let url = srcset ? srcset.split(",")[0].trim().split(" ")[0] : "";
+        if (!url) url = $img.attr("src") || "";
+        if (!url) return null;
+        return absUrl(url.replace(/-thumb(?=\.)/, ""));
       })
       .get()
       .filter(Boolean);
 
-    images_urls = [...new Set(images_urls)];
+    images_urls = images_urls.filter(function (u, i) {
+      return images_urls.indexOf(u) === i;
+    });
   }
 
-  // Pricing
+  // Pricing: each country link appears twice — price first, availability second.
   const $pricing = $("#pricing");
   let pricing_availability = null;
 
   if ($pricing.length) {
-    function getPricingCell(regex, index) {
+    function pricingCell(re, index) {
       const $link = $pricing
         .find("a[href]")
-        .filter((_, el) => regex.test($(el).attr("href") || ""))
+        .filter(function (_, el) { return re.test($(el).attr("href") || ""); })
         .eq(index);
-
       if (!$link.length) return null;
       return $link.closest("td").next("td").text().trim() || null;
     }
 
-    const pRaw = {
-      uk: getPricingCell(/\/uk\/car\//i, 0),
-      nl: getPricingCell(/\/nl\/auto\//i, 0),
-      de: getPricingCell(/\/de\/pkw\//i, 0)
-    };
-
-    const aRaw = {
-      uk: getPricingCell(/\/uk\/car\//i, 1),
-      nl: getPricingCell(/\/nl\/auto\//i, 1),
-      de: getPricingCell(/\/de\/pkw\//i, 1)
-    };
+    const UK = /\/uk\/car\//i;
+    const NL = /\/nl\/auto\//i;
+    const DE = /\/de\/pkw\//i;
 
     pricing_availability = {
       pricing: {
-        uk: parsePrice(pRaw.uk),
-        nl: parsePrice(pRaw.nl),
-        de: parsePrice(pRaw.de)
+        uk: parsePrice(pricingCell(UK, 0)),
+        nl: parsePrice(pricingCell(NL, 0)),
+        de: parsePrice(pricingCell(DE, 0)),
       },
-      availability: aRaw
+      availability: {
+        uk: pricingCell(UK, 1),
+        nl: pricingCell(NL, 1),
+        de: pricingCell(DE, 1),
+      },
     };
   }
-  const meta = extractMetaInfo();
-  const real_range = extractRealRange();
-  const distance_suitability = extractDistanceSuitability();
-  const battery_details = extractBattery();
-  const charging = extractCharging();
-  const performance = extractPerformance();
-  const v2x_charging = extractV2X();
-  const energy_consumption = extractEnergyConsumption();
-  const real_energy_consumption = extractRealEnergyConsumption();
-  const dimensions_weight = extractDimensionsWeight();
-  const misc = extractMisc();
-  const preceding_model = extractPrecedingModel();
-  const home_destination_charging_details = extractHomeDestinationChargingDetails();
 
-  // --- Build the core vehicle object (without metadata yet) ---
+  const meta = extractMetaInfo();
+
   const vehicle = {
-    car_url,
-    title,
-    breadcrumb,
-    images_urls,
-    pricing_availability,
-    real_range,
-    distance_suitability,
-    battery_details,
-    charging,
-    performance,
-    v2x_charging,
-    energy_consumption,
-    real_energy_consumption,
-    dimensions_weight,
-    misc,
-    preceding_model,
-    home_destination_charging_details,
-    ...(meta ? { meta } : {})
+    car_url: car_url,
+    title: $("h1").first().text().trim() || null,
+    breadcrumb: breadcrumb,
+    images_urls: images_urls,
+    pricing_availability: pricing_availability,
+    real_range: extractRealRange(),
+    distance_suitability: extractDistanceSuitability(),
+    battery_details: extractBattery(),
+    charging: extractCharging(),
+    performance: extractPerformance(),
+    v2x_charging: extractV2X(),
+    energy_consumption: extractEnergyConsumption(),
+    real_energy_consumption: extractRealEnergyConsumption(),
+    dimensions_weight: extractDimensionsWeight(),
+    misc: extractMisc(),
+    preceding_model: extractPrecedingModel(),
+    home_destination_charging_details: extractHomeDestinationChargingDetails(),
   };
 
-  // --- Build metadata ---
+  if (meta) vehicle.meta = meta;
 
-  // Try to read scraper version from Bright Data input, fallback to null
-  const scraper_version =
-    (typeof input !== "undefined" &&
-      Array.isArray(input) &&
-      input[0] &&
-      (input[0].scraper_version || input[0].version || null)) ||
-    null;
-
-  // ISO timestamp of when this page was parsed
-  const parsed_at = new Date().toISOString();
-
-  // Collect detected units
   const unitsSet = new Set();
   collectUnits(vehicle, unitsSet);
-  const detected_units = Array.from(unitsSet).sort();
 
   vehicle.metadata = {
-    parsed_at,        // e.g. "2025-12-07T14:32:10.123Z"
-    scraper_version,  // e.g. "1.3.0" or null if not supplied
-    detected_units    // e.g. ["A", "Wh/km", "g/km", "kW", "km", "km/h", "m", "min", "PS", "V"]
+    parsed_at: new Date().toISOString(),
+    scraper_version: cfg.scraper_version || cfg.version || null,
+    detected_units: Array.from(unitsSet).sort(),
   };
 
-  console.log("Parsed vehicle:", JSON.stringify(vehicle, null, 2));
+  // NOTE: the whole vehicle used to be console.logged here, pretty-printed.
+  // At ~650 pages per refresh that is a lot of log for no benefit. One line.
+  console.log("Parsed " + (vehicle.title || car_url) + " — " + vehicle.images_urls.length + " images");
 
- // For dev
- //return vehicle
+  // For local development, return the object directly instead:
+  // return vehicle;
 
- // For PROD
-  return {
-    vehicle: JSON.stringify(vehicle)
-    };
-
+  // PRODUCTION: the pipeline's unwrapDetails() expects this string wrapper.
+  return { vehicle: JSON.stringify(vehicle) };
 })();
 ```

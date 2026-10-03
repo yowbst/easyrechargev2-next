@@ -3,30 +3,24 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/components/theme/theme-provider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
 import {
   Loader2,
-  ChevronDown,
   CircleCheck,
   Settings2,
   Printer,
 } from "lucide-react";
 import { parsePhoneNumber } from "libphonenumber-js";
+import { Field, Section } from "./SubmissionFields";
+import { BatterySubmissionSections } from "./BatterySubmissionSections";
 import type { FormSubmission, FormUser, FormSession } from "@shared/types";
 
 // ---------- Types ----------
@@ -100,84 +94,6 @@ function formatUrlParams(
         </code>
       ))}
     </span>
-  );
-}
-
-// ---------- Sub-components ----------
-
-function Field({
-  label,
-  value,
-  tooltip,
-  tooltipImage,
-  multiline,
-}: {
-  label: string;
-  value: React.ReactNode;
-  tooltip?: string;
-  tooltipImage?: string;
-  multiline?: boolean;
-}) {
-  const display =
-    value === null || value === undefined || value === ""
-      ? "\u2014"
-      : value;
-  return (
-    <div className="flex flex-col sm:flex-row sm:gap-2 gap-0.5 py-2 sm:py-1.5 print:py-0.5 border-b border-border/40 last:border-0 text-sm print:text-[8pt] print:leading-tight">
-      <span className="text-muted-foreground sm:w-56 print:w-40 sm:shrink-0">
-        {tooltip || tooltipImage ? (
-          <InfoTooltip content={tooltip} image={tooltipImage}>
-            {label}
-          </InfoTooltip>
-        ) : (
-          label
-        )}
-      </span>
-      <span
-        className={`font-medium ${multiline ? "whitespace-pre-wrap" : "break-words"}`}
-      >
-        {display}
-      </span>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  defaultOpen = true,
-  printVisible = true,
-  children,
-}: {
-  title: string;
-  defaultOpen?: boolean;
-  printVisible?: boolean;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className={!printVisible ? "print-exclude-section" : ""}>
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <Card className="print:shadow-none print:border-0 print:rounded-none">
-          <CardHeader className="pb-2 print:p-0 print:pb-0">
-            <CollapsibleTrigger className="w-full cursor-pointer select-none hover:bg-muted/50 transition-colors print:cursor-default text-left">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base print:text-[9pt] print:font-bold print:uppercase print:tracking-wide print:text-gray-500 print:pb-0.5 print:w-full print:border-b print:border-gray-300">
-                  {title}
-                </CardTitle>
-                <ChevronDown
-                  className={`h-4 w-4 text-muted-foreground transition-transform duration-200 print:hidden ${open ? "rotate-180" : ""}`}
-                />
-              </div>
-            </CollapsibleTrigger>
-          </CardHeader>
-          <CollapsibleContent className="print-section-content">
-            <CardContent className="space-y-0 print:p-0">
-              {children}
-            </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
-    </div>
   );
 }
 
@@ -271,17 +187,10 @@ export function QuoteSubmissionView({
     };
   }, []);
 
-  const sectionIds = [
-    "metadata",
-    "contact",
-    "housing",
-    "parking",
-    "charger",
-    "vehicle",
-    "finalize",
-  ] as const;
+  const ECP_SECTION_IDS = ["metadata", "contact", "housing", "parking", "charger", "vehicle", "finalize"] as const;
+  const BATTERY_SECTION_IDS = ["metadata", "contact", "housing", "installation", "consumption", "finalize"] as const;
   const [printSections, setPrintSections] = useState<Record<string, boolean>>(
-    () => Object.fromEntries(sectionIds.map((id) => [id, true])),
+    () => Object.fromEntries([...ECP_SECTION_IDS, ...BATTERY_SECTION_IDS].map((id) => [id, true])),
   );
   const togglePrintSection = (id: string) =>
     setPrintSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -353,6 +262,9 @@ export function QuoteSubmissionView({
 
   const { submission, user, session } = data;
   const fd = (submission.data ?? {}) as Record<string, unknown>;
+  const isBattery = submission.product === "battery";
+  const sectionIds = isBattery ? BATTERY_SECTION_IDS : ECP_SECTION_IDS;
+  const tb = (key: string) => dictionary[`pages.quote-battery.${key}`] ?? "";
 
   return (
     <div
@@ -408,7 +320,11 @@ export function QuoteSubmissionView({
                           contact:
                             tq("steps.contact.title") || "Demandeur",
                           housing:
-                            tq("steps.housing.title") || "Logement",
+                            (isBattery ? tb("steps.housing.title") : tq("steps.housing.title")) || "Logement",
+                          installation:
+                            tb("steps.pv.title") || "Installation solaire",
+                          consumption:
+                            tb("steps.consumption.title") || "Consommation",
                           parking:
                             tq("steps.parking.title") || "Parking",
                           charger:
@@ -604,6 +520,17 @@ export function QuoteSubmissionView({
             />
           </Section>
 
+          {isBattery ? (
+            <BatterySubmissionSections
+              fd={fd}
+              tb={tb}
+              yes={tCommon("yes", "Oui")}
+              no={tCommon("no", "Non")}
+              dontKnow={tq("common.dontKnow") || tCommon("dontKnow", "Je ne sais pas")}
+              printSections={printSections}
+            />
+          ) : (
+            <>
           {/* 3. Housing */}
           <Section
             title={tq("steps.housing.title") || "Logement"}
@@ -888,6 +815,8 @@ export function QuoteSubmissionView({
               tooltipImage={tooltipImage("vehicle", "vehicleChargingHours")}
             />
           </Section>
+            </>
+          )}
 
           {/* 7. Finalization */}
           <Section

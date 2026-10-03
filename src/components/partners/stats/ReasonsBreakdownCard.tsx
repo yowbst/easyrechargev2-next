@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { StatsCard } from "./StatsCard";
 import type { ReasonRow } from "@/lib/dispatch/stats";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 
@@ -34,28 +34,25 @@ export function ReasonsBreakdownCard({
   }, []);
 
   return (
-    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
-      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
-        {Icon && <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}
-        <span>{title}</span>
-      </h3>
+    <StatsCard title={title} Icon={Icon}>
       {rows.length === 0 ? (
-        <p className="py-6 text-center text-xs text-muted-foreground">
+        <p className="py-6 text-center text-sm text-muted-foreground">
           {t("stats.empty")}
         </p>
       ) : (
-        <ul className="space-y-2.5">
+        <ul className="space-y-3">
           {rows.map((r) => {
             const label = t(`${labelNs}.${r.key}.label`);
             const pct = max > 0 ? (r.count / max) * 100 : 0;
             return (
               <li
                 key={r.key}
-                className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-center gap-3 text-xs"
+                className="grid grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-3 text-sm"
               >
-                <span className="truncate" title={label}>
-                  {label}
-                </span>
+                <div className="min-w-0">
+                  <span className="mb-1.5 block truncate" title={label}>
+                    {label}
+                  </span>
                 <div
                   className="h-2 overflow-hidden rounded-full bg-muted"
                   role="progressbar"
@@ -72,7 +69,8 @@ export function ReasonsBreakdownCard({
                     }}
                   />
                 </div>
-                <span className="w-6 text-right tabular-nums text-muted-foreground">
+                </div>
+                <span className="text-right font-semibold tabular-nums">
                   {r.count}
                 </span>
               </li>
@@ -80,6 +78,6 @@ export function ReasonsBreakdownCard({
           })}
         </ul>
       )}
-    </Card>
+    </StatsCard>
   );
 }

@@ -235,6 +235,7 @@ export function VehiclesHub({
                         charging={vehicle.charging}
                         brandIconSvg={brandData?.iconSvg}
                         brandIconName={brandData?.iconName}
+                        isAvailable={vehicle.isAvailable}
                         lang={lang}
                         dictionary={dictionary}
                       />

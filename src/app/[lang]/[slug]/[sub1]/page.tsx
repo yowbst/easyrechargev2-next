@@ -6,6 +6,7 @@ import Image from "next/image";
 import { isValidLang, slugToDirectusLocale, getRouteSlug } from "@/lib/i18n/config";
 import { GoogleAdsConversion } from "@/components/GoogleAdsConversion";
 import { adsSendTo } from "@/lib/googleAds";
+import { successPageIds, viewPageIds } from "@/lib/products";
 import { resolveSub1Route } from "@/lib/route-resolver";
 import {
   fetchVehicle,
@@ -540,7 +541,10 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                         fill
                         priority
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 66vw"
-                        quality={90}
+                        // 90 n'est pas dans `images.qualities` : Next le
+                        // ramenait silencieusement à 75, et une URL q=90
+                        // forgée renvoie un 400. On écrit ce qui est servi.
+                        quality={75}
                         className="object-cover"
                         data-testid="img-vehicle-hero"
                       />
@@ -557,7 +561,18 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
                     <div className="mt-auto pt-6" />
 
-                    <h1 className="text-xl sm:text-2xl font-heading font-bold mb-6">{vehicle.brand} {vehicle.model}</h1>
+                    <div className="flex flex-wrap items-center gap-3 mb-6">
+                      <h1 className="text-xl sm:text-2xl font-heading font-bold">{vehicle.brand} {vehicle.model}</h1>
+                      {/* Le modèle reste en ligne à dessein : quelqu'un qui possède
+                          déjà une voiture retirée de la vente est précisément celui
+                          qui cherche une borne compatible. Le badge informe, il
+                          n'écarte pas. */}
+                      {vehicle.isAvailable === false && (
+                        <Badge variant="secondary" className="font-medium">
+                          {d("common.vehicle.discontinued")}
+                        </Badge>
+                      )}
+                    </div>
 
                     {description && (
                       <p className="text-base leading-relaxed text-muted-foreground mb-10">{description}</p>
@@ -1031,14 +1046,19 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
   // Quote success
   if (route.type === "quote-success") {
-    const [quotePage, layoutData, registry] = await Promise.all([
-      fetchPage("quote-success", locale),
+    const pageIds = successPageIds(route.product);
+    const [pages, layoutData, registry] = await Promise.all([
+      Promise.all(pageIds.map((id) => fetchPage(id, locale))),
       fetchLayout(locale),
       fetchPageRegistry(),
     ]);
-    const dictionary = quotePage
-      ? extractPageDictionary("quote-success", quotePage, locale)
-      : {};
+    // Charger page first, product page last: the product's own copy wins.
+    const dictionary: Record<string, string> = Object.assign(
+      {},
+      ...pages.map((p, i) => (p ? extractPageDictionary(pageIds[i], p, locale) : {})).reverse(),
+    );
+    // Hero and CTAs come from the most specific page that exists.
+    const quotePage = pages.find(Boolean);
 
     // Extract hero block data
     const heroBlock = quotePage?.blocks?.find(
@@ -1066,10 +1086,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     // data); this one covers lost beacons and shares the transaction_id so
     // Google dedupes. Inert unless tag_id + quote_submit label are set.
     const googleAds = gc?.google_ads ?? {};
-    // NOTE: quote-success doesn't know which product's funnel it terminates —
-    // defaults to DEFAULT_PRODUCT. When a second product gets its own quote
-    // funnel, give its success route its own product here.
-    const adsConversionSendTo = adsSendTo(googleAds, "quote_submit");
+    const adsConversionSendTo = adsSendTo(googleAds, "quote_submit", route.product);
 
     return (
       <Suspense>
@@ -1085,6 +1102,8 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
           }}
           quoteSlug={slug}
           pageRegistry={registry}
+          product={route.product}
+          dictPageIds={pageIds}
         />
       </Suspense>
     );
@@ -1092,18 +1111,21 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
 
   // Quote submission view
   if (route.type === "quote-submission") {
-    const [quotePage, quoteViewPage, layoutData] = await Promise.all([
-      fetchPage("quote", locale),
-      fetchPage("quote-view", locale),
+    // Partner links always use the charger slug; the view picks its sections
+    // from submission.product, so both products' copy is loaded.
+    const formIds = ["quote", "quote-battery"];
+    const viewIds = [...viewPageIds("battery")].reverse(); // quote-view, then quote-battery-view
+    const [formPages, viewPages, layoutData] = await Promise.all([
+      Promise.all(formIds.map((id) => fetchPage(id, locale))),
+      Promise.all(viewIds.map((id) => fetchPage(id, locale))),
       fetchLayout(locale),
     ]);
-    const quoteDict = quotePage
-      ? extractPageDictionary("quote", quotePage, locale)
-      : {};
-    const viewDict = quoteViewPage
-      ? extractPageDictionary("quote-view", quoteViewPage, locale)
-      : {};
-    const dictionary = { ...quoteDict, ...viewDict };
+    const dictionary: Record<string, string> = Object.assign(
+      {},
+      ...formPages.map((p, i) => (p ? extractPageDictionary(formIds[i], p, locale) : {})),
+      ...viewPages.map((p, i) => (p ? extractPageDictionary(viewIds[i], p, locale) : {})),
+    );
+    const quotePage = formPages[0];
 
     const logoColorUrl = layoutData?.logo_color
       ? `${DIRECTUS_URL}/assets/${layoutData.logo_color}`

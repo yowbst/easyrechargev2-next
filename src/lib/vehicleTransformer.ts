@@ -6,6 +6,13 @@ export interface Vehicle {
   slug: string;
   brand: string;
   model: string;
+  /**
+   * False for a model EV Database no longer lists as on sale. These records
+   * stay on the site on purpose: someone who already owns a discontinued car
+   * is exactly the person looking for a charger that fits it. The flag drives
+   * a badge, never a filter.
+   */
+  isAvailable: boolean;
   image: string;
   batteryCapacity: number;
   batteryDisplay: string;
@@ -74,6 +81,10 @@ export function transformDirectusVehicle(dv: AnyRecord): Vehicle | null {
     slug: dv.slug || String(dv.id),
     brand: brandName,
     model: dv.model,
+    // Only an explicit false marks a model as withdrawn. A record whose
+    // availability was never determined (null/undefined) must not be
+    // advertised as discontinued on the strength of a missing value.
+    isAvailable: dv.is_available !== false,
     image: dv.thumbnail ? `${DIRECTUS_URL}/assets/${dv.thumbnail}` : "",
     batteryCapacity: battery.value,
     batteryDisplay: `${battery.value} ${battery.unit}`,

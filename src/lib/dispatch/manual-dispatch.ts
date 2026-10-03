@@ -1,7 +1,7 @@
 import { storage, getEnvironment } from "@/lib/directus-storage";
 import { directusFetch } from "@/lib/directus";
 import { runDispatch } from "@/lib/dispatch";
-import { deriveLeadCategory } from "@/lib/dispatch/categorize";
+import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
 import {
   getQuoteWebhookUrl,
   parsePhone,
@@ -23,6 +23,7 @@ export type ManualDispatchResult =
       dispatch: DispatchResult;
     }
   | { ok: false; error: "not_found" }
+  | { ok: false; error: "not_dispatchable" }
   | { ok: false; error: "already_dispatched"; existing: number };
 
 /**
@@ -64,8 +65,14 @@ export async function manualDispatch(
   const product = normalizeProduct(submission.product);
   const email = user?.email ?? null;
   const locale = user?.language === "de" ? "de" : "fr";
-  const leadCategory = deriveLeadCategory(data);
+  const leadCategory = deriveLeadCategory(product, data);
   const rawCanton = typeof data.canton === "string" ? data.canton : null;
+
+  // Same rule as the quote route: a lead stored as non-dispatchable (battery
+  // visitor without PV) is never sent to a partner, unless forced.
+  if (!isDispatchable(leadCategory) && !force) {
+    return { ok: false, error: "not_dispatchable" };
+  }
 
   const dispatchResult = await runDispatch({
     submissionId,

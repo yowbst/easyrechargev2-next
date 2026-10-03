@@ -15,9 +15,11 @@ import { useSearchParams } from "next/navigation";
 export function GoogleAdsConversion({ sendTo }: { sendTo?: string | null }) {
   const searchParams = useSearchParams();
   const submissionId = searchParams.get("submissionId") || undefined;
+  // nd=1: the lead is stored but never dispatched (battery visitor without PV).
+  const notALead = searchParams.get("nd") === "1";
 
   useEffect(() => {
-    if (!sendTo) return;
+    if (!sendTo || notALead) return;
     const guardKey = `er-ads-conv-${submissionId || "unknown"}`;
     try {
       if (sessionStorage.getItem(guardKey)) return;
@@ -45,7 +47,7 @@ export function GoogleAdsConversion({ sendTo }: { sendTo?: string | null }) {
     return () => {
       cancelled = true;
     };
-  }, [sendTo, submissionId]);
+  }, [sendTo, submissionId, notALead]);
 
   return null;
 }

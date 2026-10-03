@@ -15,12 +15,20 @@ export type DispatchStatus =
 export type LegalForm = "corporation" | "llc" | "gp" | "sp";
 
 export type LeadCategory =
+  // ecp (charger)
   | "owner_no_solar"
   | "owner_solar"
   | "co_owner_no_solar"
   | "co_owner_solar"
   | "tenant_no_solar"
-  | "tenant_solar";
+  | "tenant_solar"
+  // battery
+  | "owner_pv_small"
+  | "owner_pv_large"
+  | "co_owner_pv_small"
+  | "co_owner_pv_large"
+  /** Battery visitor without PV: stored, never dispatched nor invoiced. */
+  | "no_pv";
 
 export type DispatchStage =
   | "new"
@@ -119,6 +127,11 @@ export const LEAD_CATEGORIES: LeadCategory[] = [
   "co_owner_solar",
   "tenant_no_solar",
   "tenant_solar",
+  "owner_pv_small",
+  "owner_pv_large",
+  "co_owner_pv_small",
+  "co_owner_pv_large",
+  "no_pv",
 ];
 
 export interface Canton {
@@ -127,13 +140,26 @@ export interface Canton {
   is_active: boolean;
 }
 
+export type PartnerProductStatus = "active" | "paused";
+
+/** One `partner_products` row: does this partner receive the product, and how many per month. */
+export interface PartnerProduct {
+  product: string;
+  status: PartnerProductStatus;
+  /** 0 or null = unlimited. */
+  monthly_quota: number | null;
+}
+
 export interface Partner {
   id: string;
   status: PartnerStatus;
   name: string;
   slug: string;
   notification_email: string;
+  /** Legacy charger quota, used while the partner has no `products` rows. */
   monthly_quota: number;
+  /** O2M `partner_products`. Empty or absent = charger only (legacy). */
+  products?: PartnerProduct[] | null;
   priority: number;
   language: Language;
   billable_rate: number;

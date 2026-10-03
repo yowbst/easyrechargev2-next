@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   HelpCircle,
+  X,
+  Ban,
   Mail,
   Phone,
   MapPin,
@@ -183,22 +185,36 @@ export function DisqualifyModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-lg bg-background shadow-lg">
-        <div className="shrink-0 border-b px-6 py-4">
-          <h2 className="text-lg font-semibold">{t("modal.title")}</h2>
-          <p className="text-xs text-muted-foreground">{t("modal.subtitle")}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,var(--sidebar)_60%,transparent)] p-4 sm:p-8">
+      <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-card shadow-2xl">
+        <div className="flex shrink-0 items-start justify-between gap-6 border-b px-6 py-5 sm:px-7">
+          <div>
+            <h2 className="font-heading text-2xl font-semibold leading-tight tracking-tight">
+              {t("modal.title")}
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {t("modal.subtitle")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("modal.cancel")}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="size-[18px]" />
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-7">
+          <div className="grid grid-cols-1 gap-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
           {/* Lead context (left) */}
-          <aside className="rounded-md border bg-muted/30 p-4 text-sm">
-            <div className="mb-3">
-              <p className="font-semibold">
+          <aside className="h-fit rounded-lg bg-muted p-5 text-sm">
+            <div className="mb-4">
+              <p className="text-[17px] font-semibold leading-tight">
                 {firstName} {lastInitial}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {t(`stages.${dispatch.stage}`)}
                 {" · "}
                 {relativeShort}
@@ -206,11 +222,11 @@ export function DisqualifyModal({
               </p>
             </div>
 
-            <dl className="space-y-1.5 text-xs">
+            <dl className="space-y-2 text-[15px]">
               {user?.email && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2.5">
                   <Mail
-                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                    className="size-[15px] shrink-0 text-muted-foreground"
                     aria-hidden
                   />
                   <a
@@ -222,9 +238,9 @@ export function DisqualifyModal({
                 </div>
               )}
               {user?.phone && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2.5">
                   <Phone
-                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                    className="size-[15px] shrink-0 text-muted-foreground"
                     aria-hidden
                   />
                   <a href={`tel:${user.phone}`} className="hover:underline">
@@ -233,9 +249,9 @@ export function DisqualifyModal({
                 </div>
               )}
               {(zip || locality) && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2.5">
                   <MapPin
-                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                    className="size-[15px] shrink-0 text-muted-foreground"
                     aria-hidden
                   />
                   {mapsHref ? (
@@ -255,18 +271,18 @@ export function DisqualifyModal({
                 </div>
               )}
               {HousingIcon && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2.5">
                   <HousingIcon
-                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                    className="size-[15px] shrink-0 text-muted-foreground"
                     aria-hidden
                   />
                   <span>{housingLabel}</span>
                 </div>
               )}
               {deadlineLabel && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2.5">
                   <CalendarClock
-                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                    className="size-[15px] shrink-0 text-muted-foreground"
                     aria-hidden
                   />
                   <span>{deadlineLabel}</span>
@@ -274,30 +290,34 @@ export function DisqualifyModal({
               )}
             </dl>
 
-            <p className="mt-4 border-t pt-3 text-[11px] text-muted-foreground">
+            <p className="mt-[18px] border-t pt-3.5 text-[13px] leading-relaxed text-muted-foreground">
               {t("modal.billing_notice")}
             </p>
           </aside>
 
           {/* Reasons (right) */}
-          <div role="radiogroup" className="divide-y">
+          <div role="radiogroup" className="flex flex-col">
             {REASON_GROUPS.map((g) => (
-              <div key={g.labelKey} className="py-5 first:pt-0 last:pb-0">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <div key={g.labelKey} className="border-t py-4 first:border-t-0 first:pt-0">
+                <p className="mb-2.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   {t(`reason_groups.${g.labelKey}`)}
                 </p>
-                <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
                   {g.reasons.map((r) => {
                     const allowed = allowedSet.has(r);
                     return (
                       <label
                         key={r}
-                        className={`flex items-center gap-2 rounded px-1 py-1 text-sm ${
+                        className={`flex min-h-10 items-center gap-2.5 rounded-md px-2 text-[15px] transition-colors ${
                           g.reasons.length === 1 ? "sm:col-span-2" : ""
                         } ${
                           allowed
-                            ? "cursor-pointer hover:bg-muted/50"
-                            : "cursor-not-allowed opacity-50"
+                            ? "cursor-pointer hover:bg-muted/60"
+                            : "cursor-not-allowed opacity-45"
+                        } ${
+                          reason === r
+                            ? "bg-[color-mix(in_srgb,var(--primary)_12%,transparent)]"
+                            : ""
                         }`}
                       >
                         <input
@@ -307,17 +327,17 @@ export function DisqualifyModal({
                           checked={reason === r}
                           onChange={() => setReason(r)}
                           disabled={!allowed}
-                          className="shrink-0"
+                          className="size-5 shrink-0 accent-[var(--primary)]"
                         />
-                        <span className="flex flex-1 items-center gap-1.5">
-                          <span>{t(`reasons.${r}.label`)}</span>
+                        <span className="flex flex-1 items-center gap-2">
+                          <span className="flex-1">{t(`reasons.${r}.label`)}</span>
                           <Tooltip>
                             <TooltipTrigger
                               render={
-                                <span className="inline-flex shrink-0 text-muted-foreground/60" />
+                                <span className="inline-flex shrink-0 text-muted-foreground/70" />
                               }
                             >
-                              <HelpCircle className="h-3.5 w-3.5" />
+                              <HelpCircle className="size-[15px]" />
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs">
                               {t(`reasons.${r}.description`)}
@@ -339,11 +359,11 @@ export function DisqualifyModal({
           </div>
         </div>
 
-        <div className="shrink-0 space-y-3 border-t px-6 py-4">
+        <div className="shrink-0 space-y-4 border-t bg-background px-6 py-5 sm:px-7">
         <label className="block">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             {noteRequired ? (
-              <span className="text-rose-600 dark:text-rose-400">
+              <span className="text-destructive">
                 {t("modal.note_required")} *
               </span>
             ) : (
@@ -361,19 +381,19 @@ export function DisqualifyModal({
                 ? t("modal.note_placeholder_required")
                 : t("modal.note_placeholder", { name: fullName })
             }
-            className={`mt-1 w-full rounded border bg-background px-2 py-1 text-sm ${
+            className={`mt-2 w-full resize-y rounded-lg border bg-card px-3.5 py-3 text-[15px] leading-relaxed ${
               noteRequired && trimmedNote.length === 0
-                ? "border-rose-300 dark:border-rose-700"
+                ? "border-destructive/60"
                 : ""
             }`}
           />
         </label>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="rounded border px-3 py-1.5 text-sm"
+            className="inline-flex h-11 items-center rounded-md border px-4.5 text-[15px] font-semibold transition-colors hover:bg-muted"
           >
             {t("modal.cancel")}
           </button>
@@ -381,8 +401,9 @@ export function DisqualifyModal({
             type="button"
             onClick={submit}
             disabled={!canSubmit}
-            className="rounded bg-rose-600 px-3 py-1.5 text-sm text-white hover:bg-rose-700 disabled:opacity-50"
+            className="inline-flex h-11 items-center gap-2 rounded-md bg-destructive px-4.5 text-[15px] font-semibold text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
+            <Ban className="size-4" aria-hidden />
             {t("modal.confirm")}
           </button>
         </div>

@@ -40,6 +40,44 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* Direction B — the named palette from the design: Paper, Sand, Forest,
+     Charge, Signal. Used by the public home page; fall back to the site's
+     own tokens outside the Direction B scope. */
+  --color-tone-success: var(--tone-success, var(--primary));
+  --color-tone-success-tint: var(--tone-success-tint, var(--muted));
+  --color-tone-warning: var(--tone-warning, var(--foreground));
+  --color-tone-warning-tint: var(--tone-warning-tint, var(--muted));
+  --color-tone-danger: var(--tone-danger, var(--destructive));
+  --color-tone-danger-tint: var(--tone-danger-tint, var(--muted));
+  --color-tone-info: var(--tone-info, var(--foreground));
+  --color-tone-info-tint: var(--tone-info-tint, var(--muted));
+
+  --color-b-paper: var(--b-paper, var(--background));
+  --color-b-sand: var(--b-sand, var(--muted));
+  --color-b-inset: var(--b-inset, var(--muted));
+  --color-b-forest: var(--b-forest, var(--foreground));
+  --color-b-on-forest: var(--b-on-forest, var(--background));
+  --color-b-charge: var(--b-charge, var(--primary));
+  --color-b-on-charge: var(--b-on-charge, var(--primary-foreground));
+  --color-b-signal: var(--b-signal, var(--primary));
+
+  /* Direction B — partner-space surfaces and lead-quality bands. Values are
+     defined in the `[data-partner-shell]` scope below; outside it they fall
+     back to the public site's tokens so a stray class can't render invisible. */
+  --color-partner-column: var(--partner-column, var(--muted));
+  --color-partner-inset: var(--partner-inset, var(--muted));
+  --color-partner-dashed: var(--partner-dashed, var(--border));
+  --color-partner-accent: var(--partner-accent, var(--primary));
+  --color-partner-hot: var(--partner-hot, var(--primary));
+  --color-partner-hot-bg: var(--partner-hot-bg, var(--muted));
+  --color-partner-warm: var(--partner-warm, var(--foreground));
+  --color-partner-warm-bg: var(--partner-warm-bg, var(--muted));
+  --color-partner-cold: var(--partner-cold, var(--foreground));
+  --color-partner-cold-bg: var(--partner-cold-bg, var(--muted));
+  --color-partner-won: var(--partner-won, var(--primary));
+  --color-partner-lost: var(--partner-lost, var(--destructive));
+  --color-partner-rot: var(--partner-rot, var(--foreground));
+
   --font-sans: var(--font-open-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-heading: var(--font-montserrat), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: Georgia, serif;
@@ -97,6 +135,22 @@
   --sidebar-accent: hsl(220 10% 92%);
   --sidebar-accent-foreground: hsl(220 15% 25%);
   --sidebar-ring: hsl(142 76% 36%);
+
+  /* ─ Geometry, as tokens ─
+     Direction B specifies a different control scale (44/56/36 buttons, 56px
+     fields, 6px corners on buttons and badges, never a pill). The primitives
+     read these variables instead of hardcoding sizes, so the Direction B scope
+     can restate them without touching a single component — and everything
+     outside that scope keeps exactly the values it has today. */
+  --control-h-sm: 2rem;
+  --control-h-md: 2.25rem;
+  --control-h-lg: 2.5rem;
+  --control-radius: var(--radius-lg);
+  --field-h: 2rem;
+  --field-radius: var(--radius-lg);
+  --badge-h: 1.5rem;
+  --badge-radius: calc(var(--radius) * 8);
+  --focus-ring-width: 3px;
 
   --radius: 0.5rem;
 
@@ -179,6 +233,698 @@
   --destructive-border: hsl(0 80% 59%);
   --sidebar-primary-border: hsl(142 71% 54%);
   --sidebar-accent-border: hsl(220 16% 31%);
+}
+
+/* ─── Direction B — type scale (06 Composants UI, artboard 1a) ──────────────
+   Seven sizes, no others. Declared as utilities so a component asks for a rung
+   by name instead of restating a clamp, a line-height and a tracking value
+   every time — which is what the scale is for, and what stops it drifting.
+
+   The display and heading rungs fluid-scale down on narrow screens; their
+   upper bound is the size the design draws at 1240px. Nothing here is scoped:
+   a utility that only worked in one place would be a trap. They simply go
+   unused outside Direction B. */
+@utility type-display {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(2.5rem, 6vw, 4.25rem); /* 40 → 68 */
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+@utility type-h1 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(2rem, 4vw, 2.75rem); /* 32 → 44 */
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+}
+
+@utility type-h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(1.5rem, 3vw, 2rem); /* 24 → 32 */
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+@utility type-h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.5rem; /* 24 */
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+@utility type-subtitle {
+  font-weight: 600;
+  font-size: 1.25rem; /* 20 */
+  line-height: 1.3;
+}
+
+@utility type-body {
+  font-size: 1.0625rem; /* 17 */
+  line-height: 1.6;
+}
+
+@utility type-secondary {
+  font-size: 0.9375rem; /* 15 */
+  line-height: 1.55;
+}
+
+@utility type-caption {
+  /* The floor. Nothing in Direction B is smaller than 14px. */
+  font-size: 0.875rem; /* 14 */
+  line-height: 1.45;
+}
+
+@utility type-label {
+  font-weight: 600;
+  font-size: 0.8125rem; /* 13 */
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ─── Direction B — control scale and semantic tones ────────────────────────
+   Applies to both Direction B surfaces: the public home page and the partner
+   space. Only the variables are restated here; the components read them, so
+   nothing outside these two scopes is affected. */
+html:has([data-direction-b]),
+html:has([data-partner-shell]) {
+  --control-h-sm: 2.25rem;   /* 36 */
+  --control-h-md: 2.75rem;   /* 44 — the minimum target */
+  --control-h-lg: 3.5rem;    /* 56 — fields and primary CTAs */
+  --control-radius: 6px;
+  --field-h: 3.5rem;
+  --field-radius: 8px;
+  --badge-h: 1.75rem;        /* 28 */
+  --badge-radius: 6px;       /* never a pill */
+
+  /* Four semantic pairs: a readable ink and the tint it sits on. Each ink is
+     AA on both Paper and Sand, which is why they are darker than the usual
+     500-weight hues. */
+  --tone-success: #0b5c2e;
+  --tone-success-tint: rgba(22, 163, 74, 0.12);
+  --tone-warning: #5c3d00;
+  --tone-warning-tint: #fbf3e1;
+  --tone-danger: #8c1d18;
+  --tone-danger-tint: rgba(179, 38, 30, 0.1);
+  --tone-info: #173f73;
+  --tone-info-tint: rgba(30, 91, 168, 0.12);
+}
+
+html.dark:has([data-direction-b]),
+html.dark:has([data-partner-shell]) {
+  --tone-success: #7ce8ad;
+  --tone-success-tint: rgba(22, 163, 74, 0.2);
+  --tone-warning: #e8c98a;
+  --tone-warning-tint: rgba(161, 98, 7, 0.22);
+  --tone-danger: #f2645a;
+  --tone-danger-tint: rgba(179, 38, 30, 0.22);
+  --tone-info: #9cc4f0;
+  --tone-info-tint: rgba(30, 91, 168, 0.24);
+}
+
+/* ─── Direction B — primitive geometry (06 Composants UI) ───────────────────
+   The control scale that could not be expressed as a token, applied only
+   inside the two Direction B surfaces. Selectors go through `data-slot`, which
+   every shadcn primitive already carries, so no component file is edited and
+   nothing outside these scopes moves.
+
+   Specificity note: `[data-direction-b] [data-slot=…]` is (0,2,0) and beats a
+   Tailwind utility (0,1,0) — which is what lets these restate the defaults —
+   but it also means a component that deliberately sets its own size here would
+   be overridden. Only properties the spec actually changes are listed. */
+[data-direction-b],
+[data-partner-shell] {
+  /* Focus: 3px, offset 2, on every focusable thing. */
+  & :focus-visible {
+    outline: var(--focus-ring-width) solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Fields — 56px, 8px corners, sand-tinted well. */
+  & [data-slot="select-trigger"] {
+    height: var(--field-h);
+    border-radius: var(--field-radius);
+    padding-inline: 1.125rem;
+    font-size: 1.0625rem;
+  }
+
+  /* Checkbox — 24px, 6px corners. */
+  & [data-slot="checkbox"] {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 6px;
+  }
+  & [data-slot="checkbox-indicator"] svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+  }
+
+  /* Radio — 24px circle with a 12px dot. */
+  & [data-slot="radio-group-item"] {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  & [data-slot="radio-group-indicator"] svg,
+  & [data-slot="radio-group-indicator"] > * {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  /* Switch — a 52×30 rounded rectangle, not a pill, with a square thumb. */
+  & [data-slot="switch"] {
+    width: 3.25rem;
+    height: 1.875rem;
+    border-radius: 6px;
+  }
+  & [data-slot="switch-thumb"] {
+    border-radius: 4px;
+  }
+  & [data-slot="switch"][data-size="default"] [data-slot="switch-thumb"] {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  /* Slider — 6px rail, 28px thumb. */
+  & [data-slot="slider-track"] {
+    border-radius: 6px;
+  }
+  & [data-slot="slider-track"][data-horizontal] {
+    height: 0.375rem;
+  }
+  & [data-slot="slider-thumb"] {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-width: 2px;
+    border-color: var(--b-charge, var(--primary));
+    background: var(--card);
+    box-shadow: 0 2px 6px rgba(12, 59, 39, 0.2);
+  }
+
+  /* Progress — 8px rail. */
+  & [data-slot="progress"] {
+    height: 0.5rem;
+    border-radius: 6px;
+  }
+
+  /* Pagination and tabs — 44px and 40px targets, square corners. */
+  & [data-slot="pagination-link"] {
+    min-width: var(--control-h-md);
+    height: var(--control-h-md);
+    border-radius: var(--control-radius);
+  }
+  & [data-slot="tabs-list"] {
+    border-radius: 8px;
+    padding: 4px;
+  }
+  & [data-slot="tabs-trigger"] {
+    height: 2.5rem;
+    border-radius: var(--control-radius);
+    padding-inline: 1rem;
+    font-size: 0.9375rem;
+  }
+
+  /* Menus and dialogs — 8px cards, 12px blocks, one shadow. */
+  & [data-slot="dropdown-menu-content"],
+  & [data-slot="select-content"],
+  & [data-slot="popover-content"] {
+    border-radius: 8px;
+    box-shadow: 0 16px 40px -16px rgba(12, 59, 39, 0.3);
+  }
+  & [data-slot="dropdown-menu-item"],
+  & [data-slot="select-item"] {
+    min-height: 2.5rem;
+    border-radius: var(--control-radius);
+    font-size: 0.9375rem;
+  }
+  & [data-slot="dialog-content"],
+  & [data-slot="alert-dialog-content"] {
+    border-radius: 12px;
+    box-shadow: 0 24px 60px -24px rgba(7, 35, 26, 0.5);
+  }
+
+  /* Tooltip — forest ground, 14px, readable rather than tiny. */
+  & [data-slot="tooltip-content"] {
+    border-radius: 8px;
+    background: var(--b-forest, var(--foreground));
+    color: var(--b-on-forest, var(--background));
+    font-size: 0.875rem;
+    line-height: 1.5;
+    padding: 0.75rem 0.875rem;
+  }
+
+  /* Table — tinted header, hairline rows. */
+  & [data-slot="table-header"] {
+    background: var(--b-inset, var(--muted));
+  }
+  & [data-slot="table-head"],
+  & [data-slot="table-cell"] {
+    padding: 0.875rem 1rem;
+  }
+
+  /* Alerts — the four semantic tones, ink on its own tint. */
+  & [data-slot="alert"] {
+    border-radius: 8px;
+    padding: 1rem 1.125rem;
+  }
+  & [data-slot="alert"][data-variant="destructive"] {
+    background: var(--tone-danger-tint);
+    border-color: color-mix(in srgb, var(--tone-danger) 30%, transparent);
+    color: var(--tone-danger);
+  }
+
+  /* Avatar — a rounded square, not a circle. The design uses initials on
+     forest for people and companies alike; a circle would read as a photo
+     placeholder that never arrives. */
+  & [data-slot="avatar"] {
+    border-radius: 6px;
+  }
+  & [data-slot="avatar-image"],
+  & [data-slot="avatar-fallback"] {
+    border-radius: inherit;
+  }
+  & [data-slot="avatar-fallback"] {
+    background: var(--b-forest, var(--foreground));
+    color: var(--b-on-forest, var(--background));
+    font-weight: 600;
+  }
+
+  /* Breadcrumb — 15px, the trail muted and the current page in ink. */
+  & [data-slot="breadcrumb-list"] {
+    font-size: 0.9375rem;
+    gap: 0.5rem;
+  }
+  & [data-slot="breadcrumb-page"] {
+    color: var(--foreground);
+    font-weight: 500;
+  }
+  & [data-slot="breadcrumb-separator"] svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  /* Accordion — 60px rows, 17px question, hairline between items. */
+  & [data-slot="accordion-item"] {
+    border-bottom: 1px solid var(--border);
+  }
+  & [data-slot="accordion-trigger"] {
+    min-height: 3.75rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  & [data-slot="accordion-trigger-icon"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--muted-foreground);
+  }
+  & [data-slot="accordion-content"] {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--muted-foreground);
+  }
+}
+
+/* Toast — the one surface that is forest-on-paper rather than the reverse, so
+   it reads as the app speaking rather than as page content. Sonner renders
+   outside the Direction B subtree, into its own portal, so it is matched from
+   <html> rather than through a descendant selector. */
+html:has([data-direction-b]) [data-sonner-toast],
+html:has([data-partner-shell]) [data-sonner-toast] {
+  border-radius: 8px;
+  border-color: transparent;
+  background: var(--b-forest, var(--foreground));
+  color: var(--b-on-forest, var(--background));
+  box-shadow: 0 16px 40px -16px rgba(7, 35, 26, 0.5);
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+}
+
+html:has([data-direction-b]) [data-sonner-toast] [data-icon] svg,
+html:has([data-partner-shell]) [data-sonner-toast] [data-icon] svg {
+  color: var(--b-signal, var(--primary));
+}
+
+html:has([data-direction-b]) [data-sonner-toast] [data-button],
+html:has([data-partner-shell]) [data-sonner-toast] [data-button] {
+  height: 2rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--b-on-forest, var(--background)) 12%, transparent);
+  color: var(--b-on-forest, var(--background));
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Skeleton: a shimmer rather than a pulse — it reads as "loading" instead of
+   "broken", and it is the one place the design asks for motion. */
+[data-direction-b] [data-slot="skeleton"],
+[data-partner-shell] [data-slot="skeleton"] {
+  background: linear-gradient(
+    90deg,
+    var(--b-sand, var(--muted)) 0px,
+    color-mix(in srgb, var(--b-sand, var(--muted)) 55%, var(--card)) 40px,
+    var(--b-sand, var(--muted)) 80px
+  );
+  background-size: 400px 100%;
+  animation: er-shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-direction-b] [data-slot="skeleton"],
+  [data-partner-shell] [data-slot="skeleton"] {
+    animation: none;
+  }
+}
+
+@keyframes er-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+/* ─── Direction B — public home page ─────────────────────────────────────────
+   Same visual direction as the partner space, applied to the public site. The
+   home page carries `data-direction-b`; `:has()` lifts the palette to <html>
+   so the shared Header and Footer (rendered by [lang]/layout.tsx, outside the
+   page) adopt it too — and only on the routes that opt in. Every other public
+   page keeps the site's existing palette and type.
+
+   Light and dark are mutually exclusive selectors of equal specificity so
+   neither out-ranks the other; both out-rank the plain `:root` / `.dark`. */
+html:not(.dark):has([data-direction-b]) {
+  --background: #f0ede5;
+  --foreground: #14231c;
+  --border: #d6cfbf;
+  --card: #f3f1eb;
+  --card-foreground: #14231c;
+  --card-border: #d6cfbf;
+  --popover: #f3f1eb;
+  --popover-foreground: #14231c;
+  --popover-border: #d6cfbf;
+  /* Forest, not the link green: every `bg-primary` on this page is a CTA, and
+     the design paints those #07231A. Links get their own colour below. */
+  --primary: #07231a;
+  --primary-foreground: #f3f1eb;
+  --secondary: #e2dcce;
+  --secondary-foreground: #14231c;
+  --muted: #e2dcce;
+  --muted-foreground: #465550;
+  --accent: #e2dcce;
+  --accent-foreground: #14231c;
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --input: #c4bcaa;
+  --ring: #0f7a3d;
+
+  --primary-border: #04150c;
+  --secondary-border: #c4bcaa;
+  --muted-border: #c4bcaa;
+  --accent-border: #c4bcaa;
+  --destructive-border: #8c1d18;
+
+  --b-paper: #f0ede5;
+  --b-sand: #e2dcce;
+  --b-inset: #e9e4d8;
+  --b-forest: #07231a;
+  --b-on-forest: #f3f1eb;
+  --b-charge: #16a34a;
+  --b-on-charge: #04150c;
+  --b-signal: #3ddc84;
+  --b-link: #0f7a3d;
+}
+
+html.dark:has([data-direction-b]) {
+  --background: #060f0b;
+  --foreground: #e8ede9;
+  --border: #25402f;
+  --card: #142a20;
+  --card-foreground: #e8ede9;
+  --card-border: #25402f;
+  --popover: #142a20;
+  --popover-foreground: #e8ede9;
+  --popover-border: #25402f;
+  --primary: #3ddc84;
+  --primary-foreground: #04150c;
+  --secondary: #1b3527;
+  --secondary-foreground: #e8ede9;
+  --muted: #1b3527;
+  --muted-foreground: #a3b8ad;
+  --accent: #1b3527;
+  --accent-foreground: #e8ede9;
+  --destructive: #f2645a;
+  --destructive-foreground: #1a0705;
+  --input: #2f4d3b;
+  --ring: #3ddc84;
+
+  --primary-border: #2fb96c;
+  --secondary-border: #244034;
+  --muted-border: #244034;
+  --accent-border: #244034;
+  --destructive-border: #c94a42;
+
+  --b-paper: #060f0b;
+  --b-sand: #0c1b14;
+  --b-inset: #0f2318;
+  --b-forest: #0c1b14;
+  --b-on-forest: #e8ede9;
+  --b-charge: #16a34a;
+  --b-on-charge: #eafff2;
+  --b-signal: #3ddc84;
+  --b-link: #3ddc84;
+}
+
+html:has([data-direction-b]) {
+  --font-sans: var(--font-public-sans), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-instrument-sans), system-ui, -apple-system, sans-serif;
+}
+
+[data-direction-b] {
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
+[data-direction-b] :focus-visible {
+  outline: 3px solid var(--b-link, var(--ring));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Sections slide up as they enter the viewport, driven by the scroll position
+   rather than a JS observer.
+
+   Written as longhands on purpose. The `animation` shorthand resets
+   `animation-duration` to its initial `0s`, and a scroll-driven timeline needs
+   `auto` to be driven by scroll at all — with `0s` the animation never
+   progresses and `fill: both` pins the element on its first keyframe, i.e.
+   opacity 0. That is an animation that silently hides the page below the fold.
+
+   The explicit `opacity: 1` base is the seatbelt: if the timeline ever fails to
+   attach for any reason, the content is visible rather than blank. */
+[data-direction-b] [data-reveal] {
+  opacity: 1;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-direction-b] [data-reveal] {
+      animation-name: er-reveal;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+@keyframes er-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes er-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.9;
+  }
+}
+
+/* ─── Direction B — partner space ────────────────────────────────────────────
+   The partner portal runs its own visual direction: a warm parchment ground,
+   a deep-forest sidebar and a green accent, set in Instrument Sans / Public
+   Sans. It is scoped rather than global so the public site keeps its own
+   palette and type.
+
+   The hook is `:has([data-partner-shell])` on <html> rather than a class on a
+   wrapper div, because the sidebar's mobile Sheet and every popover/tooltip
+   portal to document.body — a wrapper scope would leave them on the public
+   palette. Light and dark are written as mutually exclusive selectors of equal
+   specificity (`html:not(.dark):has(…)` / `html.dark:has(…)`) so neither can
+   out-rank the other, and both out-rank the plain `:root` / `.dark` blocks. */
+html:not(.dark):has([data-partner-shell]) {
+  --background: #f0ede5;
+  --foreground: #14231c;
+  --border: #d6cfbf;
+  --card: #f3f1eb;
+  --card-foreground: #14231c;
+  --card-border: #d6cfbf;
+  --popover: #f3f1eb;
+  --popover-foreground: #14231c;
+  --popover-border: #d6cfbf;
+  --primary: #0f7a3d;
+  --primary-foreground: #f3f1eb;
+  --secondary: #e2dcce;
+  --secondary-foreground: #14231c;
+  --muted: #e2dcce;
+  --muted-foreground: #465550;
+  --accent: #e2dcce;
+  --accent-foreground: #14231c;
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --input: #c4bcaa;
+  --ring: #0f7a3d;
+
+  --chart-1: #16a34a;
+  --chart-2: #0f7a3d;
+  --chart-3: #a16207;
+  --chart-4: #1e5ba8;
+  --chart-5: #b3261e;
+
+  --sidebar: #07231a;
+  --sidebar-foreground: #f3f1eb;
+  --sidebar-border: rgba(243, 241, 235, 0.14);
+  --sidebar-primary: #3ddc84;
+  --sidebar-primary-foreground: #04150c;
+  --sidebar-accent: rgba(243, 241, 235, 0.1);
+  --sidebar-accent-foreground: #f3f1eb;
+  --sidebar-ring: #3ddc84;
+
+  --primary-border: #0b5c2e;
+  --secondary-border: #c4bcaa;
+  --muted-border: #c4bcaa;
+  --accent-border: #c4bcaa;
+  --destructive-border: #8c1d18;
+  --sidebar-primary-border: #2fb96c;
+  --sidebar-accent-border: rgba(243, 241, 235, 0.2);
+
+  --partner-column: #e2dcce;
+  --partner-inset: #e9e4d8;
+  --partner-dashed: #c4bcaa;
+  --partner-accent: #3ddc84;
+  --partner-hot: #0b5c2e;
+  --partner-hot-bg: rgba(22, 163, 74, 0.14);
+  --partner-warm: #5c3d00;
+  --partner-warm-bg: #fbf3e1;
+  --partner-cold: #173f73;
+  --partner-cold-bg: rgba(30, 91, 168, 0.12);
+  --partner-won: #16a34a;
+  --partner-lost: #b3261e;
+  --partner-rot: #a16207;
+}
+
+html.dark:has([data-partner-shell]) {
+  /* Dark counterpart to the parchment ramp. Direction B stacks four surfaces —
+     ground < column < card < muted — and the dark set has to keep the same
+     four steps apart, or the kanban columns and the sidebar dissolve into the
+     page. Values are a single green-tinted ramp, lightening as they rise. */
+  --background: #060f0b;
+  --foreground: #e8ede9;
+  --border: #25402f;
+  --card: #142a20;
+  --card-foreground: #e8ede9;
+  --card-border: #25402f;
+  --popover: #142a20;
+  --popover-foreground: #e8ede9;
+  --popover-border: #25402f;
+  --primary: #3ddc84;
+  --primary-foreground: #04150c;
+  --secondary: #1b3527;
+  --secondary-foreground: #e8ede9;
+  --muted: #1b3527;
+  --muted-foreground: #a3b8ad;
+  --accent: #1b3527;
+  --accent-foreground: #e8ede9;
+  --destructive: #f2645a;
+  --destructive-foreground: #1a0705;
+  --input: #2f4d3b;
+  --ring: #3ddc84;
+
+  --chart-1: #3ddc84;
+  --chart-2: #16a34a;
+  --chart-3: #e0a63a;
+  --chart-4: #6ba3e8;
+  --chart-5: #f2645a;
+
+  /* The sidebar is the darkest surface in light mode; in dark mode it becomes
+     a *raised* rail instead, because a near-black rail on a near-black page
+     reads as nothing at all. */
+  --sidebar: #0c1b14;
+  --sidebar-foreground: #e8ede9;
+  --sidebar-border: rgba(232, 237, 233, 0.14);
+  --sidebar-primary: #3ddc84;
+  --sidebar-primary-foreground: #04150c;
+  --sidebar-accent: rgba(232, 237, 233, 0.1);
+  --sidebar-accent-foreground: #e8ede9;
+  --sidebar-ring: #3ddc84;
+
+  --primary-border: #2fb96c;
+  --secondary-border: #2a4737;
+  --muted-border: #2a4737;
+  --accent-border: #2a4737;
+  --destructive-border: #c94a42;
+  --sidebar-primary-border: #2fb96c;
+  --sidebar-accent-border: rgba(232, 237, 233, 0.2);
+
+  --partner-column: #0c1b14;
+  --partner-inset: #0f2318;
+  --partner-dashed: #2f4d3b;
+  --partner-accent: #3ddc84;
+  --partner-hot: #7ce8ad;
+  --partner-hot-bg: rgba(22, 163, 74, 0.22);
+  --partner-warm: #e8c98a;
+  --partner-warm-bg: rgba(161, 98, 7, 0.26);
+  --partner-cold: #9cc4f0;
+  --partner-cold-bg: rgba(30, 91, 168, 0.28);
+  --partner-won: #3ddc84;
+  --partner-lost: #f2645a;
+  --partner-rot: #e0a63a;
+}
+
+/* Type: Instrument Sans for headings and figures, Public Sans for text.
+   Tabular figures throughout — the partner reads these screens as numbers. */
+html:has([data-partner-shell]) {
+  --font-sans: var(--font-public-sans), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-instrument-sans), system-ui, -apple-system, sans-serif;
+}
+
+[data-partner-shell] {
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
+/* A 3px ring is the design's focus treatment — visible against both the
+   parchment ground and the dark sidebar. */
+[data-partner-shell] :focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* ─── Focused layout: hides site header/footer for immersive pages (e.g. quote form) ─── */

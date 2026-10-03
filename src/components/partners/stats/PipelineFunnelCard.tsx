@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ListChecks } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { StatsCard } from "./StatsCard";
 import type { FunnelRow } from "@/lib/dispatch/stats";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 
@@ -25,17 +25,13 @@ export function PipelineFunnelCard({
   }, []);
 
   return (
-    <Card className="p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
-      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
-        <ListChecks className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        <span>{t("stats.funnel.title")}</span>
-      </h3>
+    <StatsCard title={t("stats.funnel.title")} Icon={ListChecks}>
       {empty ? (
-        <p className="py-6 text-center text-xs text-muted-foreground">
+        <p className="py-6 text-center text-sm text-muted-foreground">
           {t("stats.empty")}
         </p>
       ) : (
-        <ul className="divide-y divide-dotted divide-border">
+        <ul>
           {rows.map((r, i) => {
             const width = max > 0 ? (r.count / max) * 100 : 0;
             const oldestSuffix =
@@ -45,13 +41,13 @@ export function PipelineFunnelCard({
             return (
               <li
                 key={r.stage}
-                className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
+                className="grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)_2.5rem] items-center gap-3.5 border-t border-dotted py-2.5 first:border-t-0 first:pt-0"
                 title={`${t(`stages.${r.stage}`)} · ${r.count}${oldestSuffix}`}
               >
-                <span className="truncate text-xs font-medium text-foreground">
+                <span className="truncate text-sm font-medium text-foreground">
                   {t(`stages.${r.stage}`)}
                 </span>
-                <div className="relative h-5">
+                <div className="relative h-[22px]">
                   <div
                     className="absolute inset-y-0 left-1/2 -translate-x-1/2 rounded-sm transition-[width] duration-700 ease-out"
                     style={{
@@ -61,7 +57,7 @@ export function PipelineFunnelCard({
                     }}
                   />
                 </div>
-                <span className="w-8 text-right text-xs font-semibold tabular-nums">
+                <span className="text-right text-sm font-semibold tabular-nums">
                   {r.count}
                 </span>
               </li>
@@ -69,6 +65,6 @@ export function PipelineFunnelCard({
           })}
         </ul>
       )}
-    </Card>
+    </StatsCard>
   );
 }

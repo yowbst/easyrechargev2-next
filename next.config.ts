@@ -19,10 +19,25 @@ const nextConfig: NextConfig = {
 
   images: {
     qualities: [60, 65, 75],
+    // Next's default tops out at 3840. Mesuré le 2026-09-13 sur les 1811
+    // images du CMS : une seule dépasse 2048 px (un fichier à 2500). Le
+    // candidat 3840 ne peut donc rien renvoyer de plus détaillé que 2048 —
+    // il produit une transformation Vercel facturée dont les octets sont
+    // identiques à ceux du candidat précédent. `sizes` ne borne que le BAS
+    // du srcset (get-img-props.js:62), jamais le haut : seul ce réglage
+    // retire le candidat.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     remotePatterns: [
+      // Both hostnames serve the same Directus instance. Listing both means a
+      // switch of DIRECTUS_URL cannot silently break every image on the site:
+      // next/image rejects any host absent from this list.
       {
         protocol: "https",
         hostname: "easyrechargev2-directus-production.up.railway.app",
+      },
+      {
+        protocol: "https",
+        hostname: "cms.easyrecharge.ch",
       },
     ],
   },

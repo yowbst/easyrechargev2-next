@@ -18,7 +18,18 @@ DIRECTUS_STATIC_TOKEN=<already set for the app>
 BRIGHTDATA_API_TOKEN=<token for the account that owns the collectors — see gotcha below>
 BRIGHTDATA_LIST_COLLECTOR=c_mipqo2it4a63h5g0k
 BRIGHTDATA_DETAILS_COLLECTOR=c_misied485yd5jpx0u
+
+# only the `images` command reads these — it refuses to start without the three
+BRIGHTDATA_CUSTOMER_ID=hl_27b6d7ae
+BRIGHTDATA_PROXY_ZONE=datacenter_proxy1
+BRIGHTDATA_PROXY_PASSWORD=<the zone's password, from the zone page>
+BRIGHTDATA_PROXY_HOST=brd.superproxy.io:44445   # optional, this is the default
 ```
+
+**The port is 44445, not the 33335 Bright Data's public docs show.** 33335 is
+refused by this account's datacenter zone. `BRIGHTDATA_PROXY_HOST` exists only as an
+override if the zone ever moves — take the value from the zone's own page in the
+dashboard, never from the docs.
 
 **If a trigger 404s, suspect a stale collector ID first.** `{"error":"Collector not found"}`
 is returned for an outdated ID and for a completely made-up one alike, so the error gives no
@@ -41,29 +52,42 @@ npm run ingest -- clean  --in <file>      # normalize + slug -> data/clean/<date
 npm run ingest -- brands --in <file>      # create/update vehicle_brands rows (WRITES)
 npm run ingest -- plan   --in <file>      # diff against CMS -> data/plans/<date>.json (read-only)
 npm run ingest -- apply  --plan <file>    # execute a reviewed plan (WRITES)
+npm run ingest -- images                  # upload 1536px thumbnails (WRITES) — see below
 npm run ingest -- help
 ```
 
-Options: `--dry-run` (brands/apply — print intent, zero writes), `--max-change-ratio <n>`
-(plan — override the change-ratio guard; `n` is a 0–1 fraction of the CMS count, not a
-percentage — e.g. `0.5`, not `50`), `--limit <n>` (scrape — cap DETAILS URLs fetched).
+Options:
+
+| Flag | Commands | Meaning |
+|---|---|---|
+| `--dry-run` | brands, apply, images | print intent, perform zero writes |
+| `--max-change-ratio <n>` | plan | override the change-ratio guard. `n` is a 0–1 fraction of the CMS count, **not** a percentage — `0.5`, not `50` |
+| `--partial` | plan | this snapshot is knowingly a subset of the catalogue: disables the scrape-size floor. The change-ratio guard stays active |
+| `--limit <n>` | scrape, images | scrape: cap DETAILS URLs fetched. images: cap thumbnails attempted |
+| `--only <file>` | scrape | target these `car_url`s (one per line), ignoring availability — how the discontinued records were repaired |
+| `--include-unavailable` | clean | keep discontinued vehicles instead of dropping them |
+| `--status draft\|published` | images | process only that half of the catalogue |
 Any flag not valid for the command being run (including a typo like `--dryrun`) is
 rejected with an error.
 
 ## Sequence
 
+Each command prints the path it wrote; paste that path into the next one. The names are
+stamped to the second, so they differ on every run — do not guess them.
+
 ```bash
 npm run ingest -- scrape
-npm run ingest -- clean  --in data/raw/<date>.json
+npm run ingest -- clean  --in data/raw/<stamp>.json
 
-npm run ingest -- brands --in data/clean/<date>.json --dry-run
+npm run ingest -- brands --in data/clean/<stamp>.json --dry-run
 # read the printed CREATE/UPDATE/unchanged lines — brands has no plan/apply gate,
 # this dry run is the only review step it gets before writing to Directus
-npm run ingest -- brands --in data/clean/<date>.json
+npm run ingest -- brands --in data/clean/<stamp>.json
 
-npm run ingest -- plan   --in data/clean/<date>.json
-# review the printed bucket summary and data/plans/<date>.json
-npm run ingest -- apply  --plan data/plans/<date>.json
+npm run ingest -- plan   --in data/clean/<stamp>.json --partial
+# --partial is expected here, see Guardrails; review the printed bucket summary
+# and the plan file before applying
+npm run ingest -- apply  --plan data/plans/<stamp>.json
 ```
 
 **`brands` writes immediately — it is not gated by a plan/apply step the way vehicles
@@ -85,10 +109,58 @@ you're not watching the terminal.
 New vehicles (from `apply`) and new brands (from `brands`) both land as `draft` in
 Directus. Add a thumbnail and publish by hand.
 
+## Images
+
+```bash
+npm run ingest -- images --dry-run                   # selection only, zero bytes
+npm run ingest -- images --status draft --limit 5    # smallest safe live run
+npm run ingest -- images --status published          # the visitor-facing half
+npm run ingest -- images                             # everything
+```
+
+Reads `evdb_images_urls` — already in the CMS, populated by `apply` — picks the `@2x`
+variant (1536x864), downloads it, uploads it to Directus as `<slug>@2x.jpg` in the
+vehicles folder, and repoints `vehicle.thumbnail` at the new file. **No scrape is
+needed**; the source URLs are already stored.
+
+**Every download goes through the Bright Data datacenter proxy zone, and the command
+fails closed.** With `BRIGHTDATA_CUSTOMER_ID`, `BRIGHTDATA_PROXY_ZONE` or
+`BRIGHTDATA_PROXY_PASSWORD` missing it refuses to start rather than falling back to a
+direct request — not downloading from the operator's
+own IP is the reason the feature exists, so there is deliberately no fallback and no flag
+to disable the proxy.
+
+**Idempotent, safe to re-run.** There is no checkpoint file: the CMS's own state decides
+what is done. A vehicle is skipped when its thumbnail's `width` is >= 1536 **or** its
+`filename_download` already equals `<slug>@2x.jpg`. The filename half of that test is not
+redundant — it is what stops a vehicle whose upstream source happens to be smaller than
+1536 from being re-downloaded and re-uploaded on every run forever. An interrupted run
+resumes simply by being run again.
+
+**Replacement is additive: the old file is never deleted.** The new file is uploaded and
+the relation repointed; the previous thumbnail stays in Directus, which is what makes a
+rollback a repoint rather than a re-download. The cost is ~562 orphaned 448px files
+(~23 MB) that can be cleaned up later, deliberately, once the result is trusted.
+
+Three vehicles have no image URL upstream and are reported as skipped, by slug, at the
+end of every run. They need a thumbnail added by hand:
+`smart-5-premium-my25-…`, `cupra-tavascan-250kw-vz-my27-…`,
+`ford-explorer-standard-range-rwd-my27-…`.
+
+A failed download or upload is counted and reported but does not abort the run — across
+830 network round-trips, stopping at the first error would make the command unusable.
+Re-running picks up exactly what failed.
+
 ## Guardrails
 
-- `plan` aborts if the scrape returns under 80% of the current CMS vehicle count (looks
-  like a broken scrape, not a shrinking catalogue).
+- `plan` aborts if the scrape returns under 80% of the current CMS vehicle count.
+  **Since the discontinued vehicles were imported, this floor trips on every normal
+  run — expect it.** EV Database lists only vehicles still on sale (~656); the CMS keeps
+  every model ever imported, withdrawn ones included (830 as of 2026-09-25). That is
+  79%, just under the floor, and the gap only widens as more models are withdrawn.
+  Confirm the raw snapshot looks sane, then re-run `plan` with `--partial`, which
+  disables this floor and nothing else — the change-ratio ceiling stays armed. The
+  error message spells this out at the point of failure.
 - `plan` aborts if CREATE + UPDATE exceeds 30% of the CMS count (looks like a
   field-mapping regression, not a real refresh). Override with `--max-change-ratio` only
   after you've confirmed the change is real.
@@ -131,10 +203,16 @@ Directus. Add a thumbnail and publish by hand.
 - **Plan bucket counts are per-entry, not per-vehicle.** One vehicle can appear as both
   an `UPDATE` and a `SLUG_DRIFT` (two separate entries), so the printed counts can sum to
   more than the scrape count. Don't read them as mutually-exclusive per-vehicle buckets.
-- New vehicles land as `draft` and need a thumbnail plus manual publishing in Directus —
-  see "Known limitations" below, there is no automated thumbnail step yet.
+- New vehicles land as `draft`. Run `images` to give them a thumbnail, then publish them
+  by hand in Directus — publishing is deliberately never automated.
 - Bright Data snapshots expire (16 days for batch collections, 7 days for real-time).
   Keep `data/raw/` around if you might need to re-run `clean`/`plan` without re-scraping.
+- **Run artefacts are stamped to the second** (`data/raw/2026-09-25-190211.json`), not by
+  day, and an existing path is never overwritten — a collision gets a `-2` suffix. They
+  used to be named `<date>.json`: on 2026-09-13 the targeted repair pass for the 174
+  discontinued vehicles silently overwrote the main 656-row snapshot of the same day,
+  destroying exactly the re-run capability the line above promises. Because the names now
+  vary, pass the real path to `clean`/`plan`/`apply` — the commands print it.
 - **`/dca/*` endpoints are current, not deprecated** — they were rebranded "Scraper
   Studio" in Bright Data's UI, but the API paths didn't change. Do **not** migrate to
   `/datasets/v3/*`; that's for Bright Data's prebuilt scrapers, not custom collectors
@@ -152,6 +230,13 @@ SLUG_DRIFT 0
 GONE       0
 UNCHANGED  562
 ```
+
+**This baseline is currently unusable: the December 2025 snapshot is not on disk.** The
+same-day overwrite described under Gotchas destroyed the September snapshots too, so the
+only surviving artefacts are those of the 174-row repair pass. Re-establishing a baseline
+means keeping the next full run's `data/raw/` file somewhere durable and recording its
+bucket counts here. Until then, treat the paragraph below as the procedure, not as
+something you can run today.
 
 If you ever suspect the comparison layer (`diff.ts`, `fieldmap.ts`, `queries.ts`) has
 regressed — e.g. `plan` starts reporting spurious `UPDATE`s or `CREATE`s against a
@@ -171,9 +256,17 @@ identity matching or field comparison broke.
   `buildBrandPayload` to leave `name` alone on update. Always run `brands --dry-run`
   first and check its UPDATE lines for a name change you didn't expect before running it
   live.
-- **There is no `images` command.** The original design considered scraping/uploading
-  thumbnails automatically; that was never implemented. Thumbnails for newly created
-  vehicles are a manual step in Directus today.
+- **`images` sets one thumbnail, not a gallery.** `evdb_images_urls` holds ~8 images per
+  vehicle; the command uses the first and ignores the rest.
+- **`images` leaves the superseded files in Directus.** They are the rollback, and
+  nothing cleans them up automatically. The 2026-09-13 batch was cleaned out by hand
+  on 2026-09-26: 740 of the 741 old 448px files deleted, 24.5 MB freed, manifest in
+  `docs/operations/2026-09-26-suppression-thumbnails-448.json`. One was kept —
+  `smart-5-premium-my25-…_thumb@2x.jpg` is still the thumbnail of a vehicle EV
+  Database publishes no image for, so deleting it would have left that record with
+  no picture at all. **Before any such cleanup, intersect the file ids with the
+  `thumbnail` of every vehicle and brand.** Filtering on width alone would have
+  broken that one record silently.
 
 ## Manual actions required (outside this repo)
 
