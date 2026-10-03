@@ -147,6 +147,7 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
             partnerIds,
             environment,
             config.billing.dedup_window_days,
+            product,
           )
         : Promise.resolve(new Set<string>()),
     ]);

@@ -253,15 +253,16 @@ export function buildPartnerLeadPrices(
 }
 
 /**
- * Return the set of partner IDs that have received a dispatch (or skipped_dedup
- * ledger row) for this email within the last `dedupWindowDays`. Used by the
- * resolver to pre-empt reason (b) — repeat dispatches to the same partner.
+ * Return the set of partner IDs that have received a dispatch of the same product
+ * (or skipped_dedup ledger row) for this email within the last `dedupWindowDays`.
+ * Used by the resolver to pre-empt reason (b) — repeat dispatches to the same partner.
  */
 export async function findRecentDispatchesByEmail(
   email: string,
   candidatePartnerIds: string[],
   environment: Environment,
   dedupWindowDays: number,
+  product: string,
 ): Promise<Set<string>> {
   const out = new Set<string>();
   if (!email || candidatePartnerIds.length === 0 || dedupWindowDays <= 0) return out;
@@ -272,6 +273,9 @@ export async function findRecentDispatchesByEmail(
   params.set("fields", "partner");
   params.set("filter[partner][_in]", candidatePartnerIds.join(","));
   params.set("filter[environment][_eq]", environment);
+  // Per product: a visitor who asks for a charger, then a battery, is two
+  // projects for a partner who does both — not a duplicate.
+  params.set("filter[product][_eq]", product);
   params.set("filter[dispatched_at][_gte]", since);
   params.set("filter[submission][user][email][_eq]", email);
   params.set("filter[status][_in]", "dispatched,skipped_dedup");
