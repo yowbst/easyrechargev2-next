@@ -34,6 +34,12 @@ describe("deriveLeadCategory — battery", () => {
     expect(deriveLeadCategory("battery", owner({ pvPower: "abc" }))).toBe("owner_pv_small");
   });
 
+  it("counts an infinite size as unknown, hence small", () => {
+    expect(deriveLeadCategory("battery", owner({ pvPower: "Infinity" }))).toBe("owner_pv_small");
+    expect(deriveLeadCategory("battery", owner({ pvPower: Infinity }))).toBe("owner_pv_small");
+    expect(deriveLeadCategory("battery", owner({ pvPower: "-Infinity" }))).toBe("owner_pv_small");
+  });
+
   it("accepts a numeric string, in case a client sends one", () => {
     expect(deriveLeadCategory("battery", owner({ pvPower: "12.5" }))).toBe("owner_pv_large");
   });

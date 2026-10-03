@@ -57,9 +57,10 @@ function deriveBatteryCategory(data: Record<string, unknown>): LeadCategory {
   return housing === "owner" ? `owner_pv_${size}` : `co_owner_pv_${size}`;
 }
 
-/** kWc as a number, or NaN when unknown. */
+/** kWc as a finite number, or NaN when unknown (Infinity included). */
 export function pvSizeKwc(raw: unknown): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "string" && raw !== "na" && raw.trim() !== "") return Number(raw);
-  return Number.NaN;
+  let n = Number.NaN;
+  if (typeof raw === "number") n = raw;
+  else if (typeof raw === "string" && raw !== "na" && raw.trim() !== "") n = Number(raw);
+  return Number.isFinite(n) ? n : Number.NaN;
 }
