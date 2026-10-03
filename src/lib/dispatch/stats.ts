@@ -44,7 +44,7 @@ export function summarize(
       } else if (c.stage === "lost") {
         closed += 1;
       }
-      scoreSum += scoreLead(c.submission?.data, weights, bands).score;
+      scoreSum += scoreLead(c.submission?.data, weights, bands, c.product).score;
       scoreCount += 1;
     }
     if (prevInRange(c.dispatched_at)) prevLeads += 1;
@@ -124,7 +124,7 @@ export function avgScoreByMonth(
     const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
     const bucket = sums[key];
     if (!bucket) continue;
-    bucket.total += scoreLead(c.submission?.data, weights, bands).score;
+    bucket.total += scoreLead(c.submission?.data, weights, bands, c.product).score;
     bucket.n += 1;
   }
   for (const s of series) {
@@ -350,7 +350,7 @@ export function transitionByBand(
     const ageMs = now.getTime() - new Date(c.dispatched_at).getTime();
     if (ageMs < cutoffMs) continue;
     if (cardRank < fromRank) continue;
-    const band = scoreLead(c.submission?.data, weights, bands).band;
+    const band = scoreLead(c.submission?.data, weights, bands, c.product).band;
     buckets[band].from += 1;
     const reachedTo = isWonStep ? c.stage === "won" : cardRank >= toRank;
     if (reachedTo) buckets[band].to += 1;
@@ -394,7 +394,7 @@ export function stageCostByBand(
   };
   for (const c of cards) {
     if (!inRange(c.dispatched_at)) continue;
-    const band = scoreLead(c.submission?.data, weights, bands).band;
+    const band = scoreLead(c.submission?.data, weights, bands, c.product).band;
     if (!c.gift) {
       const p =
         typeof c.price_chf === "number"

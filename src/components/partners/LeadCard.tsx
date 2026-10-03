@@ -234,7 +234,7 @@ export function LeadCard({
   // matters); disqualified/closed cards omit it to cut noise.
   const leadScore =
     !readOnly && !dispatch.disqualified && !isClosed && scoringWeights
-      ? scoreLead(submissionData, scoringWeights, scoreBands)
+      ? scoreLead(submissionData, scoringWeights, scoreBands, dispatch.product)
       : null;
 
   // Left accent bar marks terminal outcomes only. Rotting is a soft nudge —

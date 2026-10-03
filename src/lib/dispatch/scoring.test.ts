@@ -138,3 +138,57 @@ describe("bands drive the badge, not the score", () => {
     expect(scoreLead(mid, W).band).toBe(scoreLead(mid, W, SCORE_BANDS).band);
   });
 });
+
+describe("battery scoring", () => {
+  const battery = (overrides: Record<string, unknown> = {}) => ({
+    housingStatus: "owner",
+    deadline: "asap",
+    solarEquipment: "exists",
+    pvPower: 15,
+    evCount: 3,
+    heatPump: "no",
+    ...overrides,
+  });
+  const sub = (s: ReturnType<typeof scoreLead>, key: string) => s.breakdown.find((b) => b.key === key)?.subScore;
+
+  it("scores a large-PV owner with 3+ EVs at full marks", () => {
+    expect(scoreLead(battery(), W, SCORE_BANDS, "battery").score).toBe(100);
+  });
+
+  it("never uses the charger factors for a battery lead", () => {
+    const s = scoreLead(battery({ parkingSpotCount: "2" }), W, SCORE_BANDS, "battery");
+    expect(s.breakdown.some((b) => b.key === "volume" || b.key === "solar_upsell")).toBe(false);
+  });
+
+  it("never uses the battery factors for a charger lead", () => {
+    const s = scoreLead({ housingStatus: "owner", deadline: "asap", parkingSpotCount: "1", solarEquipment: "none", pvPower: 15, evCount: 3 }, W);
+    expect(s.breakdown.some((b) => b.key === "pv_size" || b.key === "load")).toBe(false);
+    expect(s.score).toBe(100);
+  });
+
+  it("scores PV size 1 from the threshold, 0.6 below or unknown", () => {
+    expect(sub(scoreLead(battery({ pvPower: 10 }), W, SCORE_BANDS, "battery"), "pv_size")).toBe(1);
+    expect(sub(scoreLead(battery({ pvPower: 8 }), W, SCORE_BANDS, "battery"), "pv_size")).toBe(0.6);
+    expect(sub(scoreLead(battery({ pvPower: "na" }), W, SCORE_BANDS, "battery"), "pv_size")).toBe(0.6);
+  });
+
+  it("drops PV size when the field is absent", () => {
+    const s = scoreLead(battery({ pvPower: undefined }), W, SCORE_BANDS, "battery");
+    expect(s.breakdown.some((b) => b.key === "pv_size")).toBe(false);
+  });
+
+  it("grades the load: 3+ EVs, then 1–2 EVs or a heat pump, then EV planned, then nothing", () => {
+    const load = (o: Record<string, unknown>) => sub(scoreLead(battery(o), W, SCORE_BANDS, "battery"), "load");
+    expect(load({ evCount: 3 })).toBe(1);
+    expect(load({ evCount: 1 })).toBe(0.8);
+    expect(load({ evCount: 0, heatPump: "yes" })).toBe(0.8);
+    expect(load({ evCount: 0, heatPump: "no", evPlanned: "yes" })).toBe(0.5);
+    expect(load({ evCount: 0, heatPump: "no", evPlanned: "no" })).toBe(0.3);
+    expect(load({ evCount: undefined, heatPump: undefined, evPlanned: undefined })).toBeUndefined();
+  });
+
+  it("treats an unknown product string as the charger", () => {
+    const s = scoreLead(battery(), W, SCORE_BANDS, "solar");
+    expect(s.breakdown.some((b) => b.key === "pv_size")).toBe(false);
+  });
+});

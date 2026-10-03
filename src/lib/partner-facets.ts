@@ -37,7 +37,7 @@ export function collectFacetOptions(
     if (typeof data.deadline === "string") deadline.add(data.deadline);
     if (typeof data.approval === "string")
       approval.add(data.approval.toLowerCase());
-    score.add(scoreLead(data, scoringWeights, scoreBands).band);
+    score.add(scoreLead(data, scoringWeights, scoreBands, d.product).band);
   }
   const order = (set: Set<string>, pref: string[]) =>
     [...set].sort((a, b) => {
@@ -82,7 +82,7 @@ export function matchesFacets(
     if (!v || !facets.approval.includes(v)) return false;
   }
   if (facets.score.length > 0) {
-    const band = scoreLead(data, scoringWeights, scoreBands).band;
+    const band = scoreLead(data, scoringWeights, scoreBands, d.product).band;
     if (!facets.score.includes(band)) return false;
   }
   return true;

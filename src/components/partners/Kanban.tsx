@@ -60,8 +60,8 @@ function compareCards(
     case "score":
       // Highest score first; ties fall back to most recent.
       return (
-        scoreLead(b.submission?.data, weights).score -
-          scoreLead(a.submission?.data, weights).score ||
+        scoreLead(b.submission?.data, weights, undefined, b.product).score -
+          scoreLead(a.submission?.data, weights, undefined, a.product).score ||
         b.dispatched_at.localeCompare(a.dispatched_at)
       );
     case "recent":
