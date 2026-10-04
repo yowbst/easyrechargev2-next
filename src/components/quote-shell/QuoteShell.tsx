@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Home, Landmark, MapPin, PhoneCall } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, FileCheck, Home, Landmark, MapPin, PhoneCall } from "lucide-react";
 import type { CountryCode } from "libphonenumber-js";
 import { contactFirstUnanswered, type ContactFields } from "@/components/quote/stepValidation";
 import { usePostHog } from "@/components/PostHogProvider";
@@ -438,7 +438,7 @@ export function QuoteShell({
 
   if (enrich) {
     return (
-      <div className="flex min-h-screen flex-col bg-b-paper" lang={lang} data-hide-layout data-direction-b>
+      <div className="flex min-h-screen flex-col bg-b-paper" lang={lang} data-hide-layout data-direction-b data-quote-shell>
         <QuoteHeader tc={tc} index={seq.length - 1} total={seq.length} logoSrc={logoSrc} logoDarkSrc={logoDarkSrc}
           mobileLine={{ icon: PhoneCall, text: `${tc("quote.rail.next.1")} · ${tc("quote.rail.next.1sub", slaVars)}` }} />
         <main className="mx-auto w-full max-w-170 flex-1 px-5 pt-6 pb-16 md:pt-10">
@@ -452,7 +452,10 @@ export function QuoteShell({
   const answers = answerRows(funnel, seq.slice(0, index), data, tq, tqOpt);
   const mobileLine = isContact
     ? { icon: PhoneCall, text: `${tc("quote.rail.next.1")} · ${tc("quote.rail.next.1sub", slaVars)}` }
-    : { icon: Landmark, text: subsidyLine(tc, subsidy) };
+    : (() => {
+        const line = subsidyLine(tc, subsidy);
+        return line ? { icon: Landmark, text: line } : { icon: FileCheck, text: `${tc("quote.rail.delay", slaVars)} · ${tc("quote.rail.delaySub")}` };
+      })();
   const stepWhy = tqOpt(`steps.${currentId}.why`);
   const prefillChips = index === 0 && prefilled
     ? [
@@ -462,7 +465,7 @@ export function QuoteShell({
     : [];
 
   return (
-    <div className="flex min-h-screen flex-col bg-b-paper" lang={lang} data-hide-layout data-direction-b>
+    <div className="flex min-h-screen flex-col bg-b-paper" lang={lang} data-hide-layout data-direction-b data-quote-shell>
       <QuoteHeader tc={tc} index={index} total={seq.length} logoSrc={logoSrc} logoDarkSrc={logoDarkSrc} mobileLine={mobileLine} />
 
       <div className="mx-auto w-full max-w-310 flex-1 px-5 pt-6 md:px-10 md:pt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-16">
@@ -492,12 +495,12 @@ export function QuoteShell({
             </div>
           )}
 
-          <div className="mb-8">
-            <h1 className="font-heading text-[26px] leading-tight font-semibold tracking-tight md:text-4xl">{tq(`steps.${currentId}.title`)}</h1>
-            {stepWhy && <p className="mt-2.5 text-base leading-relaxed text-muted-foreground">{stepWhy}</p>}
+          <div className="mb-7">
+            <h1 className="font-heading text-2xl leading-tight font-semibold tracking-tight md:text-[30px]">{tq(`steps.${currentId}.title`)}</h1>
+            {stepWhy && <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{stepWhy}</p>}
           </div>
 
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-7">
             {productStep && <productStep.Component {...stepProps} />}
             {isContact && (
               <ContactStep
@@ -543,13 +546,13 @@ export function QuoteShell({
             )}
             {exited ? (
               <Link href={`/${lang}`}
-                className="inline-flex h-13 items-center justify-center gap-2.5 rounded-md border-[1.5px] border-foreground px-6.5 text-base font-semibold sm:ml-auto"
+                className="inline-flex h-12 items-center justify-center gap-2.5 rounded-md border-[1.5px] border-foreground px-6 text-[15px] font-semibold sm:ml-auto"
                 data-testid="button-exit-home">
                 {tq("navigation.home")}
               </Link>
             ) : (
               <button ref={nextButtonRef} type="button" onClick={() => tryGoToStep(seq[index + 1])}
-                className="inline-flex h-13 items-center justify-center gap-2.5 rounded-md bg-b-forest px-6.5 text-base font-semibold text-b-on-forest transition hover:brightness-125 sm:ml-auto dark:bg-b-on-forest dark:text-b-forest"
+                className="inline-flex h-12 items-center justify-center gap-2.5 rounded-md bg-b-forest px-6 text-[15px] font-semibold text-b-on-forest transition hover:brightness-125 sm:ml-auto dark:bg-b-on-forest dark:text-b-forest"
                 data-testid="button-next">
                 {tq("navigation.next")}
                 <ArrowRight className="size-4" aria-hidden />

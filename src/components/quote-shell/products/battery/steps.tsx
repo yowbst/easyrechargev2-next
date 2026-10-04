@@ -27,7 +27,7 @@ function buckets(pageConfig: StepProps["pageConfig"], step: string, field: keyof
   return resolveBuckets(field, fieldConfig(pageConfig, step, field).buckets ?? BATTERY_BUCKETS[field], unit);
 }
 
-const notice = "rounded-lg bg-b-inset px-5 py-4.5 text-base leading-relaxed";
+const notice = "rounded-lg bg-b-inset px-5 py-4 text-[15px] leading-relaxed";
 
 export function HousingStep(props: StepProps) {
   const { data, set, tq, tqOpt, pageConfig } = props;

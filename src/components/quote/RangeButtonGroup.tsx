@@ -24,7 +24,7 @@ interface RangeButtonGroupProps {
 }
 
 /**
- * Bucket picker (design 06 / 15 v2): 52 px pills on one row from `sm` up;
+ * Bucket picker (design 06 / 15 v2): 48 px pills on one row from `sm` up;
  * "don't know" sits last, dashed, in a wider column so it never reads as one
  * more value. One tap = answered, and the unanswered state is obvious.
  */
@@ -46,7 +46,7 @@ export function RangeButtonGroup({
     ? `repeat(${options.length}, minmax(0,1fr)) minmax(150px,1.3fr)`
     : `repeat(${options.length}, minmax(0,1fr))`;
   const pill = (selected: boolean) =>
-    `inline-flex min-h-13 min-w-0 items-center justify-center rounded-lg px-3 text-[15px] transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+    `inline-flex min-h-12 min-w-0 items-center justify-center rounded-lg px-3 text-sm transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring ${
       selected
         ? "border-2 border-b-charge bg-b-charge/10 font-semibold text-foreground"
         : "border border-border bg-card font-medium text-foreground hover:bg-b-inset"

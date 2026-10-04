@@ -36,7 +36,7 @@ export function EnrichStep({ tq, tqOpt, tc, pageConfig, onDone }: Pick<StepProps
 
   return (
     <>
-      <h1 className="mb-8 font-heading text-[26px] leading-tight font-semibold tracking-tight md:text-4xl">{tc("steps.enrich.title")}</h1>
+      <h1 className="mb-7 font-heading text-2xl leading-tight font-semibold tracking-tight md:text-[30px]">{tc("steps.enrich.title")}</h1>
       <div className="flex flex-col gap-8">
         {(Object.keys(ENRICH_FIELDS) as EnrichField[]).map((field) => {
           const step = ENRICH_FIELDS[field].step;
