@@ -116,7 +116,7 @@ export function CoverageB({
               </p>
             )}
           </div>
-          <ul className="flex shrink-0 flex-wrap gap-x-5 gap-y-2 text-[15px] text-muted-foreground">
+          <ul className="flex min-w-0 flex-wrap gap-x-5 gap-y-2 text-[15px] text-muted-foreground sm:shrink-0">
             <li className="flex items-center gap-2">
               <span
                 aria-hidden

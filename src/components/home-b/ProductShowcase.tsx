@@ -45,7 +45,7 @@ export function ProductShowcase({
         <SectionHead eyebrow={eyebrow} title={title} lede={lede} action={action} />
 
         <div className="grid items-stretch gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(100%,21.25rem),1fr))]">
-          <div className="relative max-h-[640px] min-h-[440px] overflow-hidden rounded-xl bg-b-inset [aspect-ratio:964/848]">
+          <div className="relative max-h-[640px] min-w-0 overflow-hidden rounded-xl bg-b-inset [aspect-ratio:964/848] md:min-h-[440px]">
             {image ? (
               <Image
                 src={image}
