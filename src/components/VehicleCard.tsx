@@ -1,19 +1,8 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  Clock,
-  Plug,
-  Zap,
-  Gauge,
-  MapPin,
-  Battery,
-  BadgeDollarSign,
-  Rocket,
-} from "lucide-react";
+import { ArrowRight, Home, Plug } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
 import { getRouteSlug } from "@/lib/i18n/config";
 import { BrandIcon } from "@/lib/vehicles/shared";
@@ -57,6 +46,22 @@ interface VehicleCardProps {
   dictionary: Record<string, string>;
 }
 
+const metric = (m?: ChargingMetric) => (m?.value != null && m.unit ? `${m.value} ${m.unit}` : null);
+
+/** "510 min" → "8 h 30": a full charge reads in hours. */
+export function formatChargeTime(m?: ChargingMetric): string | null {
+  if (m?.value == null) return null;
+  if (m.unit !== "min" || m.value < 60) return metric(m);
+  const h = Math.floor(m.value / 60);
+  const min = Math.round(m.value % 60);
+  return min ? `${h} h ${String(min).padStart(2, "0")}` : `${h} h`;
+}
+
+/**
+ * Vehicle card, Direction B (design 13 Véhicules): brand and model first, the
+ * three figures people compare, then a "home charging" inset that answers the
+ * question the site exists for — how long a full charge takes at home.
+ */
 export function VehicleCard({
   id,
   brand,
@@ -75,153 +80,121 @@ export function VehicleCard({
   dictionary,
 }: VehicleCardProps) {
   const d = (key: string) => t(dictionary, key);
+  const f = "shared.vehiclesFilters";
 
   const vehiclesPath = getRouteSlug(lang, "vehicles");
-  const vehicleSlug = slug || id;
-  const vehicleUrl = `/${lang}/${vehiclesPath}/${vehicleSlug}`;
+  const vehicleUrl = `/${lang}/${vehiclesPath}/${slug || id}`;
+
+  const home = charging?.home_destination;
+  const time = formatChargeTime(home?.charge_time);
+  const from = home?.charge_time?.range?.from;
+  const to = home?.charge_time?.range?.to;
+  const timeRange = from?.value != null && to?.value != null ? `${from.value}–${to.value}${to.unit ? ` ${to.unit}` : ""}` : null;
+  const power = metric(home?.charge_power);
+  const speed = metric(home?.charge_speed);
+  const viewLabel = t(dictionary, "shared.vehicleCard.view");
+
+  // Short labels from the vehicle page when present ("Batterie" rather than
+  // the filter's "Capacité batterie", which does not fit a third of a card).
+  const label = (spec: string, filterKey: string) => {
+    const short = t(dictionary, `pages.vehicle.specs.${spec}`);
+    return short && !short.startsWith("[") && short !== `pages.vehicle.specs.${spec}` ? short : d(`${f}.general.${filterKey}.label`);
+  };
+  const stats = [
+    { label: label("range", "range"), value: rangeDisplay },
+    { label: label("battery", "battery"), value: batteryDisplay },
+    { label: label("efficiency", "efficiency"), value: efficiencyDisplay },
+  ];
 
   return (
-    <Link href={vehicleUrl} title={`${brand} ${model}`}>
-      <Card
-        className="overflow-hidden hover-elevate transition-all duration-300 h-full pt-0 gap-0"
-        data-testid={`card-vehicle-${id}`}
-      >
-        <div className="aspect-video overflow-hidden relative">
-          {image ? (
-            <Image
-              src={image}
-              alt={`${brand} ${model}`}
-              fill
-              // La carte vit dans `container mx-auto px-4` : sa largeur réelle
-              // est le viewport moins 2rem, pas 100vw. Surdéclarer faisait
-              // choisir au navigateur le candidat 1920w (66,8 Ko) sur un
-              // téléphone DPR 3, là où son besoin réel tombe sur 1200w
-              // (46,8 Ko). calc() est évalué exactement par le navigateur.
-              sizes="(max-width: 640px) calc(100vw - 2rem), (max-width: 1024px) 48vw, 400px"
-              quality={65}
-              loading="lazy"
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground text-sm">{brand} {model}</span>
-            </div>
-          )}
-          {(brandIconSvg || brandIconName) && (
-            <div className="absolute top-4 left-4 bg-background/90 backdrop-blur rounded-lg p-2">
-              <BrandIcon iconSvg={brandIconSvg} iconName={brandIconName} className="h-6 w-6" />
-            </div>
-          )}
-          {!isAvailable && (
-            <Badge
-              variant="secondary"
-              className="absolute bottom-3 left-3 bg-background/90 backdrop-blur text-[11px] font-medium shadow-sm border border-border/50"
-            >
-              {d("common.vehicle.discontinued")}
-            </Badge>
-          )}
-          <div className="absolute top-4 right-4 bg-background/90 backdrop-blur rounded-lg p-2.5 flex flex-col gap-2 text-[11px] font-bold shadow-md border border-border/50 w-28">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="truncate">{rangeDisplay}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Battery className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="truncate">{batteryDisplay}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Gauge className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="truncate">{efficiencyDisplay}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <BadgeDollarSign className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="truncate">
-                {Math.round(pricePerRange)} CHF/km
-              </span>
-            </div>
+    <Link
+      href={vehicleUrl}
+      title={`${brand} ${model}`}
+      className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card text-foreground transition-shadow hover:shadow-[0_12px_32px_-16px_rgba(7,35,26,.35)] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      data-testid={`card-vehicle-${id}`}
+    >
+      <div className="relative aspect-video overflow-hidden bg-b-inset">
+        {image ? (
+          <Image
+            src={image}
+            alt={`${brand} ${model}`}
+            fill
+            // The card sits in the 1240 px container (px-5 on mobile): its real
+            // width is the viewport minus 2.5rem, not 100vw. Over-declaring made
+            // phones pick the 1920w candidate.
+            sizes="(max-width: 768px) calc(100vw - 2.5rem), (max-width: 1024px) 46vw, 380px"
+            quality={65}
+            loading="lazy"
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <span className="text-sm text-muted-foreground">{brand} {model}</span>
           </div>
-        </div>
-        <div className="p-4 flex flex-col items-start">
-          <div className="flex flex-row items-center gap-2 mb-1">
-            <Badge
-              variant="outline"
-              className="text-[10px] uppercase tracking-wider font-bold py-0 h-4"
-            >
-              {brand}
-            </Badge>
-            <h3 className="text-lg font-heading font-bold truncate w-full">
-              {model}
-            </h3>
-          </div>
+        )}
+        {(brandIconSvg || brandIconName) && (
+          <span className="absolute left-3 top-3 inline-flex size-10 items-center justify-center rounded-lg bg-b-paper/95">
+            <BrandIcon iconSvg={brandIconSvg} iconName={brandIconName} className="size-5.5" />
+          </span>
+        )}
+        {!isAvailable && (
+          <span className="absolute bottom-3 left-3 inline-flex h-7 items-center rounded-md border bg-b-paper px-2.5 text-[13px] font-semibold text-muted-foreground">
+            {d("common.vehicle.discontinued")}
+          </span>
+        )}
+      </div>
 
-          <div className="mt-3 pt-3 border-t border-border/50 w-full">
-            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-2">
-              {d("pages.vehicle.card.title")}
-            </p>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 w-full">
-              <div className="flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Plug className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-[10px] text-muted-foreground font-medium">
-                    {d("pages.vehicle.card.chargePort")}
-                  </span>
-                </div>
-                <span className="text-[11px] font-medium">
-                  {charging?.home_destination?.charge_port ?? "-"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-[10px] text-muted-foreground font-medium">
-                    {d("pages.vehicle.card.chargeTime")}
-                    {charging?.home_destination?.charge_time?.range?.from
-                      ?.value != null &&
-                    charging?.home_destination?.charge_time?.range?.to?.value !=
-                      null
-                      ? ` (${charging.home_destination.charge_time.range.from.value}-${charging.home_destination.charge_time.range.to.value}${charging.home_destination.charge_time.range.to.unit})`
-                      : " (-)"}
-                  </span>
-                </div>
-                <span className="text-[11px] font-medium">
-                  {charging?.home_destination?.charge_time?.value &&
-                  charging?.home_destination?.charge_time?.unit
-                    ? `${charging.home_destination.charge_time.value} ${charging.home_destination.charge_time.unit}`
-                    : "-"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-[10px] text-muted-foreground font-medium">
-                    {d("pages.vehicle.card.chargePower")}
-                  </span>
-                </div>
-                <span className="text-[11px] font-medium">
-                  {charging?.home_destination?.charge_power?.value &&
-                  charging?.home_destination?.charge_power?.unit
-                    ? `${charging.home_destination.charge_power.value} ${charging.home_destination.charge_power.unit}`
-                    : "-"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Rocket className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-[10px] text-muted-foreground font-medium">
-                    {d("pages.vehicle.card.chargeSpeed")}
-                  </span>
-                </div>
-                <span className="text-[11px] font-medium">
-                  {charging?.home_destination?.charge_speed?.value &&
-                  charging?.home_destination?.charge_speed?.unit
-                    ? `${charging.home_destination.charge_speed.value} ${charging.home_destination.charge_speed.unit}`
-                    : "-"}
-                </span>
-              </div>
-            </div>
-          </div>
+      <div className="flex flex-1 flex-col gap-4.5 p-5 md:px-5.5">
+        <div className="min-w-0">
+          <div className="mb-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{brand}</div>
+          <h3 className="font-heading text-[22px] font-semibold leading-[1.15] tracking-[-0.03em] md:text-2xl">{model}</h3>
         </div>
-      </Card>
+
+        <dl className="grid grid-cols-3 gap-3">
+          {stats.map((s) => (
+            <div key={s.label} className="min-w-0">
+              <dt className="mb-1 truncate text-[13px] text-muted-foreground" title={s.label}>{s.label}</dt>
+              <dd className="text-[17px] font-semibold leading-tight whitespace-nowrap md:text-lg">{s.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="rounded-lg bg-b-inset px-4 py-3.5">
+          <div className="mb-2.5 flex items-center justify-between gap-2.5">
+            <span className="flex items-center gap-2 text-sm font-semibold leading-tight">
+              <Home className="size-[15px] text-b-link" aria-hidden />
+              {d("pages.vehicle.card.title")}
+            </span>
+            {home?.charge_port && (
+              <span className="inline-flex h-6.5 items-center gap-1.5 rounded-md bg-b-paper px-2 text-[13px] font-semibold text-muted-foreground" title={d(`${f}.chargingHomeDestination.chargePort.label`)}>
+                <Plug className="size-[13px]" aria-hidden />
+                {home.charge_port}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-baseline gap-1.5">
+            <span className="font-heading text-[26px] font-semibold leading-none tracking-[-0.03em]">{time ?? "—"}</span>
+            {timeRange && <span className="text-sm text-muted-foreground">{timeRange}</span>}
+          </div>
+          {(power || speed) && (
+            <div className="mt-1.5 text-sm text-muted-foreground">
+              {[power, speed ? `+${speed}` : null].filter(Boolean).join(" · ")}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-3">
+          <span className="text-sm text-muted-foreground" title={d(`${f}.general.pricePerRange.label`)}>
+            {Math.round(pricePerRange)} CHF/km
+          </span>
+          {viewLabel && !viewLabel.startsWith("[") && (
+            <span className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-b-link">
+              {viewLabel}
+              <ArrowRight className="size-[15px] transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </span>
+          )}
+        </div>
+      </div>
     </Link>
   );
 }

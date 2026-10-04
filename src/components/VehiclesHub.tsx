@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Car, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 import { t } from "@/lib/i18n/dictionaries";
 import { getRouteSlug } from "@/lib/i18n/config";
 import { resolveRouteId } from "@/lib/pageConfig";
-import Image from "next/image";
 import { BrandIcon } from "@/lib/vehicles/shared";
-import { VehicleCard } from "@/components/VehicleCard";
 import { VehicleFilters } from "@/components/VehicleFilters";
-import { MiniQuoteCard } from "@/components/MiniQuoteCard";
-import { GetQuote } from "@/components/GetQuote";
+import { VehicleGrid } from "@/components/VehicleGrid";
+import { Container, Eyebrow } from "@/components/home-b/Shell";
+import { CtaB } from "@/components/home-b/CtaB";
+import { opt } from "@/components/home-b/content";
 import { useVehicleFilters } from "@/hooks/useVehicleFilters";
 import type { Vehicle } from "@/lib/vehicleTransformer";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -45,11 +44,16 @@ const normalizeName = (name: string | undefined): string => {
 
 const ITEMS_PER_PAGE = 100;
 
+const brandChip = (on: boolean) =>
+  `inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-3.5 text-[15px] transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+    on ? "border-b-forest bg-b-forest font-semibold text-b-on-forest" : "border-border bg-card font-medium hover:bg-b-inset"
+  }`;
+
+/** Vehicles hub, Direction B (design 13 Véhicules — hub). */
 export function VehiclesHub({
   vehicles,
   brands,
   lang,
-  slug,
   dictionary,
   pageRegistry,
   heroTitle,
@@ -59,10 +63,9 @@ export function VehiclesHub({
 }: VehiclesHubProps) {
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
 
-  // Brand data is passed from the server with icon info for client-side rendering
-
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Vehicle brands from actual vehicle data
   const vehicleBrands = useMemo(
@@ -70,14 +73,12 @@ export function VehiclesHub({
     [vehicles],
   );
 
-  // Sort brands by vehicle count
+  // Brands sorted by vehicle count, with their counts
   const sortedBrands = useMemo(() => {
-    return [...brands].sort((a, b) => {
-      const countA = vehicles.filter((v) => normalizeName(v.brand) === normalizeName(a.name)).length;
-      const countB = vehicles.filter((v) => normalizeName(v.brand) === normalizeName(b.name)).length;
-      if (countB !== countA) return countB - countA;
-      return String(a.name || "").localeCompare(String(b.name || ""));
-    });
+    const count = (name: string) => vehicles.filter((v) => normalizeName(v.brand) === normalizeName(name)).length;
+    return [...brands]
+      .map((b) => ({ ...b, count: count(b.name) }))
+      .sort((a, b) => b.count - a.count || String(a.name || "").localeCompare(String(b.name || "")));
   }, [brands, vehicles]);
 
   // Shared filter state
@@ -99,241 +100,148 @@ export function VehiclesHub({
   const resetPage = () => {
     if (currentPage !== 1) setCurrentPage(1);
   };
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const quotePage = pageRegistry.find((p) => p.id === "quote");
+  const quoteHref = quotePage ? `/${lang}/${quotePage.slugs[lang]}` : `/${lang}`;
+  const allBrandsHref =
+    resolveRouteId("vehicles-brands", lang, pageRegistry) ||
+    `/${lang}/${getRouteSlug(lang, "vehicles")}/${getRouteSlug(lang, "brands")}`;
+
+  const status = (
+    <>
+      {d("pages.vehicles.vehiclesGrid.results.count", { count: filteredVehicles.length })}
+      {totalPages > 1 && (
+        <>
+          {" · "}
+          {d("pages.vehicles.vehiclesGrid.results.page", { current: currentPage, total: totalPages })}
+        </>
+      )}
+    </>
+  );
 
   return (
-    <div className="flex-1">
-      {/* Hero Section */}
-      <section
-        className="relative py-16 md:py-28 overflow-hidden"
-      >
-        {heroImage && (
-          // LCP element of the vehicles listing — must never lazy-load.
-          <Image src={heroImage} alt="" fill priority fetchPriority="high" quality={60} sizes="100vw" className="object-cover object-center" />
-        )}
-        {heroImage && (
-          <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />
-        )}
-        {!heroImage && <div className="absolute inset-0 bg-muted/50" aria-hidden="true" />}
-
-        <div className="relative container mx-auto px-4">
-          <div className="flex flex-col gap-4 mb-4">
-            <h1 className={`text-4xl md:text-5xl font-heading font-bold ${heroImage ? "text-white" : ""}`}>
+    <div data-direction-b className="flex-1 bg-b-paper">
+      {/* Hero — text left, photograph right */}
+      <section className="pt-10 pb-8 md:pt-18 md:pb-12">
+        <Container className={heroImage ? "grid items-end gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-14" : ""}>
+          <div>
+            {opt(dictionary, "pages.vehicles.hero.eyebrow") && <Eyebrow>{opt(dictionary, "pages.vehicles.hero.eyebrow")}</Eyebrow>}
+            <h1 className="mb-4 font-heading text-4xl font-semibold leading-[1.06] tracking-[-0.04em] md:mb-4.5 md:text-[56px] md:leading-[1.04]">
               {heroTitle}
             </h1>
+            <p className="max-w-150 text-[17px] leading-relaxed text-muted-foreground md:text-lg">{heroSubtitle}</p>
           </div>
-          <p className={`text-lg w-full ${heroImage ? "text-white/85" : "text-muted-foreground"}`}>
-            {heroSubtitle}
-          </p>
-        </div>
+          {heroImage && (
+            <div className="relative aspect-video overflow-hidden rounded-xl bg-b-inset max-lg:hidden">
+              {/* LCP element of the vehicles listing on desktop — never lazy. */}
+              <Image src={heroImage} alt="" fill priority fetchPriority="high" quality={60} sizes="(max-width: 1240px) 42vw, 480px" className="object-cover object-center" />
+            </div>
+          )}
+        </Container>
       </section>
 
-      {/* Brand Filter */}
-      <section className="py-8 border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap gap-3">
-            <Badge
-              variant={selectedBrand === null ? "default" : "outline"}
-              className="cursor-pointer px-4 py-2"
+      {/* Brands */}
+      <section className="pb-6">
+        <Container className="max-md:px-0">
+          {opt(dictionary, "pages.vehicles.brandsFilters.title") && (
+            <p className="type-label mb-3.5 tracking-widest text-muted-foreground max-md:px-5">
+              {opt(dictionary, "pages.vehicles.brandsFilters.title")}
+            </p>
+          )}
+          <div
+            role="group"
+            aria-label={opt(dictionary, "pages.vehicles.brandsFilters.title") ?? d("pages.vehicles.brandsFilters.badges.all", { count: vehicles.length })}
+            className="flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-0"
+          >
+            <button
+              type="button"
+              aria-pressed={selectedBrand === null}
+              className={brandChip(selectedBrand === null)}
               onClick={() => { setSelectedBrand(null); resetPage(); }}
               data-testid="badge-brand-all"
             >
               {d("pages.vehicles.brandsFilters.badges.all", { count: vehicles.length })}
-            </Badge>
+            </button>
             {sortedBrands.slice(0, 20).map((brand) => {
-              const vehicleCount = vehicles.filter(
-                (v) => normalizeName(v.brand) === normalizeName(brand.name),
-              ).length;
+              const on = selectedBrand === brand.name;
               return (
-                <Badge
+                <button
                   key={brand.name}
-                  variant={selectedBrand === brand.name ? "default" : "outline"}
-                  className="cursor-pointer px-4 py-2 gap-2"
+                  type="button"
+                  aria-pressed={on}
+                  className={brandChip(on)}
                   onClick={() => { setSelectedBrand(brand.name); resetPage(); }}
                   data-testid={`badge-brand-${brand.name}`}
                 >
-                  <BrandIcon iconSvg={brand.iconSvg} iconName={brand.iconName} className="h-4 w-4" />
-                  {brand.name} ({vehicleCount})
-                </Badge>
+                  <BrandIcon iconSvg={brand.iconSvg} iconName={brand.iconName} className="size-4.5" />
+                  {brand.name}
+                  <span className={`text-[13px] font-medium ${on ? "text-b-on-forest/78" : "text-muted-foreground"}`}>{brand.count}</span>
+                </button>
               );
             })}
-          </div>
-          <div className="flex flex-wrap gap-2 mt-4">
             <Link
-              href={
-                resolveRouteId("vehicles-brands", lang, pageRegistry) ||
-                `/${lang}/${getRouteSlug(lang, "vehicles")}/${getRouteSlug(lang, "brands")}`
-              }
-              title={d("pages.vehicles.brandsFilters.count", { count: vehicleBrands.length })}
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted"
+              href={allBrandsHref}
+              className="inline-flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-[15px] font-semibold text-b-link hover:underline"
               data-testid="button-view-all-brands"
             >
               {d("pages.vehicles.brandsFilters.count", { count: vehicleBrands.length })}
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="size-4" aria-hidden />
             </Link>
           </div>
-        </div>
+        </Container>
       </section>
 
-      {/* Advanced Filters */}
-      <VehicleFilters
-        filters={filters}
-        onFilterChange={resetPage}
-        dictionary={dictionary}
-      />
-
-      {/* Results count */}
-      <section className="py-4">
-        <div className="container mx-auto px-4">
-          <p className="text-sm text-muted-foreground">
-            {d("pages.vehicles.vehiclesGrid.results.count", { count: filteredVehicles.length })}
-            {totalPages > 1 && (
-              <span>
-                {" | "}
-                {d("pages.vehicles.vehiclesGrid.results.page", {
-                  current: currentPage,
-                  total: totalPages,
-                })}
-              </span>
-            )}
-          </p>
-        </div>
-      </section>
-
-      {/* Vehicles Grid */}
-      <section className="py-8 pb-16">
-        <div className="container mx-auto px-4">
-          {filteredVehicles.length === 0 ? (
-            <div className="text-center py-16">
-              <Car className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">
-                {d("pages.vehicles.vehiclesGrid.results.empty.title")}
-              </h3>
-              <p className="text-muted-foreground">
-                {d("pages.vehicles.vehiclesGrid.results.empty.text")}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {(() => {
-                  const cards = paginatedVehicles.map((vehicle) => {
-                    const brandData = sortedBrands.find(
-                      (b) => normalizeName(b.name) === normalizeName(vehicle.brand),
-                    );
-                    return (
-                      <VehicleCard
-                        key={vehicle.id}
-                        id={vehicle.id}
-                        brand={vehicle.brand}
-                        model={vehicle.model}
-                        slug={vehicle.slug}
-                        image={vehicle.image}
-                        rangeDisplay={vehicle.rangeDisplay}
-                        batteryDisplay={vehicle.batteryDisplay}
-                        efficiencyDisplay={vehicle.efficiencyDisplay}
-                        pricePerRange={vehicle.pricePerRange}
-                        charging={vehicle.charging}
-                        brandIconSvg={brandData?.iconSvg}
-                        brandIconName={brandData?.iconName}
-                        isAvailable={vehicle.isAvailable}
-                        lang={lang}
-                        dictionary={dictionary}
-                      />
-                    );
-                  });
-
-                  // Insert MiniQuoteCard at position 3 (index 2)
-                  if (paginatedVehicles.length > 0) {
-                    const insertIndex = Math.min(paginatedVehicles.length, 2);
-                    cards.splice(
-                      insertIndex,
-                      0,
-                      <MiniQuoteCard
-                        key="mini-quote-card"
-                        pageId="vehicles"
-                        dictionary={dictionary}
-                        pageRegistry={pageRegistry}
-                        lang={lang}
-                      />,
-                    );
-                  }
-
-                  return cards;
-                })()}
-              </div>
-
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 mt-12">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    data-testid="button-prev-page"
-                  >
-                    {d("pages.vehicles.vehiclesGrid.pagination.previous")}
-                  </Button>
-
-                  <div className="flex gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                      const showPage =
-                        page === 1 ||
-                        page === totalPages ||
-                        Math.abs(page - currentPage) <= 1;
-                      const showEllipsis =
-                        (page === 2 && currentPage > 3) ||
-                        (page === totalPages - 1 && currentPage < totalPages - 2);
-
-                      if (!showPage && !showEllipsis) return null;
-
-                      if (showEllipsis) {
-                        return (
-                          <span key={page} className="px-2 text-muted-foreground">...</span>
-                        );
-                      }
-
-                      return (
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentPage(page)}
-                          className="min-w-9"
-                          data-testid={`button-page-${page}`}
-                        >
-                          {page}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    data-testid="button-next-page"
-                  >
-                    {d("pages.vehicles.vehiclesGrid.pagination.next")}
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* GetQuote CTA */}
-      {getQuoteBlock && (
-        <GetQuote
-          title={getQuoteBlock.headline}
-          subtitle={getQuoteBlock.subheadline}
-          ctaLabel={getQuoteBlock.ctaLabel}
-          ctaHref={getQuoteBlock.ctaHref}
-          note={getQuoteBlock.note}
-          image={getQuoteBlock.image}
+      {/* Filters + results */}
+      <Container className="pb-16 md:pb-24">
+        <VehicleFilters
+          filters={filters}
+          onFilterChange={resetPage}
+          dictionary={dictionary}
+          resultCount={filteredVehicles.length}
+          status={status}
         />
+        <div ref={resultsRef} className="scroll-mt-24 pt-8">
+          <VehicleGrid
+            vehicles={paginatedVehicles}
+            brands={sortedBrands}
+            page={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            lang={lang}
+            dictionary={dictionary}
+            pageRegistry={pageRegistry}
+            miniQuotePageId="vehicles"
+            labels={{
+              emptyTitle: d("pages.vehicles.vehiclesGrid.results.empty.title"),
+              emptyText: d("pages.vehicles.vehiclesGrid.results.empty.text"),
+              emptyQuote: opt(dictionary, "pages.vehicles.vehiclesGrid.results.empty.cta"),
+              clear: d("shared.vehiclesFilters.clear"),
+              previous: d("pages.vehicles.vehiclesGrid.pagination.previous"),
+              next: d("pages.vehicles.vehiclesGrid.pagination.next"),
+            }}
+            onClearFilters={
+              filters.hasActiveFilters || selectedBrand
+                ? () => { filters.clearFilters(); setSelectedBrand(null); resetPage(); }
+                : undefined
+            }
+            quoteHref={quoteHref}
+          />
+        </div>
+      </Container>
+
+      {getQuoteBlock && (
+        <div className="pb-14">
+          <CtaB
+            title={getQuoteBlock.headline}
+            subtitle={getQuoteBlock.subheadline}
+            primary={{ label: getQuoteBlock.ctaLabel, href: getQuoteBlock.ctaHref }}
+            note={getQuoteBlock.note}
+          />
+        </div>
       )}
     </div>
   );
