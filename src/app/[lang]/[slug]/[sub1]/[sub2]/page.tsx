@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { isValidLang, slugToDirectusLocale, getDateLocale } from "@/lib/i18n/config";
 import { getRouteSlug } from "@/lib/i18n/config";
 import { extractLayoutDictionary, extractPageDictionary, t } from "@/lib/i18n/dictionaries";
@@ -21,7 +20,6 @@ import {
 import { VehicleBrandDetail } from "@/components/VehicleBrandDetail";
 import { transformDirectusVehicle } from "@/lib/vehicleTransformer";
 import type { Vehicle } from "@/lib/vehicleTransformer";
-import Image from "next/image";
 import { DIRECTUS_URL } from "@/lib/directus";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -44,23 +42,16 @@ import {
   buildGovernmentService,
 } from "@/lib/seo/jsonLd";
 import { LocalitySubsidiesPage } from "@/components/LocalitySubsidiesPage";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { resolveRouteLinks } from "@/lib/pageConfig";
-import { MiniQuoteCard } from "@/components/MiniQuoteCard";
 import { GetQuote } from "@/components/GetQuote";
-import { LucideCmsIcon } from "@/components/LucideCmsIcon";
+import { BlogArticle } from "@/components/blog/BlogArticle";
+import type { PostCardData } from "@/components/home-b/PostCard";
+import { opt } from "@/components/home-b/content";
+import { deriveExcerpt } from "@/lib/blog-excerpt";
 import { BrandIcon } from "@/lib/vehicles/shared";
 import {
-  ArrowLeft,
   ChevronRight,
   ChevronDown,
-  Calendar,
-  Clock,
   Battery,
   Car,
   Zap,
@@ -94,7 +85,6 @@ import {
   Sun,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import {
@@ -492,6 +482,37 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const quotePage = registry.find((p) => p.id === "quote");
     const quoteHref = quotePage ? `/${lang}/${quotePage.slugs[lang]}` : `/${lang}`;
 
+    // Lede: the editor's SEO description. `excerpt` does not exist on
+    // blog_posts_translations, so the page has never had one before.
+    const articleLede = decodeHtmlEntities(String(pt.seo?.meta_description || rawExcerpt || "").trim()) || undefined;
+    const readingTimeText = (minutes: number) =>
+      df("pages.blog-post.readingTime.label",
+        df("shared.blogCard.readingTime.label_one", `${minutes} min`, { count: minutes }),
+        { count: minutes });
+
+    // Related: up to three other posts of the same category.
+    const categoryKey = post.category?.category_id;
+    const relatedRaw = categoryKey ? await fetchBlogPosts(locale, categoryKey) : [];
+    const relatedPosts: PostCardData[] = relatedRaw
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((rp: any) => String(rp.id) !== String(post.id))
+      .slice(0, 3)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((rp: any) => {
+        const rpt = rp.translations?.[0];
+        const rct = rp.category?.translations?.[0];
+        return {
+          id: String(rp.id),
+          title: rpt?.title || "",
+          excerpt: deriveExcerpt(rpt, rpt?.title || ""),
+          readingTime: parseReadingTime(rp.reading_time),
+          image: rp.image ? `${DIRECTUS_URL}/assets/${rp.image}` : "/og-default.webp",
+          category: rct?.name || categoryName,
+          href: `/${lang}/${slug}/${rct?.slug || sub1}/${rpt?.slug || rp.slug || rp.id}`,
+        };
+      })
+      .filter((rp: PostCardData) => rp.title);
+
     // JSON-LD
     const SITE_URL = getSiteUrl();
     const currentPath = `/${lang}/${slug}/${sub1}/${sub2}`;
@@ -514,7 +535,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
       ]),
       buildBlogPosting({
         headline: articleTitle,
-        description: articleExcerpt || articleTitle,
+        description: articleLede || articleTitle,
         imageUrl: absoluteImage,
         datePublished: post.date_published || post.date_created || "",
         dateModified: post.date_updated,
@@ -551,257 +572,53 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
 
-        {/* Back navigation */}
-        <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <div className="container mx-auto px-4 py-3">
-            <Link
-              href={`/${lang}/${slug}`}
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {df("pages.blog-post.subheader.back", lang === "de" ? "Zurück zum Blog" : "Retour au blog")}
-            </Link>
-          </div>
-        </nav>
-
-        <div className="flex-1">
-          {/* Hero image with overlay text */}
-          <section className="relative h-80 sm:h-96 md:h-[28rem] lg:h-[32rem] overflow-hidden">
-            <Image
-              src={imageUrl}
-              alt={articleTitle}
-              fill
-              priority
-              fetchPriority="high"
-              quality={65}
-              sizes="(max-width: 1024px) 100vw, 1200px"
-              className="object-cover"
-              data-testid="img-article-hero"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
-
-            <div className="absolute inset-x-0 bottom-0 text-white">
-              <div className="container mx-auto px-4 pb-8 md:pb-12">
-                <div className="max-w-3xl">
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <Badge
-                      className="bg-white/15 text-white hover:bg-white/25 border-white/20 backdrop-blur-sm text-xs font-medium tracking-wide uppercase"
-                      data-testid="badge-article-category"
-                    >
-                      {categoryName}
-                    </Badge>
-                    {tagNames.map((tag) => (
-                      <Badge
-                        key={tag}
-                        className="bg-white/10 text-white/80 border-white/15 backdrop-blur-sm text-xs font-medium"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  <h1
-                    className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-heading font-bold leading-[1.15] tracking-tight"
-                    data-testid="text-article-title"
-                  >
-                    {articleTitle}
-                  </h1>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 text-sm text-white/80">
-                    {formattedDate && (
-                      <div
-                        className="flex items-center gap-1.5"
-                        data-testid="text-article-date"
-                      >
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>{formattedDate}</span>
-                      </div>
-                    )}
-                    {formattedDate && (
-                      <span className="text-white/40" aria-hidden="true">|</span>
-                    )}
-                    <div
-                      className="flex items-center gap-1.5"
-                      data-testid="text-article-reading-time"
-                    >
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>
-                        {df("pages.blog-post.readingTime.label",
-                          df("shared.blogCard.readingTime.label_one",
-                            `${readingTime} min`,
-                            { count: readingTime }),
-                          { count: readingTime })}
-                      </span>
-                    </div>
-                    {authorName && (
-                      <>
-                        <span className="text-white/40" aria-hidden="true">|</span>
-                        <div className="flex items-center gap-1.5">
-                          {authorPortrait && (
-                            <Image
-                              src={authorPortrait}
-                              alt={authorName}
-                              width={20}
-                              height={20}
-                              className="rounded-full ring-1 ring-white/30"
-                            />
-                          )}
-                          <span>{authorName}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Article content + sidebar */}
-          <section className="py-10 md:py-16">
-            <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10 lg:gap-12">
-                  {/* Main article column */}
-                  <article className="min-w-0">
-                    {/* Lede / excerpt */}
-                    {articleExcerpt && (
-                      <p
-                        className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 pb-8 border-b border-border/60"
-                        data-testid="text-article-excerpt"
-                      >
-                        {articleExcerpt}
-                      </p>
-                    )}
-
-                    {/* Article body */}
-                    <div
-                      className={[
-                        "prose dark:prose-invert max-w-none",
-                        "prose-p:leading-[1.8] prose-p:text-base prose-p:text-foreground/85",
-                        "prose-headings:font-heading prose-headings:tracking-tight prose-headings:text-foreground",
-                        "prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4",
-                        "prose-h3:text-xl prose-h3:mt-10 prose-h3:mb-3",
-                        "prose-h4:text-lg prose-h4:mt-8 prose-h4:mb-2",
-                        "prose-li:text-base prose-li:leading-[1.8] prose-li:text-foreground/85",
-                        "prose-ul:my-6 prose-ol:my-6",
-                        "prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline",
-                        "prose-img:rounded-lg prose-img:my-8",
-                        "prose-blockquote:border-l-primary/40 prose-blockquote:text-foreground/75 prose-blockquote:not-italic prose-blockquote:font-normal",
-                        "prose-hr:border-border/60 prose-hr:my-10",
-                        "prose-strong:text-foreground prose-strong:font-semibold",
-                      ].join(" ")}
-                      data-testid="article-body"
-                    >
-                      {safeBody ? (
-                        <div dangerouslySetInnerHTML={{ __html: safeBody }} />
-                      ) : (
-                        <p className="text-muted-foreground">
-                          {df("pages.blog-post.noContent", lang === "de" ? "Kein Inhalt verfügbar." : "Aucun contenu disponible.")}
-                        </p>
-                      )}
-                    </div>
-
-
-                    {/* FAQ */}
-                    {faqItems.length > 0 && (
-                      <div className="mt-10">
-                        <h2 className="text-xl sm:text-2xl font-heading font-bold mb-4">
-                          {df("pages.blog-post.faq.title", lang === "de" ? "Häufige Fragen" : "Questions fréquentes")}
-                        </h2>
-                        <Accordion className="w-full">
-                          {faqItems.map((item, index) => (
-                            <AccordionItem key={index} value={`faq-${index}`}>
-                              <AccordionTrigger className="text-left hover:no-underline w-full justify-between gap-4">
-                                {item.question}
-                              </AccordionTrigger>
-                              <AccordionContent>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                  {item.answer}
-                                </p>
-                              </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                        </Accordion>
-                      </div>
-                    )}
-                  </article>
-
-                  {/* Sidebar */}
-                  <aside>
-                    <div className="lg:sticky lg:top-24 space-y-5">
-                      <MiniQuoteCard
-                        pageId="blog-post"
-                        dictionary={dictionary}
-                        pageRegistry={registry}
-                        lang={lang}
-                      />
-
-                      {expertAdvice && (
-                        <Card
-                          className="p-5 bg-muted/50 dark:bg-muted/30 border-border/50"
-                          data-testid="card-expert-advice"
-                        >
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <LucideCmsIcon
-                                name={config.expertAdvice?.icon}
-                                className="h-4 w-4 text-primary"
-                              />
-                              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {df("pages.blog-post.expertAdvice.title", lang === "de" ? "Expertenrat" : "Conseil d'expert")}
-                              </span>
-                            </div>
-                            <blockquote className="text-sm leading-loose text-foreground/80 border-l-2 border-primary/30 pl-3">
-                              <div
-                                dangerouslySetInnerHTML={{ __html: expertAdvice }}
-                              />
-                            </blockquote>
-                          </div>
-                        </Card>
-                      )}
-
-                      {takeaways && (
-                        <Card
-                          className="p-5 bg-muted/50 dark:bg-muted/30 border-border/50"
-                          data-testid="card-article-takeaways"
-                        >
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <LucideCmsIcon
-                                name={config.takeaways?.icon}
-                                className="h-4 w-4 text-primary"
-                              />
-                              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {df("pages.blog-post.takeaways.title", lang === "de" ? "Wichtige Erkenntnisse" : "Points clés")}
-                              </span>
-                            </div>
-                            <div
-                              className="prose prose-sm dark:prose-invert max-w-none prose-p:text-sm prose-p:leading-loose prose-li:text-sm prose-li:leading-loose prose-ul:my-3 prose-ol:my-3 prose-li:my-1.5 prose-p:text-foreground/80 prose-li:text-foreground/80"
-                              data-testid="article-takeaways-content"
-                            >
-                              <div
-                                dangerouslySetInnerHTML={{ __html: takeaways }}
-                              />
-                            </div>
-                          </div>
-                        </Card>
-                      )}
-                    </div>
-                  </aside>
-                </div>
-            </div>
-          </section>
-
-          {/* GetQuote CTA */}
-          {hasGetQuoteBlock && (
-            <GetQuote
-              title={d("pages.blog-post.blocks.getquote.headline")}
-              subtitle={d("pages.blog-post.blocks.getquote.subheadline")}
-              ctaLabel={d("pages.blog-post.blocks.getquote.cta.label")}
-              ctaHref={quoteHref}
-              note={d("pages.blog-post.blocks.getquote.note")}
-              variant={getQuoteVariant as "primary" | "muted"}
-              image={getQuoteImage}
-            />
-          )}
-        </div>
+        <BlogArticle
+          lang={lang}
+          labels={{
+            back: df("pages.blog-post.subheader.back", lang === "de" ? "Zurück zum Blog" : "Retour au blog"),
+            published: opt(dictionary, "pages.blog-post.published"),
+            faqTitle: df("pages.blog-post.faq.title", lang === "de" ? "Häufige Fragen" : "Questions fréquentes"),
+            expertAdviceTitle: df("pages.blog-post.expertAdvice.title", lang === "de" ? "Expertenrat" : "Conseil d'expert"),
+            takeawaysTitle: df("pages.blog-post.takeaways.title", lang === "de" ? "Wichtige Erkenntnisse" : "Points clés"),
+            authorLabel: opt(dictionary, "pages.blog-post.author.label"),
+            relatedEyebrow: opt(dictionary, "pages.blog-post.related.eyebrow"),
+            relatedTitle: opt(dictionary, "pages.blog-post.related.title"),
+            relatedAll: opt(dictionary, "pages.blog-post.related.all"),
+            relatedRead: opt(dictionary, "pages.blog-post.related.read"),
+          }}
+          blogHref={`/${lang}/${slug}`}
+          categoryName={categoryName}
+          tagNames={tagNames}
+          readingTimeLabel={readingTimeText(readingTime)}
+          title={articleTitle}
+          lede={articleLede}
+          author={authorName ? { name: authorName, credentials: authorCredentials, portrait: authorPortrait } : null}
+          date={formattedDate}
+          dateTime={dateValue || undefined}
+          image={imageUrl}
+          bodyHtml={safeBody}
+          noContentLabel={df("pages.blog-post.noContent", lang === "de" ? "Kein Inhalt verfügbar." : "Aucun contenu disponible.")}
+          faq={faqItems}
+          expertAdviceHtml={expertAdvice || undefined}
+          expertAdviceIcon={config.expertAdvice?.icon}
+          takeawaysHtml={takeaways || undefined}
+          takeawaysIcon={config.takeaways?.icon}
+          related={relatedPosts}
+          relatedReadingTime={readingTimeText}
+          cta={
+            hasGetQuoteBlock
+              ? {
+                  title: d("pages.blog-post.blocks.getquote.headline"),
+                  subtitle: opt(dictionary, "pages.blog-post.blocks.getquote.subheadline"),
+                  label: d("pages.blog-post.blocks.getquote.cta.label"),
+                  href: quoteHref,
+                  note: opt(dictionary, "pages.blog-post.blocks.getquote.note"),
+                }
+              : undefined
+          }
+          dictionary={dictionary}
+          pageRegistry={registry}
+        />
       </>
     );
   }
