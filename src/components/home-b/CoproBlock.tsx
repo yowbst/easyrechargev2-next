@@ -33,7 +33,9 @@ export function CoproBlock({
     <section data-reveal className="bg-b-paper py-14">
       <Container>
         <div className="grid items-center gap-10 rounded-xl bg-b-sand p-8 md:p-14 lg:grid-cols-2 lg:gap-14">
-          <div>
+          {/* min-w-0 + break-words: German compounds ("Eigentümerversammlung")
+              are wider than a 390 px column and would push the page sideways. */}
+          <div className="min-w-0 break-words">
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
             <SectionTitle>{title}</SectionTitle>
             {lede && (

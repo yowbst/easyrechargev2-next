@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
 import { NavLink } from "./NavLink";
 import { EnvBadge } from "./EnvBadge";
+import { HeaderShell } from "./HeaderShell";
 
 import { t } from "@/lib/i18n/dictionaries";
+import { opt } from "@/components/home-b/content";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,80 +105,110 @@ export function Header({
     }
   }
 
+  const labels = {
+    nav: opt(dictionary, "layout.header.nav_label") ?? "Navigation principale",
+    menuOpen: opt(dictionary, "layout.header.menu.open"),
+    menuClose: opt(dictionary, "layout.header.menu.close"),
+    language: opt(dictionary, "layout.header.language.label"),
+    theme: opt(dictionary, "layout.header.theme.toggle"),
+    themeShort: opt(dictionary, "layout.header.theme.label"),
+    // Below `xl` the CTA stays in the bar, in a short form when one exists.
+    ctaShort: opt(dictionary, "layout.header.cta_short"),
+  };
+
+  const ctaClass =
+    "items-center justify-center gap-2 whitespace-nowrap rounded-md bg-b-forest font-semibold text-b-on-forest transition-colors hover:bg-b-charge hover:text-b-on-charge focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+  const renderCta = (className: string, content: React.ReactNode, testId: string) =>
+    ctaLink &&
+    (ctaLink.external ? (
+      <a
+        href={ctaLink.href}
+        title={ctaLink.label}
+        target={ctaLink.openInNewTab ? "_blank" : "_self"}
+        rel={ctaLink.openInNewTab ? "noopener noreferrer" : undefined}
+        className={className}
+        data-testid={testId}
+      >
+        {content}
+      </a>
+    ) : (
+      <Link href={ctaLink.href} title={ctaLink.label} className={className} data-testid={testId}>
+        {content}
+      </Link>
+    ));
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href={`/${lang}`} title="easyRecharge" className="flex items-center" data-testid="link-home">
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={logoSrc}
-              alt="easyRecharge"
-              className="h-10 dark:hidden"
-              style={{ width: "auto", height: "2.5rem" }}
-              data-testid="img-logo"
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={logoDarkSrc}
-              alt="easyRecharge"
-              className="h-10 hidden dark:block"
-              style={{ width: "auto", height: "2.5rem" }}
-            />
-          </>
+    <HeaderShell>
+      <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center gap-1.5 pr-3 pl-5 md:px-10 xl:gap-10">
+        <Link
+          href={`/${lang}`}
+          aria-label="easyRecharge — accueil"
+          className="flex shrink-0 items-center rounded-md focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          data-testid="link-home"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoSrc}
+            alt="easyRecharge"
+            className="h-9 w-auto md:h-10 dark:hidden"
+            data-testid="img-logo"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoDarkSrc} alt="easyRecharge" className="hidden h-9 w-auto md:h-10 dark:block" />
         </Link>
         <EnvBadge />
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        {/* Desktop navigation from `xl`: with the counts and the German labels
+            the links, language, theme and CTA need ~1250 px. Below that the
+            menu takes over rather than truncating a label. */}
+        <nav aria-label={labels.nav} className="ml-2 hidden items-center gap-1.5 xl:flex">
           {navLinks.map((item) => (
             <NavLink
               key={item.id}
               href={item.href}
               title={item.label}
               data-testid={`link-nav-${item.id}`}
-              className="text-sm font-medium transition-colors hover:text-primary"
-              activeClassName="text-primary"
+              className="inline-flex h-11 items-center whitespace-nowrap rounded-md px-3.5 text-[15px] transition-colors duration-100 hover:bg-b-inset focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              activeClassName="bg-b-sand font-semibold text-foreground hover:bg-b-sand"
             >
               {item.label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
-          {headerConfig?.show_language_selector && (
-            <LanguageSwitcher pageRegistry={pageRegistry} />
+        <div className="ml-auto flex items-center gap-1.5 xl:gap-3">
+          {renderCta(
+            `inline-flex h-11 px-3.5 text-sm xl:hidden ${ctaClass}`,
+            labels.ctaShort ?? ctaLink?.label,
+            "button-header-quote-short",
           )}
-          {headerConfig?.show_theme_toggle && <ThemeToggle />}
-
-          {/* Desktop CTA */}
-          {ctaLink &&
-            (ctaLink.external ? (
-              <a
-                href={ctaLink.href}
-                title={ctaLink.label}
-                target={ctaLink.openInNewTab ? "_blank" : "_self"}
-                rel={ctaLink.openInNewTab ? "noopener noreferrer" : undefined}
-                className="hidden md:inline-flex w-48 items-center justify-center rounded-lg bg-primary text-primary-foreground [a]:hover:bg-primary/80 min-h-10 px-6 text-sm font-medium transition-all"
-                data-testid="button-header-quote"
-              >
-                {ctaLink.label}
-              </a>
-            ) : (
-              <Link
-                href={ctaLink.href}
-                title={ctaLink.label}
-                className="hidden md:inline-flex w-48 items-center justify-center rounded-lg bg-primary text-primary-foreground [a]:hover:bg-primary/80 min-h-10 px-6 text-sm font-medium transition-all"
-                data-testid="button-header-quote"
-              >
-                {ctaLink.label}
-              </Link>
-            ))}
+          {headerConfig?.show_language_selector && (
+            <LanguageSwitcher pageRegistry={pageRegistry} label={labels.language} />
+          )}
+          {headerConfig?.show_theme_toggle && (
+            <div className="hidden xl:block">
+              <ThemeToggle label={labels.theme} />
+            </div>
+          )}
+          {renderCta(
+            `hidden h-11 px-5 text-[15px] xl:inline-flex ${ctaClass}`,
+            <>
+              {ctaLink?.label}
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </>,
+            "button-header-quote",
+          )}
 
           {/* Mobile Menu (Client Component) */}
-          <MobileMenu navLinks={navLinks} ctaLink={ctaLink} />
+          <MobileMenu
+            navLinks={navLinks}
+            ctaLink={ctaLink}
+            labels={{ open: labels.menuOpen, close: labels.menuClose, nav: labels.nav, theme: labels.themeShort }}
+            themeToggle={headerConfig?.show_theme_toggle ? <ThemeToggle label={labels.theme} /> : undefined}
+          />
         </div>
       </div>
-    </header>
+    </HeaderShell>
   );
 }
