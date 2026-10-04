@@ -5,14 +5,19 @@ export interface Callout {
   n: string;
   title: string;
   body: string;
+  /** Marker position over the photograph, as `"x,y"` percentages. */
+  pin?: string;
 }
 
 /**
- * "La borne" — the product in its actual setting, annotated.
+ * "La borne" — the product, annotated.
  *
- * The callouts are absolutely positioned over the photograph from `lg` up, as
- * drawn; below that they stack underneath it, because three overlapping cards
- * on a 390px screen would cover the thing they are pointing at.
+ * Two columns: the photograph carries numbered markers, and the numbers are
+ * explained in the panel beside it. The earlier version floated the
+ * explanations over the picture, which meant the cards covered the thing they
+ * described and nothing was legible below `lg`. Splitting them lets the photo
+ * be a photo and the text be text, and the layout collapses to one column on
+ * its own — the markers stay on the image, the panel moves under it.
  */
 export function ProductShowcase({
   eyebrow,
@@ -31,7 +36,7 @@ export function ProductShowcase({
   image?: string;
   imageAlt?: string;
   callouts: Callout[];
-  /** Certification strip pinned to the bottom-right of the image. */
+  /** Certification line closing the panel. */
   badge?: string;
 }) {
   return (
@@ -39,76 +44,80 @@ export function ProductShowcase({
       <Container>
         <SectionHead eyebrow={eyebrow} title={title} lede={lede} action={action} />
 
-        <div className="relative overflow-hidden rounded-xl bg-b-sand">
-          <div className="relative aspect-[16/10] lg:aspect-[1160/520]">
+        <div className="grid items-stretch gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(100%,21.25rem),1fr))]">
+          <div className="relative max-h-[640px] min-h-[440px] overflow-hidden rounded-xl bg-b-inset [aspect-ratio:964/848]">
             {image ? (
               <Image
                 src={image}
                 alt={imageAlt}
                 fill
-                quality={65}
-                sizes="(max-width: 1240px) 100vw, 1160px"
-                className="object-cover object-center"
+                quality={70}
+                sizes="(max-width: 1240px) 100vw, 600px"
+                // Anchored right, matching the design's `xMaxYMid slice`: the
+                // crop keeps the charger, the cable and the connector, and
+                // gives up the shelving on the far left. The marker
+                // percentages below are measured against that same window.
+                className="object-cover object-right"
               />
             ) : (
               <div
                 aria-hidden
-                className="absolute inset-0 bg-[repeating-linear-gradient(45deg,var(--b-sand)_0_6px,color-mix(in_srgb,var(--b-sand)_82%,black)_6px_12px)]"
+                className="absolute inset-0 bg-[repeating-linear-gradient(45deg,var(--b-inset)_0_6px,color-mix(in_srgb,var(--b-inset)_82%,black)_6px_12px)]"
               />
             )}
+
+            {/* Markers are decorative: every number is repeated in the panel
+                beside the image, where it carries its explanation. */}
+            {callouts.map((c) => {
+              const [x, y] = (c.pin ?? "").split(",").map((v) => v.trim());
+              if (!x || !y) return null;
+              return (
+                <span
+                  key={c.n}
+                  aria-hidden
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                  className="absolute inline-flex size-[52px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[10px] border-[3px] border-b-paper bg-b-charge text-[26px] font-semibold leading-none text-b-on-charge"
+                >
+                  {c.n}
+                </span>
+              );
+            })}
           </div>
 
-          {callouts.length > 0 && (
-            <ul className="pointer-events-none absolute inset-y-7 left-7 hidden w-[280px] flex-col justify-between lg:flex">
-              {callouts.map((c) => (
+          <div className="flex flex-col justify-center rounded-xl bg-b-sand px-6 py-3 md:px-9">
+            <ol>
+              {callouts.map((c, i) => (
                 <li
                   key={c.n}
-                  className="rounded-lg bg-[color-mix(in_srgb,var(--b-paper)_96%,transparent)] px-5 py-4 backdrop-blur-sm"
+                  className={`flex items-start gap-[18px] py-6 ${i > 0 ? "border-t" : ""}`}
                 >
-                  <CalloutBody {...c} />
+                  <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-b-charge text-[15px] font-semibold text-b-on-charge">
+                    {c.n}
+                  </span>
+                  <div>
+                    <p className="type-h3 mb-2 text-[22px]">
+                      {c.title}
+                    </p>
+                    <p className="text-base leading-[1.55] text-[color-mix(in_srgb,var(--foreground)_78%,var(--b-paper))]">
+                      {c.body}
+                    </p>
+                  </div>
                 </li>
               ))}
-            </ul>
-          )}
+            </ol>
 
-          {badge && (
-            <div className="absolute bottom-7 right-7 hidden items-center gap-3 rounded-lg bg-[color-mix(in_srgb,var(--b-forest)_94%,transparent)] px-5 py-4 text-b-on-forest backdrop-blur-sm lg:flex">
-              <span
-                aria-hidden
-                className="size-[9px] rounded-full bg-b-signal motion-safe:animate-[er-breathe_2.4s_ease-in-out_infinite]"
-              />
-              <span className="text-[15px] font-medium">{badge}</span>
-            </div>
-          )}
+            {badge && (
+              <p className="flex items-center gap-3 pb-3 pt-5 text-[15px] font-semibold leading-[1.4]">
+                <span
+                  aria-hidden
+                  className="size-2.5 shrink-0 rounded-full bg-b-charge motion-safe:animate-[er-breathe_2.4s_ease-in-out_infinite]"
+                />
+                {badge}
+              </p>
+            )}
+          </div>
         </div>
-
-        {/* Small screens: the same annotations, stacked under the photo. */}
-        {callouts.length > 0 && (
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:hidden">
-            {callouts.map((c) => (
-              <li key={c.n} className="rounded-lg bg-b-sand px-5 py-4">
-                <CalloutBody {...c} />
-              </li>
-            ))}
-          </ul>
-        )}
       </Container>
     </section>
-  );
-}
-
-function CalloutBody({ n, title, body }: Callout) {
-  return (
-    <>
-      <div className="mb-2 flex items-center gap-2.5">
-        <span className="inline-flex size-[22px] items-center justify-center rounded-md bg-b-charge text-[13px] font-semibold text-b-on-charge">
-          {n}
-        </span>
-        <span className="font-heading text-xl font-semibold leading-none tracking-[-0.03em]">
-          {title}
-        </span>
-      </div>
-      <p className="text-[15px] leading-[1.5] text-muted-foreground">{body}</p>
-    </>
   );
 }

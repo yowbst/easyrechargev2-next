@@ -33,7 +33,7 @@ export function ProcessB({
         <div className="mb-12 grid items-end gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
           <SectionTitle>{title}</SectionTitle>
           {lede && (
-            <p className="max-w-[34rem] text-[17px] leading-[1.65] opacity-75">
+            <p className="type-body max-w-[34rem] opacity-75">
               {lede}
             </p>
           )}

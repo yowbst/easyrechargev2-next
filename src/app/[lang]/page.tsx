@@ -42,6 +42,7 @@ import { GuidesB, type GuidePost } from "@/components/home-b/GuidesB";
 import { CoverageB, type CoverageStat } from "@/components/home-b/CoverageB";
 import { FaqB, type FaqEntry } from "@/components/home-b/FaqB";
 import { opt, optList } from "@/components/home-b/content";
+import { deriveExcerpt } from "@/lib/blog-excerpt";
 
 export function generateStaticParams() {
   return [{ lang: "fr" }, { lang: "de" }];
@@ -209,7 +210,7 @@ export default async function Home({ params }: HomeProps) {
       return {
         id: String(post.id),
         title: pt.title,
-        excerpt: pt.excerpt || "",
+        excerpt: deriveExcerpt(pt, pt.title),
         readingTime: parseReadingTime(post.reading_time || pt.reading_time),
         image: post.image ? `${DIRECTUS_URL}/assets/${post.image}` : "/og-default.webp",
         category: post.category?.translations?.[0]?.name || "Guide",
@@ -234,10 +235,35 @@ export default async function Home({ params }: HomeProps) {
     ? `/${lang}/${contactEntry.slugs[lang]}`
     : undefined;
 
+  /**
+   * Directus file UUID → asset URL. Goes through the authenticated proxy
+   * rather than a direct Directus URL, which 403s without the token.
+   */
+  const assetUrl = (id?: string) => (id ? `/api/cms/assets/${id}` : undefined);
+
   // ─── Direction B sections ───────────────────────────────────────────────
   // Hero figures come from global_config, which already holds the SLAs the
   // rest of the site quotes — so the hero can never disagree with the process
   // section about how long a first contact takes.
+  // Hero backdrop. `blocks.hero.images.N` is the rotating set; `blocks.hero.image`
+  // stays supported as the single-image form, so the section keeps working
+  // whichever one an editor filled in.
+  const heroImages: string[] = (() => {
+    const many = optList<{ id: string }>(
+      dictionary,
+      "pages.home.blocks.hero.images",
+      (at) => {
+        const id = at("");
+        return id ? { id } : null;
+      },
+      10,
+    ).map((x) => x.id);
+    const list = many.length > 0
+      ? many
+      : [opt(dictionary, "pages.home.blocks.hero.image")].filter(Boolean) as string[];
+    return list.map((id) => assetUrl(id)!).filter(Boolean);
+  })();
+
   const heroStats: HeroStat[] = [
     {
       value: String(slas?.first_contact?.value ?? 48),
@@ -317,11 +343,17 @@ export default async function Home({ params }: HomeProps) {
       if (!text || !name) return null;
       const status = opt(dictionary, `${tbp}.items.${ti.id}.status`);
       const location = opt(dictionary, `${tbp}.items.${ti.id}.location`);
+      // Statuses are authored as "Propriétaire • Maison individuelle"; with the
+      // locality appended that is three facts on one line under a 260px card.
+      // The line keeps the first — who they are — and the full string moves to
+      // the title attribute so nothing is lost.
+      const role = status?.split(/\s*[•·|]\s*/)[0]?.trim();
       return {
         id: ti.id,
         text,
         name,
-        meta: [status, location].filter(Boolean).join(" · ") || undefined,
+        meta: [role, location].filter(Boolean).join(" · ") || undefined,
+        metaFull: [status, location].filter(Boolean).join(" · ") || undefined,
         rating: ti.rating,
       };
     })
@@ -337,7 +369,7 @@ export default async function Home({ params }: HomeProps) {
     (at, i) => {
       const title = at("title");
       return title
-        ? { n: String(i + 1), title, body: at("body") ?? "" }
+        ? { n: String(i + 1), title, body: at("body") ?? "", pin: at("pin") }
         : null;
     },
     3,
@@ -458,6 +490,9 @@ export default async function Home({ params }: HomeProps) {
           title={heroTitle}
           subtitle={heroSubtitle}
           stats={heroStats}
+          images={heroImages}
+          imageAlt={opt(dictionary, "pages.home.blocks.hero.image_alt") ?? ""}
+          rotateSeconds={Number(opt(dictionary, "pages.home.blocks.hero.rotate_seconds")) || undefined}
         >
           <div className="mb-5 flex items-center justify-between gap-4">
             <span className="text-[17px] font-semibold">
@@ -499,11 +534,7 @@ export default async function Home({ params }: HomeProps) {
                   }
                 : undefined
             }
-            image={
-              findBlock(blocks, "block_product")?.image
-                ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_product").image}`
-                : undefined
-            }
+            image={assetUrl(opt(dictionary, "pages.home.blocks.product.image"))}
             imageAlt={opt(dictionary, "pages.home.blocks.product.image_alt") ?? ""}
             callouts={productCallouts}
             badge={opt(dictionary, "pages.home.blocks.product.badge")}
@@ -603,11 +634,7 @@ export default async function Home({ params }: HomeProps) {
                   }
                 : undefined
             }
-            image={
-              findBlock(blocks, "block_copro")?.image
-                ? `${DIRECTUS_URL}/assets/${findBlock(blocks, "block_copro").image}`
-                : undefined
-            }
+            image={assetUrl(opt(dictionary, "pages.home.blocks.copro.image"))}
             imageAlt={opt(dictionary, "pages.home.blocks.copro.image_alt") ?? ""}
             statValue={opt(dictionary, "pages.home.blocks.copro.stat.value")}
             statLabel={opt(dictionary, "pages.home.blocks.copro.stat.label")}

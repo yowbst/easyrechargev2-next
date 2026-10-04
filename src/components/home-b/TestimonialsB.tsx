@@ -7,6 +7,8 @@ export interface TestimonialB {
   name: string;
   /** Line under the name, e.g. "Propriétaire · Nyon". */
   meta?: string;
+  /** Full, unabridged version — surfaced on hover rather than on the card. */
+  metaFull?: string;
   rating: number;
 }
 
@@ -88,7 +90,12 @@ export function TestimonialsB({
                     {item.name}
                   </p>
                   {item.meta && (
-                    <p className="text-sm text-muted-foreground">{item.meta}</p>
+                    <p
+                      className="truncate text-sm text-muted-foreground"
+                      title={item.metaFull ?? item.meta}
+                    >
+                      {item.meta}
+                    </p>
                   )}
                 </div>
               </div>

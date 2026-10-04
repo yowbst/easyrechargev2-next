@@ -42,7 +42,7 @@ export function FaqB({
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
             <SectionTitle>{title}</SectionTitle>
             {lede && (
-              <p className="mt-4 text-[17px] leading-[1.65] text-muted-foreground">
+              <p className="type-body mt-4 text-muted-foreground">
                 {lede}
               </p>
             )}

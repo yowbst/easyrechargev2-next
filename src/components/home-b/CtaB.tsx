@@ -23,11 +23,11 @@ export function CtaB({
       <Container>
         <div className="grid items-center gap-10 rounded-xl bg-b-charge px-8 py-14 text-b-on-charge lg:grid-cols-[1.2fr_0.8fr] lg:gap-14 lg:px-14 lg:py-[4.5rem]">
           <div>
-            <h2 className="font-heading font-semibold leading-[1.06] tracking-[-0.04em] text-[clamp(2rem,4vw,2.75rem)]">
+            <h2 className="type-h1">
               {title}
             </h2>
             {subtitle && (
-              <p className="mt-4 max-w-[30rem] text-[17px] leading-[1.65] opacity-80">
+              <p className="type-body mt-4 max-w-[30rem] opacity-80">
                 {subtitle}
               </p>
             )}

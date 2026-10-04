@@ -26,7 +26,7 @@ export function Container({
 /** 13px, letter-spaced, upper-case — the small label above a section title. */
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+    <p className="type-label mb-4 tracking-[0.12em] text-muted-foreground">
       {children}
     </p>
   );
@@ -43,7 +43,7 @@ export function SectionTitle({
 }) {
   return (
     <Tag
-      className={`font-heading font-semibold leading-[1.06] tracking-[-0.04em] text-[clamp(2rem,4vw,2.75rem)] ${className}`}
+      className={`type-h1 ${className}`}
     >
       {children}
     </Tag>
@@ -74,7 +74,7 @@ export function SectionHead({
         {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
         <SectionTitle>{title}</SectionTitle>
         {lede && (
-          <p className="mt-4 text-[17px] leading-[1.65] text-muted-foreground">
+          <p className="type-body mt-4 text-muted-foreground">
             {lede}
           </p>
         )}

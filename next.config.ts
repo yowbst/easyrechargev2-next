@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
   },
 
   images: {
-    qualities: [60, 65, 75],
+    qualities: [60, 65, 70, 75],
     // Next's default tops out at 3840. Mesuré le 2026-09-13 sur les 1811
     // images du CMS : une seule dépasse 2048 px (un fichier à 2500). Le
     // candidat 3840 ne peut donc rien renvoyer de plus détaillé que 2048 —
