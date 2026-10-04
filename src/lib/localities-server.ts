@@ -52,3 +52,41 @@ export async function hasChargingSubsidy(localityId: string): Promise<boolean> {
     ),
   );
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SubsidyTranslation = { subsidies?: any[] | null };
+
+/**
+ * Personal charging-infrastructure subsidies of a locality, reduced to what
+ * the quote funnel shows: whether one exists and the highest CHF amount any
+ * of them names (null when none states an amount — most do not).
+ */
+export function summarizeChargingSubsidies(translations: SubsidyTranslation[]): { available: boolean; maxChf: number | null } {
+  let available = false;
+  let max = 0;
+  for (const t of translations) {
+    for (const s of t.subsidies ?? []) {
+      if (s?.category !== "charging-infrastructure" || !s.audiences?.includes("personal")) continue;
+      available = true;
+      for (const a of s.amounts ?? []) {
+        for (const v of a?.chf ?? []) if (typeof v === "number" && v > max) max = v;
+      }
+    }
+  }
+  return { available, maxChf: max > 0 ? max : null };
+}
+
+/** Subsidy summary by postal code and locality name, as the mini-quote hands them over. */
+export async function chargingSubsidySummary(postalCode: string, locality: string) {
+  const params = new URLSearchParams();
+  params.set("fields", "name,translations.subsidies");
+  params.set("filter[postal_code][_eq]", postalCode);
+  params.set("limit", "10");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const res = await directusFetch<{ data: any[] }>(`/items/${LOCALITIES_COLLECTION}?${params.toString()}`, { next: { revalidate: 3600 } });
+  const rows = res?.data ?? [];
+  const wanted = locality.trim().toLowerCase();
+  const row = rows.find((r) => String(r.name ?? "").toLowerCase() === wanted) ?? (rows.length === 1 ? rows[0] : null);
+  if (!row) return null;
+  return { locality: String(row.name), ...summarizeChargingSubsidies(row.translations ?? []) };
+}

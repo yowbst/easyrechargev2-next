@@ -27,3 +27,18 @@ export const BATTERY_BUCKETS = {
     { value: 3, label: "3+" },
   ],
 } as const satisfies Record<string, readonly { value: number; label: string }[]>;
+
+const UNITS: Record<string, string> = { pvPower: "kWc", annualConsumption: "kWh" };
+
+/**
+ * Side-panel value of a numeric battery answer: the bucket label when the
+ * number is a bucket's, else the typed figure with its unit. Null for the
+ * text answers, which the option labels already cover.
+ */
+export function formatBatteryAnswer(field: string, value: unknown): string | null {
+  if (typeof value !== "number") return null;
+  const unit = UNITS[field] ?? "";
+  const bucket = (BATTERY_BUCKETS as Record<string, readonly { value: number; label: string }[]>)[field]?.find((b) => b.value === value);
+  if (bucket) return bucket.label.replace("{u}", unit ? `\u00a0${unit}` : "");
+  return unit ? `${value.toLocaleString("fr-CH")}\u00a0${unit}` : String(value);
+}

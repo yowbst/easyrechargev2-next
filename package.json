@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "ingest": "tsx --env-file=.env.local scripts/vehicles-ingest.ts",
-    "emails": "tsx --env-file=.env.local scripts/emails.ts"
+    "emails": "tsx --env-file=.env.local scripts/emails.ts",
+    "quote-copy": "tsx --env-file=.env.local scripts/quote-copy.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

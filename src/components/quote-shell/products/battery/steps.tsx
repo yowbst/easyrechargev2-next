@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import {
-  Battery, BatteryCharging, Building2, CalendarClock, CalendarDays, Car, CircleSlash, Clock, Cpu,
-  Gauge, Hammer, HelpCircle, Home, Key, Plug, Sun, Thermometer, User, Users, Zap,
+  ArrowRight, Battery, BatteryCharging, Building2, CalendarClock, CalendarDays, CircleSlash, Clock, Cpu, Hammer, HelpCircle, Home, Info, Key, Sun, Zap,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { IconButtonGroup, type IconButtonOption } from "@/components/quote/IconButtonGroup";
@@ -11,6 +10,7 @@ import { RangeButtonGroup } from "@/components/quote/RangeButtonGroup";
 import { resolveBuckets } from "@/lib/quoteBuckets";
 import { RevealField } from "../../RevealField";
 import { FieldLabel } from "../../FieldLabel";
+import { ApprovalField } from "../../ApprovalField";
 import { fieldConfig, tooltipImageUrl } from "../../pageConfig";
 import type { StepProps } from "../../types";
 import { BATTERY_BUCKETS } from "./buckets";
@@ -27,19 +27,20 @@ function buckets(pageConfig: StepProps["pageConfig"], step: string, field: keyof
   return resolveBuckets(field, fieldConfig(pageConfig, step, field).buckets ?? BATTERY_BUCKETS[field], unit);
 }
 
-const notice = "rounded-lg border border-border/60 bg-muted/40 p-4 text-sm leading-relaxed";
+const notice = "rounded-lg bg-b-inset px-5 py-4.5 text-base leading-relaxed";
 
-export function HousingStep({ data, set, tq, tqOpt, pageConfig }: StepProps) {
+export function HousingStep(props: StepProps) {
+  const { data, set, tq, tqOpt, pageConfig } = props;
   const d = data as Partial<BatteryFields>;
   const tenant = d.housingStatus === "tenant";
-  const label = (field: string, icon: IconButtonOption["icon"]) => (
-    <FieldLabel icon={icon} label={tq(`${F("housing", field)}.label`)} tooltip={tqOpt(`${F("housing", field)}.tooltip`)} image={tooltipImageUrl(pageConfig, "housing", field)} />
+  const label = (field: string) => (
+    <FieldLabel label={tq(`${F("housing", field)}.label`)} help={tqOpt(`${F("housing", field)}.why`)} tooltip={tqOpt(`${F("housing", field)}.tooltip`)} image={tooltipImageUrl(pageConfig, "housing", field)} />
   );
 
   return (
     <>
       <div id="q-housingStatus">
-        {label("housingStatus", User)}
+        {label("housingStatus")}
         <IconButtonGroup
           options={options(tq, "housing", "housingStatus", [["owner", Home], ["co-owner", Building2], ["tenant", Key]])}
           value={d.housingStatus ?? ""}
@@ -47,13 +48,26 @@ export function HousingStep({ data, set, tq, tqOpt, pageConfig }: StepProps) {
         />
       </div>
 
+      {/* Not a wall: a tenant cannot decide a battery, but can ask for a charger
+          (design 15 v2, 2g) — with the answers already given. */}
       <RevealField visible={tenant}>
-        <div className={notice} role="status">{tq("steps.housing.tenantExit")}</div>
+        <div className={`${notice} flex gap-3`} role="status">
+          <Info className="mt-0.5 size-4.5 shrink-0" aria-hidden />
+          <div className="flex-1">
+            {tq("steps.housing.tenantExit")}
+            {props.links.ecpQuote && (
+              <a href={props.links.ecpQuote} className="mt-3 flex h-11 w-fit items-center gap-2 rounded-md bg-b-forest px-4 text-[15px] font-semibold text-b-on-forest dark:bg-b-on-forest dark:text-b-forest" data-testid="link-tenant-ecp">
+                {props.tc("steps.housing.tenantExitAlt")}
+                <ArrowRight className="size-4" aria-hidden />
+              </a>
+            )}
+          </div>
+        </div>
       </RevealField>
 
       <RevealField visible={!!d.housingStatus && !tenant}>
         <div id="q-housingType">
-          {label("housingType", Home)}
+          {label("housingType")}
           <IconButtonGroup
             options={options(tq, "housing", "housingType", [["house", Home], ["apartment", Building2]])}
             value={d.housingType ?? ""}
@@ -65,7 +79,7 @@ export function HousingStep({ data, set, tq, tqOpt, pageConfig }: StepProps) {
 
       <RevealField visible={!!d.housingType && !tenant}>
         <div id="q-solarEquipment">
-          {label("solarEquipment", Sun)}
+          {label("solarEquipment")}
           <IconButtonGroup
             options={options(tq, "housing", "solarEquipment", [["exists", Sun], ["in-progress", Hammer], ["none", CircleSlash]])}
             value={d.solarEquipment ?? ""}
@@ -77,17 +91,21 @@ export function HousingStep({ data, set, tq, tqOpt, pageConfig }: StepProps) {
       <RevealField visible={d.solarEquipment === "none" && !tenant}>
         <div className={notice} role="status">{tq("steps.housing.noPvNote")}</div>
       </RevealField>
+
+      {/* Co-ownership approval: asked here since the finalize step is gone (v2). */}
+      <RevealField visible={d.housingStatus === "co-owner" && !!d.solarEquipment && !props.hidden.has("approval")}>
+        <ApprovalField {...props} />
+      </RevealField>
     </>
   );
 }
 
 /** A bucket picker that can switch to a typed exact value. */
-function ExactOrBuckets({ step, field, exactField, unit, icon, allowNa, data, set, tq, tqOpt, pageConfig }: StepProps & {
+function ExactOrBuckets({ step, field, exactField, unit, allowNa, data, set, tq, tqOpt, pageConfig }: StepProps & {
   step: string;
   field: "pvPower" | "annualConsumption";
   exactField: "pvPowerExact" | "annualConsumptionExact";
   unit: string;
-  icon: IconButtonOption["icon"];
   allowNa: boolean;
 }) {
   const exact = data[exactField] === true;
@@ -99,7 +117,7 @@ function ExactOrBuckets({ step, field, exactField, unit, icon, allowNa, data, se
     <div id={`q-${field}`}>
       {exact || field === "annualConsumption" ? (
         <>
-          <FieldLabel icon={icon} label={tq(`${k}.label`)} tooltip={tqOpt(`${k}.tooltip`)} image={tooltipImageUrl(pageConfig, step, field)} htmlFor={exact ? `${field}-exact` : undefined} />
+          <FieldLabel label={tq(`${k}.label`)} help={tqOpt(`${k}.why`)} tooltip={tqOpt(`${k}.tooltip`)} image={tooltipImageUrl(pageConfig, step, field)} htmlFor={exact ? `${field}-exact` : undefined} />
           {exact && (
             <div className="flex items-center gap-2">
               <Input
@@ -123,7 +141,7 @@ function ExactOrBuckets({ step, field, exactField, unit, icon, allowNa, data, se
           label={tq(`${k}.label`)}
           naLabel={tq("common.dontKnow")}
           allowNa={allowNa}
-          icon={icon}
+          help={tqOpt(`${k}.why`)}
           tooltip={tqOpt(`${k}.tooltip`)}
           tooltipImage={tooltipImageUrl(pageConfig, step, field)}
           testId={field}
@@ -149,11 +167,11 @@ export function PvStep(props: StepProps) {
 
   return (
     <>
-      <ExactOrBuckets {...props} step="pv" field="pvPower" exactField="pvPowerExact" unit="kWc" icon={Gauge} allowNa />
+      <ExactOrBuckets {...props} step="pv" field="pvPower" exactField="pvPowerExact" unit="kWc" allowNa />
 
       <RevealField visible={sizeAnswered}>
         <div id="q-inverterBrand">
-          <FieldLabel icon={Cpu} label={tq(`${F("pv", "inverterBrand")}.label`)} tooltip={tqOpt(`${F("pv", "inverterBrand")}.tooltip`)} image={tooltipImageUrl(pageConfig, "pv", "inverterBrand")} />
+          <FieldLabel label={tq(`${F("pv", "inverterBrand")}.label`)} help={tqOpt(`${F("pv", "inverterBrand")}.why`)} tooltip={tqOpt(`${F("pv", "inverterBrand")}.tooltip`)} image={tooltipImageUrl(pageConfig, "pv", "inverterBrand")} />
           <IconButtonGroup
             options={options(tq, "pv", "inverterBrand", [["solaredge", Cpu], ["fronius", Cpu], ["huawei", Cpu], ["sma", Cpu], ["other", Cpu], ["unknown", HelpCircle]])}
             value={d.inverterBrand ?? ""}
@@ -164,7 +182,7 @@ export function PvStep(props: StepProps) {
 
       <RevealField visible={!!d.inverterBrand}>
         <div id="q-existingBattery">
-          <FieldLabel icon={Battery} label={tq(`${F("pv", "existingBattery")}.label`)} />
+          <FieldLabel label={tq(`${F("pv", "existingBattery")}.label`)} help={tqOpt(`${F("pv", "existingBattery")}.why`)} />
           <IconButtonGroup
             options={options(tq, "pv", "existingBattery", [["none", Battery], ["extend", BatteryCharging]])}
             value={d.existingBattery ?? ""}
@@ -193,7 +211,7 @@ export function ConsumptionStep(props: StepProps) {
           options={buckets(pageConfig, "consumption", "householdCount", "")}
           label={tq(`${k("householdCount")}.label`)}
           allowNa={false}
-          icon={Users}
+          help={tqOpt(`${k("householdCount")}.why`)}
           tooltip={tqOpt(`${k("householdCount")}.tooltip`)}
           tooltipImage={tooltipImageUrl(pageConfig, "consumption", "householdCount")}
           testId="householdCount"
@@ -208,19 +226,18 @@ export function ConsumptionStep(props: StepProps) {
             options={buckets(pageConfig, "consumption", "householdSize", "")}
             label={tq(`${k("householdSize")}.label`)}
             allowNa={false}
-            icon={User}
             testId="householdSize"
           />
         </div>
       </RevealField>
 
       <RevealField visible={countDone}>
-        <ExactOrBuckets {...props} step="consumption" field="annualConsumption" exactField="annualConsumptionExact" unit="kWh" icon={Gauge} allowNa={false} />
+        <ExactOrBuckets {...props} step="consumption" field="annualConsumption" exactField="annualConsumptionExact" unit="kWh" allowNa={false} />
       </RevealField>
 
       <RevealField visible={countDone}>
         <div id="q-heatPump">
-          <FieldLabel icon={Thermometer} label={tq(`${k("heatPump")}.label`)} tooltip={tqOpt(`${k("heatPump")}.tooltip`)} />
+          <FieldLabel label={tq(`${k("heatPump")}.label`)} help={tqOpt(`${k("heatPump")}.why`)} tooltip={tqOpt(`${k("heatPump")}.tooltip`)} />
           <IconButtonGroup options={yesNo("heatPump")} value={d.heatPump ?? ""} onChange={(v) => set("heatPump", v)} />
         </div>
       </RevealField>
@@ -233,7 +250,7 @@ export function ConsumptionStep(props: StepProps) {
             options={buckets(pageConfig, "consumption", "evCount", "")}
             label={tq(`${k("evCount")}.label`)}
             allowNa={false}
-            icon={Car}
+            help={tqOpt(`${k("evCount")}.why`)}
             tooltip={tqOpt(`${k("evCount")}.tooltip`)}
             testId="evCount"
           />
@@ -242,21 +259,21 @@ export function ConsumptionStep(props: StepProps) {
 
       <RevealField visible={d.evCount === 0}>
         <div id="q-evPlanned" className="pl-4 border-l-2 border-primary/20">
-          <FieldLabel icon={Car} label={tq(`${k("evPlanned")}.label`)} />
+          <FieldLabel label={tq(`${k("evPlanned")}.label`)} help={tqOpt(`${k("evPlanned")}.why`)} />
           <IconButtonGroup options={yesNo("evPlanned")} value={d.evPlanned ?? ""} onChange={(v) => set("evPlanned", v)} />
         </div>
       </RevealField>
 
       <RevealField visible={typeof d.evCount === "number" && d.evCount >= 1}>
         <div id="q-hasCharger" className="pl-4 border-l-2 border-primary/20">
-          <FieldLabel icon={Plug} label={tq(`${k("hasCharger")}.label`)} />
+          <FieldLabel label={tq(`${k("hasCharger")}.label`)} help={tqOpt(`${k("hasCharger")}.why`)} />
           <IconButtonGroup options={yesNo("hasCharger")} value={d.hasCharger ?? ""} onChange={(v) => set("hasCharger", v)} />
         </div>
       </RevealField>
 
       <RevealField visible={evDone}>
         <div id="q-deadline">
-          <FieldLabel icon={Clock} label={tq(`${k("deadline")}.label`)} />
+          <FieldLabel label={tq(`${k("deadline")}.label`)} help={tqOpt(`${k("deadline")}.why`)} />
           <IconButtonGroup
             options={options(tq, "consumption", "deadline", [["asap", Zap], ["2-3mo", Clock], ["3-6mo", CalendarClock], ["6+mo", CalendarDays]])}
             value={d.deadline ?? ""}

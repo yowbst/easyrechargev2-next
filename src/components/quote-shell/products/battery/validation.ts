@@ -47,6 +47,8 @@ export function batteryFirstUnanswered(stepId: string, d: Data): string | null {
 export function batteryFieldChange(field: string, value: unknown, d: Data): Data {
   const next: Data = { ...d, [field]: value };
   if (field === "housingStatus" && value === "owner" && d.housingType === "apartment") next.housingType = "";
+  // Approval is only asked of co-owners here (tenants leave the funnel).
+  if (field === "housingStatus" && value !== "co-owner") next.approval = "";
   if (field === "pvPowerExact") next.pvPower = null;
   if (field === "annualConsumptionExact") next.annualConsumption = null;
   if (field === "householdCount" && value !== 1) next.householdSize = null;

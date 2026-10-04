@@ -60,6 +60,8 @@
   --color-b-charge: var(--b-charge, var(--primary));
   --color-b-on-charge: var(--b-on-charge, var(--primary-foreground));
   --color-b-signal: var(--b-signal, var(--primary));
+  /* Was missing: every text-b-link / border-b-link rendered with no colour. */
+  --color-b-link: var(--b-link, var(--primary));
 
   /* Direction B — partner-space surfaces and lead-quality bands. Values are
      defined in the `[data-partner-shell]` scope below; outside it they fall
@@ -1042,7 +1044,7 @@ body:has([data-hide-layout]) > footer {
 /* Missing-answer nudge: pulses a ring around the question the guarded
    Continue button points at — needed on desktop where the whole step fits
    in the viewport and the scroll-to-question is a visual no-op. The class
-   is added/removed by QuoteForm's nudgeField(). */
+   is added/removed by QuoteShell's nudgeField(). */
 @keyframes er-nudge-pulse {
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--destructive) 55%, transparent); }
   70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--destructive) 0%, transparent); }

@@ -52,3 +52,6 @@ next-env.d.ts
 # Built e-mails and Make blueprint backups (npm run emails)
 /emails/dist/
 /emails/.backups/
+
+# Directus content backups (npm run quote-copy)
+/.backups/

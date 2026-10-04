@@ -88,6 +88,9 @@ ChatGPT Ads (OpenAI Measurement Pixel + Conversions API):
 - Browser pixel: Pixel ID in Directus `site_settings.global_config.openai_ads.pixel_id` (no ID → nothing loads). Loaded by `components/OpenAIPixel.tsx`, consent-gated (measures only after the cookie banner is accepted), `debug` outside production. Events in `lib/openaiAds.ts`: `page_viewed` on quote start ("ECP/BATTERY Quote Form Started"), `lead_created` on the quote success page ("ECP/BATTERY Quote Form Submitted"; the products differ by URL), `event_id` = submission id.
 - `OPENAI_ADS_API_KEY` / `OPENAI_ADS_PIXEL_ID` — server-side Conversions API (`lib/openai-ads/conversions.ts`): one `lead_created` per production, non-test, dispatched lead that carries an `oppref` (proxy `_oppref` cookie) or `obref`; same `id` as the pixel for dedup. Either var missing = no-op. Production only.
 
+Quote enrichment (funnel v2, flag `quote-enrich`):
+- `QUOTE_ENRICH_SECRET` — optional HMAC key for the `/api/quote/[id]/enrich` token; falls back to `MCP_JWT_SECRET`, then `CRON_SECRET`. With none set, `/api/quote` returns no token and the enrichment screen never shows.
+
 Partner invoicing — Google Docs env vars (used by `src/lib/billing/google-docs.ts`):
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` — service account credentials (Drive + Docs API scopes) used to copy the invoice template and substitute placeholders; the key is a PEM private key with literal `\n` escapes
 - `GOOGLE_INVOICE_TEMPLATE_DOC_ID` — Doc id of the placeholder template (`{{invoice_number}}` etc.) that gets copied per invoice
@@ -122,7 +125,7 @@ src/app/
 **Route resolution** is in `src/lib/route-resolver.ts`. Each page calls `resolveSlugRoute()`, `resolveSub1Route()`, or `resolveSub2Route()` which looks up the Directus page registry to determine the page type, then renders the appropriate component.
 
 Route types per level:
-- **[slug]:** `cms-page | quote (charger) | quote-battery (battery, via QuoteShell) | contact | blog-listing | vehicles-listing`
+- **[slug]:** `cms-page | quote (charger) | quote-battery (battery) | contact | blog-listing | vehicles-listing` — both quote routes render `QuoteShell`
 - **[slug]/[sub1]:** `vehicle-detail | vehicle-brands | blog-listing | quote-success | quote-submission`
 - **[slug]/[sub1]/[sub2]:** `blog-post | vehicle-brand-detail | vehicle-model-detail`
 
@@ -130,7 +133,7 @@ Route types per level:
 
 **Server Components (default):** All pages, Header, Footer, layout. Data fetched directly from Directus via `directusFetch()`.
 
-**Client Components ("use client"):** QuoteForm, ContactForm, MiniQuoteForm, MiniQuoteCard, SwissMap, CookieBanner, PostHogProvider, LanguageSwitcher, ThemeToggle, VehicleDetailClient, VehicleFilters, PlaceAutocomplete, carousels.
+**Client Components ("use client"):** QuoteShell, ContactForm, MiniQuoteForm, MiniQuoteCard, SwissMap, CookieBanner, PostHogProvider, LanguageSwitcher, ThemeToggle, VehicleDetailClient, VehicleFilters, PlaceAutocomplete, carousels.
 
 **Pattern:** Server Component fetches data and passes serializable props to Client Component islands.
 
@@ -310,6 +313,8 @@ Dictionary strings can contain `{quote_request_duration}`, `{first_contact}`, `{
 | `/api/contact` | POST | Contact form → Directus + webhook |
 | `/api/form-submissions/[id]` | GET | Retrieve submission (QuoteSuccess page) |
 | `/api/cms/localities` | GET | Swiss locality search (autocomplete) |
+| `/api/cms/localities/subsidy-summary` | GET | Commune charging subsidy by NPA + locality (quote side panel) |
+| `/api/quote/[id]/enrich` | PATCH | Optional charger answers after sending (flag `quote-enrich`); HMAC token from `/api/quote`, 6 fields, empty ones only, 2 h window |
 | `/api/cms/assets/[id]` | GET | Directus asset proxy (auth required) |
 
 | `/api/docs` | GET | OpenAPI 3.0 spec (JSON) |
@@ -352,9 +357,8 @@ Form submission routes create a session → user → submission chain in Directu
 | `Header.tsx` | Server | Nav with language switcher, theme toggle, mobile menu |
 | `Footer.tsx` | Server | Footer links, company info |
 | `Hero.tsx` | Server | Hero section with image/text |
-| `quote/QuoteForm.tsx` | Client | 7-step form wizard (~1800 LOC) |
 | `ContactForm.tsx` | Client | Contact form with address autocomplete |
-| `quote-shell/QuoteShell.tsx` | Client | Product-agnostic quote funnel (battery); charger still on QuoteForm |
+| `quote-shell/QuoteShell.tsx` | Client | Quote funnel v2 for every product (focused header, side panel `Rail.tsx`, shared `ContactStep`); per-product steps in `quote-shell/products/<product>/`; strings missing in Directus fall back to `quote-shell/copy.ts` |
 | `MiniQuoteForm.tsx` | Client | Compact embedded quote form |
 | `MiniQuoteCard.tsx` | Client | Quote CTA card |
 | `SwissMap.tsx` | Client | Interactive SVG canton map |

@@ -239,6 +239,7 @@ export function MiniQuoteForm({
       locality: selectedLocality.locality,
       housingStatus: getHousingStatusValue(housingStatus),
     });
+    if (selectedLocality.canton) params.set("canton", selectedLocality.canton);
 
     // Submit to Directus and pass session token to quote page for linking
     try {

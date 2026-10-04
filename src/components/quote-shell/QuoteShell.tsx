@@ -1,16 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import { CheckCircle, ChevronLeft, ChevronRight, Home, Loader2, User } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Home, Landmark, MapPin, PhoneCall } from "lucide-react";
 import type { CountryCode } from "libphonenumber-js";
-import { Card } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { ProgressBar } from "@/components/quote/ProgressBar";
-import { firstUnansweredField as sharedFirstUnanswered, type StepFields } from "@/components/quote/stepValidation";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { contactFirstUnanswered, type ContactFields } from "@/components/quote/stepValidation";
 import { usePostHog } from "@/components/PostHogProvider";
 import { useFormTelemetry } from "@/hooks/use-form-telemetry";
 import { getAttributionCompact } from "@/lib/attribution";
@@ -21,13 +16,15 @@ import { parseQuoteDraft, quoteDraftKey, serializeQuoteDraft } from "@/lib/quote
 import type { PublicQuoteConfig } from "@/lib/public-config";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 import type { Product } from "@/lib/products";
+import { SHELL_COPY } from "./copy";
 import { makeShellT } from "./dictionary";
-import { CONTACT, FINALIZE, WELCOME, clampToFirstIncomplete, firstBlockingStep, stepSequence } from "./navigation";
-import { stepConfig } from "./pageConfig";
+import { CONTACT, clampToFirstIncomplete, firstBlockingStep, stepSequence } from "./navigation";
+import { hiddenFields, stepConfig } from "./pageConfig";
 import { getFunnel } from "./funnels";
-import { WelcomeStep } from "./WelcomeStep";
 import { ContactStep } from "./ContactStep";
-import { FinalizeStep } from "./FinalizeStep";
+import { EnrichStep } from "./EnrichStep";
+import { QuoteHeader } from "./QuoteHeader";
+import { Rail, answerRows, subsidyLine, type PartnerOffer, type SubsidySummary } from "./Rail";
 import type { FormValues } from "./types";
 
 const SHARED_INITIAL: FormValues = {
@@ -36,13 +33,27 @@ const SHARED_INITIAL: FormValues = {
   approval: "", comment: "", acceptTerms: false,
 };
 
+/** Mini-quote hand-off (MiniQuoteForm / MiniQuoteCard put these in the URL). */
+const URL_PREFILL = ["housingStatus", "postalCode", "locality", "canton"] as const;
+
+// Room left above a revealed question for the header, and below for the sticky bar.
+const TOP_CLEARANCE = 96;
+const BOTTOM_CLEARANCE = 104;
+
+const answered = (v: unknown) => v !== null && v !== undefined && v !== "" && v !== false;
+
+/** Scroll the window (never scrollIntoView) so an element sits under the header. */
+function scrollToElement(el: Element) {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - TOP_CLEARANCE, behavior: reduced ? "auto" : "smooth" });
+}
+
 interface QuoteShellProps {
   product: Product;
   lang: string;
   dictionary: Record<string, string>;
   quoteSlug: string;
   pageConfig?: Record<string, unknown>;
-  heroImage?: string;
   globalConfig?: PublicQuoteConfig;
   logoSrc?: string;
   logoDarkSrc?: string;
@@ -52,32 +63,53 @@ interface QuoteShellProps {
 }
 
 export function QuoteShell({
-  product, lang, dictionary, quoteSlug, pageConfig = {}, heroImage,
+  product, lang, dictionary, quoteSlug, pageConfig = {},
   globalConfig: gc = {}, logoSrc, logoDarkSrc, pageRegistry, prefill,
 }: QuoteShellProps) {
   const funnel = getFunnel(product);
-  const { tq, tqOpt } = useMemo(() => makeShellT(dictionary, funnel.dictPageIds), [dictionary, funnel]);
+  const { tq, tqOpt, tc } = useMemo(
+    () => makeShellT(dictionary, funnel.dictPageIds, SHELL_COPY[lang as "fr" | "de"] ?? SHELL_COPY.fr),
+    [dictionary, funnel, lang],
+  );
   const ph = usePostHog();
   const telemetry = useFormTelemetry({ formType: "quote", locale: lang });
   const draftKey = quoteDraftKey(product);
+  const hidden = useMemo(() => hiddenFields(pageConfig), [pageConfig]);
+  const offer = stepConfig(pageConfig, "welcome").offer as PartnerOffer | undefined;
+  const slaVars = {
+    first_contact: gc.slas?.first_contact?.value ?? 48,
+    quote_delivery_timeline: gc.slas?.quote_delivery_timeline?.value ?? "3-5",
+  };
 
   const [data, setData] = useState<FormValues>(() => ({ ...SHARED_INITIAL, ...funnel.initialData, ...prefill }));
-  const [stepId, setStepId] = useState<string>(WELCOME);
-  const [showMissingHint, setShowMissingHint] = useState(false);
+  const [stepId, setStepId] = useState<string>(funnel.steps[0].id);
+  const [nudged, setNudged] = useState<{ field: string; el: HTMLElement } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+  /** What the mini-quote handed over, shown as already answered on the first step. */
+  const [prefilled, setPrefilled] = useState<FormValues | null>(null);
+  const [subsidy, setSubsidy] = useState<SubsidySummary | null>(null);
+  /** Sent, flag quote-enrich on: the optional questions before the success page. */
+  const [enrich, setEnrich] = useState<{ submissionId: string; token: string; redirect: () => void } | null>(null);
   const miniQuoteSessionTokenRef = useRef<string | null>(null);
+  // quote_start (Ads + OpenAI) fires once, on completing the first step.
+  const startedRef = useRef(false);
+  // Set by a tile choice; the next render reveals and scrolls to what follows.
+  const advanceRef = useRef(false);
+  // The page is being left on purpose (submit redirect): no beforeunload prompt.
+  const leavingRef = useRef(false);
+  const nextButtonRef = useRef<HTMLButtonElement>(null);
+  // First view, held until PostHog is ready (then cleared: sent once).
+  const landingRef = useRef<{ step: number; step_name: string } | null>(null);
 
   const missingFor = (id: string, d: FormValues): string | null => {
-    if (id === WELCOME) return null;
-    if (id === CONTACT) return sharedFirstUnanswered(5, d as unknown as StepFields);
-    if (id === FINALIZE) return sharedFirstUnanswered(6, d as unknown as StepFields);
-    return funnel.firstUnansweredField(id, d);
+    if (id === CONTACT) return contactFirstUnanswered(d as unknown as ContactFields);
+    return funnel.firstUnansweredField(id, d, hidden);
   };
   const exitsAt = (id: string, d: FormValues): boolean =>
     funnel.steps.find((s) => s.id === id)?.exit?.(d) ?? false;
 
-  // Latest answers for the popstate listener, registered once.
+  // Latest answers for the listeners registered once.
   const dataRef = useRef(data);
   useEffect(() => {
     dataRef.current = data;
@@ -86,10 +118,18 @@ export function QuoteShell({
   const seq = stepSequence(funnel.steps, data);
   const index = Math.max(0, seq.indexOf(stepId));
   const currentId = seq[index];
+  const isContact = currentId === CONTACT;
   const productStep = funnel.steps.find((s) => s.id === currentId);
   const exited = productStep?.exit?.(data) ?? false;
-  const missingField = missingFor(currentId, data);
-  const StepIcon = productStep?.icon ?? (currentId === CONTACT ? User : CheckCircle);
+  const dirty = funnel.steps.some((s) => s.summary?.some((f) => answered(data[f]))) || answered(data.email) || answered(data.phone);
+
+  const eventProps = () => ({
+    form_type: "quote",
+    product,
+    locale: lang,
+    entry_point: miniQuoteSessionTokenRef.current ? "mini-quote" : "direct",
+    shell: "v2",
+  });
 
   // Restore the draft, read mini-quote hand-off params, land on the right step.
   useEffect(() => {
@@ -100,18 +140,31 @@ export function QuoteShell({
 
     const params = new URLSearchParams(window.location.search);
     const fromUrl: FormValues = {};
-    for (const key of ["locality", "postalCode", "housingStatus"]) {
+    for (const key of URL_PREFILL) {
       const v = params.get(key);
       if (v) fromUrl[key] = v;
     }
     const token = params.get("sessionToken");
     if (token) miniQuoteSessionTokenRef.current = token;
 
-    const merged = { ...SHARED_INITIAL, ...funnel.initialData, ...prefill, ...restored, ...fromUrl };
+    const merged = { ...SHARED_INITIAL, ...funnel.initialData, ...prefill, ...restored, ...fromUrl, ...funnel.fixedData };
+    const mergedSeq = stepSequence(funnel.steps, merged);
+    const landing = clampToFirstIncomplete(mergedSeq, params.get("step"), (id) => missingFor(id, merged));
     setData(merged);
-    setStepId(clampToFirstIncomplete(stepSequence(funnel.steps, merged), params.get("step"), (id) => missingFor(id, merged)));
+    setStepId(landing);
+    if (fromUrl.housingStatus || fromUrl.postalCode) setPrefilled(fromUrl);
+    landingRef.current = { step: mergedSeq.indexOf(landing) + 1, step_name: landing };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // No welcome screen since v2: the landing step is the funnel's first view.
+  // PostHog starts on idle, after this mount, so send it once the client exists.
+  useEffect(() => {
+    if (!ph || !landingRef.current) return;
+    ph.capture("quote_step_viewed", { ...eventProps(), ...landingRef.current });
+    landingRef.current = null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ph, stepId]);
 
   // Persist the draft so refresh / back-navigation resumes.
   useEffect(() => {
@@ -136,16 +189,60 @@ export function QuoteShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const eventProps = () => ({
-    form_type: "quote",
-    product,
-    locale: lang,
-    entry_point: miniQuoteSessionTokenRef.current ? "mini-quote" : "direct",
-  });
+  // The draft is kept, so leaving only needs a quiet browser prompt — and only
+  // once something has been answered.
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (leavingRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
+
+  // The commune's subsidy for the side panel, once NPA and locality are known.
+  const postalCode = typeof data.postalCode === "string" ? data.postalCode.trim() : "";
+  const locality = typeof data.locality === "string" ? data.locality.trim() : "";
+  useEffect(() => {
+    if (!/^\d{4}$/.test(postalCode) || !locality) return;
+    const ctrl = new AbortController();
+    const id = setTimeout(() => {
+      fetch(`/api/cms/localities/subsidy-summary?${new URLSearchParams({ postalCode, locality })}`, { signal: ctrl.signal })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((s) => setSubsidy(s?.locality ? (s as SubsidySummary) : null))
+        .catch(() => { /* aborted or offline: keep the general line */ });
+    }, 400);
+    return () => { clearTimeout(id); ctrl.abort(); };
+  }, [postalCode, locality]);
+
+  // Auto-advance (design 15 v2): after a choice, scroll to the question it
+  // revealed; once the step is complete, focus "Continue". Never changes step.
+  useEffect(() => {
+    if (!advanceRef.current) return;
+    advanceRef.current = false;
+    const id = window.setTimeout(() => {
+      const next = missingFor(currentId, dataRef.current);
+      if (!next) {
+        nextButtonRef.current?.focus({ preventScroll: true });
+        return;
+      }
+      const el = document.getElementById(`q-${next}`);
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.top < TOP_CLEARANCE || rect.bottom > window.innerHeight - BOTTOM_CLEARANCE) scrollToElement(el);
+    }, 200); // RevealField opens in 180 ms
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   const set = (field: string, value: unknown) => {
-    if (showMissingHint) setShowMissingHint(false);
+    if (nudged) setNudged(null);
     telemetry.trackChange(field, String(value));
+    // Typing (exact kWc, contact details) must not move the page.
+    const typing = document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement;
+    if (!isContact && !typing) advanceRef.current = true;
     setData((prev) => funnel.applyChange(field, value, prev));
   };
   const patch = (updates: FormValues) => setData((prev) => ({ ...prev, ...updates }));
@@ -153,29 +250,31 @@ export function QuoteShell({
   const goToStep = (nextId: string) => {
     const nextIndex = seq.indexOf(nextId);
     if (nextIndex > index) {
-      ph?.capture("quote_step_completed", { ...eventProps(), step: index, step_name: currentId });
-      if (currentId === WELCOME) {
+      ph?.capture("quote_step_completed", { ...eventProps(), step: index + 1, step_name: currentId });
+      if (index === 0 && !startedRef.current) {
+        startedRef.current = true;
         const startSendTo = adsSendTo(gc.google_ads, "quote_start", product);
         if (startSendTo) fireAdsConversion(startSendTo);
         measureQuoteStarted(product);
       }
     }
-    ph?.capture("quote_step_viewed", { ...eventProps(), step: nextIndex, step_name: nextId });
+    ph?.capture("quote_step_viewed", { ...eventProps(), step: nextIndex + 1, step_name: nextId });
     const url = new URL(window.location.href);
     url.searchParams.set("step", nextId);
+    url.hash = "";
     history.pushState({}, "", url.toString());
+    setNudged(null);
     setStepId(nextId);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Same nudge as QuoteForm: scroll to the missing question and pulse it.
+  // Scroll to the missing question, pulse it and say what is missing under it.
   const nudgeField = (field: string) => {
-    setShowMissingHint(true);
-    ph?.capture("quote_missing_answer_nudge", { ...eventProps(), step: index, field });
+    ph?.capture("quote_missing_answer_nudge", { ...eventProps(), step: index + 1, step_name: currentId, field });
     const el = document.getElementById(`q-${field}`);
     if (!el) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+    setNudged({ field, el });
+    scrollToElement(el);
     el.classList.remove("er-field-nudge");
     void el.offsetWidth;
     el.classList.add("er-field-nudge");
@@ -183,12 +282,21 @@ export function QuoteShell({
   };
 
   const tryGoToStep = (nextId: string) => {
-    if (seq.indexOf(nextId) > index && missingField) {
-      nudgeField(missingField);
+    const missing = missingFor(currentId, data);
+    if (seq.indexOf(nextId) > index && missing) {
+      nudgeField(missing);
       return;
     }
-    setShowMissingHint(false);
     goToStep(nextId);
+  };
+
+  // Side-panel pencil: back to the step, then to the question.
+  const editAnswer = (id: string, field: string) => {
+    goToStep(id);
+    window.setTimeout(() => {
+      const el = document.getElementById(`q-${field}`);
+      if (el) scrollToElement(el);
+    }, 350);
   };
 
   const submit = async () => {
@@ -254,7 +362,23 @@ export function QuoteShell({
       if (result.submissionId) qs.set("submissionId", result.submissionId);
       // Not dispatchable = not a lead for Ads: the success page skips its fallback conversion too.
       if (!dispatchable) qs.set("nd", "1");
-      const redirect = () => { window.location.href = `/${lang}/${quoteSlug}/${seg}?${qs.toString()}`; };
+      const redirect = () => {
+        leavingRef.current = true;
+        window.location.href = `/${lang}/${quoteSlug}/${seg}?${qs.toString()}`;
+      };
+
+      // Flag quote-enrich (0 % until opened as a test): the dropped charger
+      // questions, optional, before the success page. Calling isFeatureEnabled
+      // records the exposure.
+      const enrichToken = typeof result.enrichToken === "string" ? result.enrichToken : null;
+      const afterConversion =
+        enrichToken && result.submissionId && ph?.isFeatureEnabled("quote-enrich") === true
+          ? () => {
+              leavingRef.current = true;
+              setEnrich({ submissionId: result.submissionId, token: enrichToken, redirect });
+              window.scrollTo({ top: 0 });
+            }
+          : redirect;
 
       const leadSendTo = dispatchable ? adsSendTo(gc.google_ads, "quote_submit", product) : null;
       if (leadSendTo) {
@@ -270,10 +394,10 @@ export function QuoteShell({
               country: "CH",
             },
           },
-          onDone: redirect,
+          onDone: afterConversion,
         });
       } else {
-        redirect();
+        afterConversion();
       }
     } catch (err) {
       telemetry.trackSubmit(false, { error: String(err) });
@@ -283,104 +407,157 @@ export function QuoteShell({
     }
   };
 
-  const stepProps = { data, set, tq, tqOpt, lang, pageConfig };
+  // Tenant exit of the battery funnel: the charger quote, with what is known.
+  const ecpQuoteSlug = product !== "ecp" ? pageRegistry?.find((p) => p.id === "quote")?.slugs[lang] : undefined;
+  const ecpQuote = ecpQuoteSlug
+    ? `/${lang}/${ecpQuoteSlug}?${new URLSearchParams(
+        Object.fromEntries(
+          [...URL_PREFILL.map((k) => [k, data[k]] as const), ["sessionToken", miniQuoteSessionTokenRef.current] as const]
+            .filter(([, v]) => typeof v === "string" && v),
+        ) as Record<string, string>,
+      )}`
+    : undefined;
+
+  const finishEnrich = async (answers: FormValues) => {
+    if (!enrich) return;
+    let answered = 0;
+    if (Object.keys(answers).length > 0) {
+      try {
+        const res = await fetch(`/api/quote/${enrich.submissionId}/enrich`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: enrich.token, answers }),
+        });
+        answered = res.ok ? ((await res.json()).answered ?? 0) : 0;
+      } catch { /* the request is already sent: never hold the visitor back */ }
+    }
+    // Sent at once: the redirect follows immediately and would drop a batched event.
+    try { ph?.capture("quote_enrichment_completed", { ...eventProps(), answered, offered: 6 }, { send_instantly: true }); } catch { /* noop */ }
+    enrich.redirect();
+  };
+
+  if (enrich) {
+    return (
+      <div className="flex min-h-screen flex-col bg-b-paper" lang={lang} data-hide-layout data-direction-b>
+        <QuoteHeader tc={tc} index={seq.length - 1} total={seq.length} logoSrc={logoSrc} logoDarkSrc={logoDarkSrc}
+          mobileLine={{ icon: PhoneCall, text: `${tc("quote.rail.next.1")} · ${tc("quote.rail.next.1sub", slaVars)}` }} />
+        <main className="mx-auto w-full max-w-170 flex-1 px-5 pt-6 pb-16 md:pt-10">
+          <EnrichStep tq={tq} tqOpt={tqOpt} tc={tc} pageConfig={pageConfig} onDone={finishEnrich} />
+        </main>
+      </div>
+    );
+  }
+
+  const stepProps = { data, set, tq, tqOpt, tc, lang, pageConfig, hidden, links: { ecpQuote } };
+  const answers = answerRows(funnel, seq.slice(0, index), data, tq, tqOpt);
+  const mobileLine = isContact
+    ? { icon: PhoneCall, text: `${tc("quote.rail.next.1")} · ${tc("quote.rail.next.1sub", slaVars)}` }
+    : { icon: Landmark, text: subsidyLine(tc, subsidy) };
+  const stepWhy = tqOpt(`steps.${currentId}.why`);
+  const prefillChips = index === 0 && prefilled
+    ? [
+        prefilled.housingStatus && { icon: Home, label: tqOpt(`steps.housing.fields.housingStatus.options.${prefilled.housingStatus}`) ?? String(prefilled.housingStatus) },
+        prefilled.postalCode && { icon: MapPin, label: `${prefilled.postalCode} ${prefilled.locality ?? ""}`.trim() },
+      ].filter((c): c is { icon: typeof Home; label: string } => !!c)
+    : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30" data-hide-layout data-direction-b>
-      <div className="py-4 md:py-6 bg-background">
-        <div className="container mx-auto px-4 flex justify-between items-center md:grid md:grid-cols-3">
-          <div className="hidden md:block" />
-          <div className="flex md:justify-center">
-            <Link href={`/${lang}`} data-testid="link-logo-home">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoSrc || "/logo-color.svg"} alt="easyRecharge" className="h-8 md:h-10 w-auto dark:hidden" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoDarkSrc || "/logo-white.svg"} alt="easyRecharge" className="h-8 md:h-10 w-auto hidden dark:block" />
-            </Link>
-          </div>
-          <div className="flex justify-end items-center gap-2">
-            <LanguageSwitcher pageRegistry={pageRegistry} />
-            <ThemeToggle />
-          </div>
-        </div>
-      </div>
+    <div className="flex min-h-screen flex-col bg-b-paper" lang={lang} data-hide-layout data-direction-b>
+      <QuoteHeader tc={tc} index={index} total={seq.length} logoSrc={logoSrc} logoDarkSrc={logoDarkSrc} mobileLine={mobileLine} />
 
-      <div className="flex-1 py-4 md:py-6 pb-32">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto">
-            {index > 0 && (
-              <ProgressBar
-                currentStep={index}
-                totalSteps={seq.length - 1}
-                onStepClick={(s) => (s < index ? goToStep(seq[s]) : tryGoToStep(seq[s]))}
-                className="mb-4"
+      <div className="mx-auto w-full max-w-310 flex-1 px-5 pt-6 md:px-10 md:pt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-16">
+        <main className="max-w-170 pb-10">
+          {prefillChips.length > 0 && (
+            <div className="mb-7 flex flex-wrap items-center gap-2.5 rounded-lg bg-b-inset px-3.5 py-3 text-[15px]">
+              <CheckCircle2 className="size-4.5 text-b-link" aria-hidden />
+              <span className="text-muted-foreground">{tc("quote.prefill.label")}</span>
+              {prefillChips.map(({ icon: Icon, label }) => (
+                <span key={label} className="inline-flex h-7.5 shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 font-semibold whitespace-nowrap">
+                  <Icon className="size-3.5 text-muted-foreground" aria-hidden />
+                  {label}
+                </span>
+              ))}
+              <button
+                type="button"
+                className="ml-auto h-7.5 px-2 text-sm font-semibold text-b-link underline underline-offset-3"
+                onClick={() => {
+                  const el = document.getElementById("q-housingStatus");
+                  if (!el) return;
+                  scrollToElement(el);
+                  el.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')?.focus({ preventScroll: true });
+                }}
+              >
+                {tc("quote.prefill.edit")}
+              </button>
+            </div>
+          )}
+
+          <div className="mb-8">
+            <h1 className="font-heading text-[26px] leading-tight font-semibold tracking-tight md:text-4xl">{tq(`steps.${currentId}.title`)}</h1>
+            {stepWhy && <p className="mt-2.5 text-base leading-relaxed text-muted-foreground">{stepWhy}</p>}
+          </div>
+
+          <div className="flex flex-col gap-8">
+            {productStep && <productStep.Component {...stepProps} />}
+            {isContact && (
+              <ContactStep
+                {...stepProps}
+                patch={patch}
+                slaVars={slaVars}
+                onSubmit={submit}
+                onBack={index > 0 ? () => goToStep(seq[index - 1]) : undefined}
+                isSubmitting={isSubmitting}
+                submitError={submitError}
+                focusStreet={!!prefilled?.postalCode}
               />
             )}
-
-            <Card className={`rounded-2xl border border-border/80 shadow-sm ${currentId === WELCOME ? "overflow-hidden pt-0 gap-0" : "p-6"}`}>
-              {currentId === WELCOME ? (
-                <WelcomeStep tq={tq} heroImage={heroImage} globalConfig={gc} offer={stepConfig(pageConfig, WELCOME).offer as Parameters<typeof WelcomeStep>[0]["offer"]} />
-              ) : (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-3 pb-4 border-b border-border/60">
-                    <StepIcon className="h-6 w-6 text-primary flex-shrink-0" />
-                    <h2 className="text-2xl font-heading font-bold">{tq(`steps.${currentId}.title`)}</h2>
-                  </div>
-                  {productStep && <productStep.Component {...stepProps} />}
-                  {currentId === CONTACT && <ContactStep {...stepProps} patch={patch} />}
-                  {currentId === FINALIZE && <FinalizeStep {...stepProps} />}
-                </div>
-              )}
-            </Card>
           </div>
-        </div>
+        </main>
 
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 shadow-lg z-50 py-3">
-          <div className="container mx-auto px-4">
-            <div className="max-w-2xl mx-auto">
-              {showMissingHint && missingField && (
-                <p className="text-xs text-destructive text-center mb-2" role="status">
-                  {tqOpt("navigation.missingAnswer") ??
-                    (lang === "de"
-                      ? "Oben fehlt noch eine Antwort — wir haben sie für Sie markiert."
-                      : "Il manque une réponse ci-dessus — nous vous y avons amené.")}
-                </p>
-              )}
-              {currentId === WELCOME ? (
-                <Button size="lg" onClick={() => tryGoToStep(seq[1])} className="w-full font-semibold" data-testid="button-start-quote">
-                  {tq("welcome.cta")}
-                  <ChevronRight className="ml-2 h-5 w-5" />
-                </Button>
-              ) : (
-                <div className="flex gap-3">
-                  {index > 1 && (
-                    <Button size="lg" variant="outline" onClick={() => goToStep(seq[index - 1])} className="font-semibold" data-testid="button-back">
-                      <ChevronLeft className="mr-2 h-5 w-5" />
-                      {tq("navigation.back")}
-                    </Button>
-                  )}
-                  {exited ? (
-                    <Link href={`/${lang}`} className={cn(buttonVariants({ size: "lg" }), "flex-1 font-semibold")} data-testid="button-exit-home">
-                      <Home className="mr-2 h-5 w-5" />
-                      {tq("navigation.home")}
-                    </Link>
-                  ) : currentId === FINALIZE ? (
-                    <Button size="lg" onClick={submit} disabled={isSubmitting} className={`flex-1 font-semibold${missingField ? " opacity-60" : ""}`} data-testid="button-submit">
-                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : tq("steps.finalize.submit")}
-                    </Button>
-                  ) : (
-                    <Button size="lg" onClick={() => tryGoToStep(seq[index + 1])} className={`flex-1 font-semibold${missingField ? " opacity-60" : ""}`} data-testid="button-next">
-                      {tq("navigation.next")}
-                      <ChevronRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  )}
-                </div>
-              )}
-              {submitError && <p className="text-xs text-destructive text-center w-full mt-1">{tq("steps.finalize.submitError")}</p>}
-            </div>
-          </div>
+        <div className="hidden lg:block">
+          <Rail tc={tc} tq={tq} gc={gc} subsidy={subsidy} offer={offer} last={isContact} answers={answers} onEdit={editAnswer} />
         </div>
       </div>
+
+      {/* The missing-answer message sits under the question it is about. */}
+      {nudged && nudged.el.isConnected &&
+        createPortal(
+          <p role="alert" className="mt-2.5 flex items-center gap-2 text-sm font-medium text-(--destructive-border)">
+            <AlertCircle className="size-4 shrink-0" aria-hidden />
+            {tc("quote.missing")}
+          </p>,
+          nudged.el,
+        )}
+
+      {/* Between steps only: the contact step sends from inside the flow. */}
+      {!isContact && (
+        <footer className="sticky bottom-0 z-40 border-t border-border bg-b-paper/95 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-310 flex-col-reverse gap-1 px-5 pt-3 pb-4 sm:flex-row sm:items-center sm:gap-3 md:px-10 md:py-4">
+            {index > 0 && (
+              <button type="button" onClick={() => goToStep(seq[index - 1])}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-[15px] font-semibold text-muted-foreground hover:text-foreground sm:h-12"
+                data-testid="button-back">
+                <ArrowLeft className="size-4" aria-hidden />
+                {tq("navigation.back")}
+              </button>
+            )}
+            {exited ? (
+              <Link href={`/${lang}`}
+                className="inline-flex h-13 items-center justify-center gap-2.5 rounded-md border-[1.5px] border-foreground px-6.5 text-base font-semibold sm:ml-auto"
+                data-testid="button-exit-home">
+                {tq("navigation.home")}
+              </Link>
+            ) : (
+              <button ref={nextButtonRef} type="button" onClick={() => tryGoToStep(seq[index + 1])}
+                className="inline-flex h-13 items-center justify-center gap-2.5 rounded-md bg-b-forest px-6.5 text-base font-semibold text-b-on-forest transition hover:brightness-125 sm:ml-auto dark:bg-b-on-forest dark:text-b-forest"
+                data-testid="button-next">
+                {tq("navigation.next")}
+                <ArrowRight className="size-4" aria-hidden />
+              </button>
+            )}
+          </div>
+        </footer>
+      )}
     </div>
   );
 }

@@ -4,7 +4,7 @@
  * (`pages.quote.*`) for the shared steps — contact, finalize, navigation —
  * so a new product only translates what differs.
  */
-export function makeShellT(dictionary: Record<string, string>, pageIds: string[]) {
+export function makeShellT(dictionary: Record<string, string>, pageIds: string[], fallback: Record<string, string> = {}) {
   const lookup = (key: string): string | undefined => {
     for (const id of pageIds) {
       const v = dictionary[`pages.${id}.${key}`];
@@ -27,5 +27,8 @@ export function makeShellT(dictionary: Record<string, string>, pageIds: string[]
   /** undefined when the key is missing or still a [placeholder]. */
   const tqOpt = (key: string) => lookup(key);
 
-  return { tq, tqOpt };
+  /** Directus first, then the bundled v2 copy (`copy.ts`), always interpolated. */
+  const tc = (key: string, vars?: Record<string, string | number>) => interpolate(lookup(key) ?? fallback[key] ?? key, vars);
+
+  return { tq, tqOpt, tc };
 }

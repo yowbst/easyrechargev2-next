@@ -179,6 +179,15 @@ class DirectusStorage {
     return result.data;
   }
 
+  /** Replace a submission's `data` (a JSON field: send the whole object). */
+  async updateSubmissionData(id: string, data: Record<string, unknown>): Promise<void> {
+    await directusFetch(`/items/form_submissions/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ data }),
+      next: { revalidate: 0 },
+    });
+  }
+
   async getSubmissionById(id: string): Promise<{
     submission: FormSubmission;
     user: FormUser | null;

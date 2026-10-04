@@ -21,6 +21,8 @@ interface PlaceAutocompleteProps {
   id?: string;
   /** Space (px) reserved for a fixed bottom bar, e.g. the quote form nav. */
   bottomClearance?: number;
+  className?: string;
+  autoFocus?: boolean;
 }
 
 export function PlaceAutocomplete({
@@ -30,6 +32,8 @@ export function PlaceAutocomplete({
   placeholder = "Rue et numéro, NPA Localité",
   id,
   bottomClearance = 0,
+  className,
+  autoFocus,
 }: PlaceAutocompleteProps) {
   const places = useMapsLibrary("places");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -193,6 +197,8 @@ export function PlaceAutocomplete({
         }}
         placeholder={placeholder}
         autoComplete="off"
+        autoFocus={autoFocus}
+        className={className}
         onFocus={() => {
           const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
           inputRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });

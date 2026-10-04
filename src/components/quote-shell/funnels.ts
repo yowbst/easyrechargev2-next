@@ -3,9 +3,10 @@
 import type { Product } from "@/lib/products";
 import type { ProductFunnel } from "./types";
 import { batteryFunnel } from "./products/battery";
+import { ecpFunnel } from "./products/ecp";
 
-/** Products whose funnel runs on QuoteShell. The charger still uses QuoteForm. */
-export const FUNNELS: Partial<Record<Product, ProductFunnel>> = { battery: batteryFunnel };
+/** Every quote funnel runs on QuoteShell since v2. */
+export const FUNNELS: Record<Product, ProductFunnel> = { ecp: ecpFunnel, battery: batteryFunnel };
 
 export function getFunnel(product: Product): ProductFunnel {
   const funnel = FUNNELS[product];
