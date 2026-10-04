@@ -2,21 +2,12 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Container, Eyebrow, SectionTitle } from "./Shell";
 import { CarouselArrows, CarouselDots, useCarousel } from "./Carousel";
+import { PostCard, type PostCardData } from "./PostCard";
 
-export interface GuidePost {
-  id: string;
-  title: string;
-  excerpt: string;
-  readingTime: number;
-  image: string;
-  category: string;
-  tag?: string;
-  href: string;
-}
+export type GuidePost = PostCardData;
 
 /**
  * Blog guides on the home page. Three cards visible on desktop, one on mobile,
@@ -85,51 +76,14 @@ export function GuidesB({
         className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-6 px-6 [scrollbar-width:none] md:gap-6 md:scroll-px-10 md:px-10 [&::-webkit-scrollbar]:hidden"
       >
         {posts.map((post) => (
-          <Link
+          <PostCard
             key={post.id}
-            href={post.href}
-            className="flex shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-card text-foreground basis-[min(100%,20rem)] lg:basis-[calc((min(100vw,1240px)-5rem-3rem)/3)]"
-            data-testid={`card-guide-${post.id}`}
-          >
-            <div className="relative aspect-[16/9] bg-b-inset">
-              <Image
-                src={post.image}
-                alt=""
-                fill
-                quality={60}
-                sizes="(max-width: 1024px) 90vw, 380px"
-                className="object-cover object-center"
-              />
-              {post.tag && (
-                <span className="absolute left-3.5 top-3.5 inline-flex h-7 items-center rounded-md bg-b-charge px-2.5 text-[13px] font-semibold text-b-on-charge">
-                  {post.tag}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-1 flex-col p-5 md:px-6 md:pb-6 md:pt-5.5">
-              <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                <span className="inline-flex h-[26px] items-center rounded-md bg-b-sand px-2.5 font-semibold">
-                  {post.category}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Clock className="size-3.5" aria-hidden />
-                  {readingTimeLabel.replace("{n}", String(post.readingTime))}
-                </span>
-              </div>
-              <h3 className="mb-2.5 font-heading text-2xl font-semibold leading-[1.15] tracking-[-0.03em]">
-                {post.title}
-              </h3>
-              <p className="mb-4.5 flex-1 text-[15px] leading-[1.55] text-muted-foreground">
-                {post.excerpt}
-              </p>
-              {readLabel && (
-                <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-b-link">
-                  {readLabel}
-                  <ArrowRight className="size-[15px]" aria-hidden />
-                </span>
-              )}
-            </div>
-          </Link>
+            post={post}
+            readingTimeLabel={readingTimeLabel}
+            readLabel={readLabel}
+            testId={`card-guide-${post.id}`}
+            className="shrink-0 snap-start basis-[min(100%,20rem)] lg:basis-[calc((min(100vw,1240px)-5rem-3rem)/3)]"
+          />
         ))}
       </div>
 

@@ -2,13 +2,14 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { BookOpen, List, ChevronDown, ChevronUp } from "lucide-react";
-import { BlogCard } from "@/components/BlogCard";
+import { BookOpen, List, ChevronDown } from "lucide-react";
 import { MiniQuoteCard } from "@/components/MiniQuoteCard";
-import { GetQuote } from "@/components/GetQuote";
+import { Container, Eyebrow, SectionTitle } from "@/components/home-b/Shell";
+import { PostCard } from "@/components/home-b/PostCard";
+import { CtaB } from "@/components/home-b/CtaB";
 import { useVisibleTagSections } from "@/hooks/useVisibleTagSections";
 import { t } from "@/lib/i18n/dictionaries";
+import { opt } from "@/components/home-b/content";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 
 interface TransformedPost {
@@ -44,6 +45,21 @@ interface BlogListingProps {
   lang: string;
 }
 
+/**
+ * The mini-quote card is shared with five other pages; on the blog it sits in
+ * the article grid and must not read as one more article (design 11 Blog), so
+ * it is re-coloured Forest here by scoping the theme variables it already uses.
+ */
+const FOREST_SCOPE =
+  "[--card:#07231a] [--card-foreground:#f3f1eb] [--foreground:#f3f1eb] [--muted-foreground:rgba(243,241,235,.78)] [--border:rgba(243,241,235,.22)] [--primary:#16a34a] [--primary-foreground:#04150c] [--muted:rgba(243,241,235,.08)] [--accent:rgba(243,241,235,.08)] [--accent-foreground:#f3f1eb] [--input:rgba(243,241,235,.22)]";
+
+const chipClass = (on: boolean) =>
+  `inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md border px-4 text-[15px] transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+    on
+      ? "border-b-forest bg-b-forest font-semibold text-b-on-forest"
+      : "border-border bg-card font-medium text-foreground hover:bg-b-inset"
+  }`;
+
 export function BlogListing({
   posts,
   heroTitle,
@@ -51,13 +67,27 @@ export function BlogListing({
   heroImage,
   guideSectionTitle,
   guideSectionSubtitle,
-  getQuoteBlock,
   dictionary,
   pageRegistry,
   lang,
 }: BlogListingProps) {
   const hasImage = !!heroImage;
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
+
+  const blogSlug = pageRegistry.find((p) => p.id === "blog")?.slugs[lang] || "blog";
+  const postHref = (post: TransformedPost) => `/${lang}/${blogSlug}/${post.categorySlug}/${post.slug}`;
+  const card = (post: TransformedPost, readLabel: string | undefined, priority: boolean, tag?: string) => (
+    <PostCard
+      key={post.id}
+      post={{ ...post, tag, href: postHref(post) }}
+      readingTimeLabel={d("shared.blogCard.readingTime.label", { count: post.readingTime })}
+      readLabel={readLabel}
+      priority={priority}
+      testId={`card-blog-${post.id}`}
+    />
+  );
+  const guideRead = opt(dictionary, "pages.blog.rechargingGuide.read");
+  const articleRead = opt(dictionary, "pages.blog.restOfBlog.read");
 
   // Separate guide posts from other posts
   const guidePosts = useMemo(
@@ -141,327 +171,255 @@ export function BlogListing({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hiddenTags.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // GetQuote block
-  const getQuoteVariant = (() => {
-    const variant = getQuoteBlock?.variant;
-    if (variant === "grey") return "muted" as const;
-    if (variant === "green") return "primary" as const;
-    return "muted" as const;
-  })();
-
   const quotePage = pageRegistry.find((p) => p.id === "quote");
   const quoteHref = quotePage ? `/${lang}/${quotePage.slugs[lang]}` : `/${lang}`;
 
+  const miniQuote = (
+    <div key="mini-quote-card" className={`${FOREST_SCOPE} [&>*]:h-full [&>*]:rounded-xl [&>*]:border-0 [&>*]:shadow-none`}>
+      <MiniQuoteCard pageId="blog" dictionary={dictionary} pageRegistry={pageRegistry} lang={lang} />
+    </div>
+  );
+
+  const tagsLabel = d("pages.blog.rechargingGuide.tags.label", { count: allTags.length });
+  const ctaTitle = opt(dictionary, "pages.blog.blocks.getquote.headline");
+  const ctaLabel = opt(dictionary, "pages.blog.blocks.getquote.cta.label");
+
   return (
-    <div>
-      {/* Hero Section */}
-      <section
-        className="relative py-16 md:py-28 overflow-hidden"
-      >
-        {hasImage && (() => {
-          return (
-            <>
+    <div data-direction-b className="bg-b-paper">
+      {/* Hero — text left, photograph right: the title never depends on the
+          photo for contrast. Without an image the text takes the full width. */}
+      <section className="py-12 md:pt-20 md:pb-18">
+        <Container className={hasImage ? "grid items-center gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-14" : ""}>
+          <div>
+            {opt(dictionary, "pages.blog.hero.eyebrow") && <Eyebrow>{opt(dictionary, "pages.blog.hero.eyebrow")}</Eyebrow>}
+            <h1
+              className="mb-4 font-heading text-4xl font-semibold leading-[1.06] tracking-[-0.04em] md:mb-5 md:text-[56px] md:leading-[1.04]"
+              data-testid="heading-blog-title"
+            >
+              {heroTitle}
+            </h1>
+            <p className="max-w-[35rem] text-[17px] leading-relaxed text-muted-foreground md:text-lg" data-testid="text-blog-subtitle">
+              {heroSubtitle}
+            </p>
+          </div>
+          {hasImage && (
+            <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-b-inset max-lg:hidden">
               <Image
                 src={heroImage!}
                 alt=""
                 fill
                 priority
-                // LCP element of the blog listing — fetch at high priority so
-                // it isn't queued behind CSS/fonts/JS on mobile.
+                // LCP element of the blog listing on desktop.
                 fetchPriority="high"
                 quality={60}
-                sizes="(max-width: 1024px) 100vw, 1920px"
+                sizes="(max-width: 1240px) 45vw, 540px"
                 className="object-cover object-center"
               />
-              <div className="absolute inset-0 bg-slate-900/75" aria-hidden="true" />
-            </>
-          );
-        })()}
-        {!hasImage && <div className="absolute inset-0 bg-muted/50" aria-hidden="true" />}
-
-        <div className="relative container mx-auto px-4">
-          <h1
-            className={`text-4xl md:text-5xl font-heading font-bold text-center mb-4 ${hasImage ? "text-white" : ""}`}
-            data-testid="heading-blog-title"
-          >
-            {heroTitle}
-          </h1>
-          <p
-            className={`text-lg text-center max-w-2xl mx-auto ${hasImage ? "text-white/85" : "text-muted-foreground"}`}
-            data-testid="text-blog-subtitle"
-          >
-            {heroSubtitle}
-          </p>
-        </div>
+            </div>
+          )}
+        </Container>
       </section>
 
-      {/* Guide de la recharge - Highlighted Section with Sticky TOC */}
+      {/* Guide de la recharge — grouped by tag, sticky table of contents */}
       {guidePosts.length > 0 && (
-        <section
-          id="guide-section"
-          className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-y"
-        >
-          {/* Section Header */}
-          <div className="py-12 pb-6">
-            <div className="container mx-auto px-4">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                  <BookOpen className="h-8 w-8 text-primary" />
-                </div>
-                <h2
-                  className="text-4xl font-heading font-bold mb-3"
-                  data-testid="heading-guide-section"
-                >
+        <section id="guide-section" className="bg-b-sand pt-10 md:pt-18">
+          <Container className="mb-5 md:mb-7">
+            <div className="max-w-[40rem]">
+              {opt(dictionary, "pages.blog.rechargingGuide.eyebrow") ? (
+                <p className="type-label mb-4 flex items-center gap-2.5 tracking-[0.12em] text-muted-foreground">
+                  <BookOpen className="h-4 w-4 text-b-link" aria-hidden />
+                  {opt(dictionary, "pages.blog.rechargingGuide.eyebrow")}
+                </p>
+              ) : (
+                <BookOpen className="mb-4 h-6 w-6 text-b-link" aria-hidden />
+              )}
+              <SectionTitle className="mb-3.5">
+                <span data-testid="heading-guide-section">
                   {guideSectionTitle || d("pages.blog.rechargingGuide.headline")}
-                </h2>
-                {guideSectionSubtitle && !guideSectionSubtitle.startsWith("[") && (
-                  <p
-                    className="text-lg text-muted-foreground max-w-2xl mx-auto"
-                    data-testid="text-guide-section-subheadline"
-                  >
-                    {guideSectionSubtitle}
-                  </p>
-                )}
-              </div>
+                </span>
+              </SectionTitle>
+              {guideSectionSubtitle && !guideSectionSubtitle.startsWith("[") && (
+                <p className="type-body text-muted-foreground" data-testid="text-guide-section-subheadline">
+                  {guideSectionSubtitle}
+                </p>
+              )}
             </div>
-          </div>
+          </Container>
 
-          {/* Sticky Table of Contents */}
+          {/* Sticky table of contents: the tags whose section is off screen */}
           {hiddenTags.length > 0 && (
             <div
               ref={sommaireRef}
-              className={`sticky top-16 z-40 transition-colors duration-200 ${
+              className={`sticky top-16 z-40 border-y transition-[background-color,box-shadow,border-color] duration-200 ${
                 isSommaireStuck
-                  ? "bg-background border-b shadow-sm"
-                  : ""
+                  ? "border-border bg-b-paper shadow-[0_8px_20px_-14px_rgba(7,35,26,.3)]"
+                  : "border-transparent"
               }`}
             >
-              <div className="container mx-auto px-4 py-3">
-                {/* Desktop: horizontal scrollable list */}
+              {/* Desktop: one scrolling row */}
+              <Container className="hidden h-15 items-center gap-3.5 md:flex">
                 <nav
-                  className="hidden md:flex items-center gap-3 min-w-0 overflow-x-auto"
+                  aria-label={tagsLabel}
+                  className="flex min-w-0 items-center gap-3.5 overflow-x-auto [scrollbar-width:none]"
                   data-testid="nav-table-of-contents"
                 >
-                  <List className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span className="text-sm font-medium text-muted-foreground flex-shrink-0">
-                    {d("pages.blog.rechargingGuide.tags.label", { count: allTags.length })}
+                  <span className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-semibold text-muted-foreground">
+                    <List className="h-4 w-4 text-b-link" aria-hidden />
+                    {tagsLabel}
                   </span>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <span aria-hidden className="h-6 w-px shrink-0 bg-border" />
+                  {hiddenTags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => scrollToSection(tag.id)}
+                      className="inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-md border border-border bg-card px-3.5 text-sm font-medium transition-colors hover:bg-b-inset focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                      data-testid={`link-tag-${tag.slug}`}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </nav>
+              </Container>
+
+              {/* Mobile: collapsible */}
+              <div className="bg-b-paper md:hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileTagsExpanded(!isMobileTagsExpanded)}
+                  aria-expanded={isMobileTagsExpanded}
+                  className="flex h-14 w-full items-center justify-between px-5 text-[15px] font-semibold"
+                  data-testid="button-toggle-mobile-tags"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <List className="h-4 w-4 text-b-link" aria-hidden />
+                    {tagsLabel}
+                  </span>
+                  <ChevronDown
+                    className={`h-4.5 w-4.5 text-muted-foreground transition-transform ${isMobileTagsExpanded ? "rotate-180" : ""}`}
+                    aria-hidden
+                  />
+                </button>
+                {isMobileTagsExpanded && (
+                  <div className="flex flex-wrap gap-2 px-5 pb-4">
                     {hiddenTags.map((tag) => (
-                      <Badge
+                      <button
                         key={tag.id}
-                        variant="outline"
-                        className="cursor-pointer hover-elevate flex-shrink-0"
-                        onClick={() => scrollToSection(tag.id)}
-                        data-testid={`link-tag-${tag.slug}`}
+                        type="button"
+                        onClick={() => {
+                          scrollToSection(tag.id);
+                          setIsMobileTagsExpanded(false);
+                        }}
+                        className="inline-flex h-11 items-center rounded-md border border-border bg-card px-3.5 text-sm font-medium"
+                        data-testid={`link-tag-mobile-${tag.slug}`}
                       >
                         {tag.name}
-                      </Badge>
+                      </button>
                     ))}
                   </div>
-                </nav>
-
-                {/* Mobile: collapsible list */}
-                <div className="md:hidden">
-                  <button
-                    onClick={() => setIsMobileTagsExpanded(!isMobileTagsExpanded)}
-                    className="flex items-center justify-between w-full"
-                    data-testid="button-toggle-mobile-tags"
-                  >
-                    <div className="flex items-center gap-2">
-                      <List className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">
-                        {d("pages.blog.rechargingGuide.tags.label", { count: allTags.length })}
-                      </span>
-                    </div>
-                    {isMobileTagsExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </button>
-                  {isMobileTagsExpanded && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {hiddenTags.map((tag) => (
-                        <Badge
-                          key={tag.id}
-                          variant="outline"
-                          className="cursor-pointer hover-elevate"
-                          onClick={() => {
-                            scrollToSection(tag.id);
-                            setIsMobileTagsExpanded(false);
-                          }}
-                          data-testid={`link-tag-mobile-${tag.slug}`}
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Tag-based Article Sections */}
+          {/* Tag-based Article Sections — alternating Sand / Inset */}
           {allTags.map((tag, tagIndex) => {
             const postsForTag = postsByTag.get(tag.id) || [];
             if (postsForTag.length === 0) return null;
-
-            const isEven = tagIndex % 2 === 0;
 
             return (
               <div
                 key={tag.id}
                 id={`tag-section-${tag.id}`}
                 ref={(el) => registerSection(tag.id, el)}
-                className={`py-10 scroll-mt-24 ${isEven ? "" : "bg-background/50"}`}
+                className={`scroll-mt-[136px] py-9 md:pb-12 ${tagIndex % 2 === 1 ? "bg-b-inset" : ""}`}
               >
-                <div className="container mx-auto px-4">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Badge variant="default" className="text-sm px-3 py-1">
+                <Container>
+                  <div className="mb-6 flex items-center gap-3">
+                    <span className="inline-flex h-8 items-center rounded-md bg-b-forest px-3 text-sm font-semibold text-b-on-forest">
                       {tag.name}
-                    </Badge>
+                    </span>
                     <span className="text-sm text-muted-foreground">
                       {d("pages.blog.rechargingGuide.articles.label", { count: postsForTag.length })}
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
                     {postsForTag.flatMap((post, index) => {
-                      // Insert MiniQuoteCard at position 3 in the first tag section
-                      if (tagIndex === 0 && index === 2) {
-                        return [
-                          <MiniQuoteCard
-                            key="mini-quote-card"
-                            pageId="blog"
-                            dictionary={dictionary}
-                            pageRegistry={pageRegistry}
-                            lang={lang}
-                          />,
-                          <BlogCard
-                            key={post.id}
-                            {...post}
-                            priority={tagIndex === 0 && index < 3}
-                            dictionary={dictionary}
-                            pageRegistry={pageRegistry}
-                          />,
-                        ];
-                      }
-                      return [
-                        <BlogCard
-                          key={post.id}
-                          {...post}
-                          priority={tagIndex === 0 && index < 3}
-                          dictionary={dictionary}
-                          pageRegistry={pageRegistry}
-                        />,
-                      ];
+                      const node = card(post, guideRead, tagIndex === 0 && index < 3);
+                      // Mini-quote card in 3rd position of the first section.
+                      return tagIndex === 0 && index === 2 ? [miniQuote, node] : [node];
                     })}
                   </div>
-                </div>
+                </Container>
               </div>
             );
           })}
 
           {/* Fallback: Show guide posts grid if no tags */}
           {allTags.length === 0 && (
-            <div className="py-8">
-              <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {guidePosts.flatMap((post, index) => {
-                    if (index === 2) {
-                      return [
-                        <MiniQuoteCard
-                          key="mini-quote-card"
-                          pageId="blog"
-                          dictionary={dictionary}
-                          pageRegistry={pageRegistry}
-                          lang={lang}
-                        />,
-                        <BlogCard
-                          key={post.id}
-                          {...post}
-                          priority={index < 3}
-                          dictionary={dictionary}
-                          pageRegistry={pageRegistry}
-                        />,
-                      ];
-                    }
-                    return [
-                      <BlogCard
-                        key={post.id}
-                        {...post}
-                        priority={index < 3}
-                        dictionary={dictionary}
-                        pageRegistry={pageRegistry}
-                      />,
-                    ];
-                  })}
-                </div>
+            <Container className="py-9">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+                {guidePosts.flatMap((post, index) => {
+                  const node = card(post, guideRead, index < 3);
+                  return index === 2 ? [miniQuote, node] : [node];
+                })}
               </div>
-            </div>
+            </Container>
           )}
         </section>
       )}
 
       {/* Other Articles Section */}
       {otherPosts.length > 0 && (
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <div className="mb-8">
-              <h2
-                className="text-3xl font-heading font-bold mb-6"
-                data-testid="heading-articles-section"
+        <section className="pt-12 pb-14 md:pt-24 md:pb-28">
+          <Container className="max-md:px-0">
+            <SectionTitle className="mb-5 max-md:px-5 md:mb-6">
+              <span data-testid="heading-articles-section">{d("pages.blog.restOfBlog.headline")}</span>
+            </SectionTitle>
+            <div
+              role="group"
+              aria-label={d("pages.blog.restOfBlog.tags.all")}
+              className="mb-8 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-0"
+            >
+              <button
+                type="button"
+                aria-pressed={selectedCategory === null}
+                onClick={() => setSelectedCategory(null)}
+                className={chipClass(selectedCategory === null)}
+                data-testid="badge-category-all"
               >
-                {d("pages.blog.restOfBlog.headline")}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedCategory(null)}
-                  data-testid="badge-category-all"
+                {d("pages.blog.restOfBlog.tags.all")}
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  aria-pressed={selectedCategory === category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={chipClass(selectedCategory === category)}
+                  data-testid={`badge-category-${category}`}
                 >
-                  {d("pages.blog.restOfBlog.tags.all")}
-                </Badge>
-                {categories.map((category) => (
-                  <Badge
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => setSelectedCategory(category)}
-                    data-testid={`badge-category-${category}`}
-                  >
-                    {category}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredPosts.map((post, index) => (
-                <BlogCard
-                  key={post.id}
-                  {...post}
-                  priority={index < 3}
-                  dictionary={dictionary}
-                  pageRegistry={pageRegistry}
-                />
+                  {category}
+                </button>
               ))}
             </div>
-          </div>
+            <div className="grid grid-cols-1 gap-4 max-md:px-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+              {filteredPosts.map((post) => card(post, articleRead, false))}
+            </div>
+          </Container>
         </section>
       )}
 
-      {/* GetQuote CTA */}
-      <GetQuote
-        variant={getQuoteVariant}
-        title={d("pages.blog.blocks.getquote.headline")}
-        subtitle={d("pages.blog.blocks.getquote.subheadline")}
-        ctaLabel={d("pages.blog.blocks.getquote.cta.label")}
-        ctaHref={quoteHref}
-        note={d("pages.blog.blocks.getquote.note")}
-        image={getQuoteBlock?.image}
-      />
+      {ctaTitle && ctaLabel && (
+        <div className="pb-14">
+          <CtaB
+            title={ctaTitle}
+            subtitle={opt(dictionary, "pages.blog.blocks.getquote.subheadline")}
+            primary={{ label: ctaLabel, href: quoteHref }}
+            note={opt(dictionary, "pages.blog.blocks.getquote.note")}
+          />
+        </div>
+      )}
     </div>
   );
 }

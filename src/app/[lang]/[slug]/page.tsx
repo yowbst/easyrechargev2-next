@@ -1,6 +1,7 @@
 import { FUNNEL_ROUTES, isFunnelRoute } from "@/lib/products";
 import { QuoteShell } from "@/components/quote-shell/QuoteShell";
 import type { Metadata } from "next";
+import { deriveExcerpt } from "@/lib/blog-excerpt";
 import { notFound } from "next/navigation";
 import { pickPublicQuoteConfig } from "@/lib/public-config";
 import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands, fetchAllLocalitySlugs, fetchCantonCoats, fetchChargerPriceRange } from "@/lib/directus-queries";
@@ -271,7 +272,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
       return {
         id: String(post.id),
         title: pt?.title || "",
-        excerpt: pt?.excerpt || "",
+        excerpt: deriveExcerpt(pt, pt?.title || ""),
         slug: pt?.slug || post.slug || String(post.id),
         readingTime: parseReadingTime(post.reading_time),
         image: post.image ? `${DIRECTUS_URL}/assets/${post.image}` : "/og-default.webp",
