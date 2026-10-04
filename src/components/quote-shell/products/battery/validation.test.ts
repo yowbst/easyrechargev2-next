@@ -122,4 +122,10 @@ describe("batteryFieldChange", () => {
     expect(on.pvPower).toBe(8);
     expect(on.inverterBrand).toBe("solaredge");
   });
+
+  it("drops the co-ownership approval once the visitor is no longer a co-owner", () => {
+    const coOwner = { housingStatus: "co-owner", approval: "yes" };
+    expect(batteryFieldChange("housingStatus", "owner", coOwner).approval).toBe("");
+    expect(batteryFieldChange("housingStatus", "co-owner", coOwner).approval).toBe("yes");
+  });
 });

@@ -1,9 +1,8 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { FieldLabel } from "@/components/quote-shell/FieldLabel";
 import type { BucketOption } from "@/lib/quoteBuckets";
 
 interface RangeButtonGroupProps {
@@ -11,7 +10,10 @@ interface RangeButtonGroupProps {
   onChange: (value: number | "na") => void;
   options: BucketOption[];
   label: string;
+  /** Why we ask (`…fields.<field>.why`). */
+  help?: string;
   naLabel?: string;
+  /** Kept for call-site compatibility; the v2 labels carry no icon. */
   icon?: LucideIcon;
   tooltip?: ReactNode;
   tooltipImage?: string;
@@ -21,16 +23,18 @@ interface RangeButtonGroupProps {
   allowNa?: boolean;
 }
 
-/** Tap-button bucket picker that replaced SliderWithCheckbox: one tap =
- * answered, and the unanswered state is visually obvious (nothing
- * selected), unlike a slider thumb parked at min. */
+/**
+ * Bucket picker (design 06 / 15 v2): 52 px pills on one row from `sm` up;
+ * "don't know" sits last, dashed, in a wider column so it never reads as one
+ * more value. One tap = answered, and the unanswered state is obvious.
+ */
 export function RangeButtonGroup({
   value,
   onChange,
   options,
   label,
+  help,
   naLabel = "Je ne sais pas",
-  icon: Icon,
   tooltip,
   tooltipImage,
   className = "",
@@ -38,30 +42,29 @@ export function RangeButtonGroup({
   allowNa = true,
 }: RangeButtonGroupProps) {
   const isNA = value === "na";
-  const cols = options.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4";
+  const columns = allowNa
+    ? `repeat(${options.length}, minmax(0,1fr)) minmax(150px,1.3fr)`
+    : `repeat(${options.length}, minmax(0,1fr))`;
+  const pill = (selected: boolean) =>
+    `inline-flex min-h-13 min-w-0 items-center justify-center rounded-lg px-3 text-[15px] transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+      selected
+        ? "border-2 border-b-charge bg-b-charge/10 font-semibold text-foreground"
+        : "border border-border bg-card font-medium text-foreground hover:bg-b-inset"
+    }`;
 
   return (
     <div className={className}>
-      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4 block">
-        <InfoTooltip className="flex items-center gap-1.5" content={tooltip} image={tooltipImage}>
-          {Icon && <Icon className="h-3.5 w-3.5 text-primary" />}
-          {label}
-        </InfoTooltip>
-      </Label>
-
-      <div className={`grid grid-cols-2 ${cols} gap-2`}>
+      <FieldLabel label={label} help={help} tooltip={typeof tooltip === "string" ? tooltip : undefined} image={tooltipImage} />
+      <div role="radiogroup" aria-label={label} className="grid grid-cols-2 gap-2.5 sm:grid-cols-(--cols)" style={{ "--cols": columns } as React.CSSProperties}>
         {options.map((option) => {
           const isSelected = value === option.value;
           return (
             <button
               key={option.value}
               type="button"
-              aria-pressed={isSelected}
-              className={`py-3 px-2 rounded-lg border text-sm font-medium transition-all ${
-                isSelected
-                  ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/30"
-                  : "border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 text-foreground"
-              }`}
+              role="radio"
+              aria-checked={isSelected}
+              className={pill(isSelected)}
               onClick={() => onChange(option.value)}
               data-testid={testId ? `bucket-${testId}-${option.value}` : undefined}
             >
@@ -69,26 +72,19 @@ export function RangeButtonGroup({
             </button>
           );
         })}
+        {allowNa && (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={isNA}
+            className={`${pill(isNA)} col-span-2 sm:col-span-1 ${isNA ? "" : "border-dashed bg-transparent text-muted-foreground"}`}
+            onClick={() => onChange("na")}
+            data-testid={testId ? `bucket-${testId}-na` : undefined}
+          >
+            {naLabel}
+          </button>
+        )}
       </div>
-
-      {/* Same visual grammar as the bucket buttons (bordered, centered,
-          selected = primary tint + ring) so it reads as a tappable option —
-          the earlier muted left-aligned style looked like an empty input. */}
-      {allowNa && (
-        <button
-          type="button"
-          aria-pressed={isNA}
-          className={`w-full mt-2 py-2.5 px-3 rounded-lg border text-sm font-medium text-center transition-all ${
-            isNA
-              ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/30"
-              : "border-border/60 bg-background hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
-          }`}
-          onClick={() => onChange("na")}
-          data-testid={testId ? `bucket-${testId}-na` : undefined}
-        >
-          {naLabel}
-        </button>
-      )}
     </div>
   );
 }

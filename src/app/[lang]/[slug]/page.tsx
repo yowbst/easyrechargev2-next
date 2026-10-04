@@ -36,7 +36,6 @@ import { LazySwissMap as SwissMap, LazyTestimonials as Testimonials, LazyGuideCa
 // wrapper so each page only downloads the chunk of the variant it renders
 // (dynamic() in a Server Component would bundle ALL of them into this route).
 import {
-  QuoteForm,
   ContactForm,
   BlogListing,
   VehiclesHub,
@@ -175,9 +174,6 @@ export default async function SlugPage({ params }: SlugPageProps) {
     if (isFunnelRoute(entry.id)) {
       const logoSrc = layoutData?.logo_color ? `${DIRECTUS_URL}/assets/${layoutData.logo_color}` : "/logo-color.svg";
       const logoDarkSrc = layoutData?.logo_white ? `${DIRECTUS_URL}/assets/${layoutData.logo_white}` : "/logo-white.svg";
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const quoteHeroBlock = page?.blocks?.find((b: any) => b?.collection === "block_hero")?.item;
-      const quoteHeroImage = quoteHeroBlock?.image ? `${DIRECTUS_URL}/assets/${quoteHeroBlock.image}` : undefined;
       const quotePageConfig = page?.config || {};
       // NB: the Directus field is snake_case — `globalConfig` was a latent
       // bug that left the quote form with default stats/SLAs and no ads config.
@@ -186,30 +182,14 @@ export default async function SlugPage({ params }: SlugPageProps) {
       // into the page the browser receives.
       const globalConfig = pickPublicQuoteConfig(layoutData?.global_config);
       const product = FUNNEL_ROUTES[entry.id];
-      if (product !== "ecp") {
-        return (
-          <QuoteShell
-            product={product}
-            lang={lang}
-            dictionary={dictionary}
-            quoteSlug={slug}
-            logoSrc={logoSrc}
-            logoDarkSrc={logoDarkSrc}
-            heroImage={quoteHeroImage}
-            pageConfig={quotePageConfig}
-            globalConfig={globalConfig}
-            pageRegistry={registry}
-          />
-        );
-      }
       return (
-        <QuoteForm
+        <QuoteShell
+          product={product}
           lang={lang}
           dictionary={dictionary}
           quoteSlug={slug}
           logoSrc={logoSrc}
           logoDarkSrc={logoDarkSrc}
-          heroImage={quoteHeroImage}
           pageConfig={quotePageConfig}
           globalConfig={globalConfig}
           pageRegistry={registry}

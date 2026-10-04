@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCircle, ChevronLeft, ChevronRight, Home, Loader2, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, Loader2, User } from "lucide-react";
 import type { CountryCode } from "libphonenumber-js";
 import { Card } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ProgressBar } from "@/components/quote/ProgressBar";
-import { firstUnansweredField as sharedFirstUnanswered, type StepFields } from "@/components/quote/stepValidation";
+import { contactFirstUnanswered, type ContactFields } from "@/components/quote/stepValidation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePostHog } from "@/components/PostHogProvider";
@@ -22,12 +22,10 @@ import type { PublicQuoteConfig } from "@/lib/public-config";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 import type { Product } from "@/lib/products";
 import { makeShellT } from "./dictionary";
-import { CONTACT, FINALIZE, WELCOME, clampToFirstIncomplete, firstBlockingStep, stepSequence } from "./navigation";
-import { stepConfig } from "./pageConfig";
+import { CONTACT, clampToFirstIncomplete, firstBlockingStep, stepSequence } from "./navigation";
+import { hiddenFields } from "./pageConfig";
 import { getFunnel } from "./funnels";
-import { WelcomeStep } from "./WelcomeStep";
 import { ContactStep } from "./ContactStep";
-import { FinalizeStep } from "./FinalizeStep";
 import type { FormValues } from "./types";
 
 const SHARED_INITIAL: FormValues = {
@@ -42,7 +40,6 @@ interface QuoteShellProps {
   dictionary: Record<string, string>;
   quoteSlug: string;
   pageConfig?: Record<string, unknown>;
-  heroImage?: string;
   globalConfig?: PublicQuoteConfig;
   logoSrc?: string;
   logoDarkSrc?: string;
@@ -52,7 +49,7 @@ interface QuoteShellProps {
 }
 
 export function QuoteShell({
-  product, lang, dictionary, quoteSlug, pageConfig = {}, heroImage,
+  product, lang, dictionary, quoteSlug, pageConfig = {},
   globalConfig: gc = {}, logoSrc, logoDarkSrc, pageRegistry, prefill,
 }: QuoteShellProps) {
   const funnel = getFunnel(product);
@@ -60,19 +57,20 @@ export function QuoteShell({
   const ph = usePostHog();
   const telemetry = useFormTelemetry({ formType: "quote", locale: lang });
   const draftKey = quoteDraftKey(product);
+  const hidden = useMemo(() => hiddenFields(pageConfig), [pageConfig]);
 
   const [data, setData] = useState<FormValues>(() => ({ ...SHARED_INITIAL, ...funnel.initialData, ...prefill }));
-  const [stepId, setStepId] = useState<string>(WELCOME);
+  const [stepId, setStepId] = useState<string>(funnel.steps[0].id);
   const [showMissingHint, setShowMissingHint] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const miniQuoteSessionTokenRef = useRef<string | null>(null);
+  // quote_start (Ads + OpenAI) fires once, on completing the first step.
+  const startedRef = useRef(false);
 
   const missingFor = (id: string, d: FormValues): string | null => {
-    if (id === WELCOME) return null;
-    if (id === CONTACT) return sharedFirstUnanswered(5, d as unknown as StepFields);
-    if (id === FINALIZE) return sharedFirstUnanswered(6, d as unknown as StepFields);
-    return funnel.firstUnansweredField(id, d);
+    if (id === CONTACT) return contactFirstUnanswered(d as unknown as ContactFields);
+    return funnel.firstUnansweredField(id, d, hidden);
   };
   const exitsAt = (id: string, d: FormValues): boolean =>
     funnel.steps.find((s) => s.id === id)?.exit?.(d) ?? false;
@@ -89,7 +87,7 @@ export function QuoteShell({
   const productStep = funnel.steps.find((s) => s.id === currentId);
   const exited = productStep?.exit?.(data) ?? false;
   const missingField = missingFor(currentId, data);
-  const StepIcon = productStep?.icon ?? (currentId === CONTACT ? User : CheckCircle);
+  const StepIcon = productStep?.icon ?? User;
 
   // Restore the draft, read mini-quote hand-off params, land on the right step.
   useEffect(() => {
@@ -108,8 +106,12 @@ export function QuoteShell({
     if (token) miniQuoteSessionTokenRef.current = token;
 
     const merged = { ...SHARED_INITIAL, ...funnel.initialData, ...prefill, ...restored, ...fromUrl };
+    const mergedSeq = stepSequence(funnel.steps, merged);
+    const landing = clampToFirstIncomplete(mergedSeq, params.get("step"), (id) => missingFor(id, merged));
     setData(merged);
-    setStepId(clampToFirstIncomplete(stepSequence(funnel.steps, merged), params.get("step"), (id) => missingFor(id, merged)));
+    setStepId(landing);
+    // No welcome screen since v2: the first question is the funnel's first view.
+    ph?.capture("quote_step_viewed", { ...eventProps(), step: mergedSeq.indexOf(landing) + 1, step_name: landing });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -141,6 +143,7 @@ export function QuoteShell({
     product,
     locale: lang,
     entry_point: miniQuoteSessionTokenRef.current ? "mini-quote" : "direct",
+    shell: "v2",
   });
 
   const set = (field: string, value: unknown) => {
@@ -153,14 +156,15 @@ export function QuoteShell({
   const goToStep = (nextId: string) => {
     const nextIndex = seq.indexOf(nextId);
     if (nextIndex > index) {
-      ph?.capture("quote_step_completed", { ...eventProps(), step: index, step_name: currentId });
-      if (currentId === WELCOME) {
+      ph?.capture("quote_step_completed", { ...eventProps(), step: index + 1, step_name: currentId });
+      if (index === 0 && !startedRef.current) {
+        startedRef.current = true;
         const startSendTo = adsSendTo(gc.google_ads, "quote_start", product);
         if (startSendTo) fireAdsConversion(startSendTo);
         measureQuoteStarted(product);
       }
     }
-    ph?.capture("quote_step_viewed", { ...eventProps(), step: nextIndex, step_name: nextId });
+    ph?.capture("quote_step_viewed", { ...eventProps(), step: nextIndex + 1, step_name: nextId });
     const url = new URL(window.location.href);
     url.searchParams.set("step", nextId);
     history.pushState({}, "", url.toString());
@@ -171,7 +175,7 @@ export function QuoteShell({
   // Same nudge as QuoteForm: scroll to the missing question and pulse it.
   const nudgeField = (field: string) => {
     setShowMissingHint(true);
-    ph?.capture("quote_missing_answer_nudge", { ...eventProps(), step: index, field });
+    ph?.capture("quote_missing_answer_nudge", { ...eventProps(), step: index + 1, step_name: currentId, field });
     const el = document.getElementById(`q-${field}`);
     if (!el) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -283,7 +287,7 @@ export function QuoteShell({
     }
   };
 
-  const stepProps = { data, set, tq, tqOpt, lang, pageConfig };
+  const stepProps = { data, set, tq, tqOpt, lang, pageConfig, hidden };
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30" data-hide-layout data-direction-b>
@@ -308,29 +312,22 @@ export function QuoteShell({
       <div className="flex-1 py-4 md:py-6 pb-32">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto">
-            {index > 0 && (
-              <ProgressBar
-                currentStep={index}
-                totalSteps={seq.length - 1}
-                onStepClick={(s) => (s < index ? goToStep(seq[s]) : tryGoToStep(seq[s]))}
-                className="mb-4"
-              />
-            )}
+            <ProgressBar
+              currentStep={index + 1}
+              totalSteps={seq.length}
+              onStepClick={(s) => goToStep(seq[s - 1])}
+              className="mb-4"
+            />
 
-            <Card className={`rounded-2xl border border-border/80 shadow-sm ${currentId === WELCOME ? "overflow-hidden pt-0 gap-0" : "p-6"}`}>
-              {currentId === WELCOME ? (
-                <WelcomeStep tq={tq} heroImage={heroImage} globalConfig={gc} offer={stepConfig(pageConfig, WELCOME).offer as Parameters<typeof WelcomeStep>[0]["offer"]} />
-              ) : (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-3 pb-4 border-b border-border/60">
-                    <StepIcon className="h-6 w-6 text-primary flex-shrink-0" />
-                    <h2 className="text-2xl font-heading font-bold">{tq(`steps.${currentId}.title`)}</h2>
-                  </div>
-                  {productStep && <productStep.Component {...stepProps} />}
-                  {currentId === CONTACT && <ContactStep {...stepProps} patch={patch} />}
-                  {currentId === FINALIZE && <FinalizeStep {...stepProps} />}
+            <Card className="rounded-2xl border border-border/80 p-6 shadow-sm">
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 pb-4 border-b border-border/60">
+                  <StepIcon className="h-6 w-6 text-primary flex-shrink-0" />
+                  <h2 className="text-2xl font-heading font-bold">{tq(`steps.${currentId}.title`)}</h2>
                 </div>
-              )}
+                {productStep && <productStep.Component {...stepProps} />}
+                {currentId === CONTACT && <ContactStep {...stepProps} patch={patch} />}
+              </div>
             </Card>
           </div>
         </div>
@@ -346,36 +343,29 @@ export function QuoteShell({
                       : "Il manque une réponse ci-dessus — nous vous y avons amené.")}
                 </p>
               )}
-              {currentId === WELCOME ? (
-                <Button size="lg" onClick={() => tryGoToStep(seq[1])} className="w-full font-semibold" data-testid="button-start-quote">
-                  {tq("welcome.cta")}
-                  <ChevronRight className="ml-2 h-5 w-5" />
-                </Button>
-              ) : (
-                <div className="flex gap-3">
-                  {index > 1 && (
-                    <Button size="lg" variant="outline" onClick={() => goToStep(seq[index - 1])} className="font-semibold" data-testid="button-back">
-                      <ChevronLeft className="mr-2 h-5 w-5" />
-                      {tq("navigation.back")}
-                    </Button>
-                  )}
-                  {exited ? (
-                    <Link href={`/${lang}`} className={cn(buttonVariants({ size: "lg" }), "flex-1 font-semibold")} data-testid="button-exit-home">
-                      <Home className="mr-2 h-5 w-5" />
-                      {tq("navigation.home")}
-                    </Link>
-                  ) : currentId === FINALIZE ? (
-                    <Button size="lg" onClick={submit} disabled={isSubmitting} className={`flex-1 font-semibold${missingField ? " opacity-60" : ""}`} data-testid="button-submit">
-                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : tq("steps.finalize.submit")}
-                    </Button>
-                  ) : (
-                    <Button size="lg" onClick={() => tryGoToStep(seq[index + 1])} className={`flex-1 font-semibold${missingField ? " opacity-60" : ""}`} data-testid="button-next">
-                      {tq("navigation.next")}
-                      <ChevronRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  )}
-                </div>
-              )}
+              <div className="flex gap-3">
+                {index > 0 && (
+                  <Button size="lg" variant="outline" onClick={() => goToStep(seq[index - 1])} className="font-semibold" data-testid="button-back">
+                    <ChevronLeft className="mr-2 h-5 w-5" />
+                    {tq("navigation.back")}
+                  </Button>
+                )}
+                {exited ? (
+                  <Link href={`/${lang}`} className={cn(buttonVariants({ size: "lg" }), "flex-1 font-semibold")} data-testid="button-exit-home">
+                    <Home className="mr-2 h-5 w-5" />
+                    {tq("navigation.home")}
+                  </Link>
+                ) : currentId === CONTACT ? (
+                  <Button size="lg" onClick={submit} disabled={isSubmitting} aria-busy={isSubmitting} className="flex-1 font-semibold" data-testid="button-submit">
+                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (tqOpt("steps.contact.submit") ?? tq("steps.finalize.submit"))}
+                  </Button>
+                ) : (
+                  <Button size="lg" onClick={() => tryGoToStep(seq[index + 1])} className="flex-1 font-semibold" data-testid="button-next">
+                    {tq("navigation.next")}
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </Button>
+                )}
+              </div>
               {submitError && <p className="text-xs text-destructive text-center w-full mt-1">{tq("steps.finalize.submitError")}</p>}
             </div>
           </div>

@@ -12,6 +12,8 @@ export interface StepProps {
   tqOpt: (key: string) => string | undefined;
   lang: string;
   pageConfig: Record<string, unknown>;
+  /** Questions hidden in the Directus page config (`config.hiddenFields`): not shown, not required. */
+  hidden: ReadonlySet<string>;
 }
 
 export interface StepDef {
@@ -31,7 +33,7 @@ export interface ProductFunnel {
   dictPageIds: string[];
   steps: StepDef[];
   initialData: FormValues;
-  firstUnansweredField: (stepId: string, data: FormValues) => string | null;
+  firstUnansweredField: (stepId: string, data: FormValues, hidden?: ReadonlySet<string>) => string | null;
   /** Apply one answer and clear the answers it invalidates. */
   applyChange: (field: string, value: unknown, data: FormValues) => FormValues;
 }

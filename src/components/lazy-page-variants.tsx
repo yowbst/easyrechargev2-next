@@ -15,9 +15,6 @@ import dynamic from "next/dynamic";
 // that actually renders triggers its chunk download (SSR still works — ssr
 // defaults to true for dynamic() in Client Components).
 
-export const QuoteForm = dynamic(() =>
-  import("@/components/quote/QuoteForm").then((m) => m.QuoteForm),
-);
 export const ContactForm = dynamic(() =>
   import("@/components/ContactForm").then((m) => m.ContactForm),
 );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fieldConfig, stepConfig, tooltipImageUrl } from "./pageConfig";
+import { fieldConfig, hiddenFields, stepConfig, tooltipImageUrl } from "./pageConfig";
 
 const cfg = {
   steps: [
@@ -26,5 +26,11 @@ describe("page config helpers", () => {
     expect(tooltipImageUrl(cfg, "pv", "pvPower")).toBe("/api/cms/assets/uuid-1");
     expect(tooltipImageUrl(cfg, "contact", "phone")).toBe("/api/cms/assets/uuid-2");
     expect(tooltipImageUrl(cfg, "pv", "nope")).toBeUndefined();
+  });
+
+  it("reads the hidden questions, ignoring anything that is not a key", () => {
+    expect([...hiddenFields({ hiddenFields: ["deadline", 3, null] })]).toEqual(["deadline"]);
+    expect(hiddenFields({}).size).toBe(0);
+    expect(hiddenFields({ hiddenFields: "deadline" }).size).toBe(0);
   });
 });

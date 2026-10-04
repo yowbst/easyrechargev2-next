@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { Mail, MapPin, Phone as PhoneIcon, User, Users } from "lucide-react";
 import type { CountryCode } from "libphonenumber-js";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SUPPORTED_COUNTRIES, validatePhone } from "@/lib/phone-utils";
@@ -38,6 +40,8 @@ interface ContactFields {
   locality?: string;
   canton?: string;
   country?: string;
+  comment?: string;
+  acceptTerms?: boolean;
 }
 
 interface ContactStepProps {
@@ -81,6 +85,8 @@ export function ContactStep({ data, set, patch, tq, tqOpt, lang, pageConfig }: C
     }
     patch(updates);
   };
+
+  const privacyNote = tq("steps.finalize.fields.acceptTerms.privacyNote").split("{privacyLink}");
 
   const toggleAddressMode = () => {
     patch({
@@ -437,6 +443,46 @@ export function ContactStep({ data, set, patch, tq, tqOpt, lang, pageConfig }: C
         {formData.phone && !isPhoneValid && (
           <p className="text-xs text-destructive mt-1">{tq("steps.contact.fields.phone.error")}</p>
         )}
+      </div>
+
+      {/* Comment and consent: the former finalize step, merged in v2. Keys stay
+          under steps.finalize.* where the translations already live. */}
+      <details className="group rounded-lg border border-border bg-card">
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-b-link marker:hidden">
+          {tq("steps.finalize.fields.comment.label")}
+        </summary>
+        <div className="px-4 pb-4">
+          <Textarea
+            id="comment"
+            aria-label={tq("steps.finalize.fields.comment.label")}
+            placeholder={tq("steps.finalize.fields.comment.placeholder")}
+            value={formData.comment ?? ""}
+            onChange={(e) => handleFieldChange("comment", e.target.value)}
+            rows={4}
+            className="resize-none"
+            data-testid="textarea-comment"
+          />
+        </div>
+      </details>
+
+      <div id="q-acceptTerms" className="space-y-2">
+        <label htmlFor="acceptTerms" className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
+          <Checkbox
+            id="acceptTerms"
+            checked={formData.acceptTerms === true}
+            onCheckedChange={(checked) => handleFieldChange("acceptTerms", !!checked)}
+            className="mt-0.5 shrink-0"
+            data-testid="checkbox-accept-terms"
+          />
+          <span>{tq("steps.finalize.fields.acceptTerms.label")}</span>
+        </label>
+        <p className="px-1 text-xs text-muted-foreground">
+          {privacyNote[0]}
+          <a href={`/${lang}/privacy`} className="text-b-link hover:underline" target="_blank" rel="noopener noreferrer">
+            {tq("steps.finalize.fields.acceptTerms.privacyLink")}
+          </a>
+          {privacyNote[1]}
+        </p>
       </div>
     </>
   );

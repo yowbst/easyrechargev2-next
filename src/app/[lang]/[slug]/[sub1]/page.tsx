@@ -1046,7 +1046,7 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
       slas?.quote_delivery_timeline?.value ?? "3-5";
 
     // Google Ads lead conversion — fallback signal only: the primary fire
-    // happens in QuoteForm at submit time (with enhanced-conversion user
+    // happens in QuoteShell at submit time (with enhanced-conversion user
     // data); this one covers lost beacons and shares the transaction_id so
     // Google dedupes. Inert unless tag_id + quote_submit label are set.
     const googleAds = gc?.google_ads ?? {};

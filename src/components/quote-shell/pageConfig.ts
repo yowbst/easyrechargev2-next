@@ -19,3 +19,9 @@ export function tooltipImageUrl(pageConfig: Cfg, stepId: string, key: string): s
   const id = fc.tooltipImage ?? (Array.isArray(fc.tooltipImages) ? fc.tooltipImages[0] : undefined);
   return typeof id === "string" && id ? `/api/cms/assets/${id}` : undefined;
 }
+
+/** Questions an editor hid in the Directus page config (`config.hiddenFields`). */
+export function hiddenFields(pageConfig: Cfg): ReadonlySet<string> {
+  const list = Array.isArray(pageConfig.hiddenFields) ? pageConfig.hiddenFields : [];
+  return new Set(list.filter((k): k is string => typeof k === "string"));
+}

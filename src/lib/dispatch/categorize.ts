@@ -17,7 +17,7 @@ export function isDispatchable(category: LeadCategory): boolean {
 }
 
 /**
- * Charger funnel. Field names match src/components/quote/QuoteForm.tsx:
+ * Charger funnel. Field names match src/components/quote-shell/products/ecp/fields.ts:
  *   - housingStatus: "owner" | "co-owner" | "tenant"
  *   - solarEquipment: "exists" | "in-progress" | "none" | ""
  *

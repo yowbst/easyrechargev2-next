@@ -1042,7 +1042,7 @@ body:has([data-hide-layout]) > footer {
 /* Missing-answer nudge: pulses a ring around the question the guarded
    Continue button points at — needed on desktop where the whole step fits
    in the viewport and the scroll-to-question is a visual no-op. The class
-   is added/removed by QuoteForm's nudgeField(). */
+   is added/removed by QuoteShell's nudgeField(). */
 @keyframes er-nudge-pulse {
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--destructive) 55%, transparent); }
   70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--destructive) 0%, transparent); }
