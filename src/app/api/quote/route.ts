@@ -7,6 +7,7 @@ import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
 import { getQuoteWebhookUrl, parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
 import { normalizeProduct } from "@/lib/products";
 import { sendOpenAILeadConversion } from "@/lib/openai-ads/conversions";
+import { enrichToken } from "@/lib/quote-enrich";
 
 export async function POST(req: Request) {
   try {
@@ -183,7 +184,9 @@ export async function POST(req: Request) {
       after(() => sendOpenAILeadConversion(payload));
     }
 
-    return NextResponse.json({ success: true, submissionId: submission.id, dispatchable });
+    // Lets this browser add the optional charger answers afterwards (flag quote-enrich).
+    const enrich = product === "ecp" ? enrichToken(submission.id) : null;
+    return NextResponse.json({ success: true, submissionId: submission.id, dispatchable, ...(enrich && { enrichToken: enrich }) });
   } catch (error) {
     console.error("[Quote] Submission error:", error);
     serverLog("ERROR", "Quote submission failed", { route: "quote", error: error instanceof Error ? error.message : String(error) });

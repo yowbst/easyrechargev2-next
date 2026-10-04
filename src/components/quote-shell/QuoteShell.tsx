@@ -22,6 +22,7 @@ import { CONTACT, clampToFirstIncomplete, firstBlockingStep, stepSequence } from
 import { hiddenFields, stepConfig } from "./pageConfig";
 import { getFunnel } from "./funnels";
 import { ContactStep } from "./ContactStep";
+import { EnrichStep } from "./EnrichStep";
 import { QuoteHeader } from "./QuoteHeader";
 import { Rail, answerRows, subsidyLine, type PartnerOffer, type SubsidySummary } from "./Rail";
 import type { FormValues } from "./types";
@@ -88,6 +89,8 @@ export function QuoteShell({
   /** What the mini-quote handed over, shown as already answered on the first step. */
   const [prefilled, setPrefilled] = useState<FormValues | null>(null);
   const [subsidy, setSubsidy] = useState<SubsidySummary | null>(null);
+  /** Sent, flag quote-enrich on: the optional questions before the success page. */
+  const [enrich, setEnrich] = useState<{ submissionId: string; token: string; redirect: () => void } | null>(null);
   const miniQuoteSessionTokenRef = useRef<string | null>(null);
   // quote_start (Ads + OpenAI) fires once, on completing the first step.
   const startedRef = useRef(false);
@@ -364,6 +367,19 @@ export function QuoteShell({
         window.location.href = `/${lang}/${quoteSlug}/${seg}?${qs.toString()}`;
       };
 
+      // Flag quote-enrich (0 % until opened as a test): the dropped charger
+      // questions, optional, before the success page. Calling isFeatureEnabled
+      // records the exposure.
+      const enrichToken = typeof result.enrichToken === "string" ? result.enrichToken : null;
+      const afterConversion =
+        enrichToken && result.submissionId && ph?.isFeatureEnabled("quote-enrich") === true
+          ? () => {
+              leavingRef.current = true;
+              setEnrich({ submissionId: result.submissionId, token: enrichToken, redirect });
+              window.scrollTo({ top: 0 });
+            }
+          : redirect;
+
       const leadSendTo = dispatchable ? adsSendTo(gc.google_ads, "quote_submit", product) : null;
       if (leadSendTo) {
         fireAdsConversion(leadSendTo, {
@@ -378,10 +394,10 @@ export function QuoteShell({
               country: "CH",
             },
           },
-          onDone: redirect,
+          onDone: afterConversion,
         });
       } else {
-        redirect();
+        afterConversion();
       }
     } catch (err) {
       telemetry.trackSubmit(false, { error: String(err) });
@@ -401,6 +417,36 @@ export function QuoteShell({
         ) as Record<string, string>,
       )}`
     : undefined;
+
+  const finishEnrich = async (answers: FormValues) => {
+    if (!enrich) return;
+    let answered = 0;
+    if (Object.keys(answers).length > 0) {
+      try {
+        const res = await fetch(`/api/quote/${enrich.submissionId}/enrich`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: enrich.token, answers }),
+        });
+        answered = res.ok ? ((await res.json()).answered ?? 0) : 0;
+      } catch { /* the request is already sent: never hold the visitor back */ }
+    }
+    // Sent at once: the redirect follows immediately and would drop a batched event.
+    try { ph?.capture("quote_enrichment_completed", { ...eventProps(), answered, offered: 6 }, { send_instantly: true }); } catch { /* noop */ }
+    enrich.redirect();
+  };
+
+  if (enrich) {
+    return (
+      <div className="flex min-h-screen flex-col bg-b-paper" lang={lang} data-hide-layout data-direction-b>
+        <QuoteHeader tc={tc} index={seq.length - 1} total={seq.length} logoSrc={logoSrc} logoDarkSrc={logoDarkSrc}
+          mobileLine={{ icon: PhoneCall, text: `${tc("quote.rail.next.1")} · ${tc("quote.rail.next.1sub", slaVars)}` }} />
+        <main className="mx-auto w-full max-w-170 flex-1 px-5 pt-6 pb-16 md:pt-10">
+          <EnrichStep tq={tq} tqOpt={tqOpt} tc={tc} pageConfig={pageConfig} onDone={finishEnrich} />
+        </main>
+      </div>
+    );
+  }
 
   const stepProps = { data, set, tq, tqOpt, tc, lang, pageConfig, hidden, links: { ecpQuote } };
   const answers = answerRows(funnel, seq.slice(0, index), data, tq, tqOpt);
