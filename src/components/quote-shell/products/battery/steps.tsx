@@ -57,7 +57,7 @@ export function HousingStep(props: StepProps) {
             {tq("steps.housing.tenantExit")}
             {props.links.ecpQuote && (
               <a href={props.links.ecpQuote} className="mt-3 flex h-11 w-fit items-center gap-2 rounded-md bg-b-forest px-4 text-[15px] font-semibold text-b-on-forest dark:bg-b-on-forest dark:text-b-forest" data-testid="link-tenant-ecp">
-                {props.tc("steps.housing.tenantExit.alt")}
+                {props.tc("steps.housing.tenantExitAlt")}
                 <ArrowRight className="size-4" aria-hidden />
               </a>
             )}

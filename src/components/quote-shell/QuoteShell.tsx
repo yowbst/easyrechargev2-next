@@ -96,6 +96,8 @@ export function QuoteShell({
   // The page is being left on purpose (submit redirect): no beforeunload prompt.
   const leavingRef = useRef(false);
   const nextButtonRef = useRef<HTMLButtonElement>(null);
+  // First view, held until PostHog is ready (then cleared: sent once).
+  const landingRef = useRef<{ step: number; step_name: string } | null>(null);
 
   const missingFor = (id: string, d: FormValues): string | null => {
     if (id === CONTACT) return contactFirstUnanswered(d as unknown as ContactFields);
@@ -148,10 +150,18 @@ export function QuoteShell({
     setData(merged);
     setStepId(landing);
     if (fromUrl.housingStatus || fromUrl.postalCode) setPrefilled(fromUrl);
-    // No welcome screen since v2: the first question is the funnel's first view.
-    ph?.capture("quote_step_viewed", { ...eventProps(), step: mergedSeq.indexOf(landing) + 1, step_name: landing });
+    landingRef.current = { step: mergedSeq.indexOf(landing) + 1, step_name: landing };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // No welcome screen since v2: the landing step is the funnel's first view.
+  // PostHog starts on idle, after this mount, so send it once the client exists.
+  useEffect(() => {
+    if (!ph || !landingRef.current) return;
+    ph.capture("quote_step_viewed", { ...eventProps(), ...landingRef.current });
+    landingRef.current = null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ph, stepId]);
 
   // Persist the draft so refresh / back-navigation resumes.
   useEffect(() => {

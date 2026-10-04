@@ -2,7 +2,8 @@
  * Funnel v2 strings, used when the Directus quote page does not have the key
  * yet. Directus wins as soon as a key is translated there; this file is also
  * the source pushed to Directus, so the two never drift.
- * Keys are relative to `pages.<quote page>.`.
+ * Keys are relative to `pages.<quote page>.`; `npm run quote-copy` writes the
+ * missing ones to the charger quote page, which the battery funnel also reads.
  */
 export const SHELL_COPY: Record<"fr" | "de", Record<string, string>> = {
   fr: {
@@ -47,7 +48,26 @@ export const SHELL_COPY: Record<"fr" | "de", Record<string, string>> = {
     "steps.contact.fields.phone.why": "l'installateur vous appelle sous {first_contact} h",
     "steps.contact.fields.comment.optional": "(facultatif)",
     "steps.contact.privacyNote": "Vos coordonnées ne sont transmises qu'aux installateurs retenus. Hébergement en Suisse.",
-    "steps.housing.tenantExit.alt": "Demander un devis borne à la place",
+    "steps.housing.tenantExitAlt": "Demander un devis borne à la place",
+    // Why we ask. Shared with the battery funnel (it reads this page as a
+    // fallback), so housing texts must suit both products.
+    "steps.housing.fields.housingStatus.why": "l'accord nécessaire en dépend",
+    "steps.housing.fields.solarEquipment.why": "pour coordonner avec votre production",
+    "steps.parking.fields.parkingSpotLocation.why": "pour estimer le passage du câble",
+    "steps.charger.fields.parkingSpotCount.why": "pour dimensionner l'alimentation",
+    "steps.charger.fields.deadline.why": "indicatif — aide l'installateur à planifier",
+    "steps.vehicle.fields.vehicleStatus.why": "pour planifier la mise en service",
+    // Optional questions after sending (flag quote-enrich).
+    "steps.enrich.title": "Demande envoyée. Quelques précisions pour un devis plus juste ?",
+    "steps.enrich.save": "Enregistrer",
+    "steps.enrich.later": "Plus tard",
+    "steps.enrich.saved": "Merci, c'est transmis avec votre demande.",
+    "steps.enrich.fields.electricalBoardType.why": "pour vérifier la place au tableau",
+    "steps.enrich.fields.electricalLineDistance.why": "pour dimensionner le câble",
+    "steps.enrich.fields.electricalLineHoleCount.why": "pour estimer les percements",
+    "steps.enrich.fields.ecpProvided.why": "pour savoir quelle borne chiffrer",
+    "steps.enrich.fields.vehicleTripDistance.why": "pour adapter la puissance à vos trajets",
+    "steps.enrich.fields.vehicleChargingHours.why": "pour choisir la puissance de charge",
   },
   de: {
     "quote.header.trust": "Daten in der Schweiz gespeichert",
@@ -91,6 +111,22 @@ export const SHELL_COPY: Record<"fr" | "de", Record<string, string>> = {
     "steps.contact.fields.phone.why": "der Installateur ruft Sie innert {first_contact} Std. an",
     "steps.contact.fields.comment.optional": "(optional)",
     "steps.contact.privacyNote": "Ihre Angaben gehen nur an die ausgewählten Installateure. Hosting in der Schweiz.",
-    "steps.housing.tenantExit.alt": "Stattdessen eine Offerte für eine Ladestation anfragen",
+    "steps.housing.tenantExitAlt": "Stattdessen eine Offerte für eine Ladestation anfragen",
+    "steps.housing.fields.housingStatus.why": "davon hängt die nötige Zustimmung ab",
+    "steps.housing.fields.solarEquipment.why": "zur Abstimmung mit Ihrer Produktion",
+    "steps.parking.fields.parkingSpotLocation.why": "für die Kabelführung",
+    "steps.charger.fields.parkingSpotCount.why": "für die Auslegung der Zuleitung",
+    "steps.charger.fields.deadline.why": "unverbindlich — hilft dem Installateur bei der Planung",
+    "steps.vehicle.fields.vehicleStatus.why": "für die Planung der Inbetriebnahme",
+    "steps.enrich.title": "Anfrage gesendet. Ein paar Angaben für eine genauere Offerte?",
+    "steps.enrich.save": "Speichern",
+    "steps.enrich.later": "Später",
+    "steps.enrich.saved": "Danke, wir geben es mit Ihrer Anfrage weiter.",
+    "steps.enrich.fields.electricalBoardType.why": "um den Platz im Verteiler zu prüfen",
+    "steps.enrich.fields.electricalLineDistance.why": "für die Kabeldimensionierung",
+    "steps.enrich.fields.electricalLineHoleCount.why": "für den Aufwand der Durchbrüche",
+    "steps.enrich.fields.ecpProvided.why": "damit klar ist, welche Ladestation offeriert wird",
+    "steps.enrich.fields.vehicleTripDistance.why": "um die Leistung an Ihre Fahrten anzupassen",
+    "steps.enrich.fields.vehicleChargingHours.why": "für die Wahl der Ladeleistung",
   },
 };
