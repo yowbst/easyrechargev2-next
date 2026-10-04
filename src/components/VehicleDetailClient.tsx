@@ -1,7 +1,6 @@
 "use client";
 
 import { t } from "@/lib/i18n/dictionaries";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Snowflake, Sun, Info, Building2, Route, BarChart3, type LucideIcon } from "lucide-react";
@@ -20,13 +19,13 @@ function RangeCard({ label, data, tooltip, icon: Icon }: RangeCardProps) {
   if (!numKm || isNaN(numKm)) return null;
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5">
-        <Icon className="h-4 w-4 shrink-0 text-primary" />
+    <div className="rounded-xl bg-b-sand p-5.5">
+      <div className="mb-2.5 flex items-center gap-2 text-[15px] text-muted-foreground">
+        <Icon className="size-4 shrink-0 text-b-link" />
         {tooltip ? <InfoTooltip content={tooltip}>{label}</InfoTooltip> : label}
       </div>
-      <div className="text-2xl font-bold">{numKm} km</div>
-    </Card>
+      <div className="font-heading text-[32px] font-semibold leading-none tracking-[-0.03em]">{numKm} km</div>
+    </div>
   );
 }
 
@@ -65,24 +64,24 @@ export function VehicleDetailClient({
   const d = (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars);
 
   return (
-    <section className="py-12">
-      <div className="container mx-auto px-4">
+    <section className="py-14 md:py-20">
+      <div className="mx-auto w-full max-w-[1240px] px-5 md:px-10">
           <Tabs defaultValue="mild">
-            <div className="mb-8">
-              <h2 className="text-xl sm:text-2xl font-heading font-bold">
+            <div className="mb-5">
+              <h2 className="font-heading text-[26px] font-semibold leading-[1.15] tracking-[-0.03em] md:text-[32px]">
                 {d("pages.vehicle.sections.realRangeOf", { brand: brand || "", model: model || "" })}
               </h2>
               {intro && (
-                <p className="text-base text-muted-foreground leading-relaxed mt-2">{intro}</p>
+                <p className="mt-2 max-w-[45rem] text-[17px] leading-relaxed text-muted-foreground">{intro}</p>
               )}
             </div>
-            <TabsList className="h-auto w-full sm:w-auto p-1.5 gap-1.5 mb-6">
-              <TabsTrigger value="cold" className="px-8 py-3.5 text-sm gap-2">
+            <TabsList className="mb-5 h-auto w-full gap-1 rounded-lg bg-b-sand p-1 sm:w-auto">
+              <TabsTrigger value="cold" className="h-11 gap-2 rounded-md px-5 text-[15px] font-semibold text-muted-foreground data-active:bg-card data-active:text-foreground data-active:shadow-[0_1px_2px_rgba(7,35,26,.12)]">
                 <Snowflake className="h-4 w-4" />
                 {d("pages.vehicle.realRange.cold")}
               </TabsTrigger>
-              <TabsTrigger value="mild" className="px-8 py-3.5 text-sm gap-2">
-                <Sun className="h-4 w-4" />
+              <TabsTrigger value="mild" className="h-11 gap-2 rounded-md px-5 text-[15px] font-semibold text-muted-foreground data-active:bg-card data-active:text-foreground data-active:shadow-[0_1px_2px_rgba(7,35,26,.12)]">
+                <Sun className="h-4 w-4 text-[#A16207]" />
                 {d("pages.vehicle.realRange.mild")}
               </TabsTrigger>
             </TabsList>
@@ -98,7 +97,7 @@ export function VehicleDetailClient({
                 />
                 <RangeCard icon={BarChart3} label={d("pages.vehicle.realRange.combined")} data={coldCombined} />
               </div>
-              <p className="flex items-start gap-2 text-xs text-muted-foreground mt-4">
+              <p className="mt-3.5 flex items-start gap-2 text-sm text-muted-foreground">
                 <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                 {d("pages.vehicle.realRange.coldDesc")}
               </p>
@@ -115,7 +114,7 @@ export function VehicleDetailClient({
                 />
                 <RangeCard icon={BarChart3} label={d("pages.vehicle.realRange.combined")} data={mildCombined} />
               </div>
-              <p className="flex items-start gap-2 text-xs text-muted-foreground mt-4">
+              <p className="mt-3.5 flex items-start gap-2 text-sm text-muted-foreground">
                 <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                 {d("pages.vehicle.realRange.mildDesc")}
               </p>
