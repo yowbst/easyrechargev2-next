@@ -10,10 +10,14 @@ export interface StepProps {
   set: (field: string, value: unknown) => void;
   tq: (key: string, vars?: Record<string, string | number>) => string;
   tqOpt: (key: string) => string | undefined;
+  /** Directus, then the bundled v2 copy (copy.ts); always interpolated. */
+  tc: (key: string, vars?: Record<string, string | number>) => string;
   lang: string;
   pageConfig: Record<string, unknown>;
   /** Questions hidden in the Directus page config (`config.hiddenFields`): not shown, not required. */
   hidden: ReadonlySet<string>;
+  /** Links to the other funnels, with the answers they can reuse (tenant exit). */
+  links: { ecpQuote?: string };
 }
 
 export interface StepDef {
@@ -25,6 +29,8 @@ export interface StepDef {
   skip?: (data: FormValues) => boolean;
   /** The visitor cannot continue: the shell replaces "Continue" with a link home. */
   exit?: (data: FormValues) => boolean;
+  /** Answers listed in the side panel once the step is done, in order. */
+  summary?: string[];
 }
 
 export interface ProductFunnel {
@@ -33,7 +39,11 @@ export interface ProductFunnel {
   dictPageIds: string[];
   steps: StepDef[];
   initialData: FormValues;
+  /** Values a restored draft or URL cannot override (questions no longer asked). */
+  fixedData?: FormValues;
   firstUnansweredField: (stepId: string, data: FormValues, hidden?: ReadonlySet<string>) => string | null;
+  /** Side-panel value of an answer, when the option label is not enough (counts, kWc). */
+  formatAnswer?: (field: string, value: unknown, t: StepProps["tq"]) => string | null;
   /** Apply one answer and clear the answers it invalidates. */
   applyChange: (field: string, value: unknown, data: FormValues) => FormValues;
 }

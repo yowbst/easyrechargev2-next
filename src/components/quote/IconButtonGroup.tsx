@@ -84,7 +84,7 @@ export function IconButtonGroup({ options, value, onChange, className = "", disa
             data-testid={`icon-button-${option.value}`}
           >
             {Icon && <Icon className={`size-5 shrink-0 ${isSelected ? "text-b-link" : "text-muted-foreground"}`} aria-hidden />}
-            <span className="min-w-0 wrap-anywhere">{option.label}</span>
+            <span className="min-w-0 hyphens-auto wrap-anywhere">{option.label}</span>
           </button>
         );
       })}

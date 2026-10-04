@@ -122,7 +122,7 @@ src/app/
 **Route resolution** is in `src/lib/route-resolver.ts`. Each page calls `resolveSlugRoute()`, `resolveSub1Route()`, or `resolveSub2Route()` which looks up the Directus page registry to determine the page type, then renders the appropriate component.
 
 Route types per level:
-- **[slug]:** `cms-page | quote (charger) | quote-battery (battery, via QuoteShell) | contact | blog-listing | vehicles-listing`
+- **[slug]:** `cms-page | quote (charger) | quote-battery (battery) | contact | blog-listing | vehicles-listing` — both quote routes render `QuoteShell`
 - **[slug]/[sub1]:** `vehicle-detail | vehicle-brands | blog-listing | quote-success | quote-submission`
 - **[slug]/[sub1]/[sub2]:** `blog-post | vehicle-brand-detail | vehicle-model-detail`
 
@@ -130,7 +130,7 @@ Route types per level:
 
 **Server Components (default):** All pages, Header, Footer, layout. Data fetched directly from Directus via `directusFetch()`.
 
-**Client Components ("use client"):** QuoteForm, ContactForm, MiniQuoteForm, MiniQuoteCard, SwissMap, CookieBanner, PostHogProvider, LanguageSwitcher, ThemeToggle, VehicleDetailClient, VehicleFilters, PlaceAutocomplete, carousels.
+**Client Components ("use client"):** QuoteShell, ContactForm, MiniQuoteForm, MiniQuoteCard, SwissMap, CookieBanner, PostHogProvider, LanguageSwitcher, ThemeToggle, VehicleDetailClient, VehicleFilters, PlaceAutocomplete, carousels.
 
 **Pattern:** Server Component fetches data and passes serializable props to Client Component islands.
 
@@ -352,9 +352,8 @@ Form submission routes create a session → user → submission chain in Directu
 | `Header.tsx` | Server | Nav with language switcher, theme toggle, mobile menu |
 | `Footer.tsx` | Server | Footer links, company info |
 | `Hero.tsx` | Server | Hero section with image/text |
-| `quote/QuoteForm.tsx` | Client | 7-step form wizard (~1800 LOC) |
 | `ContactForm.tsx` | Client | Contact form with address autocomplete |
-| `quote-shell/QuoteShell.tsx` | Client | Product-agnostic quote funnel (battery); charger still on QuoteForm |
+| `quote-shell/QuoteShell.tsx` | Client | Quote funnel v2 for every product (focused header, side panel `Rail.tsx`, shared `ContactStep`); per-product steps in `quote-shell/products/<product>/`; strings missing in Directus fall back to `quote-shell/copy.ts` |
 | `MiniQuoteForm.tsx` | Client | Compact embedded quote form |
 | `MiniQuoteCard.tsx` | Client | Quote CTA card |
 | `SwissMap.tsx` | Client | Interactive SVG canton map |

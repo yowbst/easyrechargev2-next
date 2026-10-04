@@ -60,6 +60,8 @@
   --color-b-charge: var(--b-charge, var(--primary));
   --color-b-on-charge: var(--b-on-charge, var(--primary-foreground));
   --color-b-signal: var(--b-signal, var(--primary));
+  /* Was missing: every text-b-link / border-b-link rendered with no colour. */
+  --color-b-link: var(--b-link, var(--primary));
 
   /* Direction B — partner-space surfaces and lead-quality bands. Values are
      defined in the `[data-partner-shell]` scope below; outside it they fall

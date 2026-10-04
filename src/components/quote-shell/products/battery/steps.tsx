@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  Battery, BatteryCharging, Building2, CalendarClock, CalendarDays, CircleSlash, Clock, Cpu, Hammer, HelpCircle, Home, Key, Sun, Zap,
+  ArrowRight, Battery, BatteryCharging, Building2, CalendarClock, CalendarDays, CircleSlash, Clock, Cpu, Hammer, HelpCircle, Home, Info, Key, Sun, Zap,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { IconButtonGroup, type IconButtonOption } from "@/components/quote/IconButtonGroup";
@@ -27,7 +27,7 @@ function buckets(pageConfig: StepProps["pageConfig"], step: string, field: keyof
   return resolveBuckets(field, fieldConfig(pageConfig, step, field).buckets ?? BATTERY_BUCKETS[field], unit);
 }
 
-const notice = "rounded-lg border border-border/60 bg-muted/40 p-4 text-sm leading-relaxed";
+const notice = "rounded-lg bg-b-inset px-5 py-4.5 text-base leading-relaxed";
 
 export function HousingStep(props: StepProps) {
   const { data, set, tq, tqOpt, pageConfig } = props;
@@ -48,8 +48,21 @@ export function HousingStep(props: StepProps) {
         />
       </div>
 
+      {/* Not a wall: a tenant cannot decide a battery, but can ask for a charger
+          (design 15 v2, 2g) — with the answers already given. */}
       <RevealField visible={tenant}>
-        <div className={notice} role="status">{tq("steps.housing.tenantExit")}</div>
+        <div className={`${notice} flex gap-3`} role="status">
+          <Info className="mt-0.5 size-4.5 shrink-0" aria-hidden />
+          <div className="flex-1">
+            {tq("steps.housing.tenantExit")}
+            {props.links.ecpQuote && (
+              <a href={props.links.ecpQuote} className="mt-3 flex h-11 w-fit items-center gap-2 rounded-md bg-b-forest px-4 text-[15px] font-semibold text-b-on-forest dark:bg-b-on-forest dark:text-b-forest" data-testid="link-tenant-ecp">
+                {props.tc("steps.housing.tenantExit.alt")}
+                <ArrowRight className="size-4" aria-hidden />
+              </a>
+            )}
+          </div>
+        </div>
       </RevealField>
 
       <RevealField visible={!!d.housingStatus && !tenant}>

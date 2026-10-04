@@ -29,4 +29,11 @@ describe("makeShellT", () => {
     expect(tqOpt("broken")).toBeUndefined();
     expect(tqOpt("missing.key")).toBeUndefined();
   });
+
+  it("tc() reads Directus first, then the bundled copy, and interpolates both", () => {
+    const { tc } = makeShellT(dict, ["quote-battery", "quote"], { "quote.rail.delay": "Devis sous {d} jours", "navigation.next": "ignored" });
+    expect(tc("navigation.next")).toBe("Continuer");
+    expect(tc("quote.rail.delay", { d: "3-5" })).toBe("Devis sous 3-5 jours");
+    expect(tc("nowhere")).toBe("nowhere");
+  });
 });
