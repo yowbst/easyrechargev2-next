@@ -3,6 +3,8 @@
  *
  *   npm run quote-copy -- plan    Show the keys missing from the charger quote page (read-only)
  *   npm run quote-copy -- apply   Back up, then add the missing keys (writes!)
+ *   ... apply --update=k1,k2      Also overwrite these keys with the copy.ts text (a wording fix)
+ *   ... apply --remove=k1         Also delete these keys (texts no longer used)
  *
  * Source: src/components/quote-shell/copy.ts. Only MISSING keys are added — a
  * key already translated in Directus is never overwritten, so editors keep the
@@ -42,6 +44,34 @@ async function fetchRows(): Promise<Row[]> {
   return pages[0].translations;
 }
 
+/** Deletes the dotted `key`; true when it was there. */
+function removeKey(content: Json, key: string): boolean {
+  const parts = key.split(".");
+  let node: Json = content;
+  for (const part of parts.slice(0, -1)) {
+    const next = node[part];
+    if (typeof next !== "object" || next === null) return false;
+    node = next as Json;
+  }
+  const leaf = parts[parts.length - 1];
+  if (!(leaf in node)) return false;
+  delete node[leaf];
+  return true;
+}
+
+/** Overwrites the dotted `key` (only where it exists or can be created). */
+function setKey(content: Json, key: string, value: string): boolean {
+  if (addMissing(content, key, value) === "conflict") return false;
+  const parts = key.split(".");
+  let node: Json = content;
+  for (const part of parts.slice(0, -1)) node = node[part] as Json;
+  node[parts[parts.length - 1]] = value;
+  return true;
+}
+
+const listArg = (name: string) =>
+  (process.argv.find((a) => a.startsWith(`--${name}=`))?.split("=")[1] ?? "").split(",").filter(Boolean);
+
 /** Adds `value` at the dotted `key` unless something is there; reports a clash with a string on the way. */
 function addMissing(content: Json, key: string, value: string): "added" | "exists" | "conflict" {
   const parts = key.split(".");
@@ -78,7 +108,16 @@ async function main() {
     console.log(`\n${locale} (pages_translations ${row.id}): ${added.length} to add, ${conflicts.length} conflicts`);
     for (const k of added) console.log(`  + ${k}`);
     for (const k of conflicts) console.log(`  ! ${k} (a parent key holds text)`);
-    if (mode === "plan" || added.length === 0) continue;
+    const updated: string[] = [];
+    for (const key of listArg("update")) {
+      const value = SHELL_COPY[lang][key];
+      if (value === undefined) throw new Error(`--update ${key}: not in copy.ts`);
+      if (!added.includes(key) && setKey(merged, key, value)) updated.push(key);
+    }
+    const removed = listArg("remove").filter((key) => removeKey(merged, key));
+    for (const k of updated) console.log(`  ~ ${k}`);
+    for (const k of removed) console.log(`  - ${k}`);
+    if (mode === "plan" || added.length + updated.length + removed.length === 0) continue;
 
     mkdirSync(BACKUPS, { recursive: true });
     const file = join(BACKUPS, `${new Date().toISOString().replace(/[:.]/g, "-")}-${row.id}-${locale}.json`);

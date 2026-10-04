@@ -31,19 +31,23 @@ const slaVars = (gc: PublicQuoteConfig) => ({
   quote_delivery_timeline: gc.slas?.quote_delivery_timeline?.value ?? "3-5",
 });
 
-/** The subsidy line: an amount when the commune states one, else a general promise. */
-export function subsidyLine(tc: T, subsidy: SubsidySummary | null): string {
+/**
+ * The subsidy line, only from the commune's data: an amount when it states
+ * one, else that a programme exists. No data, no line — never a promise.
+ */
+export function subsidyLine(tc: T, subsidy: SubsidySummary | null): string | null {
   if (subsidy?.maxChf) return tc("quote.rail.subsidy", { locality: subsidy.locality, amount: subsidy.maxChf.toLocaleString("fr-CH") });
   if (subsidy?.available) return tc("quote.rail.subsidyAvailable", { locality: subsidy.locality });
-  return tc("quote.rail.subsidyFallback");
+  return null;
 }
 
 /** "What you get" rows (design 15 v2): subsidy, installers, delay, then the partner offer. */
 function benefitRows(tc: T, tq: StepProps["tq"], gc: PublicQuoteConfig, subsidy: SubsidySummary | null, offer?: PartnerOffer): RailRow[] {
   const sla = slaVars(gc);
   const partners = (gc.stats as { partners?: number } | undefined)?.partners;
+  const subsidyMain = subsidyLine(tc, subsidy);
   const rows: RailRow[] = [
-    { icon: Landmark, main: subsidyLine(tc, subsidy), sub: tc("quote.rail.subsidySub") },
+    ...(subsidyMain ? [{ icon: Landmark, main: subsidyMain, sub: tc("quote.rail.subsidySub") }] : []),
     {
       icon: BadgeCheck,
       // A count of one reads as a weakness: below two, the line names no number.
@@ -108,8 +112,8 @@ function Rows({ rows }: { rows: RailRow[] }) {
         <li key={main} className="flex items-start gap-3">
           <Icon className="mt-0.5 size-4.5 shrink-0 text-b-signal" aria-hidden />
           <div>
-            <div className="text-base leading-snug font-semibold">{main}</div>
-            {sub && <div className="text-sm leading-snug text-b-on-forest/75">{sub}</div>}
+            <div className="text-[15px] leading-snug font-semibold">{main}</div>
+            {sub && <div className="text-[13px] leading-snug text-b-on-forest/75">{sub}</div>}
           </div>
         </li>
       ))}

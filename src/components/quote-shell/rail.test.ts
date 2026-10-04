@@ -41,9 +41,10 @@ describe("answerRows labels", () => {
 });
 
 describe("subsidyLine", () => {
-  it("names the amount when there is one, else a general line", () => {
+  it("names the amount when there is one, a programme without one, and nothing without data", () => {
     expect(subsidyLine(tc, { locality: "Lausanne", available: true, maxChf: 400 })).toBe('quote.rail.subsidy{"locality":"Lausanne","amount":"400"}');
     expect(subsidyLine(tc, { locality: "Bern", available: true, maxChf: null })).toBe('quote.rail.subsidyAvailable{"locality":"Bern"}');
-    expect(subsidyLine(tc, null)).toBe("quote.rail.subsidyFallback");
+    // No data for the commune: no line at all rather than a promise.
+    expect(subsidyLine(tc, null)).toBeNull();
   });
 });

@@ -52,10 +52,12 @@ interface ContactStepProps extends Omit<StepProps, "hidden" | "links"> {
   focusStreet: boolean;
 }
 
-// Inputs of design 06 / 15 v2: 52 px, radius 8, a 2 px link border on focus.
+// Inputs of design 06 / 15 v2 (one size down): 48 px, radius 8, a 2 px link border on focus.
 const FIELD =
-  "h-13 rounded-lg border-border bg-card px-3.5 text-base md:text-base focus-visible:border-2 focus-visible:border-b-link focus-visible:ring-0";
-const LABEL = "flex flex-wrap items-baseline justify-between gap-x-3 text-[15px] font-semibold leading-snug";
+  "h-12 rounded-lg border-border bg-card px-3.5 text-[15px] md:text-[15px] focus-visible:border-2 focus-visible:border-b-link focus-visible:ring-0";
+// The select trigger sets its height under data-[size=default], which outranks a plain h-*.
+const SELECT_FIELD = `${FIELD} data-[size=default]:h-12`;
+const LABEL = "flex flex-wrap items-baseline justify-between gap-x-3 text-sm font-semibold leading-snug";
 
 const countryFlag = (code: string) =>
   Array.from(code.toUpperCase()).map((c) => String.fromCodePoint(0x1f1e6 - 65 + c.charCodeAt(0))).join("");
@@ -65,7 +67,7 @@ function Field({ id, label, why, className = "", children }: { id: string; label
     <div className={`flex flex-col gap-2 ${className}`}>
       <label htmlFor={id} className={LABEL}>
         {label}
-        {why && <span className="text-sm font-normal text-muted-foreground">{why}</span>}
+        {why && <span className="text-[13px] font-normal text-muted-foreground">{why}</span>}
       </label>
       {children}
     </div>
@@ -121,7 +123,7 @@ export function ContactStep({
     <>
       {/* Address */}
       <fieldset id="q-address" className="flex flex-col gap-3">
-        <legend className="mb-3 text-[17px] font-semibold">{tq("steps.contact.fields.address.label")}</legend>
+        <legend className="mb-3 text-base font-semibold">{tq("steps.contact.fields.address.label")}</legend>
         <div className="grid grid-cols-4 gap-3">
           {searching ? (
             <Field id="address" label={tc("steps.contact.fields.address.street")} className="col-span-4">
@@ -160,7 +162,7 @@ export function ContactStep({
           {askCanton && (
             <Field id="canton" label={tq("steps.contact.fields.address.subfields.canton")}>
               <Select value={f.canton || ""} onValueChange={(value) => set("canton", value)}>
-                <SelectTrigger id="canton" className={`${FIELD} w-full`} data-testid="input-canton">
+                <SelectTrigger id="canton" className={`${SELECT_FIELD} w-full`} data-testid="input-canton">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -180,7 +182,7 @@ export function ContactStep({
 
       {/* The person */}
       <fieldset className="flex flex-col gap-4">
-        <legend className="mb-3 text-[17px] font-semibold">{tc("steps.contact.fields.identity")}</legend>
+        <legend className="mb-3 text-base font-semibold">{tc("steps.contact.fields.identity")}</legend>
         <div className="grid grid-cols-2 gap-3">
           <Field id="firstName" label={tq("steps.contact.fields.firstName.label")}>
             <div id="q-firstName">
@@ -217,7 +219,7 @@ export function ContactStep({
         <Field id="phone" label={tq("steps.contact.fields.phone.label")} why={tc("steps.contact.fields.phone.why", slaVars)}>
           <div id="q-phone" className="flex">
             <Select value={f.phoneCountry} onValueChange={(value) => set("phoneCountry", value)}>
-              <SelectTrigger aria-label={tq("steps.contact.fields.phone.label")} className={`${FIELD} w-28 rounded-r-none border-r-0`} data-testid="select-phoneCountry">
+              <SelectTrigger aria-label={tq("steps.contact.fields.phone.label")} className={`${SELECT_FIELD} w-28 shrink-0 rounded-r-none border-r-0`} data-testid="select-phoneCountry">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -263,7 +265,7 @@ export function ContactStep({
           onClick={onSubmit}
           disabled={isSubmitting}
           aria-busy={isSubmitting}
-          className="inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-md bg-b-charge text-[17px] font-semibold text-b-on-charge transition hover:brightness-95 disabled:opacity-80"
+          className="inline-flex h-13 w-full items-center justify-center gap-2.5 rounded-md bg-b-charge text-base font-semibold text-b-on-charge transition hover:brightness-95 disabled:opacity-80"
           data-testid="button-submit"
         >
           {isSubmitting ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <>{tc("steps.contact.submit")}<ArrowRight className="size-4.5" aria-hidden /></>}

@@ -8,15 +8,23 @@ import { IconButtonGroup, type IconButtonOption } from "@/components/quote/IconB
 import { RevealField } from "../../RevealField";
 import { FieldLabel } from "../../FieldLabel";
 import { ApprovalField } from "../../ApprovalField";
-import { tooltipImageUrl } from "../../pageConfig";
+import { optionTooltipImageUrl, tooltipImageUrl } from "../../pageConfig";
 import type { StepProps } from "../../types";
 import { PARKING_MAIN, parkingMain, type EcpFields } from "./fields";
 import { asksApproval, hasSolar, showsNeighborhoodEquipment } from "./validation";
 
 const F = (step: string, field: string) => `steps.${step}.fields.${field}`;
 
-function options(tq: StepProps["tq"], step: string, field: string, list: [string, IconButtonOption["icon"]][]): IconButtonOption[] {
-  return list.map(([value, icon]) => ({ value, label: tq(`${F(step, field)}.options.${value}`), icon }));
+/** Tiles of one question, with each option's tooltip (`optionTooltips.<value>`) when Directus has one. */
+function options(props: StepProps, step: string, field: string, list: [string, IconButtonOption["icon"]][], labelKey = "options"): IconButtonOption[] {
+  const { tq, tqOpt, pageConfig } = props;
+  return list.map(([value, icon]) => ({
+    value,
+    label: tq(`${F(step, field)}.${labelKey}.${value}`),
+    icon,
+    tooltip: tqOpt(`${F(step, field)}.optionTooltips.${value}`),
+    image: optionTooltipImageUrl(pageConfig, step, field, value),
+  }));
 }
 
 /** One single-choice question: label + why + tiles, anchored at `#q-<field>`. */
@@ -40,7 +48,7 @@ function Question({ step, field, list, value, onChange, props, cols, disabledVal
       <FieldLabel label={tq(`${k}.label`)} help={tqOpt(`${k}.why`)} tooltip={tqOpt(`${k}.tooltip`)} image={tooltipImageUrl(pageConfig, step, field)} />
       <IconButtonGroup
         label={tq(`${k}.label`)}
-        options={options(tq, step, field, list)}
+        options={options(props, step, field, list)}
         value={value}
         onChange={onChange}
         cols={cols}
@@ -107,7 +115,7 @@ export function ParkingStep(props: StepProps) {
         <IconButtonGroup
           label={tq(`${k}.label`)}
           cols={2}
-          options={PARKING_MAIN.map((v) => ({ value: v, label: tq(`${k}.options.${v}`), icon: MAIN_ICONS[v] }))}
+          options={options(props, "parking", "parkingSpotLocation", PARKING_MAIN.map((v) => [v, MAIN_ICONS[v]]))}
           value={main}
           // Choosing a first level keeps an already chosen second level of the same family.
           onChange={(v) => set("parkingSpotLocation", parkingMain(d.parkingSpotLocation ?? "") === v ? d.parkingSpotLocation : v)}
@@ -121,10 +129,7 @@ export function ParkingStep(props: StepProps) {
             <IconButtonGroup
               label={tq(`${k}.options.${family}`)}
               cols={2}
-              options={[
-                { value: `${family}-adjacent`, label: tq(`${k}.options.${family}-adjacent`), icon: Home },
-                { value: `${family}-standalone`, label: tq(`${k}.options.${family}-standalone`), icon: Box },
-              ]}
+              options={options(props, "parking", "parkingSpotLocation", [[`${family}-adjacent`, Home], [`${family}-standalone`, Box]])}
               value={d.parkingSpotLocation ?? ""}
               onChange={(v) => set("parkingSpotLocation", v)}
             />

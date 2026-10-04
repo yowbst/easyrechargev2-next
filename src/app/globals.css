@@ -1041,6 +1041,17 @@ body:has([data-hide-layout]) > footer {
   .print-grid .border-b { border-bottom-color: #f3f4f6 !important; }
 }
 
+/* Quote funnel v2 runs one size below the Direction B control scale (48 px
+   fields, 15 px text), so its selects line up with its inputs. Declared after
+   the Direction B field rule, which is unlayered and would otherwise win. */
+[data-quote-shell] {
+  --field-h: 3rem;
+  & [data-slot="select-trigger"] {
+    padding-inline: 0.875rem;
+    font-size: 0.9375rem;
+  }
+}
+
 /* Missing-answer nudge: pulses a ring around the question the guarded
    Continue button points at — needed on desktop where the whole step fits
    in the viewport and the scroll-to-question is a visual no-op. The class
