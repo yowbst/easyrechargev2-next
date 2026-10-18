@@ -63,18 +63,6 @@ describe("reconcileBilling with null booleans (production shape)", () => {
     vi.resetModules();
   });
 
-  it("queries with _neq:true so null rows are not excluded", async () => {
-    const { reconcileBilling } = await import("./admin");
-    await reconcileBilling({ dryRun: true });
-
-    const get = calls.find((c) => c.path.startsWith("/items/partner_dispatches") && c.method === "GET");
-    expect(get).toBeDefined();
-    const query = decodeURIComponent(get!.path);
-    expect(query).toContain("filter[disqualified][_neq]=true");
-    expect(query).toContain("filter[gift][_neq]=true");
-    expect(query).not.toContain("[_eq]=false");
-  });
-
   it("locks a null-disqualified row whose window has elapsed", async () => {
     const { reconcileBilling } = await import("./admin");
     const result = await reconcileBilling({ dryRun: true });

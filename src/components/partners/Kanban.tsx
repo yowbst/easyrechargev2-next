@@ -19,7 +19,8 @@ import {
   Ban,
   Archive,
 } from "lucide-react";
-import { STAGE_RANK, type DispatchStage } from "@/lib/dispatch/types";
+import type { DispatchStage } from "@/lib/dispatch/types";
+import { allowedActions, reopenStage, type Actor } from "@/lib/dispatch/lifecycle/rules";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
@@ -82,6 +83,8 @@ const STAGE_ICONS: Record<DispatchStage, ComponentType<{ className?: string }>> 
 // Main funnel: active pipeline columns. Outcomes (Won/Lost) live in a
 // separate compact section below — they're informational for conversion-rate
 // / CAC tracking, not part of the day-to-day workflow.
+const BOARD: Actor = { kind: "partner", partnerId: "", source: "kanban" };
+
 const MAIN_STAGES: DispatchStage[] = [
   "new",
   "contacted",
@@ -116,7 +119,8 @@ export function Kanban({
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
-  const [draggingStage, setDraggingStage] = useState<DispatchStage | null>(null);
+  // Where the dragged card may land, from the lifecycle rules.
+  const [dropTargets, setDropTargets] = useState<string[] | null>(null);
 
   // Local mirror so we can update the UI optimistically on drag-drop. Server
   // is still source of truth — re-sync whenever the prop changes (router.refresh
@@ -144,15 +148,8 @@ export function Kanban({
   let wonCount = 0;
   let lostCount = 0;
 
-  const closedFromStage = (d: PartnerDispatchCard): string => {
-    const h = d.stage_history;
-    if (Array.isArray(h)) {
-      for (let i = h.length - 1; i >= 0; i--) {
-        if ((MAIN_STAGES as string[]).includes(h[i].stage)) return h[i].stage;
-      }
-    }
-    return "quote_sent";
-  };
+  const closedFromStage = (d: PartnerDispatchCard): DispatchStage => reopenStage(d);
+
 
   // Header filters (date window + attribute facets) apply across every
   // section. A facet group with no selection doesn't constrain.
@@ -178,6 +175,24 @@ export function Kanban({
     disqGrouped[s].sort((a, b) => compareCards(a, b, sort, scoringWeights));
     closedGrouped[s].sort((a, b) => compareCards(a, b, sort, scoringWeights));
   }
+  // Sync the server-decided billing lock without waiting for the refresh.
+  async function syncBilling(id: string, res: Response, now: string) {
+    const data: { billable?: boolean } = await res.json().catch(() => ({}));
+    if (typeof data.billable !== "boolean") return;
+    setLocalDispatches((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              billable: data.billable!,
+              billable_locked_at:
+                data.billable && !d.billable_locked_at ? now : d.billable_locked_at,
+            }
+          : d,
+      ),
+    );
+  }
+
   async function moveStage(id: string, stage: DispatchStage) {
     const previous = localDispatches;
     const now = new Date().toISOString();
@@ -203,24 +218,7 @@ export function Kanban({
         alert(`Échec: ${err.error ?? res.status}`);
         return;
       }
-      // Sync server-decided fields (billable lock) without waiting for refresh.
-      const data: { billable?: boolean } = await res.json().catch(() => ({}));
-      if (typeof data.billable === "boolean") {
-        setLocalDispatches((prev) =>
-          prev.map((d) =>
-            d.id === id
-              ? {
-                  ...d,
-                  billable: data.billable!,
-                  billable_locked_at:
-                    data.billable && !d.billable_locked_at
-                      ? now
-                      : d.billable_locked_at,
-                }
-              : d,
-          ),
-        );
-      }
+      await syncBilling(id, res, now);
       // Background re-sync; won't flicker since local state already matches.
       startTransition(() => router.refresh());
     } finally {
@@ -231,7 +229,8 @@ export function Kanban({
   async function lose(id: string, reason: string, note?: string) {
     const previous = localDispatches;
     const now = new Date().toISOString();
-    // Optimistic: close as Lost with its reason; Lost locks billing.
+    // Optimistic: close as Lost with its reason. Billing is the server's call
+    // (a gift never bills) and is synced from its answer below.
     setLocalDispatches((prev) =>
       prev.map((d) =>
         d.id === id
@@ -241,8 +240,6 @@ export function Kanban({
               stage_entered_at: now,
               lost_reason: reason,
               lost_note: note ?? null,
-              billable: true,
-              billable_locked_at: d.billable_locked_at ?? now,
             }
           : d,
       ),
@@ -267,6 +264,7 @@ export function Kanban({
         alert(`Échec: ${err.error ?? res.status}`);
         return;
       }
+      await syncBilling(id, res, now);
       startTransition(() => router.refresh());
     } finally {
       setPending(null);
@@ -360,17 +358,17 @@ export function Kanban({
     e.dataTransfer.setData(DRAG_MIME, id);
     e.dataTransfer.effectAllowed = "move";
     const card = localDispatches.find((c) => c.id === id);
-    if (card) setDraggingStage(card.stage as DispatchStage);
+    if (card) setDropTargets(allowedActions(card, BOARD));
   }
   function handleDragEnd() {
     setDropTarget(null);
-    setDraggingStage(null);
+    setDropTargets(null);
   }
   function handleDragOver(e: DragEvent<HTMLElement>, stage: DispatchStage) {
     if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
-    // Block backward drops by skipping preventDefault — the browser then
-    // refuses the drop entirely, no visual highlight on this column.
-    if (draggingStage && STAGE_RANK[stage] < STAGE_RANK[draggingStage]) return;
+    // Block a drop the rules refuse by skipping preventDefault — the browser
+    // then refuses it entirely, no visual highlight on this column.
+    if (dropTargets && !dropTargets.includes(stage)) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     if (dropTarget !== stage) setDropTarget(stage);
@@ -382,11 +380,10 @@ export function Kanban({
     e.preventDefault();
     const id = e.dataTransfer.getData(DRAG_MIME);
     setDropTarget(null);
-    setDraggingStage(null);
+    setDropTargets(null);
     if (!id) return;
     const card = localDispatches.find((c) => c.id === id);
-    if (!card || card.stage === stage) return;
-    if (STAGE_RANK[stage] < STAGE_RANK[card.stage as DispatchStage]) return;
+    if (!card || !allowedActions(card, BOARD).includes(stage)) return;
     moveStage(id, stage);
   }
 
@@ -576,7 +573,7 @@ export function Kanban({
                             pending={pending === d.id}
                             onMove={() => {}}
                             onDisqualify={() => {}}
-                            onReopen={() => reopen(d.id, closedFromStage(d) as DispatchStage)}
+                            onReopen={() => reopen(d.id, closedFromStage(d))}
                             readOnly
                           />
                         </li>

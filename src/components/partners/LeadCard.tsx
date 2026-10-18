@@ -26,11 +26,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  DISPATCH_STAGES,
-  STAGE_RANK,
-  type DispatchStage,
-} from "@/lib/dispatch/types";
+import { DISPATCH_STAGES, type DispatchStage } from "@/lib/dispatch/types";
+import { allowedActions, type Actor } from "@/lib/dispatch/lifecycle/rules";
 import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queries";
 import {
   scoreLead,
@@ -115,6 +112,8 @@ const ICON_BUTTON =
   "inline-flex size-8 shrink-0 items-center justify-center rounded-md " +
   "text-muted-foreground transition-colors hover:bg-background " +
   "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
+
+const BOARD: Actor = { kind: "partner", partnerId: "", source: "kanban" };
 
 export function LeadCard({
   dispatch,
@@ -223,12 +222,12 @@ export function LeadCard({
   const stageReasons = reasonsByStage[dispatch.stage] ?? null;
 
   const isClosed = dispatch.stage === "won" || dispatch.stage === "lost";
-  // Won/Lost only make sense once the partner has engaged the lead — earlier
-  // drop-offs are disqualifications, not outcomes.
-  const canClose =
-    !readOnly &&
-    !dispatch.disqualified &&
-    (dispatch.stage === "appointment" || dispatch.stage === "quote_sent");
+  // What the lifecycle rules let the partner do next. Won/Lost only once the
+  // lead is engaged — earlier drop-offs are disqualifications, not outcomes.
+  const allowed = allowedActions(dispatch, BOARD);
+  const canWin = !readOnly && !isClosed && allowed.includes("won");
+  const canLose = !readOnly && !isClosed && allowed.includes("lost");
+  const canClose = canWin || canLose;
 
   // Quality score — shown only on the active pipeline (where prioritisation
   // matters); disqualified/closed cards omit it to cut noise.
@@ -576,41 +575,41 @@ export function LeadCard({
             </Tooltip>
           )}
           <span className="ml-auto flex items-center gap-0.5">
-            {canClose && (
-              <>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => onMove("won")}
-                        aria-label={t("card.actions.won")}
-                        className={`${ICON_BUTTON} text-primary hover:text-primary`}
-                      />
-                    }
-                  >
-                    <CircleCheck className="size-4" />
-                  </TooltipTrigger>
-                  <TooltipContent>{t("card.actions.won")}</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => setLostOpen(true)}
-                        aria-label={t("card.actions.lost")}
-                        className={`${ICON_BUTTON} text-partner-lost hover:text-partner-lost`}
-                      />
-                    }
-                  >
-                    <CircleX className="size-4" />
-                  </TooltipTrigger>
-                  <TooltipContent>{t("card.actions.lost")}</TooltipContent>
-                </Tooltip>
-              </>
+            {canWin && (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => onMove("won")}
+                      aria-label={t("card.actions.won")}
+                      className={`${ICON_BUTTON} text-primary hover:text-primary`}
+                    />
+                  }
+                >
+                  <CircleCheck className="size-4" />
+                </TooltipTrigger>
+                <TooltipContent>{t("card.actions.won")}</TooltipContent>
+              </Tooltip>
+            )}
+            {canLose && (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => setLostOpen(true)}
+                      aria-label={t("card.actions.lost")}
+                      className={`${ICON_BUTTON} text-partner-lost hover:text-partner-lost`}
+                    />
+                  }
+                >
+                  <CircleX className="size-4" />
+                </TooltipTrigger>
+                <TooltipContent>{t("card.actions.lost")}</TooltipContent>
+              </Tooltip>
             )}
             {!locked && (
               <Tooltip>
@@ -654,15 +653,9 @@ export function LeadCard({
           aria-label={t("card.actions.change_stage")}
         >
           {DISPATCH_STAGES.map((s) => {
-            const isBackward =
-              STAGE_RANK[s] < STAGE_RANK[dispatch.stage as DispatchStage];
-            // Won/Lost only from engaged stages (appointment onwards).
-            const isEarlyClose =
-              (s === "won" || s === "lost") &&
-              STAGE_RANK[dispatch.stage as DispatchStage] <
-                STAGE_RANK.appointment;
+            const unavailable = s !== dispatch.stage && !allowed.includes(s);
             return (
-              <option key={s} value={s} disabled={isBackward || isEarlyClose}>
+              <option key={s} value={s} disabled={unavailable}>
                 {t(`stages.${s}`)}
               </option>
             );

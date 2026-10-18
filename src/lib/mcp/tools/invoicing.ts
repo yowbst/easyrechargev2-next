@@ -8,9 +8,18 @@ import {
 } from "@/lib/billing/invoice";
 import { generateInvoiceDocument, markInvoiceDocumentsSuperseded } from "@/lib/billing/google-docs";
 import { INVOICE_STATUSES } from "@/lib/billing/types";
-import { adminDisqualify, adminRequalify } from "@/lib/dispatch/admin-override";
+import { act, type Intent } from "@/lib/dispatch/lifecycle";
 import { DISQUALIFICATION_REASONS } from "@/lib/dispatch/types";
 import { run } from "./helpers";
+
+/** An admin override through the Dispatch lifecycle; a refusal becomes the tool's error. */
+async function adminAct(dispatchId: string, intent: Intent) {
+  const r = await act(dispatchId, { kind: "admin" }, intent);
+  if (!r.ok) {
+    throw new Error(r.invoice ? `${r.error}: ${r.invoice.number} (${r.invoice.status})` : r.error);
+  }
+  return r;
+}
 
 export function registerInvoicingTools(server: McpServer) {
   server.registerTool(
@@ -152,9 +161,10 @@ export function registerInvoicingTools(server: McpServer) {
       annotations: { destructiveHint: true, idempotentHint: false },
     },
     async ({ dispatchId, reason, note }: { dispatchId: string; reason: string; note?: string }) =>
-      run(async () =>
-        adminDisqualify(dispatchId, reason as never, note ?? null),
-      ),
+      run(async () => {
+        const r = await adminAct(dispatchId, { type: "disqualify", reason, note });
+        return { ok: true, reason, wasLocked: Boolean(r.before.billable_locked_at) };
+      }),
   );
 
   server.registerTool(
@@ -167,7 +177,10 @@ export function registerInvoicingTools(server: McpServer) {
       annotations: { destructiveHint: true, idempotentHint: false },
     },
     async ({ dispatchId, note }: { dispatchId: string; note?: string }) =>
-      run(async () => adminRequalify(dispatchId, note ?? null)),
+      run(async () => {
+        const r = await adminAct(dispatchId, { type: "requalify", note });
+        return { ok: true, wasDisqualified: r.before.disqualified === true };
+      }),
   );
 
   server.registerTool(

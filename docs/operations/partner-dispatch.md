@@ -139,6 +139,25 @@ Note: `partners.billable_rate` is unrelated — it is a quality-rate metric for 
 
 Each dispatch row tracks a `stage` from `new → contacted → appointment → quote_sent → won → lost`, plus a side-state `disqualified=true` with a reason from `partner_already_has | dedup | unreachable | not_engaging | competitor | long_timeframe | no_authorization`. Partners drive transitions via the dashboard.
 
+Every write to a dispatch's stage, disqualification or billing lock goes through
+one module, `src/lib/dispatch/lifecycle/` — the kanban, the e-mail action links,
+the admin routes and MCP tools, and the reconcile cron all call
+`act(dispatchId, actor, intent)`. The rules themselves are in
+`lifecycle/rules.ts` (pure, also imported by the board for its buttons and drop
+targets via `allowedActions`); `rules.test.ts` is the table that pins them:
+
+- Stages only move forward; a move to the current stage writes nothing.
+- **Lost** from `contacted` onward, **won** from `appointment` onward; earlier
+  drop-offs are disqualifications.
+- On the board, a closed lead can swap won ↔ lost, or **reopen** to the stage it
+  was closed from (billing stays locked, the lost reason is cleared). An e-mail
+  link never touches a closed lead: it answers "already done".
+- A partner disqualifies only inside the acceptance window and before the billing
+  lock; past the window the refusal also locks billing.
+- An **admin** may disqualify, requalify or move a lead to any stage past those
+  guards, but never while it sits on an invoice that is not cancelled. Admin moves
+  are column fixes: no billing change, no event.
+
 ### Billing window
 
 A dispatch becomes `billable=true` when its stage reaches `quote_sent` (or beyond),
@@ -149,7 +168,7 @@ with a per-partner override under `partners.disqualification_overrides.acceptanc
 Gifts (`gift=true`) and disqualified rows are never billable.
 
 There are no per-stage windows. The May 2026 plan proposed them; the implementation
-in `src/lib/dispatch/billing.ts` uses the single acceptance window above, and
+in `src/lib/dispatch/lifecycle/rules.ts` uses the single acceptance window above, and
 `stage_windows_days` does not exist in `site_settings`.
 
 Reconciliation runs daily via `/api/cron/reconcile-billing`. The manual endpoint
@@ -189,7 +208,7 @@ to `/partners/action/<token>`. Opening it **never writes** — mail scanners
 (Safe Links, Mimecast) open links before people do. The page shows the lead and a
 Confirm button (or the kanban's Lost / Disqualify modal), which POSTs to
 `/api/partners/action`. The same rules as the kanban apply: both go through
-`src/lib/dispatch/partner-actions.ts`. A second click shows "already done".
+the lifecycle module. A second click shows "already done".
 The quote webhook carries the links as `dispatch.targets[].actionUrls`.
 
 **Reminders.** `/api/cron/dispatch-reminders` runs at 07:00 UTC on weekdays. A lead
@@ -234,10 +253,11 @@ stays the new-lead path. Every payload has `event`, `environment` and `at`:
 | `event` | Sent by | Make |
 |---|---|---|
 | `reminder_due` | the reminders cron | e-mail to the partner (one module per stage × language, `emails/make/partner-reminder-*.json`) |
-| `stage_changed` | any stage move (`source`: `kanban` / `email`) | Slack |
-| `disqualified` | any disqualification | Slack |
+| `stage_changed` | a partner's stage move (`source`: `kanban` / `email`) | Slack |
+| `disqualified` | any disqualification (`source`: `kanban` / `email` / `admin`) | Slack |
+| `requalified` | an admin undoing a disqualification (`source`: `admin`) | not routed yet — add a branch |
 
-`stage_changed` and `disqualified` carry no customer name, contact or free-text note
+`stage_changed`, `disqualified` and `requalified` carry no customer name, contact or free-text note
 (they go to Slack): partner, postal code, locality, canton, product, stages and reason.
 
 ## Manually dispatching a submission

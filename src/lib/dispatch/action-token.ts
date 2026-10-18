@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { STAGE_RANK, type DispatchStage } from "./types";
+import type { DispatchStage } from "./types";
+import { allowedActions, type Actor } from "./lifecycle/rules";
 
 /**
  * Signed links that let a partner act on a lead from an e-mail, without
@@ -75,24 +76,31 @@ export function verifyDispatchAction(token: unknown, now = Date.now(), key = sec
   return payload.exp < now ? { status: "expired", payload } : { status: "valid", payload };
 }
 
+const EMAIL: Actor = { kind: "partner", partnerId: "", source: "email" };
+
+/** Buttons per e-mail and stage, before the lifecycle rules have their say. */
+const REMINDER_MENU: Partial<Record<DispatchStage, DispatchAction[]>> = {
+  new: ["contacted", "appointment"],
+  contacted: ["appointment", "quote_sent", "lost"],
+  appointment: ["quote_sent", "lost"],
+  quote_sent: ["won", "lost"],
+};
+const MENU: Record<ActionContext, Partial<Record<DispatchStage, DispatchAction[]>>> = {
+  new: { ...REMINDER_MENU, new: ["contacted", "disqualify"] },
+  reminder: REMINDER_MENU,
+};
+
 /**
  * The next steps worth a button, given where the lead sits. Disqualifying is
  * offered only on the new-lead e-mail (to drop a lead the partner already
  * knows); a reminder never nudges towards it inside the acceptance window.
  */
 export function actionsFor(stage: DispatchStage, context: ActionContext): DispatchAction[] {
-  switch (stage) {
-    case "new":
-      return context === "new" ? ["contacted", "disqualify"] : ["contacted", "appointment"];
-    case "contacted":
-      return ["appointment", "quote_sent", "lost"];
-    case "appointment":
-      return ["quote_sent", "lost"];
-    case "quote_sent":
-      return ["won", "lost"];
-    default:
-      return [];
-  }
+  const allowed = allowedActions(
+    { stage, stage_history: null, disqualified: null, billable_locked_at: null },
+    EMAIL,
+  );
+  return (MENU[context][stage] ?? []).filter((a) => allowed.includes(a));
 }
 
 /**
@@ -129,8 +137,10 @@ export function actionBlocker(
   action: DispatchAction,
 ): ActionBlocker | null {
   if (row.disqualified) return "already_disqualified";
-  if (action === "disqualify") return row.billable_locked_at ? "billing_locked" : null;
-  const current = STAGE_RANK[row.stage as DispatchStage];
-  if (current === undefined) return null;
-  return current >= STAGE_RANK[action] ? "already_done" : null;
+  const allowed = allowedActions(
+    { ...row, stage_history: null },
+    EMAIL,
+  );
+  if (allowed.includes(action)) return null;
+  return action === "disqualify" ? "billing_locked" : "already_done";
 }

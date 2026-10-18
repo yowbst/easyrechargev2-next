@@ -10,15 +10,19 @@ import { getPostHogServer, serverLog } from "@/lib/posthog-server";
  *
  * - `reminder_due`   — sent by the reminders cron; Make e-mails the partner.
  * - `stage_changed`  — a partner moved a lead (kanban, e-mail button…).
- * - `disqualified`   — a partner disqualified a lead.
+ * - `disqualified`   — a partner or an admin disqualified a lead.
+ * - `requalified`    — an admin undid a disqualification.
+ *
+ * The last three are decided by the Dispatch lifecycle module
+ * (`lifecycle/rules.ts`).
  *
  * Every payload carries `environment`: staging partners exercise the same
  * path, and Make filters on it.
  */
-export type DispatchEventName = "reminder_due" | "stage_changed" | "disqualified";
+export type DispatchEventName = "reminder_due" | "stage_changed" | "disqualified" | "requalified";
 
-/** Where a partner action came from. */
-export type ActionSource = "kanban" | "email" | "amp";
+/** Where a lifecycle action came from. */
+export type ActionSource = "kanban" | "email" | "amp" | "admin";
 
 export async function getDispatchEventsWebhookUrl(): Promise<string | null> {
   try {

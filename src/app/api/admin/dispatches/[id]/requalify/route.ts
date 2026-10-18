@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminRequalify } from "@/lib/dispatch/admin-override";
+import { act } from "@/lib/dispatch/lifecycle";
 import { assertAdmin } from "@/lib/billing/admin-guard";
 
 /**
@@ -14,19 +14,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const { note } = (await req.json().catch(() => ({}))) as { note?: string };
   try {
-    return NextResponse.json(await adminRequalify(id, note ?? null));
+    const result = await act(id, { kind: "admin" }, { type: "requalify", note });
+    if (!result.ok) {
+      const { error, status, invoice } = result;
+      return NextResponse.json({ error, ...(invoice ? { invoice } : {}) }, { status });
+    }
+    return NextResponse.json({ ok: true, wasDisqualified: result.before.disqualified === true });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown";
-    const status =
-      msg === "dispatch_not_found" ? 404
-      : msg === "attached_to_live_invoice" ? 409
-      : 500;
-    if (status === 500) console.error("[admin/dispatches/requalify]", e);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const invoice = (e as any)?.invoice;
-    return NextResponse.json(
-      status === 500 ? { error: "internal_error" } : { error: msg, ...(invoice ? { invoice } : {}) },
-      { status },
-    );
+    console.error("[admin/dispatches/requalify]", e);
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

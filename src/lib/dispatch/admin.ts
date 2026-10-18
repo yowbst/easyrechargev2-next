@@ -1,7 +1,6 @@
 import { directusFetch } from "@/lib/directus";
 import { getEnvironment } from "@/lib/directus-storage";
-import { fetchDispatchConfig } from "./queries";
-import { isAcceptanceExpired } from "./billing";
+import { lockAcceptedDispatches } from "./lifecycle";
 
 interface BillingRow {
   partner: string;
@@ -61,75 +60,14 @@ export async function getMonthlyBilling(month: string): Promise<{
   };
 }
 
-interface ReconcileRow {
-  id: string;
-  dispatched_at: string;
-  disqualified: boolean;
-  gift: boolean;
-  billable: boolean;
-  partner: { disqualification_overrides: Record<string, number> | null } | null;
-}
-
 /**
- * Backstop that flips billable=true on any non-gift, non-disqualified dispatch
- * whose current-stage window has elapsed without movement.
+ * Backstop that locks billing on every dispatched lead whose acceptance
+ * window has ended. The rule lives in the Dispatch lifecycle module.
  *
  * When `dryRun: true`, computes the candidate ids but performs ZERO PATCHes —
  * used by MCP tooling to preview what a reconcile run would lock.
  */
-export async function reconcileBilling(
-  opts: { dryRun?: boolean; now?: Date } = {},
-): Promise<{ locked: number; ids: string[]; dryRun: boolean }> {
-  const now = opts.now ?? new Date();
-  const dryRun = opts.dryRun ?? false;
-
-  const config = await fetchDispatchConfig();
-
-  const params = new URLSearchParams();
-  params.set(
-    "fields",
-    "id,dispatched_at,disqualified,gift,billable,partner.disqualification_overrides",
-  );
-  params.set("filter[status][_eq]", "dispatched");
-  params.set("filter[billable][_neq]", "true");
-  params.set("filter[disqualified][_neq]", "true");
-  params.set("filter[gift][_neq]", "true");
-  params.set("limit", "1000");
-
-  const res = await directusFetch<{ data: ReconcileRow[] }>(
-    `/items/partner_dispatches?${params}`,
-    { next: { revalidate: 0 } },
-  );
-
-  const toLock: string[] = [];
-  for (const r of res?.data ?? []) {
-    if (
-      isAcceptanceExpired(
-        r.dispatched_at,
-        config.billing,
-        r.partner?.disqualification_overrides ?? null,
-        now,
-      )
-    ) {
-      toLock.push(r.id);
-    }
-  }
-
-  if (!dryRun) {
-    for (const id of toLock) {
-      await directusFetch(`/items/partner_dispatches/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          billable: true,
-          billable_locked_at: now.toISOString(),
-        }),
-        next: { revalidate: 0 },
-      });
-    }
-  }
-
-  return { locked: toLock.length, ids: toLock, dryRun };
-}
+export const reconcileBilling = lockAcceptedDispatches;
 
 const DISPATCH_FIELDS = [
   "id",

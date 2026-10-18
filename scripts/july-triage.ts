@@ -3,11 +3,11 @@
  * dropped for, and remove the QA test lead.
  *
  * The partner route cannot do either of these — it refuses a disqualified row
- * and refuses a backward move — so the moves go through adminSetStage.
+ * and refuses a backward move — so the moves go through an admin move.
  * Run with `npx tsx --env-file=.env.local scripts/july-triage.ts [--apply]`.
  */
 import { directusFetch } from "../src/lib/directus";
-import { adminSetStage } from "../src/lib/dispatch/admin-override";
+import { act } from "../src/lib/dispatch/lifecycle";
 import type { DispatchStage } from "../src/lib/dispatch/types";
 
 const APPLY = process.argv.includes("--apply");
@@ -61,8 +61,8 @@ async function main() {
       console.log(`  move ${m.who} -> ${m.to} (${m.why})`);
       continue;
     }
-    const r = await adminSetStage(m.id, m.to, `tri juillet — ${m.why}`);
-    console.log(`  ${m.who}: ${r.from} -> ${r.to}`);
+    const r = await act(m.id, { kind: "admin" }, { type: "move", stage: m.to, note: `tri juillet — ${m.why}` });
+    console.log(r.ok ? `  ${m.who}: ${r.before.stage} -> ${r.stage}` : `  ${m.who}: refused (${r.error})`);
   }
 
   if (!DO_DELETE) {
