@@ -55,3 +55,6 @@ next-env.d.ts
 
 # Directus content backups (npm run quote-copy)
 /.backups/
+
+# Local scratch inputs (reference images, drafts) — never committed
+/input/
