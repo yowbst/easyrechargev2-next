@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { addInvoiceNote } from "@/lib/billing/invoice";
-import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin } from "@/lib/admin-auth";
+import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Append a comment to the invoice's event log. Same admin-token gate as

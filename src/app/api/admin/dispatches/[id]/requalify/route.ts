@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { act } from "@/lib/dispatch/lifecycle";
-import { assertAdmin } from "@/lib/billing/admin-guard";
+import { assertAdmin } from "@/lib/admin-auth";
 
 /**
  * Undo a disqualification. Leaves the row unlocked so the next reconcile

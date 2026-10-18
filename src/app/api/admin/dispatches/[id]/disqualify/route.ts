@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { act } from "@/lib/dispatch/lifecycle";
 import { DISQUALIFICATION_REASONS } from "@/lib/dispatch/types";
-import { assertAdmin } from "@/lib/billing/admin-guard";
+import { assertAdmin } from "@/lib/admin-auth";
 
 /**
  * Operator override: disqualify a dispatch regardless of the billing lock, the

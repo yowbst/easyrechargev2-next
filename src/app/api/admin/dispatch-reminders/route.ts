@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertAdmin } from "@/lib/admin-auth";
 import { runReminders } from "@/lib/dispatch/reminders";
 
 /**
@@ -10,11 +11,7 @@ import { runReminders } from "@/lib/dispatch/reminders";
  *     "https://.../api/admin/dispatch-reminders?dryRun=1"
  */
 export async function POST(req: Request) {
-  const adminToken = process.env.DIRECTUS_STATIC_TOKEN;
-  const header = req.headers.get("x-admin-token");
-  if (!adminToken || header !== adminToken) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (!assertAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const dryRun = new URL(req.url).searchParams.get("dryRun") === "1";
   return NextResponse.json(await runReminders({ dryRun }));

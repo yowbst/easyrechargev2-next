@@ -159,6 +159,41 @@ describe("setInvoiceStatus", () => {
   });
 });
 
+describe("setInvoiceStatus — cancelling supersedes the documents", () => {
+  beforeEach(() => { resetState(); vi.resetModules(); });
+  const NOW = new Date("2026-10-18T00:00:00.000Z");
+
+  it("renames the documents after recording the cancellation, and reports it", async () => {
+    const { setInvoiceStatus } = await import("./invoice");
+    const order: string[] = [];
+    const supersede = vi.fn(async () => {
+      order.push(`supersede after status=${state.invoice.status}`);
+      return { renamed: ["ANNULÉE — EME-202607"], skipped: [] };
+    });
+    const r = await setInvoiceStatus("inv-1", "cancelled", undefined, NOW, { supersede });
+
+    expect(supersede).toHaveBeenCalledWith("inv-1");
+    expect(order).toEqual(["supersede after status=cancelled"]);
+    expect(r).toEqual({ status: "cancelled", documents: { renamed: ["ANNULÉE — EME-202607"], skipped: [] } });
+  });
+
+  it("keeps the cancellation when the rename fails", async () => {
+    const { setInvoiceStatus } = await import("./invoice");
+    const supersede = vi.fn(async () => { throw new Error("drive down"); });
+    const r = await setInvoiceStatus("inv-1", "cancelled", undefined, NOW, { supersede });
+
+    expect(state.invoice.status).toBe("cancelled");
+    expect(r).toEqual({ status: "cancelled", documents: { error: "rename_failed" } });
+  });
+
+  it("leaves the documents alone on any other transition", async () => {
+    const { setInvoiceStatus } = await import("./invoice");
+    const supersede = vi.fn();
+    expect(await setInvoiceStatus("inv-1", "sent", undefined, NOW, { supersede })).toEqual({ status: "sent" });
+    expect(supersede).not.toHaveBeenCalled();
+  });
+});
+
 describe("addInvoiceNote", () => {
   beforeEach(() => { resetState(); vi.resetModules(); });
 

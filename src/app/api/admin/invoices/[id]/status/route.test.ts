@@ -67,13 +67,23 @@ describe("POST /api/admin/invoices/[id]/status", () => {
 
   it("calls setInvoiceStatus and returns ok with a correct token", async () => {
     const { setInvoiceStatus } = await import("@/lib/billing/invoice");
-    vi.mocked(setInvoiceStatus).mockResolvedValueOnce(undefined);
+    vi.mocked(setInvoiceStatus).mockResolvedValueOnce({ status: "sent" });
 
     const res = await post("inv1", { status: "sent", note: "emailed" }, { "x-admin-token": TOKEN });
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json).toEqual({ ok: true, status: "sent" });
     expect(vi.mocked(setInvoiceStatus)).toHaveBeenCalledWith("inv1", "sent", "emailed");
+  });
+
+  it("passes the document rename result through on a cancel", async () => {
+    const { setInvoiceStatus } = await import("@/lib/billing/invoice");
+    vi.mocked(setInvoiceStatus).mockResolvedValueOnce({
+      status: "cancelled",
+      documents: { error: "rename_failed" },
+    });
+    const res = await post("inv1", { status: "cancelled" }, { "x-admin-token": TOKEN });
+    expect(await res.json()).toEqual({ ok: true, status: "cancelled", documents: { error: "rename_failed" } });
   });
 
   it("maps invalid_transition to 409", async () => {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { previewInvoice } from "@/lib/billing/invoice";
-import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin } from "@/lib/admin-auth";
+import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Dry-run an invoice for a partner/month: number, period, issuable flag,

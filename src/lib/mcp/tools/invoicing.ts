@@ -1,22 +1,42 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { directusFetch } from "@/lib/directus";
-import { getEnvironment } from "@/lib/directus-storage";
 import {
-  addAdjustmentLine, addInvoiceNote, addManualLeadLine, issueInvoice, previewInvoice,
+  addAdjustmentLine, addInvoiceNote, addManualLeadLine, issueInvoice, listInvoices, previewInvoice,
   setInvoiceStatus,
 } from "@/lib/billing/invoice";
-import { generateInvoiceDocument, markInvoiceDocumentsSuperseded } from "@/lib/billing/google-docs";
+import { generateInvoiceDocument } from "@/lib/billing/google-docs";
+import { errorBody } from "@/lib/billing/admin-guard";
 import { INVOICE_STATUSES } from "@/lib/billing/types";
 import { act, type Intent } from "@/lib/dispatch/lifecycle";
 import { DISQUALIFICATION_REASONS } from "@/lib/dispatch/types";
-import { run } from "./helpers";
+import { err, ok, type ToolResult } from "./helpers";
 
-/** An admin override through the Dispatch lifecycle; a refusal becomes the tool's error. */
+/** A refusal the caller should see as is (a lifecycle rule said no). */
+class Refused extends Error {
+  constructor(code: string, readonly hint?: string) {
+    super(code);
+  }
+}
+
+/**
+ * Same error contract as the admin routes: domain errors and refusals come
+ * back verbatim, anything else (a raw Directus or Google error) is logged and
+ * collapsed to `internal_error` so internals never reach the MCP client.
+ */
+async function runBilling(fn: () => Promise<unknown>): Promise<ToolResult> {
+  try {
+    return ok(await fn());
+  } catch (e) {
+    if (e instanceof Refused) return err(e.message, e.hint);
+    return err(errorBody(e).error);
+  }
+}
+
+/** An admin override through the Dispatch lifecycle. */
 async function adminAct(dispatchId: string, intent: Intent) {
   const r = await act(dispatchId, { kind: "admin" }, intent);
   if (!r.ok) {
-    throw new Error(r.invoice ? `${r.error}: ${r.invoice.number} (${r.invoice.status})` : r.error);
+    throw new Refused(r.error, r.invoice ? `cancel invoice ${r.invoice.number} (${r.invoice.status}) first` : undefined);
   }
   return r;
 }
@@ -34,7 +54,7 @@ export function registerInvoicingTools(server: McpServer) {
       },
       annotations: { readOnlyHint: true },
     },
-    async ({ partner, month }) => run(() => previewInvoice(partner, month)),
+    async ({ partner, month }) => runBilling(() => previewInvoice(partner, month)),
   );
 
   server.registerTool(
@@ -49,7 +69,7 @@ export function registerInvoicingTools(server: McpServer) {
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     },
-    async ({ partner, month }) => run(() => issueInvoice(partner, month)),
+    async ({ partner, month }) => runBilling(() => issueInvoice(partner, month)),
   );
 
   server.registerTool(
@@ -61,7 +81,7 @@ export function registerInvoicingTools(server: McpServer) {
       inputSchema: { invoiceId: z.string().describe("partner_invoices id") },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     },
-    async ({ invoiceId }) => run(() => generateInvoiceDocument(invoiceId)),
+    async ({ invoiceId }) => runBilling(() => generateInvoiceDocument(invoiceId)),
   );
 
   server.registerTool(
@@ -77,10 +97,10 @@ export function registerInvoicingTools(server: McpServer) {
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     },
-    async ({ invoiceId, status, note }) => run(async () => {
-      await setInvoiceStatus(invoiceId, status, note);
-      return { ok: true, status };
-    }),
+    async ({ invoiceId, status, note }) => runBilling(async () => ({
+      ok: true,
+      ...(await setInvoiceStatus(invoiceId, status, note)),
+    })),
   );
 
   server.registerTool(
@@ -96,7 +116,7 @@ export function registerInvoicingTools(server: McpServer) {
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     },
-    async ({ invoiceId, actor, note }) => run(async () => {
+    async ({ invoiceId, actor, note }) => runBilling(async () => {
       await addInvoiceNote(invoiceId, actor ?? "yoan", note);
       return { ok: true };
     }),
@@ -115,7 +135,7 @@ export function registerInvoicingTools(server: McpServer) {
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     },
-    async ({ invoiceId, description, amountChf }) => run(async () => {
+    async ({ invoiceId, description, amountChf }) => runBilling(async () => {
       await addAdjustmentLine(invoiceId, description, amountChf);
       return { ok: true };
     }),
@@ -142,7 +162,7 @@ export function registerInvoicingTools(server: McpServer) {
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     },
-    async ({ invoiceId, label, unitPriceChf, ...meta }) => run(
+    async ({ invoiceId, label, unitPriceChf, ...meta }) => runBilling(
       () => addManualLeadLine(invoiceId, label, unitPriceChf, meta),
     ),
   );
@@ -161,7 +181,7 @@ export function registerInvoicingTools(server: McpServer) {
       annotations: { destructiveHint: true, idempotentHint: false },
     },
     async ({ dispatchId, reason, note }: { dispatchId: string; reason: string; note?: string }) =>
-      run(async () => {
+      runBilling(async () => {
         const r = await adminAct(dispatchId, { type: "disqualify", reason, note });
         return { ok: true, reason, wasLocked: Boolean(r.before.billable_locked_at) };
       }),
@@ -177,7 +197,7 @@ export function registerInvoicingTools(server: McpServer) {
       annotations: { destructiveHint: true, idempotentHint: false },
     },
     async ({ dispatchId, note }: { dispatchId: string; note?: string }) =>
-      run(async () => {
+      runBilling(async () => {
         const r = await adminAct(dispatchId, { type: "requalify", note });
         return { ok: true, wasDisqualified: r.before.disqualified === true };
       }),
@@ -194,20 +214,6 @@ export function registerInvoicingTools(server: McpServer) {
       },
       annotations: { readOnlyHint: true },
     },
-    async ({ month, status }) => run(async () => {
-      const params = new URLSearchParams();
-      params.set("fields", "id,number,version,status,period_month,total_chf,issued_at,due_at,paid_at,doc_url");
-      params.set("sort", "-issued_at");
-      params.set("limit", "100");
-      // Same environment scoping as GET /api/admin/invoices — a staging invoice
-      // must never appear in a production listing.
-      params.set("filter[environment][_eq]", getEnvironment());
-      if (month) params.set("filter[period_month][_eq]", month);
-      if (status) params.set("filter[status][_eq]", status);
-      const res = await directusFetch<{ data: unknown[] }>(
-        `/items/partner_invoices?${params}`, { next: { revalidate: 0 } },
-      );
-      return res?.data ?? [];
-    }),
+    async ({ month, status }) => runBilling(() => listInvoices({ month, status })),
   );
 }

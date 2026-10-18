@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertAdmin } from "@/lib/admin-auth";
 import { manualDispatch } from "@/lib/dispatch/manual-dispatch";
 
 /**
@@ -15,11 +16,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ submissionId: string }> },
 ) {
-  const adminToken = process.env.DIRECTUS_STATIC_TOKEN;
-  const header = req.headers.get("x-admin-token");
-  if (!adminToken || header !== adminToken) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (!assertAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { submissionId } = await params;
   const force = new URL(req.url).searchParams.get("force") === "1";

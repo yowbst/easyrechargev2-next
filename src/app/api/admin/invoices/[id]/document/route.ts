@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateInvoiceDocument } from "@/lib/billing/google-docs";
-import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin } from "@/lib/admin-auth";
+import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Generate (always a NEW) invoice Google Doc from the invoice's current

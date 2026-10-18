@@ -2,9 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/billing/invoice", () => ({
   issueInvoice: vi.fn(),
-}));
-vi.mock("@/lib/directus", () => ({
-  directusFetch: vi.fn(),
+  listInvoices: vi.fn(),
 }));
 
 const TOKEN = "test-static-token-0123456789abcdef";
@@ -35,50 +33,47 @@ const post = async (body: unknown, headers?: Record<string, string>) => {
 
 describe("GET /api/admin/invoices", () => {
   it("returns 401 when x-admin-token header is missing", async () => {
-    const { directusFetch } = await import("@/lib/directus");
+    const { listInvoices } = await import("@/lib/billing/invoice");
     const res = await get();
     expect(res.status).toBe(401);
     expect((await res.json()).error).toBe("unauthorized");
-    expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
+    expect(vi.mocked(listInvoices)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when x-admin-token is wrong", async () => {
-    const { directusFetch } = await import("@/lib/directus");
+    const { listInvoices } = await import("@/lib/billing/invoice");
     const res = await get({ "x-admin-token": "wrong" });
     expect(res.status).toBe(401);
-    expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
+    expect(vi.mocked(listInvoices)).not.toHaveBeenCalled();
   });
 
   it("returns 401 when DIRECTUS_STATIC_TOKEN is unset, even with a header", async () => {
-    const { directusFetch } = await import("@/lib/directus");
+    const { listInvoices } = await import("@/lib/billing/invoice");
     const original = process.env.DIRECTUS_STATIC_TOKEN;
     delete process.env.DIRECTUS_STATIC_TOKEN;
     try {
       const res = await get({ "x-admin-token": "anything" });
       expect(res.status).toBe(401);
-      expect(vi.mocked(directusFetch)).not.toHaveBeenCalled();
+      expect(vi.mocked(listInvoices)).not.toHaveBeenCalled();
     } finally {
       process.env.DIRECTUS_STATIC_TOKEN = original;
     }
   });
 
-  it("returns rows from directusFetch with a correct token", async () => {
-    const { directusFetch } = await import("@/lib/directus");
-    vi.mocked(directusFetch).mockResolvedValueOnce({ data: [{ id: "inv1" }] });
+  it("returns the listed invoices with a correct token, passing the filters through", async () => {
+    const { listInvoices } = await import("@/lib/billing/invoice");
+    vi.mocked(listInvoices).mockResolvedValueOnce([{ id: "inv1" }]);
 
-    const res = await get({ "x-admin-token": TOKEN }, "?month=2026-07");
+    const res = await get({ "x-admin-token": TOKEN }, "?month=2026-07&status=sent");
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.rows).toEqual([{ id: "inv1" }]);
-    expect(vi.mocked(directusFetch)).toHaveBeenCalledWith(
-      expect.stringContaining("filter%5Bperiod_month%5D%5B_eq%5D=2026-07"),
-      expect.any(Object),
-    );
+    expect(vi.mocked(listInvoices)).toHaveBeenCalledWith({ month: "2026-07", status: "sent" });
   });
 
-  it("maps an unmapped directusFetch failure to 500 internal_error, not the raw message", async () => {
-    const { directusFetch } = await import("@/lib/directus");
-    vi.mocked(directusFetch).mockRejectedValueOnce(
+  it("maps an unmapped listing failure to 500 internal_error, not the raw message", async () => {
+    const { listInvoices } = await import("@/lib/billing/invoice");
+    vi.mocked(listInvoices).mockRejectedValueOnce(
       new Error("Directus 403: forbidden on collection partner_invoices, field secret_field"),
     );
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
