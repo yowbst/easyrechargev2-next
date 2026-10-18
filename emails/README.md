@@ -8,10 +8,10 @@ copied here unchanged.
 
 | File | Role |
 |---|---|
-| `email-template.hbs.html` | The design: Handlebars, tables + inline styles, Outlook button, dark mode, hidden preheader. Optional blocks: `details`, `steps`, `note`, `cta`, `secondary`, `audienceLabel`, `unsubscribeUrl`. |
+| `email-template.hbs.html` | The design: Handlebars, tables + inline styles, Outlook button, dark mode, hidden preheader. Optional blocks: `details`, `steps`, `note`, `cta`, `secondary`, `actions` (outline buttons, with `actionsIntro`), `audienceLabel`, `unsubscribeUrl`. |
 | `make/common.json` | Per-language blocks shared by every e-mail (logo, signature, help, footer links, company). |
 | `make/tokens.json` | `%name%` → Make expression (`{{1.user.firstName}}`, `{{if(1.submission.product = …)}}`) + a sample value for previews. |
-| `make/<email>.json` | One e-mail: Make module id per language, then subject, preheader and content per language. |
+| `make/<email>.json` | One e-mail: Make module id per language (and `scenario` when not "Demande de devis"), then subject, preheader and content per language. A language without a module id is rendered to preview only. |
 
 Strings may contain `{first_contact}` and `{quote_delivery_timeline}`: filled at build
 time from Directus `site_settings.global_config.slas`, the values the success page shows.

@@ -1,0 +1,120 @@
+{
+  "$comment": "Partner reminder, lead still at 'appointment' (Make scenario 'Lead lifecycle', event reminder_due).",
+  "scenario": 9997746,
+  "modules": {
+    "fr": 14,
+    "de": 15
+  },
+  "mapper": {
+    "inReplyTo": "%rThreadId%",
+    "references": [
+      "%rThreadId%"
+    ]
+  },
+  "fr": {
+    "subject": "Re: [ NEW ] %rProductShortFr% – Demande de devis – Réf. %rRef%",
+    "preheader": "Un clic suffit pour mettre votre suivi à jour.",
+    "audienceLabel": "Partenaire",
+    "eyebrow": "Suivi du lead",
+    "title": "Avez-vous envoyé votre devis à %rFirstName% %rLastName% ?",
+    "greeting": "Bonjour,",
+    "paragraphs": [
+      "Ce lead est à l'étape « RDV pris » depuis %rDays% jours."
+    ],
+    "actionsFirst": true,
+    "actionsTitle": "Où en êtes-vous ?",
+    "actions": [
+      {
+        "label": "✓ Devis envoyé",
+        "url": "%rActionQuoteSent%"
+      },
+      {
+        "label": "✕ Projet perdu",
+        "url": "%rActionLost%",
+        "outline": true
+      }
+    ],
+    "actionsNote": "Un clic ouvre une page de confirmation : rien n'est modifié sans votre validation.",
+    "actionsLink": {
+      "label": "Ouvrir mes leads",
+      "url": "%rCrmUrl%"
+    },
+    "detailsTitle": "La demande",
+    "details": [
+      {
+        "label": "Client",
+        "value": "%rFirstName% %rLastName%"
+      },
+      {
+        "label": "Téléphone",
+        "value": "%rPhone%"
+      },
+      {
+        "label": "Produit",
+        "value": "%rProductFr%"
+      },
+      {
+        "label": "Lieu",
+        "value": "%rPlace%"
+      },
+      {
+        "label": "Référence",
+        "value": "%rRef%"
+      }
+    ],
+    "reason": "Vous recevez cet e-mail en tant que partenaire installateur easyRecharge."
+  },
+  "de": {
+    "subject": "Re: [ NEW ] %rProductShortFr% – Demande de devis – Réf. %rRef%",
+    "preheader": "Ein Klick genügt, um den Stand zu aktualisieren.",
+    "audienceLabel": "Partner",
+    "eyebrow": "Lead-Nachverfolgung",
+    "title": "Haben Sie %rFirstName% %rLastName% Ihre Offerte gesendet?",
+    "greeting": "Guten Tag",
+    "paragraphs": [
+      "Dieser Lead steht seit %rDays% Tagen auf «Termin vereinbart»."
+    ],
+    "actionsFirst": true,
+    "actionsTitle": "Wie ist der Stand?",
+    "actions": [
+      {
+        "label": "✓ Offerte gesendet",
+        "url": "%rActionQuoteSent%"
+      },
+      {
+        "label": "✕ Projekt verloren",
+        "url": "%rActionLost%",
+        "outline": true
+      }
+    ],
+    "actionsNote": "Ein Klick öffnet eine Bestätigungsseite: Ohne Ihre Bestätigung wird nichts geändert.",
+    "actionsLink": {
+      "label": "Meine Leads öffnen",
+      "url": "%rCrmUrl%"
+    },
+    "detailsTitle": "Die Anfrage",
+    "details": [
+      {
+        "label": "Kunde",
+        "value": "%rFirstName% %rLastName%"
+      },
+      {
+        "label": "Telefon",
+        "value": "%rPhone%"
+      },
+      {
+        "label": "Produkt",
+        "value": "%rProductDe%"
+      },
+      {
+        "label": "Ort",
+        "value": "%rPlace%"
+      },
+      {
+        "label": "Referenz",
+        "value": "%rRef%"
+      }
+    ],
+    "reason": "Sie erhalten diese E-Mail als Installationspartner von easyRecharge."
+  }
+}

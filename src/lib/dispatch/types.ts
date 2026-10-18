@@ -254,6 +254,8 @@ export interface DispatchTarget {
    * category — so it is recorded rather than left to a log line nobody reads.
    */
   giftReason: GiftReason | null;
+  /** `partner_dispatches` row written for this target; set once recorded. */
+  dispatchId?: string | null;
 }
 
 export interface DispatchSummary {
