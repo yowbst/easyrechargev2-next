@@ -1,19 +1,20 @@
 import { Car, Home, ParkingSquare, Zap } from "lucide-react";
 import type { ProductFunnel } from "../../types";
+import { withUi } from "../../steps";
 import { ECP_INITIAL, LEAN_REMOVED_FIELDS } from "./fields";
 import { ChargerStep, HousingStep, ParkingStep, VehicleStep } from "./steps";
-import { ecpFieldChange, ecpFirstUnanswered } from "./validation";
+import { ECP_STEPS, ecpFieldChange, ecpFirstUnanswered } from "./validation";
 
 /** Charger (borne) quote funnel — 4 product steps, then the shared contact step. */
 export const ecpFunnel: ProductFunnel = {
   product: "ecp",
   dictPageIds: ["quote"],
-  steps: [
-    { id: "housing", icon: Home, Component: HousingStep, summary: ["housingStatus", "housingType", "solarEquipment"] },
-    { id: "parking", icon: ParkingSquare, Component: ParkingStep, summary: ["parkingSpotLocation"] },
-    { id: "charger", icon: Zap, Component: ChargerStep, summary: ["parkingSpotCount", "deadline"] },
-    { id: "vehicle", icon: Car, Component: VehicleStep, summary: ["vehicleStatus"] },
-  ],
+  steps: withUi(ECP_STEPS, {
+    housing: { icon: Home, Component: HousingStep, summary: ["housingStatus", "housingType", "solarEquipment"] },
+    parking: { icon: ParkingSquare, Component: ParkingStep, summary: ["parkingSpotLocation"] },
+    charger: { icon: Zap, Component: ChargerStep, summary: ["parkingSpotCount", "deadline"] },
+    vehicle: { icon: Car, Component: VehicleStep, summary: ["vehicleStatus"] },
+  }),
   initialData: { ...ECP_INITIAL },
   // Drafts saved by the former QuoteForm may still hold the six removed answers.
   fixedData: Object.fromEntries(LEAN_REMOVED_FIELDS.map((k) => [k, null])),

@@ -3,8 +3,11 @@
 // pricing_policy.settings.prices[product][category], own Google Ads
 // conversion actions). Adding one:
 //   1. Append the key to PRODUCTS and its Directus page to FUNNEL_ROUTES.
-//   2. Register its ProductFunnel in src/components/quote-shell/funnels.ts
-//      and its categories in src/lib/dispatch/categorize.ts.
+//   2. Register its ProductFunnel in src/components/quote-shell/funnels.ts.
+//      The build then lists every other place that needs the product (each
+//      is a Record<Product, …>): answer rules (quote-shell/answers.ts),
+//      categories (dispatch/categorize.ts), score factors (dispatch/scoring.ts),
+//      the submission view (components/quote/QuoteSubmissionView.tsx).
 //   3. Add global_config.google_ads.conversions.<key> in Directus.
 //   4. Add the product's price column to partner pricing policies.
 //   5. Map the product to its Ads conversion action in the Make scenario

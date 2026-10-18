@@ -8,7 +8,7 @@ const NON_DISPATCHABLE: ReadonlySet<LeadCategory> = new Set(["no_pv"]);
 
 /** Derive the lead pricing category from quote form data, per product. */
 export function deriveLeadCategory(product: Product, data: Record<string, unknown>): LeadCategory {
-  return product === "battery" ? deriveBatteryCategory(data) : deriveEcpCategory(data);
+  return CATEGORY_RULES[product](data);
 }
 
 /** False for categories that are stored but never sent to a partner. */
@@ -64,3 +64,9 @@ export function pvSizeKwc(raw: unknown): number {
   else if (typeof raw === "string" && raw !== "na" && raw.trim() !== "") n = Number(raw);
   return Number.isFinite(n) ? n : Number.NaN;
 }
+
+/** One rule per product — a new product without one does not build. */
+const CATEGORY_RULES: Record<Product, (data: Record<string, unknown>) => LeadCategory> = {
+  ecp: deriveEcpCategory,
+  battery: deriveBatteryCategory,
+};

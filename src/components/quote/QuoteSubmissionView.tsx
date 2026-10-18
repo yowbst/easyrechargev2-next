@@ -22,6 +22,19 @@ import { parsePhoneNumber } from "libphonenumber-js";
 import { Field, Section } from "./SubmissionFields";
 import { BatterySubmissionSections } from "./BatterySubmissionSections";
 import type { FormSubmission, FormUser, FormSession } from "@shared/types";
+import { normalizeProduct, type Product } from "@/lib/products";
+
+/** Printable sections per product, in page order. */
+const SECTION_IDS: Record<Product, readonly string[]> = {
+  ecp: ["metadata", "contact", "housing", "parking", "charger", "vehicle", "finalize"],
+  battery: ["metadata", "contact", "housing", "installation", "consumption", "finalize"],
+};
+
+/** Fallback product names when Directus has no `products.<key>` label. */
+const PRODUCT_LABELS: Record<Product, string> = {
+  ecp: "Borne de recharge",
+  battery: "Batterie solaire",
+};
 
 // ---------- Types ----------
 
@@ -187,10 +200,8 @@ export function QuoteSubmissionView({
     };
   }, []);
 
-  const ECP_SECTION_IDS = ["metadata", "contact", "housing", "parking", "charger", "vehicle", "finalize"] as const;
-  const BATTERY_SECTION_IDS = ["metadata", "contact", "housing", "installation", "consumption", "finalize"] as const;
   const [printSections, setPrintSections] = useState<Record<string, boolean>>(
-    () => Object.fromEntries([...ECP_SECTION_IDS, ...BATTERY_SECTION_IDS].map((id) => [id, true])),
+    () => Object.fromEntries(Object.values(SECTION_IDS).flat().map((id) => [id, true])),
   );
   const togglePrintSection = (id: string) =>
     setPrintSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -262,12 +273,13 @@ export function QuoteSubmissionView({
 
   const { submission, user, session } = data;
   const fd = (submission.data ?? {}) as Record<string, unknown>;
-  const isBattery = submission.product === "battery";
-  const sectionIds = isBattery ? BATTERY_SECTION_IDS : ECP_SECTION_IDS;
+  const product = normalizeProduct(submission.product);
+  // Two layouts below: the battery sections, or the charger ones inline. A new
+  // product gets its SECTION_IDS entry (the build asks for it) and its layout.
+  const isBattery = product === "battery";
+  const sectionIds = SECTION_IDS[product];
   const tb = (key: string) => dictionary[`pages.quote-battery.${key}`] ?? "";
-  const productLabel =
-    tv(`products.${isBattery ? "battery" : "ecp"}`) ||
-    (isBattery ? "Batterie solaire" : "Borne de recharge");
+  const productLabel = tv(`products.${product}`) || PRODUCT_LABELS[product];
 
   return (
     <div

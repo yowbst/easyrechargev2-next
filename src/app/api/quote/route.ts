@@ -6,6 +6,7 @@ import { runDispatch, normalizeCanton, notDispatchableResult, type DispatchResul
 import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
 import { getQuoteWebhookUrl, parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
 import { normalizeProduct } from "@/lib/products";
+import { firstMissingAnswer } from "@/components/quote-shell/answers";
 import { sendOpenAILeadConversion } from "@/lib/openai-ads/conversions";
 import { enrichToken } from "@/lib/quote-enrich";
 
@@ -86,6 +87,22 @@ export async function POST(req: Request) {
       data: quoteData,
       status: "success",
     });
+
+    // The funnel only submits complete answers; a request that is not (a bot,
+    // an old client, a funnel bug) is still stored and dispatched — refusing
+    // could lose a real lead past the contact step — but it is flagged.
+    const missing = firstMissingAnswer(product, quoteData);
+    if (missing) {
+      try {
+        const posthog = getPostHogServer();
+        posthog.capture({
+          distinctId: phIds.phDistinctId ?? "anonymous",
+          event: "quote_incomplete_server",
+          properties: { product, step: missing.step, field: missing.field, submission_id: submission.id },
+        });
+        after(() => posthog.flush());
+      } catch { /* analytics never blocks a submission */ }
+    }
 
     // Resolve partner dispatch. Gated by DISPATCH_MODE env var (off|shadow|live).
     // Returns a payload-ready object embedded in the Make webhook below.

@@ -20,15 +20,22 @@ export interface StepProps {
   links: { ecpQuote?: string };
 }
 
-export interface StepDef {
+/**
+ * A step's place in the funnel and the answers that skip or end it — no UI,
+ * so the server can walk the same sequence (`answers.ts`).
+ */
+export interface StepRule {
   /** Also the URL `?step=` value, the `q-…` anchor scope and `steps.<id>.title`. */
   id: string;
-  icon: LucideIcon;
-  Component: ComponentType<StepProps>;
   /** Removed from the sequence for these answers. */
   skip?: (data: FormValues) => boolean;
   /** The visitor cannot continue: the shell replaces "Continue" with a link home. */
   exit?: (data: FormValues) => boolean;
+}
+
+export interface StepDef extends StepRule {
+  icon: LucideIcon;
+  Component: ComponentType<StepProps>;
   /** Answers listed in the side panel once the step is done, in order. */
   summary?: string[];
 }

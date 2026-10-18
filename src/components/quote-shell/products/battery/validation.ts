@@ -1,3 +1,5 @@
+import type { StepRule } from "../../types";
+
 type Data = Record<string, unknown>;
 
 const answered = (v: unknown) => v !== null && v !== undefined && v !== "";
@@ -13,6 +15,15 @@ export function parseDecimal(raw: string): number | null {
   const n = Number(s);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
+
+/** The battery steps, in order. Icons and components are added in `index.ts`. */
+export const BATTERY_STEPS: StepRule[] = [
+  { id: "housing", exit: isTenant },
+  // Skipped only on an explicit "none", so the progress bar does not grow
+  // by two steps after the first answer.
+  { id: "pv", skip: hasNoPv },
+  { id: "consumption", skip: hasNoPv },
+];
 
 /** First unanswered field of a battery step, in visual order; null when complete. */
 export function batteryFirstUnanswered(stepId: string, d: Data): string | null {

@@ -97,8 +97,6 @@ function subScores(
   const housing = str(data.housingStatus);
   const approval = str(data.approval);
   const deadline = str(data.deadline);
-  const parking = str(data.parkingSpotCount); // "1" | "2" | "3+"
-  const solar = str(data.solarEquipment);
 
   const ownership =
     housing === "owner"
@@ -129,32 +127,40 @@ function subScores(
             ? 0.2
             : null;
 
-  const isBattery = product === "battery";
-
-  // One charger is the normal case (87% of real submissions) and is already
-  // worth having, so it scores full marks rather than being penalised. Two or
-  // more is a bonus above full — hence a sub-score over 1, which is why the
-  // final score is clamped.
-  const volume = isBattery
-    ? null
-    : parking === "1" ? 1 : parking === "2" || parking === "3+" ? 1.5 : null;
-
-  // No solar yet = biggest upsell opportunity.
-  const solar_upsell = isBattery
-    ? null
-    : solar === "none"
-      ? 1
-      : solar === "in-progress"
-        ? 0.5
-        : solar === "exists"
-          ? 0.2
-          : null;
-
-  const pv_size = isBattery ? pvSizeScore(data.pvPower) : null;
-  const load = isBattery ? loadScore(data) : null;
-
-  return { ownership, authorization, urgency, volume, solar_upsell, pv_size, load };
+  return { ownership, authorization, urgency, ...PRODUCT_FACTORS[product](data) };
 }
+
+type ProductFactorKey = "volume" | "solar_upsell" | "pv_size" | "load";
+
+/**
+ * The factors that depend on the product. A factor that does not apply is
+ * null and drops out of the score. One entry per product — a new product
+ * without one does not build.
+ */
+const PRODUCT_FACTORS: Record<Product, (data: Record<string, unknown>) => Record<ProductFactorKey, number | null>> = {
+  ecp: (data) => {
+    const parking = str(data.parkingSpotCount); // "1" | "2" | "3+"
+    const solar = str(data.solarEquipment);
+    return {
+      // One charger is the normal case (87% of real submissions) and is already
+      // worth having, so it scores full marks rather than being penalised. Two or
+      // more is a bonus above full — hence a sub-score over 1, which is why the
+      // final score is clamped.
+      volume: parking === "1" ? 1 : parking === "2" || parking === "3+" ? 1.5 : null,
+      // No solar yet = biggest upsell opportunity.
+      solar_upsell:
+        solar === "none" ? 1 : solar === "in-progress" ? 0.5 : solar === "exists" ? 0.2 : null,
+      pv_size: null,
+      load: null,
+    };
+  },
+  battery: (data) => ({
+    volume: null,
+    solar_upsell: null,
+    pv_size: pvSizeScore(data.pvPower),
+    load: loadScore(data),
+  }),
+};
 
 /** Large installation = full marks; small or unknown size = 0.6; absent = null. */
 function pvSizeScore(raw: unknown): number | null {
