@@ -22,10 +22,13 @@ export type ActionSource = "kanban" | "email" | "amp";
 
 export async function getDispatchEventsWebhookUrl(): Promise<string | null> {
   try {
+    // Uncached on purpose: the same site_settings URL is cached for an hour by
+    // getQuoteWebhookUrl, and Vercel's data cache survives deploys — a cached
+    // copy from before `dispatch_events` existed silently dropped events.
     const result = await directusFetch<{
       data: { global_config?: { webhooks?: { dispatch_events?: string } } }[];
     }>(`/items/site_settings?fields=global_config&filter[status][_eq]=published`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 0 },
     });
     const raw = result?.data;
     const record = Array.isArray(raw) ? raw[0] : raw;
@@ -45,7 +48,10 @@ export async function sendDispatchEvent(
   payload: Record<string, unknown>,
 ): Promise<{ ok: boolean; status?: number; error?: string }> {
   const url = await getDispatchEventsWebhookUrl();
-  if (!url) return { ok: false, error: "no_webhook" };
+  if (!url) {
+    serverLog("WARNING", "Dispatch event dropped: no webhooks.dispatch_events configured", { event });
+    return { ok: false, error: "no_webhook" };
+  }
   try {
     const res = await fetch(url, {
       method: "POST",

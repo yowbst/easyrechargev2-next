@@ -55,7 +55,8 @@ export async function fetchReminderConfig(): Promise<ReminderConfig> {
   try {
     const res = await directusFetch<{ data: Row | Row[] | null }>(
       `/items/site_settings?fields=global_config`,
-      { next: { revalidate: 60 } },
+      // Uncached: a daily cron must see today's switch, not a stale copy.
+      { next: { revalidate: 0 } },
     );
     const raw = res?.data;
     const cfg = (Array.isArray(raw) ? raw[0] : raw)?.global_config?.dispatch?.reminders ?? {};
