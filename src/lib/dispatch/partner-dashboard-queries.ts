@@ -201,6 +201,27 @@ export async function fetchPartnerStatsConfig(): Promise<PartnerStatsConfig> {
   }
 }
 
+/**
+ * One lead card by dispatch id, with the owning partner id — for the e-mail
+ * action page. Null unless it is a `dispatched` row of this environment.
+ */
+export async function fetchDispatchCardById(
+  id: string,
+): Promise<(PartnerDispatchCard & { partner: string }) | null> {
+  const params = new URLSearchParams();
+  params.set("fields", `${CARD_FIELDS},partner,status,environment`);
+  try {
+    const res = await directusFetch<{
+      data: (PartnerDispatchCard & { partner: string; status: string; environment: string }) | null;
+    }>(`/items/partner_dispatches/${encodeURIComponent(id)}?${params}`, { next: { revalidate: 0 } });
+    const row = res?.data ?? null;
+    if (!row || row.status !== "dispatched" || row.environment !== getEnvironment()) return null;
+    return row;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPartnerDispatches(
   partnerId: string,
 ): Promise<PartnerDispatchCard[]> {

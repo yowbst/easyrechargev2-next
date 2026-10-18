@@ -178,6 +178,68 @@ The dashboard is a 6-column kanban (`Nouveau → Contacté → RDV pris → Devi
 | `skipped_test` | Test submission (non-production env or email matches a test pattern). |
 | `skipped_quota` | **Deprecated** — kept for back-compat reads only. New rows use `dispatched + gift=true` instead. |
 
+## E-mail actions and reminders
+
+Partners can move a lead without opening the dashboard.
+
+**Action links.** The "[ NEW ]" e-mail carries "✓ Contacté" and "Disqualifier"
+buttons. Each is a signed link (`src/lib/dispatch/action-token.ts`, HMAC with
+`DISPATCH_ACTION_SECRET`, else `MCP_JWT_SECRET`, else `CRON_SECRET`; 45-day expiry)
+to `/partners/action/<token>`. Opening it **never writes** — mail scanners
+(Safe Links, Mimecast) open links before people do. The page shows the lead and a
+Confirm button (or the kanban's Lost / Disqualify modal), which POSTs to
+`/api/partners/action`. The same rules as the kanban apply: both go through
+`src/lib/dispatch/partner-actions.ts`. A second click shows "already done".
+The quote webhook carries the links as `dispatch.targets[].actionUrls`.
+
+**Reminders.** `/api/cron/dispatch-reminders` runs at 07:00 UTC on weekdays. A lead
+still at `new`, `contacted`, `appointment` or `quote_sent` after a rule's
+`after_days` (counted from `stage_entered_at`) gets one `reminder_due` event, with
+action links for its next steps. Reminders never offer "Disqualifier". Rules live in
+`site_settings.global_config.dispatch.reminders`; reminders are **off** until
+`enabled: true`:
+
+```json
+{ "enabled": true, "rules": [
+  { "key": "new_d2", "stage": "new", "after_days": 2 },
+  { "key": "new_d5", "stage": "new", "after_days": 5 },
+  { "key": "contacted_d7", "stage": "contacted", "after_days": 7 },
+  { "key": "appointment_d7", "stage": "appointment", "after_days": 7 },
+  { "key": "quote_sent_d21", "stage": "quote_sent", "after_days": 21 }
+] }
+```
+
+A rule stays sendable for `grace_days` (default 3, covers a weekend) after it falls
+due; past that the lead is left alone. This keeps the backlog out: on 2026-10-18,
+56 E-ME leads had sat at `new` for 11–98 days and would otherwise all have been
+mailed on the first run. Only the most advanced due rule counts, so a lead gets at
+most one e-mail per run.
+
+Reminders thread under the lead's "[ NEW ]" e-mail: that one is sent with
+`Message-ID: <lead-{dispatchId}@easyrecharge.ch>` (`targets[].threadMessageId`), and
+each reminder reuses its subject with "Re: " and sets In-Reply-To / References to it
+(`thread_message_id`). Outlook groups on the subject alone; Gmail also needs the IDs.
+Each send is logged in `partner_dispatch_reminders` (`dispatch`, `rule_key`, `stage`,
+`stage_entered_at`, `sent_at`, `status` sent/failed, `environment`), which keeps reruns
+idempotent; a failed send is logged too and not retried. With no
+`webhooks.dispatch_events` configured the run stops without logging. Preview:
+
+    curl -X POST -H "x-admin-token: $DIRECTUS_STATIC_TOKEN" \
+      "https://easyrecharge.ch/api/admin/dispatch-reminders?dryRun=1"
+
+**Lead lifecycle webhook.** `site_settings.global_config.webhooks.dispatch_events`
+points to the second Make scenario ("eR | P / Lead lifecycle", 9997746, hook 4446258); the first (`webhooks.quote`)
+stays the new-lead path. Every payload has `event`, `environment` and `at`:
+
+| `event` | Sent by | Make |
+|---|---|---|
+| `reminder_due` | the reminders cron | e-mail to the partner (one module per stage × language, `emails/make/partner-reminder-*.json`) |
+| `stage_changed` | any stage move (`source`: `kanban` / `email`) | Slack |
+| `disqualified` | any disqualification | Slack |
+
+`stage_changed` and `disqualified` carry no customer name, contact or free-text note
+(they go to Slack): partner, postal code, locality, canton, product, stages and reason.
+
 ## Manually dispatching a submission
 
 To dispatch an existing submission that was never dispatched (e.g. submitted

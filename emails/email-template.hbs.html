@@ -26,6 +26,7 @@
     .bg-inset { background:#24352D !important; }
     .ink { color:#ECE8DF !important; }
     .ink2 { color:#C3CBC5 !important; }
+    .outline { border-color:#ECE8DF !important; }
   }
 </style>
 </head>
@@ -48,6 +49,25 @@
     </tr></table>
   </td></tr>
 
+{{#*inline "actionsBlock"}}
+  <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:16px 40px 8px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#E9E4D8" class="bg-inset" style="background:#E9E4D8; border-radius:10px;"><tr><td style="padding:22px 22px 18px;">
+      {{#if actionsTitle}}<p class="ink" style="margin:0 0 6px; font-family:Arial, Helvetica, sans-serif; font-size:18px; line-height:24px; mso-line-height-rule:exactly; font-weight:bold; color:#14231C;">{{actionsTitle}}</p>{{/if}}
+      {{#if actionsIntro}}<p class="ink2" style="margin:0 0 6px; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px; mso-line-height-rule:exactly; color:#3F4F47;">{{actionsIntro}}</p>{{/if}}
+      {{#each actions}}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:10px 0 0;">
+        {{#if outline}}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#FAF8F3" class="bg-card outline" style="background:#FAF8F3; border:2px solid #14231C; border-radius:8px; padding:13px 16px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:20px; font-weight:bold;"><a href="{{url}}" class="ink" style="display:block; color:#14231C; text-decoration:none;">{{label}}</a></td></tr></table>
+        {{else}}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#16A34A" style="background:#16A34A; border:2px solid #16A34A; border-radius:8px; padding:13px 16px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:20px; font-weight:bold;"><a href="{{url}}" style="display:block; color:#04150C; text-decoration:none;">{{label}}</a></td></tr></table>
+        {{/if}}
+      </td></tr></table>
+      {{/each}}
+      {{#if actionsNote}}<p class="ink2" style="margin:12px 0 0; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:19px; mso-line-height-rule:exactly; color:#465550;">{{actionsNote}}</p>{{/if}}
+      {{#if actionsLink}}<p style="margin:10px 0 0; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px;"><a href="{{actionsLink.url}}" style="color:#0F7A3D; text-decoration:underline;">{{actionsLink.label}}</a></p>{{/if}}
+    </td></tr></table>
+  </td></tr>
+{{/inline}}
   <!-- BODY -->
   <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:40px 40px 8px;">
     {{#if eyebrow}}<p style="margin:0 0 12px; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:18px; mso-line-height-rule:exactly; font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; color:#465550;" class="ink2">{{eyebrow}}</p>{{/if}}
@@ -57,6 +77,8 @@
     <p class="ink2" style="margin:0 0 16px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:25px; mso-line-height-rule:exactly; color:#3F4F47;">{{this}}</p>
     {{/each}}
   </td></tr>
+
+  {{#if actionsFirst}}{{> actionsBlock}}{{/if}}
 
   {{#if details}}
   <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:8px 40px 8px;">
@@ -107,6 +129,8 @@
     {{#if secondary}}<p style="margin:16px 0 0; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px;"><a href="{{secondary.url}}" style="color:#0F7A3D; text-decoration:underline;">{{secondary.label}}</a></p>{{/if}}
   </td></tr>
   {{/if}}
+
+  {{#if actions}}{{#unless actionsFirst}}{{> actionsBlock}}{{/unless}}{{/if}}
 
   <!-- SIGNATURE -->
   <tr><td class="px bg-card" bgcolor="#FAF8F3" style="background:#FAF8F3; padding:28px 40px 36px; border-radius:0 0 12px 12px;">

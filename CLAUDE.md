@@ -91,6 +91,9 @@ ChatGPT Ads (OpenAI Measurement Pixel + Conversions API):
 Quote enrichment (funnel v2, flag `quote-enrich`):
 - `QUOTE_ENRICH_SECRET` — optional HMAC key for the `/api/quote/[id]/enrich` token; falls back to `MCP_JWT_SECRET`, then `CRON_SECRET`. With none set, `/api/quote` returns no token and the enrichment screen never shows.
 
+Partner e-mail actions (see `docs/operations/partner-dispatch.md`):
+- `DISPATCH_ACTION_SECRET` — optional HMAC key for the e-mail action links (`/partners/action/<token>`); falls back to `MCP_JWT_SECRET`, then `CRON_SECRET`. Rotating it voids every link already sent.
+
 Partner invoicing — Google Docs env vars (used by `src/lib/billing/google-docs.ts`):
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` — service account credentials (Drive + Docs API scopes) used to copy the invoice template and substitute placeholders; the key is a PEM private key with literal `\n` escapes
 - `GOOGLE_INVOICE_TEMPLATE_DOC_ID` — Doc id of the placeholder template (`{{invoice_number}}` etc.) that gets copied per invoice
@@ -316,6 +319,8 @@ Dictionary strings can contain `{quote_request_duration}`, `{first_contact}`, `{
 | `/api/cms/localities/subsidy-summary` | GET | Commune charging subsidy by NPA + locality (quote side panel) |
 | `/api/quote/[id]/enrich` | PATCH | Optional charger answers after sending (flag `quote-enrich`); HMAC token from `/api/quote`, 6 fields, empty ones only, 2 h window |
 | `/api/cms/assets/[id]` | GET | Directus asset proxy (auth required) |
+| `/api/partners/action` | POST | Write behind an e-mail action link (signed token); the link itself opens `/partners/action/[token]`, which never writes |
+| `/api/cron/dispatch-reminders` | GET | Weekday partner reminders → `reminder_due` events (Vercel Cron, `CRON_SECRET`); `POST /api/admin/dispatch-reminders?dryRun=1` previews |
 
 | `/api/docs` | GET | OpenAPI 3.0 spec (JSON) |
 | `/api/debug/urls` | GET | List all generated URLs by type |
@@ -395,3 +400,17 @@ Form submission routes create a session → user → submission chain in Directu
 6. Resolve: `resolveSEOFieldMappings(merged, fieldMap)`
 7. Build OG image: `resolveOgImage(resolved, contentImage, heroImage)`
 8. Return: `buildMetadata({ title: normalizeTitle(...), description: truncate(...), ... })`
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on yowbst/easyrechargev2-next (via `gh`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` + `docs/adr/` at the repo root (created lazily). See `docs/agents/domain.md`.

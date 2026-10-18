@@ -186,7 +186,8 @@ export async function runDispatch(input: RunDispatchInput): Promise<DispatchResu
       const area = targetToArea(target, areas);
       if (!area) continue;
       try {
-        await recordDispatch({
+        // The row id lets the webhook sign per-lead action links.
+        target.dispatchId = await recordDispatch({
           submission: ctx.submissionId,
           partner: area.partner.id,
           canton,

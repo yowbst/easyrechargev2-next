@@ -44,3 +44,29 @@ export async function findPartnerByToken(token: string): Promise<Partner | null>
     return null;
   }
 }
+
+/**
+ * Same guarantees as findPartnerByToken (active, current environment), keyed
+ * by id — for e-mail action links, whose token names the dispatch, not the
+ * partner.
+ */
+export async function findPartnerById(id: string): Promise<Partner | null> {
+  if (!id || typeof id !== "string") return null;
+
+  const params = new URLSearchParams();
+  params.set("fields", PARTNER_FIELDS);
+  params.set("filter[id][_eq]", id);
+  params.set("filter[environment][_eq]", getEnvironment());
+  params.set("filter[status][_eq]", "active");
+  params.set("limit", "1");
+
+  try {
+    const res = await directusFetch<{ data: Partner[] }>(
+      `/items/partners?${params}`,
+      { next: { revalidate: 0 } },
+    );
+    return res?.data?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}

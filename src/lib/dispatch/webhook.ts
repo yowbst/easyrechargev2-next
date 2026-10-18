@@ -3,6 +3,8 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { directusFetch } from "@/lib/directus";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 import { productRefLabel } from "@/lib/products";
+import { buildActionUrls } from "./action-token";
+import { leadMessageId } from "./email-thread";
 import type { DispatchResult } from "./types";
 
 export type WebhookTrigger = "quote_submission" | "manual_dispatch";
@@ -118,6 +120,12 @@ export function buildQuoteWebhookPayload(parts: QuoteWebhookParts) {
       crmUrl: t.dashboardToken
         ? `${SITE_URL}/${t.language}/partners/${t.dashboardToken}/leads`
         : null,
+      // Buttons of the "[ NEW ]" e-mail. Null without a recorded row or a secret.
+      actionUrls: t.dispatchId
+        ? buildActionUrls(t.dispatchId, "new", "new", { siteUrl: SITE_URL })
+        : null,
+      // Message-ID header of the "[ NEW ]" e-mail; reminders thread under it.
+      threadMessageId: t.dispatchId ? leadMessageId(t.dispatchId) : null,
     })),
   };
 
