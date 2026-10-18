@@ -152,7 +152,23 @@ Keys needed: `title`, `empty`, `col.number`, `col.period`, `col.total`, `col.sta
 `col.issued`, `col.due`, `status.issued`, `status.sent`, `status.disputed`, `status.paid`,
 `detail.title`, `detail.col.date`, `detail.col.lead`, `detail.col.category`, `detail.col.amount`.
 
-## August 2026 — issue from 16.09
+## August 2026 — ✅ ISSUED & SENT 25.09.2026
+
+`EME-202608`, version 1, CHF 360 — 9 billable leads at CHF 40 plus the 11
+`commercial_agreement` gifts, 20 invoice lines in all. Due 16.10.2026.
+Doc: https://docs.google.com/document/d/1bEoaxKievzBU8OqnTbsYAXTDvs2h41Nqwp_-6KfxqXo/edit
+Invoice id `534added-04ba-4d89-a29c-2585b7f31f91`. **Sent to E-ME on 25.09.2026** — QR
+payment part added and exported by hand; status moved to `sent` the same day.
+
+Preview matched the forecast below exactly: no unsettled, no disqualified, no QA address in
+the production rows, and the 19.08 Vorster duplicate stayed `skipped_dedup`. The nine
+billable leads were all still at stage `new` — E-ME had not touched any of them — but every
+15-day window had closed (locks 05.09 → 16.09).
+
+The debtor snapshot prints `Chemin de la Crétaux 2`, and the document went out that way, so
+**Step 4 is settled in favour of `2`** unless Yoan says otherwise.
+
+### The forecast, kept for reference
 
 July's invoice `EME-202607` (17 leads, CHF 680) was issued and sent on 06.09.2026.
 
