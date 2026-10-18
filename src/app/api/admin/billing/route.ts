@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertAdmin } from "@/lib/admin-auth";
 import { getMonthlyBilling } from "@/lib/dispatch/admin";
 
 /**
@@ -12,11 +13,7 @@ import { getMonthlyBilling } from "@/lib/dispatch/admin";
  *   curl -H "x-admin-token: $DIRECTUS_STATIC_TOKEN" "https://.../api/admin/billing?month=2026-05"
  */
 export async function GET(req: Request) {
-  const adminToken = process.env.DIRECTUS_STATIC_TOKEN;
-  const header = req.headers.get("x-admin-token");
-  if (!adminToken || header !== adminToken) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (!assertAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const month = searchParams.get("month") ?? "";

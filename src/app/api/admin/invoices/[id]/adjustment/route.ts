@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { addAdjustmentLine } from "@/lib/billing/invoice";
-import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin } from "@/lib/admin-auth";
+import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Append a discount or correction line and recompute the total. Refused on a

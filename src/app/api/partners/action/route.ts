@@ -1,8 +1,8 @@
 import { after, NextResponse } from "next/server";
 import { findPartnerById } from "@/lib/partner-auth";
 import { fetchDispatchCardById } from "@/lib/dispatch/partner-dashboard-queries";
-import { actionBlocker, verifyDispatchAction } from "@/lib/dispatch/action-token";
-import { disqualifyDispatch, moveDispatchStage } from "@/lib/dispatch/partner-actions";
+import { verifyDispatchAction } from "@/lib/dispatch/action-token";
+import { act } from "@/lib/dispatch/lifecycle";
 import { getPostHogServer } from "@/lib/posthog-server";
 
 interface Body {
@@ -44,21 +44,14 @@ export async function POST(req: Request) {
     after(() => ph.flush());
   };
 
-  const blocker = actionBlocker(row, action);
-  if (blocker) {
-    track(blocker);
-    return NextResponse.json({ error: blocker }, { status: 409 });
-  }
-
-  const result =
+  // A repeated or overtaken click comes back as `already_done` from the rules.
+  const result = await act(
+    dispatchId,
+    { kind: "partner", partnerId: partner.id, source: "email" },
     action === "disqualify"
-      ? await disqualifyDispatch(partner, dispatchId, { reason: body.reason, note: body.note }, "email")
-      : await moveDispatchStage(
-          partner,
-          dispatchId,
-          { stage: action, lost_reason: body.reason, lost_note: body.note },
-          "email",
-        );
+      ? { type: "disqualify", reason: body.reason ?? "", note: body.note }
+      : { type: "move", stage: action, lostReason: body.reason, lostNote: body.note },
+  );
 
   track(result.ok ? "done" : result.error);
   if (!result.ok) {

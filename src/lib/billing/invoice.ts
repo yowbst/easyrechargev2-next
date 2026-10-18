@@ -4,6 +4,7 @@ import { fetchDispatchConfig } from "@/lib/dispatch/queries";
 import { computePeriod, isPeriodIssuable } from "./period";
 import { buildInvoiceNumber } from "./numbering";
 import { collectBillableDispatches } from "./scope";
+import { markInvoiceDocumentsSuperseded } from "./google-docs";
 import type {
   InvoiceEvent, InvoiceEventActor, InvoiceStatus,
   InvoicePeriod, PartySnapshot, ScopeResult,
@@ -362,9 +363,22 @@ async function releaseDispatches(invoiceId: string): Promise<string[]> {
   return ids;
 }
 
+export type SupersedeResult = { renamed: string[]; skipped: string[] } | { error: "rename_failed" };
+
+/**
+ * Move an invoice to `to`. Cancelling releases its dispatches, records the
+ * status, then marks the documents that were sent ANNULÉE — best-effort: a
+ * Drive outage must not undo a cancellation that is already recorded, so a
+ * failed rename is reported in `documents` instead of thrown. Every caller
+ * (HTTP route, MCP tool) gets the same behaviour from here.
+ */
 export async function setInvoiceStatus(
-  invoiceId: string, to: InvoiceStatus, note?: string, now: Date = new Date(),
-): Promise<void> {
+  invoiceId: string,
+  to: InvoiceStatus,
+  note?: string,
+  now: Date = new Date(),
+  deps: { supersede?: (invoiceId: string) => Promise<{ renamed: string[]; skipped: string[] }> } = {},
+): Promise<{ status: InvoiceStatus; documents?: SupersedeResult }> {
   const row = await fetchInvoiceState(invoiceId);
   if (!canTransition(row.status, to)) throw new Error("invalid_transition");
 
@@ -401,6 +415,15 @@ export async function setInvoiceStatus(
     }),
     next: { revalidate: 0 },
   });
+
+  if (to !== "cancelled") return { status: to };
+  const supersede = deps.supersede ?? ((id: string) => markInvoiceDocumentsSuperseded(id));
+  try {
+    return { status: to, documents: await supersede(invoiceId) };
+  } catch (e) {
+    console.error("[billing] marking documents superseded failed", e);
+    return { status: to, documents: { error: "rename_failed" } };
+  }
 }
 
 export async function addInvoiceNote(
@@ -563,4 +586,25 @@ export async function addManualLeadLine(
     adjustment_chf: totals.adjustment,
     total_chf: totals.total,
   };
+}
+
+/**
+ * Invoices newest first, optionally for one month or status. Always scoped to
+ * the current environment: every invoice row carries `environment`, and a
+ * staging invoice must never show up in a production listing.
+ */
+export async function listInvoices(
+  filter: { month?: string | null; status?: string | null } = {},
+): Promise<unknown[]> {
+  const params = new URLSearchParams();
+  params.set("fields", "id,number,version,status,period_month,total_chf,issued_at,due_at,paid_at,doc_url");
+  params.set("sort", "-issued_at");
+  params.set("limit", "100");
+  params.set("filter[environment][_eq]", getEnvironment());
+  if (filter.month) params.set("filter[period_month][_eq]", filter.month);
+  if (filter.status) params.set("filter[status][_eq]", filter.status);
+  const res = await directusFetch<{ data: unknown[] }>(
+    `/items/partner_invoices?${params}`, { next: { revalidate: 0 } },
+  );
+  return res?.data ?? [];
 }

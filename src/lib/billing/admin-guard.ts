@@ -1,8 +1,7 @@
-/** Same convention as /api/admin/billing — a static header, no session. */
-export function assertAdmin(req: Request): boolean {
-  const token = process.env.DIRECTUS_STATIC_TOKEN;
-  return Boolean(token) && req.headers.get("x-admin-token") === token;
-}
+/**
+ * Billing error mapping shared by the admin routes and the MCP invoicing
+ * tools. The admin gate itself is `assertAdmin` in `@/lib/admin-auth`.
+ */
 
 const STATUS_BY_ERROR: Record<string, number> = {
   invalid_month: 400,

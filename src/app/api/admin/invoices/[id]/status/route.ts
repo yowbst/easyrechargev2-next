@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { setInvoiceStatus } from "@/lib/billing/invoice";
-import { markInvoiceDocumentsSuperseded } from "@/lib/billing/google-docs";
 import { INVOICE_STATUSES, type InvoiceStatus } from "@/lib/billing/types";
-import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin } from "@/lib/admin-auth";
+import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Move an invoice through issued -> sent -> paid, or to disputed/cancelled.
- * Same admin-token gate as /api/admin/billing.
+ * Cancelling also marks the sent documents ANNULÉE (best-effort, reported in
+ * `documents`) — that happens inside setInvoiceStatus, so MCP does the same.
  *
  *   POST /api/admin/invoices/<id>/status  { status, note? }
  */
@@ -18,19 +19,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "invalid_status" }, { status: 400 });
   }
   try {
-    await setInvoiceStatus(id, status as InvoiceStatus, note);
-    // Cancelling supersedes whatever was sent. Best-effort: the cancellation is
-    // already recorded, and a Drive outage must not undo it.
-    let documents: { renamed: string[]; skipped: string[] } | { error: string } | undefined;
-    if (status === "cancelled") {
-      try {
-        documents = await markInvoiceDocumentsSuperseded(id);
-      } catch (e) {
-        console.error("[admin/invoices/status] marking documents superseded failed", e);
-        documents = { error: "rename_failed" };
-      }
-    }
-    return NextResponse.json({ ok: true, status, ...(documents ? { documents } : {}) });
+    return NextResponse.json({ ok: true, ...(await setInvoiceStatus(id, status as InvoiceStatus, note)) });
   } catch (e) {
     return NextResponse.json(errorBody(e), { status: errorStatus(e) });
   }

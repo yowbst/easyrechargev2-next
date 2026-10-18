@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { adminDisqualify } from "@/lib/dispatch/admin-override";
-import { DISQUALIFICATION_REASONS, type DisqualificationReason } from "@/lib/dispatch/types";
-import { assertAdmin } from "@/lib/billing/admin-guard";
+import { act } from "@/lib/dispatch/lifecycle";
+import { DISQUALIFICATION_REASONS } from "@/lib/dispatch/types";
+import { assertAdmin } from "@/lib/admin-auth";
 
 /**
  * Operator override: disqualify a dispatch regardless of the billing lock, the
@@ -17,29 +17,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { reason, note } = (await req.json().catch(() => ({}))) as {
     reason?: string; note?: string;
   };
-  if (!reason || !DISQUALIFICATION_REASONS.includes(reason as DisqualificationReason)) {
-    return NextResponse.json(
-      { error: "invalid_reason", allowed: DISQUALIFICATION_REASONS },
-      { status: 400 },
-    );
-  }
   try {
-    return NextResponse.json(
-      await adminDisqualify(id, reason as DisqualificationReason, note ?? null),
-    );
+    const result = await act(id, { kind: "admin" }, { type: "disqualify", reason: reason ?? "", note });
+    if (!result.ok) {
+      const { error, status, invoice } = result;
+      return NextResponse.json(
+        {
+          error,
+          ...(invoice ? { invoice } : {}),
+          ...(error === "invalid_reason" ? { allowed: DISQUALIFICATION_REASONS } : {}),
+        },
+        { status },
+      );
+    }
+    return NextResponse.json({ ok: true, reason, wasLocked: Boolean(result.before.billable_locked_at) });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown";
-    const status =
-      msg === "dispatch_not_found" ? 404
-      : msg === "attached_to_live_invoice" || msg === "note_required_for_other" ? 409
-      : msg === "invalid_reason" ? 400
-      : 500;
-    if (status === 500) console.error("[admin/dispatches/disqualify]", e);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const invoice = (e as any)?.invoice;
-    return NextResponse.json(
-      status === 500 ? { error: "internal_error" } : { error: msg, ...(invoice ? { invoice } : {}) },
-      { status },
-    );
+    console.error("[admin/dispatches/disqualify]", e);
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

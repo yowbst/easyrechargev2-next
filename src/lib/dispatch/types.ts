@@ -87,7 +87,8 @@ export const DISPATCH_STAGES: DispatchStage[] = [
 /**
  * Funnel rank. Won and Lost share rank 4 — both are terminal outcomes; partners
  * may swap between them after the fact. Moving to a strictly lower rank is
- * disallowed (you can't un-quote a lead).
+ * disallowed (you can't un-quote a lead). The full rule is in
+ * `lifecycle/rules.ts`.
  */
 export const STAGE_RANK: Record<DispatchStage, number> = {
   new: 0,
@@ -97,13 +98,6 @@ export const STAGE_RANK: Record<DispatchStage, number> = {
   won: 4,
   lost: 4,
 };
-
-export function canMoveStage(
-  from: DispatchStage,
-  to: DispatchStage,
-): boolean {
-  return STAGE_RANK[to] >= STAGE_RANK[from];
-}
 
 export const DISQUALIFICATION_REASONS: DisqualificationReason[] = [
   "already_known",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { addManualLeadLine } from "@/lib/billing/invoice";
-import { assertAdmin, errorBody, errorStatus } from "@/lib/billing/admin-guard";
+import { assertAdmin } from "@/lib/admin-auth";
+import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Append a `lead` line that has no dispatch behind it — a lead billed without a

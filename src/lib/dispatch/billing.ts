@@ -1,4 +1,3 @@
-import type { DispatchStage } from "./types";
 import type { BillingConfig } from "./queries";
 
 /**
@@ -23,39 +22,4 @@ export function isAcceptanceExpired(
     dispatchedAt instanceof Date ? dispatchedAt : new Date(dispatchedAt);
   const elapsedDays = (now.getTime() - dispatched.getTime()) / 86_400_000;
   return elapsedDays >= days;
-}
-
-/**
- * Decide whether `billable` should flip true on a stage transition.
- *
- * Rules:
- *   - Gift → never billable.
- *   - Disqualified → never billable.
- *   - Already billable → stays billable.
- *   - Reaching quote_sent / won / lost → billable.
- *   - Acceptance window from dispatched_at has elapsed → billable.
- */
-export function shouldLockBilling(args: {
-  newStage: DispatchStage;
-  dispatchedAt: string;
-  alreadyBillable: boolean;
-  disqualified: boolean;
-  gift: boolean;
-  billing: BillingConfig;
-  partnerOverrides?: Record<string, number> | null;
-}): boolean {
-  if (args.disqualified || args.gift) return false;
-  if (args.alreadyBillable) return true;
-  if (
-    args.newStage === "quote_sent" ||
-    args.newStage === "won" ||
-    args.newStage === "lost"
-  ) {
-    return true;
-  }
-  return isAcceptanceExpired(
-    args.dispatchedAt,
-    args.billing,
-    args.partnerOverrides,
-  );
 }
