@@ -255,7 +255,7 @@ stays the new-lead path. Every payload has `event`, `environment` and `at`:
 | `reminder_due` | the reminders cron | e-mail to the partner (one module per stage × language, `emails/make/partner-reminder-*.json`) |
 | `stage_changed` | a partner's stage move (`source`: `kanban` / `email`) | Slack |
 | `disqualified` | any disqualification (`source`: `kanban` / `email` / `admin`) | Slack |
-| `requalified` | an admin undoing a disqualification (`source`: `admin`) | not routed yet — add a branch |
+| `requalified` | an admin undoing a disqualification (`source`: `admin`) | Slack |
 
 `stage_changed`, `disqualified` and `requalified` carry no customer name, contact or free-text note
 (they go to Slack): partner, postal code, locality, canton, product, stages and reason.

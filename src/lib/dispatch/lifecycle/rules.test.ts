@@ -377,7 +377,7 @@ describe("admin overrides", () => {
         billable: false,
         billable_locked_at: null,
       },
-      events: [{ name: "requalified", payload: { source: "admin" } }],
+      events: [{ name: "requalified", payload: { source: "admin", stage: "new" } }],
     });
   });
 

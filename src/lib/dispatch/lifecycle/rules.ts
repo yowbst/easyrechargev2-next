@@ -331,7 +331,7 @@ function decideRequalify(
   return {
     ok: true,
     billable: false,
-    events: [{ name: "requalified", payload: eventContext(d, "admin") }],
+    events: [{ name: "requalified", payload: { ...eventContext(d, "admin"), stage: d.stage } }],
     patch: {
       disqualified: false,
       disqualification_reason: null,
