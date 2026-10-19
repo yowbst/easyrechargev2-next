@@ -26,8 +26,8 @@ vi.mock("@/lib/dispatch", async (orig) => ({
   ...(await orig<typeof import("@/lib/dispatch")>()),
   runDispatch: h.runDispatch,
 }));
+vi.mock("@/lib/site-settings", () => ({ webhookUrl: vi.fn(async () => "https://hook.example") }));
 vi.mock("@/lib/dispatch/webhook", () => ({
-  getQuoteWebhookUrl: vi.fn(async () => "https://hook.example"),
   parsePhone: vi.fn(() => null),
   buildQuoteWebhookPayload: h.buildPayload,
   fireQuoteWebhook: vi.fn(async () => {}),

@@ -3,11 +3,11 @@ import { directusFetch } from "@/lib/directus";
 import { runDispatch } from "@/lib/dispatch";
 import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
 import {
-  getQuoteWebhookUrl,
   parsePhone,
   buildQuoteWebhookPayload,
   fireQuoteWebhook,
 } from "@/lib/dispatch/webhook";
+import { webhookUrl as configuredWebhookUrl } from "@/lib/site-settings";
 import { serverLog } from "@/lib/posthog-server";
 import { normalizeProduct } from "@/lib/products";
 import type { DispatchMode, DispatchResult } from "./types";
@@ -86,7 +86,7 @@ export async function manualDispatch(
 
   // Always fire the webhook (customer confirmation + partner notification).
   let webhookFired = false;
-  const webhookUrl = await getQuoteWebhookUrl();
+  const webhookUrl = await configuredWebhookUrl("quote");
   if (webhookUrl && email) {
     const phDistinctId = session?.ph_distinct_id ?? null;
     const posthogDashboard = "https://eu.posthog.com/project/103083";

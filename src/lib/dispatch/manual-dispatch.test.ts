@@ -12,8 +12,8 @@ vi.mock("@/lib/directus-storage", () => ({
 }));
 vi.mock("@/lib/directus", () => ({ directusFetch: vi.fn(async () => ({ data: [] })) }));
 vi.mock("@/lib/dispatch", () => ({ runDispatch: h.runDispatch }));
+vi.mock("@/lib/site-settings", () => ({ webhookUrl: vi.fn(async () => "https://hook.example") }));
 vi.mock("@/lib/dispatch/webhook", () => ({
-  getQuoteWebhookUrl: vi.fn(async () => "https://hook.example"),
   parsePhone: vi.fn(() => null),
   buildQuoteWebhookPayload: vi.fn((x: unknown) => x),
   fireQuoteWebhook: h.fireWebhook,

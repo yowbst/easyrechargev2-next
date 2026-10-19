@@ -4,7 +4,8 @@ import { storage } from "@/lib/directus-storage";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 import { runDispatch, normalizeCanton, notDispatchableResult, type DispatchResult } from "@/lib/dispatch";
 import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
-import { getQuoteWebhookUrl, parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
+import { parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
+import { webhookUrl as configuredWebhookUrl } from "@/lib/site-settings";
 import { normalizeProduct } from "@/lib/products";
 import { firstMissingAnswer } from "@/components/quote-shell/answers";
 import { sendOpenAILeadConversion } from "@/lib/openai-ads/conversions";
@@ -153,7 +154,7 @@ export async function POST(req: Request) {
     } catch { /* don't block submission */ }
 
     // Fire webhook
-    const webhookUrl = await getQuoteWebhookUrl();
+    const webhookUrl = await configuredWebhookUrl("quote");
     if (webhookUrl) {
       const phDistinctId = phIds.phDistinctId ?? null;
       const posthogDashboard = "https://eu.posthog.com/project/103083";

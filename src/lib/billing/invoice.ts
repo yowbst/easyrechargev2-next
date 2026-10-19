@@ -1,5 +1,6 @@
 import { directusFetch } from "@/lib/directus";
 import { getEnvironment } from "@/lib/directus-storage";
+import { getGlobalConfig } from "@/lib/site-settings";
 import { fetchDispatchConfig } from "@/lib/dispatch/queries";
 import { computePeriod, isPeriodIssuable } from "./period";
 import { buildInvoiceNumber } from "./numbering";
@@ -51,12 +52,7 @@ async function fetchPartner(slug: string): Promise<PartnerRow> {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchCompany(): Promise<{ company: any; paymentTermsDays: number }> {
-  const res = await directusFetch<{ data: any }>( // eslint-disable-line @typescript-eslint/no-explicit-any
-    "/items/site_settings?fields=global_config", { next: { revalidate: 0 } },
-  );
-  const raw = res?.data;
-  const record = Array.isArray(raw) ? raw[0] : raw;
-  const global = record?.global_config ?? {};
+  const global = await getGlobalConfig();
   return {
     company: global.company ?? {},
     paymentTermsDays: global.invoicing?.payment_terms_days ?? 21,

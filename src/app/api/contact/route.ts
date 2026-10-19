@@ -1,9 +1,9 @@
 import { NextResponse, after } from "next/server";
 import { randomUUID } from "node:crypto";
 import { storage } from "@/lib/directus-storage";
-import { directusFetch } from "@/lib/directus";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
+import { webhookUrl as configuredWebhookUrl } from "@/lib/site-settings";
 
 function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
   if (!raw) return { raw: null, international: null, countryCode: null, countryCallingCode: null };
@@ -16,20 +16,6 @@ function parsePhone(raw: string | null | undefined, defaultCountry?: string) {
     countryCode: parsed.country ?? null,
     countryCallingCode: `+${parsed.countryCallingCode}`,
   };
-}
-
-async function getContactWebhookUrl(): Promise<string | null> {
-  try {
-    const result = await directusFetch<{ data: { global_config?: { webhooks?: { contact?: string } } }[] }>(
-      `/items/site_settings?fields=global_config&filter[status][_eq]=published`,
-      { next: { revalidate: 3600 } },
-    );
-    const raw = result?.data;
-    const record = Array.isArray(raw) ? raw[0] : raw;
-    return record?.global_config?.webhooks?.contact ?? null;
-  } catch {
-    return null;
-  }
 }
 
 export async function POST(req: Request) {
@@ -110,7 +96,7 @@ export async function POST(req: Request) {
     } catch { /* don't block submission */ }
 
     // Fire webhook
-    const webhookUrl = await getContactWebhookUrl();
+    const webhookUrl = await configuredWebhookUrl("contact");
     if (webhookUrl) {
       const webhookPayload = {
         submission: {
