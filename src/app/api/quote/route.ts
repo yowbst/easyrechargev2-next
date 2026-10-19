@@ -8,6 +8,7 @@ import { parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/di
 import { webhookUrl as configuredWebhookUrl } from "@/lib/site-settings";
 import { normalizeProduct } from "@/lib/products";
 import { firstMissingAnswer } from "@/components/quote-shell/answers";
+import { isEnrichable } from "@/lib/quote-enrich-fields";
 import { sendOpenAILeadConversion } from "@/lib/openai-ads/conversions";
 import { enrichToken } from "@/lib/quote-enrich";
 
@@ -203,7 +204,7 @@ export async function POST(req: Request) {
     }
 
     // Lets this browser add the optional charger answers afterwards (flag quote-enrich).
-    const enrich = product === "ecp" ? enrichToken(submission.id) : null;
+    const enrich = isEnrichable(product) ? enrichToken(submission.id) : null;
     return NextResponse.json({ success: true, submissionId: submission.id, dispatchable, ...(enrich && { enrichToken: enrich }) });
   } catch (error) {
     console.error("[Quote] Submission error:", error);

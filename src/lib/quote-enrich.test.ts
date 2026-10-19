@@ -48,3 +48,13 @@ describe("enrich token", () => {
     expect(verifyEnrichToken("sub-1", "anything", null)).toBe(false);
   });
 });
+
+describe("isEnrichable", () => {
+  it("offers the follow-up questions for the charger only, and never for an unknown product", async () => {
+    const { isEnrichable } = await import("./quote-enrich-fields");
+    expect(isEnrichable("ecp")).toBe(true);
+    expect(isEnrichable("battery")).toBe(false);
+    expect(isEnrichable("unknown")).toBe(false);
+    expect(isEnrichable(null)).toBe(false);
+  });
+});
