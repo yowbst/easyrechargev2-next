@@ -2,64 +2,6 @@ import { directusFetch } from "@/lib/directus";
 import { getEnvironment } from "@/lib/directus-storage";
 import { lockAcceptedDispatches } from "./lifecycle";
 
-interface BillingRow {
-  partner: string;
-  count: { id: string | number };
-  sum: { price_chf: string | number };
-}
-
-/**
- * Monthly billing report — sums `price_chf` per partner where billable=true
- * and the dispatch is neither a gift nor disqualified.
- *
- * Uses `_eq: true` for billable (explicit inclusion of true only), and `_neq: true`
- * for gift and disqualified (explicit exclusion of true, includes false and null).
- * This asymmetry is intentional: billable defaults to false/null and must be
- * explicitly set true to bill; gift/disqualified default to false/null and are
- * only meaningful when explicitly true.
- *
- * NOTE: intentionally has no environment filter in the aggregate query —
- * matches today's route behavior (do not add one).
- */
-export async function getMonthlyBilling(month: string): Promise<{
-  month: string;
-  rows: { partnerId: string; leadCount: number; totalChf: number }[];
-  totalChf: number;
-}> {
-  if (!month || !/^\d{4}-\d{2}$/.test(month)) throw new Error("invalid_month");
-
-  const params = new URLSearchParams();
-  params.set("aggregate[count]", "id");
-  params.set("aggregate[sum]", "price_chf");
-  params.set("groupBy", "partner");
-  params.set("filter[month_bucket][_eq]", month);
-  params.set("filter[billable][_eq]", "true");
-  params.set("filter[gift][_neq]", "true");
-  params.set("filter[disqualified][_neq]", "true");
-  params.set("limit", "500");
-
-  const res = await directusFetch<{ data: BillingRow[] }>(
-    `/items/partner_dispatches?${params}`,
-    { next: { revalidate: 0 } },
-  );
-
-  const rows = (res?.data ?? []).map((r) => ({
-    partnerId: r.partner,
-    leadCount:
-      typeof r.count?.id === "string" ? parseInt(r.count.id, 10) : (r.count?.id ?? 0),
-    totalChf:
-      typeof r.sum?.price_chf === "string"
-        ? parseInt(r.sum.price_chf, 10)
-        : (r.sum?.price_chf ?? 0),
-  }));
-
-  return {
-    month,
-    rows,
-    totalChf: rows.reduce((s, r) => s + (r.totalChf ?? 0), 0),
-  };
-}
-
 /**
  * Backstop that locks billing on every dispatched lead whose acceptance
  * window has ended. The rule lives in the Dispatch lifecycle module.

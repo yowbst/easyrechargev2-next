@@ -13,6 +13,7 @@ import { adsSendTo, fireAdsConversion } from "@/lib/googleAds";
 import { measureQuoteStarted } from "@/lib/openaiAds";
 import { formatPhoneE164 } from "@/lib/phone-utils";
 import { parseQuoteDraft, quoteDraftKey, serializeQuoteDraft } from "@/lib/quoteDraft";
+import { ENRICH_FIELD_KEYS } from "@/lib/quote-enrich-fields";
 import type { PublicQuoteConfig } from "@/lib/public-config";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 import type { Product } from "@/lib/products";
@@ -432,7 +433,7 @@ export function QuoteShell({
       } catch { /* the request is already sent: never hold the visitor back */ }
     }
     // Sent at once: the redirect follows immediately and would drop a batched event.
-    try { ph?.capture("quote_enrichment_completed", { ...eventProps(), answered, offered: 6 }, { send_instantly: true }); } catch { /* noop */ }
+    try { ph?.capture("quote_enrichment_completed", { ...eventProps(), answered, offered: ENRICH_FIELD_KEYS.length }, { send_instantly: true }); } catch { /* noop */ }
     enrich.redirect();
   };
 

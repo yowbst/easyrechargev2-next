@@ -1,6 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { storage } from "@/lib/directus-storage";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
+import { isEnrichable } from "@/lib/quote-enrich-fields";
 import { ENRICH_WINDOW_MS, mergeEnrichAnswers, sanitizeEnrichAnswers, verifyEnrichToken } from "@/lib/quote-enrich";
 
 /**
@@ -21,7 +22,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const found = await storage.getSubmissionById(id);
     const submission = found?.submission;
-    if (!submission || submission.form_type !== "quote" || submission.product !== "ecp") {
+    if (!submission || submission.form_type !== "quote" || !isEnrichable(submission.product)) {
       return NextResponse.json({ success: false }, { status: 404 });
     }
     if (Date.now() - new Date(submission.date_created).getTime() > ENRICH_WINDOW_MS) {
@@ -36,7 +37,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       posthog.capture({
         distinctId: (typeof found?.session === "object" && found.session?.ph_distinct_id) || "anonymous",
         event: "server_quote_enriched",
-        properties: { submission_id: id, product: "ecp", fields: added, answered: added.length },
+        properties: { submission_id: id, product: submission.product, fields: added, answered: added.length },
       });
       after(() => posthog.flush());
     } catch { /* analytics never blocks */ }

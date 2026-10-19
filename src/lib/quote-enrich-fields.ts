@@ -3,6 +3,7 @@
  * `quote-enrich`). Shared by the client step and the server route, so no
  * server-only import here.
  */
+import { isProduct, type Product } from "@/lib/products";
 
 export type EnrichRule = { kind: "choice"; values: readonly string[] } | { kind: "number"; min: number; max: number };
 
@@ -18,3 +19,14 @@ export const ENRICH_FIELDS = {
 
 export type EnrichField = keyof typeof ENRICH_FIELDS;
 export const ENRICH_FIELD_KEYS = Object.keys(ENRICH_FIELDS) as EnrichField[];
+
+/**
+ * Which products ask the follow-up questions after sending. One entry per
+ * product, so a new product has to answer; only the charger dropped questions
+ * from its funnel.
+ */
+const ENRICHABLE: Record<Product, boolean> = { ecp: true, battery: false };
+
+export function isEnrichable(product: unknown): boolean {
+  return isProduct(product) && ENRICHABLE[product];
+}

@@ -21,7 +21,21 @@ import {
 import { parsePhoneNumber } from "libphonenumber-js";
 import { Field, Section } from "./SubmissionFields";
 import { BatterySubmissionSections } from "./BatterySubmissionSections";
+import { EcpSubmissionSections } from "./EcpSubmissionSections";
 import type { FormSubmission, FormUser, FormSession } from "@shared/types";
+import { normalizeProduct, type Product } from "@/lib/products";
+
+/** Printable sections per product, in page order. */
+const SECTION_IDS: Record<Product, readonly string[]> = {
+  ecp: ["metadata", "contact", "housing", "parking", "charger", "vehicle", "finalize"],
+  battery: ["metadata", "contact", "housing", "installation", "consumption", "finalize"],
+};
+
+/** Fallback product names when Directus has no `products.<key>` label. */
+const PRODUCT_LABELS: Record<Product, string> = {
+  ecp: "Borne de recharge",
+  battery: "Batterie solaire",
+};
 
 // ---------- Types ----------
 
@@ -187,10 +201,8 @@ export function QuoteSubmissionView({
     };
   }, []);
 
-  const ECP_SECTION_IDS = ["metadata", "contact", "housing", "parking", "charger", "vehicle", "finalize"] as const;
-  const BATTERY_SECTION_IDS = ["metadata", "contact", "housing", "installation", "consumption", "finalize"] as const;
   const [printSections, setPrintSections] = useState<Record<string, boolean>>(
-    () => Object.fromEntries([...ECP_SECTION_IDS, ...BATTERY_SECTION_IDS].map((id) => [id, true])),
+    () => Object.fromEntries(Object.values(SECTION_IDS).flat().map((id) => [id, true])),
   );
   const togglePrintSection = (id: string) =>
     setPrintSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -262,12 +274,35 @@ export function QuoteSubmissionView({
 
   const { submission, user, session } = data;
   const fd = (submission.data ?? {}) as Record<string, unknown>;
-  const isBattery = submission.product === "battery";
-  const sectionIds = isBattery ? BATTERY_SECTION_IDS : ECP_SECTION_IDS;
+  const product = normalizeProduct(submission.product);
+  const isBattery = product === "battery";
+  const sectionIds = SECTION_IDS[product];
   const tb = (key: string) => dictionary[`pages.quote-battery.${key}`] ?? "";
-  const productLabel =
-    tv(`products.${isBattery ? "battery" : "ecp"}`) ||
-    (isBattery ? "Batterie solaire" : "Borne de recharge");
+  const productLabel = tv(`products.${product}`) || PRODUCT_LABELS[product];
+  // Each product's own answers. One entry per product: the build asks for it.
+  const PRODUCT_SECTIONS: Record<Product, () => React.ReactNode> = {
+    ecp: () => (
+      <EcpSubmissionSections
+        fd={fd}
+        printSections={printSections}
+        tq={tq}
+        tqOpt={tqOpt}
+        resolveOption={resolveOption}
+        tooltipImage={tooltipImage}
+        optionTooltipImage={optionTooltipImage}
+      />
+    ),
+    battery: () => (
+      <BatterySubmissionSections
+        fd={fd}
+        tb={tb}
+        yes={tCommon("yes", "Oui")}
+        no={tCommon("no", "Non")}
+        dontKnow={tq("common.dontKnow") || tCommon("dontKnow", "Je ne sais pas")}
+        printSections={printSections}
+      />
+    ),
+  };
 
   return (
     <div
@@ -526,303 +561,7 @@ export function QuoteSubmissionView({
             />
           </Section>
 
-          {isBattery ? (
-            <BatterySubmissionSections
-              fd={fd}
-              tb={tb}
-              yes={tCommon("yes", "Oui")}
-              no={tCommon("no", "Non")}
-              dontKnow={tq("common.dontKnow") || tCommon("dontKnow", "Je ne sais pas")}
-              printSections={printSections}
-            />
-          ) : (
-            <>
-          {/* 3. Housing */}
-          <Section
-            title={tq("steps.housing.title") || "Logement"}
-            printVisible={printSections.housing}
-          >
-            <Field
-              label={
-                tq("steps.housing.fields.housingStatus.label") || "Statut"
-              }
-              value={resolveOption(
-                "steps.housing.fields.housingStatus",
-                fd.housingStatus,
-              )}
-            />
-            <Field
-              label={
-                tq("steps.housing.fields.housingType.label") ||
-                "Type de logement"
-              }
-              value={resolveOption(
-                "steps.housing.fields.housingType",
-                fd.housingType,
-              )}
-            />
-            <Field
-              label={
-                tq("steps.housing.fields.solarEquipment.label") ||
-                "\u00c9quipement solaire"
-              }
-              value={resolveOption(
-                "steps.housing.fields.solarEquipment",
-                fd.solarEquipment,
-              )}
-              tooltip={tqOpt("steps.housing.fields.solarEquipment.tooltip")}
-              tooltipImage={tooltipImage("housing", "solarEquipment")}
-            />
-            <Field
-              label={
-                tq("steps.housing.fields.homeBattery.label") ||
-                "Batterie domicile"
-              }
-              value={resolveOption(
-                "steps.housing.fields.homeBattery",
-                fd.homeBattery,
-              )}
-              tooltip={tqOpt("steps.housing.fields.homeBattery.tooltip")}
-              tooltipImage={tooltipImage("housing", "homeBattery")}
-            />
-            <Field
-              label={
-                tq("steps.housing.fields.neighborhoodEquipment.label") ||
-                "\u00c9quipement copropri\u00e9t\u00e9"
-              }
-              value={resolveOption(
-                "steps.housing.fields.neighborhoodEquipment",
-                fd.neighborhoodEquipment,
-              )}
-              tooltip={tqOpt(
-                "steps.housing.fields.neighborhoodEquipment.tooltip",
-              )}
-              tooltipImage={tooltipImage("housing", "neighborhoodEquipment")}
-            />
-            <Field
-              label={
-                tq("steps.housing.fields.electricalBoardType.label") ||
-                "Tableau \u00e9lectrique"
-              }
-              value={resolveOption(
-                "steps.housing.fields.electricalBoardType",
-                fd.electricalBoardType,
-              )}
-              tooltip={tqOpt(
-                "steps.housing.fields.electricalBoardType.tooltip",
-              )}
-              tooltipImage={tooltipImage("housing", "electricalBoardType")}
-            />
-          </Section>
-
-          {/* 4. Parking */}
-          <Section
-            title={tq("steps.parking.title") || "Parking"}
-            printVisible={printSections.parking}
-          >
-            <Field
-              label={
-                tq("steps.parking.fields.parkingSpotLocation.label") ||
-                "Emplacement"
-              }
-              value={(() => {
-                const raw = fd.parkingSpotLocation as string | undefined;
-                if (!raw) return "\u2014";
-                const parentMap: Record<string, string> = {
-                  "exterior-adjacent": "exterior",
-                  "exterior-standalone": "exterior",
-                  "garage-adjacent": "garage",
-                  "garage-standalone": "garage",
-                  "covered-adjacent": "covered",
-                  "covered-standalone": "covered",
-                };
-                const parent = parentMap[raw];
-                if (parent) {
-                  const parentLabel = tq(
-                    `steps.parking.fields.parkingSpotLocation.options.${parent}`,
-                  );
-                  const subLabel = tq(
-                    `steps.parking.fields.parkingSpotLocation.options.${raw}`,
-                  );
-                  return `${parentLabel || parent} \u203a ${subLabel || raw}`;
-                }
-                return resolveOption(
-                  "steps.parking.fields.parkingSpotLocation",
-                  raw,
-                );
-              })()}
-              tooltip={tqOpt(
-                `steps.parking.fields.parkingSpotLocation.optionTooltips.${fd.parkingSpotLocation}`,
-              )}
-              tooltipImage={optionTooltipImage(
-                "parking",
-                "parkingSpotLocation",
-                (fd.parkingSpotLocation as string) || "",
-              )}
-            />
-            <Field
-              label={
-                tq("steps.parking.fields.electricalLineDistance.label") ||
-                "Distance ligne \u00e9lectrique (m)"
-              }
-              value={resolveOption(
-                "steps.parking.fields.electricalLineDistance",
-                fd.electricalLineDistance,
-              )}
-              tooltip={tqOpt(
-                "steps.parking.fields.electricalLineDistance.tooltip",
-              )}
-              tooltipImage={tooltipImage("parking", "electricalLineDistance")}
-            />
-            <Field
-              label={
-                tq("steps.parking.fields.electricalLineHoleCount.label") ||
-                "Nb. per\u00e7ages"
-              }
-              value={resolveOption(
-                "steps.parking.fields.electricalLineHoleCount",
-                fd.electricalLineHoleCount,
-              )}
-              tooltip={tqOpt(
-                "steps.parking.fields.electricalLineHoleCount.tooltip",
-              )}
-              tooltipImage={tooltipImage("parking", "electricalLineHoleCount")}
-            />
-          </Section>
-
-          {/* 5. Charger */}
-          <Section
-            title={tq("steps.charger.title") || "Borne de recharge"}
-            printVisible={printSections.charger}
-          >
-            <Field
-              label={
-                tq("steps.charger.fields.parkingSpotCount.label") ||
-                "Nb. emplacements"
-              }
-              value={(() => {
-                const raw = fd.parkingSpotCount as string | undefined;
-                if (!raw) return "\u2014";
-                const optKey = raw === "3+" ? "3plus" : raw;
-                const suffix = tq(
-                  `steps.charger.fields.parkingSpotCount.options.${optKey}`,
-                );
-                return suffix ? `${raw} ${suffix}` : raw;
-              })()}
-            />
-            <Field
-              label={
-                tq("steps.charger.fields.ecpStatus.label") ||
-                "Statut choix borne"
-              }
-              value={resolveOption(
-                "steps.charger.fields.ecpStatus",
-                fd.ecpStatus,
-              )}
-              tooltip={tqOpt("steps.charger.fields.ecpStatus.tooltip")}
-              tooltipImage={tooltipImage("charger", "ecpStatus")}
-            />
-            {!!(fd.ecpBrand || fd.ecpModel) && (
-              <Field
-                label={tq("steps.charger.fields.ecpStatus.label") || "Borne"}
-                value={[fd.ecpBrand as string, fd.ecpModel as string]
-                  .filter(Boolean)
-                  .join(" \u00b7 ")}
-              />
-            )}
-            <Field
-              label={
-                tq("steps.charger.fields.ecpProvided.label") || "Fournie par"
-              }
-              value={resolveOption(
-                "steps.charger.fields.ecpProvided",
-                fd.ecpProvided,
-              )}
-              tooltip={tqOpt("steps.charger.fields.ecpProvided.tooltip")}
-              tooltipImage={tooltipImage("charger", "ecpProvided")}
-            />
-            <Field
-              label={
-                tq("steps.charger.fields.deadline.label") ||
-                "D\u00e9lai souhait\u00e9"
-              }
-              value={resolveOption(
-                "steps.charger.fields.deadline",
-                fd.deadline,
-              )}
-              tooltip={tqOpt("steps.charger.fields.deadline.tooltip")}
-              tooltipImage={tooltipImage("charger", "deadline")}
-            />
-          </Section>
-
-          {/* 6. Vehicle */}
-          <Section
-            title={tq("steps.vehicle.title") || "V\u00e9hicule \u00e9lectrique"}
-            printVisible={printSections.vehicle}
-          >
-            <Field
-              label={
-                tq("steps.vehicle.fields.vehicleStatus.label") ||
-                "Statut v\u00e9hicule"
-              }
-              value={resolveOption(
-                "steps.vehicle.fields.vehicleStatus",
-                fd.vehicleStatus,
-              )}
-            />
-            {!!(fd.vehicleBrand || fd.vehicleModel) && (
-              <Field
-                label={
-                  tq("steps.vehicle.fields.vehicleBrand.label") || "Marque"
-                }
-                value={[fd.vehicleBrand as string, fd.vehicleModel as string]
-                  .filter(Boolean)
-                  .join(" \u00b7 ")}
-              />
-            )}
-            <Field
-              label={
-                tq("steps.vehicle.fields.vehicleTripDistance.label") ||
-                "Distance trajet typique (km)"
-              }
-              value={
-                fd.vehicleTripDistance === "na"
-                  ? resolveOption(
-                      "steps.vehicle.fields.vehicleTripDistance",
-                      "na",
-                    )
-                  : fd.vehicleTripDistance != null
-                    ? `${fd.vehicleTripDistance} ${tq("steps.vehicle.fields.vehicleTripDistance.unit") || "km"}`
-                    : "\u2014"
-              }
-              tooltip={tqOpt(
-                "steps.vehicle.fields.vehicleTripDistance.tooltip",
-              )}
-              tooltipImage={tooltipImage("vehicle", "vehicleTripDistance")}
-            />
-            <Field
-              label={
-                tq("steps.vehicle.fields.vehicleChargingHours.label") ||
-                "Heures de recharge disponibles"
-              }
-              value={
-                fd.vehicleChargingHours === "na"
-                  ? resolveOption(
-                      "steps.vehicle.fields.vehicleChargingHours",
-                      "na",
-                    )
-                  : fd.vehicleChargingHours != null
-                    ? `${fd.vehicleChargingHours} ${tq("steps.vehicle.fields.vehicleChargingHours.unit") || "h"}`
-                    : "\u2014"
-              }
-              tooltip={tqOpt(
-                "steps.vehicle.fields.vehicleChargingHours.tooltip",
-              )}
-              tooltipImage={tooltipImage("vehicle", "vehicleChargingHours")}
-            />
-          </Section>
-            </>
-          )}
+          {PRODUCT_SECTIONS[product]()}
 
           {/* 7. Finalization */}
           <Section

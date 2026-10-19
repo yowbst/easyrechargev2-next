@@ -5,8 +5,7 @@ import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Dry-run an invoice for a partner/month: number, period, issuable flag,
- * scope lines and total. Writes nothing. Same admin-token gate as
- * /api/admin/billing.
+ * scope lines and total. Writes nothing. Admin-token gate: `assertAdmin`.
  *
  *   POST /api/admin/invoices/preview  { partner, month }
  */

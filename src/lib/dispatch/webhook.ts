@@ -1,6 +1,5 @@
 import { after } from "next/server";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { directusFetch } from "@/lib/directus";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 import { productRefLabel } from "@/lib/products";
 import { buildActionUrls } from "./action-token";
@@ -20,20 +19,6 @@ export function parsePhone(raw: string | null | undefined, defaultCountry: strin
     countryCode: parsed.country ?? null,
     countryCallingCode: `+${parsed.countryCallingCode}`,
   };
-}
-
-export async function getQuoteWebhookUrl(): Promise<string | null> {
-  try {
-    const result = await directusFetch<{ data: { global_config?: { webhooks?: { quote?: string } } }[] }>(
-      `/items/site_settings?fields=global_config&filter[status][_eq]=published`,
-      { next: { revalidate: 3600 } },
-    );
-    const raw = result?.data;
-    const record = Array.isArray(raw) ? raw[0] : raw;
-    return record?.global_config?.webhooks?.quote ?? null;
-  } catch {
-    return null;
-  }
 }
 
 export interface QuoteWebhookParts {

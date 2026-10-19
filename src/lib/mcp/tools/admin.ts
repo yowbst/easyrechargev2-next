@@ -1,22 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getMonthlyBilling, listDispatches, reconcileBilling } from "@/lib/dispatch/admin";
+import { listDispatches, reconcileBilling } from "@/lib/dispatch/admin";
 import { manualDispatch } from "@/lib/dispatch/manual-dispatch";
 import { PRODUCTS } from "@/lib/products";
 import { run } from "./helpers";
 
 export function registerAdminTools(server: McpServer) {
-  server.registerTool(
-    "get_billing",
-    {
-      title: "Get monthly billing",
-      description: "Per-partner billable lead counts and CHF totals for a month (YYYY-MM). Read-only.",
-      inputSchema: { month: z.string().regex(/^\d{4}-\d{2}$/, "Use YYYY-MM") },
-      annotations: { readOnlyHint: true },
-    },
-    async ({ month }) => run(() => getMonthlyBilling(month)),
-  );
-
   server.registerTool(
     "reconcile_billing",
     {

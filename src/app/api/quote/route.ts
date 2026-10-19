@@ -4,8 +4,11 @@ import { storage } from "@/lib/directus-storage";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 import { runDispatch, normalizeCanton, notDispatchableResult, type DispatchResult } from "@/lib/dispatch";
 import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
-import { getQuoteWebhookUrl, parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
+import { parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
+import { webhookUrl as configuredWebhookUrl } from "@/lib/site-settings";
 import { normalizeProduct } from "@/lib/products";
+import { firstMissingAnswer } from "@/components/quote-shell/answers";
+import { isEnrichable } from "@/lib/quote-enrich-fields";
 import { sendOpenAILeadConversion } from "@/lib/openai-ads/conversions";
 import { enrichToken } from "@/lib/quote-enrich";
 
@@ -87,6 +90,22 @@ export async function POST(req: Request) {
       status: "success",
     });
 
+    // The funnel only submits complete answers; a request that is not (a bot,
+    // an old client, a funnel bug) is still stored and dispatched — refusing
+    // could lose a real lead past the contact step — but it is flagged.
+    const missing = firstMissingAnswer(product, quoteData);
+    if (missing) {
+      try {
+        const posthog = getPostHogServer();
+        posthog.capture({
+          distinctId: phIds.phDistinctId ?? "anonymous",
+          event: "quote_incomplete_server",
+          properties: { product, step: missing.step, field: missing.field, submission_id: submission.id },
+        });
+        after(() => posthog.flush());
+      } catch { /* analytics never blocks a submission */ }
+    }
+
     // Resolve partner dispatch. Gated by DISPATCH_MODE env var (off|shadow|live).
     // Returns a payload-ready object embedded in the Make webhook below.
     // runDispatch never throws — failures are logged and surface as an empty result.
@@ -136,7 +155,7 @@ export async function POST(req: Request) {
     } catch { /* don't block submission */ }
 
     // Fire webhook
-    const webhookUrl = await getQuoteWebhookUrl();
+    const webhookUrl = await configuredWebhookUrl("quote");
     if (webhookUrl) {
       const phDistinctId = phIds.phDistinctId ?? null;
       const posthogDashboard = "https://eu.posthog.com/project/103083";
@@ -185,7 +204,7 @@ export async function POST(req: Request) {
     }
 
     // Lets this browser add the optional charger answers afterwards (flag quote-enrich).
-    const enrich = product === "ecp" ? enrichToken(submission.id) : null;
+    const enrich = isEnrichable(product) ? enrichToken(submission.id) : null;
     return NextResponse.json({ success: true, submissionId: submission.id, dispatchable, ...(enrich && { enrichToken: enrich }) });
   } catch (error) {
     console.error("[Quote] Submission error:", error);

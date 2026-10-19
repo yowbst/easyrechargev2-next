@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { directusFetch } from "@/lib/directus";
+import { webhookUrl } from "@/lib/site-settings";
 import { getEnvironment } from "@/lib/directus-storage";
 import { getPostHogServer, serverLog } from "@/lib/posthog-server";
 
@@ -24,24 +24,6 @@ export type DispatchEventName = "reminder_due" | "stage_changed" | "disqualified
 /** Where a lifecycle action came from. */
 export type ActionSource = "kanban" | "email" | "amp" | "admin";
 
-export async function getDispatchEventsWebhookUrl(): Promise<string | null> {
-  try {
-    // Uncached on purpose: the same site_settings URL is cached for an hour by
-    // getQuoteWebhookUrl, and Vercel's data cache survives deploys — a cached
-    // copy from before `dispatch_events` existed silently dropped events.
-    const result = await directusFetch<{
-      data: { global_config?: { webhooks?: { dispatch_events?: string } } }[];
-    }>(`/items/site_settings?fields=global_config&filter[status][_eq]=published`, {
-      next: { revalidate: 0 },
-    });
-    const raw = result?.data;
-    const record = Array.isArray(raw) ? raw[0] : raw;
-    return record?.global_config?.webhooks?.dispatch_events ?? null;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * POST one event and report the outcome. No webhook configured is not a
  * failure of the call site, but it is reported as `{ ok: false }` so the
@@ -51,7 +33,7 @@ export async function sendDispatchEvent(
   event: DispatchEventName,
   payload: Record<string, unknown>,
 ): Promise<{ ok: boolean; status?: number; error?: string }> {
-  const url = await getDispatchEventsWebhookUrl();
+  const url = await webhookUrl("dispatch_events");
   if (!url) {
     serverLog("WARNING", "Dispatch event dropped: no webhooks.dispatch_events configured", { event });
     return { ok: false, error: "no_webhook" };

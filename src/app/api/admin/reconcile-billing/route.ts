@@ -5,7 +5,7 @@ import { reconcileBilling } from "@/lib/dispatch/admin";
 /**
  * Backstop that locks billing on every dispatched lead whose acceptance window
  * has ended (rule in the Dispatch lifecycle module). Safe to call before
- * generating an invoice. Same admin-token gate as /api/admin/billing.
+ * generating an invoice. Admin-token gate: `assertAdmin`.
  *
  *   curl -X POST -H "x-admin-token: $DIRECTUS_STATIC_TOKEN" \
  *     "https://.../api/admin/reconcile-billing"

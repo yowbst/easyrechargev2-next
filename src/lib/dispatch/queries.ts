@@ -1,4 +1,5 @@
 import { directusFetch } from "@/lib/directus";
+import { getGlobalConfig } from "@/lib/site-settings";
 import { partnerProductConfig } from "./partner-products";
 import type {
   Environment,
@@ -215,44 +216,24 @@ export async function fetchDispatchConfig(): Promise<{
     test_email_patterns?: string[];
     billing?: Partial<BillingConfig>;
   };
-  type SettingsRow = { global_config?: { dispatch?: DispatchCfg } };
-  type Resp = { data: SettingsRow | SettingsRow[] | null };
   const billingDefaults: BillingConfig = {
     currency: "CHF",
     acceptance_window_days: 15,
     dedup_window_days: 30,
   };
-  try {
-    // `global_config` is a JSON column — Directus can't project into it with
-    // dot-notation (`global_config.dispatch` returns the row id string), so we
-    // fetch the whole field and read `.dispatch` here. site_settings may return
-    // an object (singleton) or a single-element array depending on config.
-    const res = await directusFetch<Resp>(
-      `/items/site_settings?fields=global_config`,
-      { next: { revalidate: 60 } },
-    );
-    const raw = res?.data;
-    const record = Array.isArray(raw) ? raw[0] : raw;
-    const cfg = record?.global_config?.dispatch ?? {};
-    return {
-      max_shared_targets: cfg.max_shared_targets ?? 1,
-      test_email_patterns: cfg.test_email_patterns ?? [],
-      billing: {
-        currency: cfg.billing?.currency ?? billingDefaults.currency,
-        acceptance_window_days:
-          cfg.billing?.acceptance_window_days ??
-          billingDefaults.acceptance_window_days,
-        dedup_window_days:
-          cfg.billing?.dedup_window_days ?? billingDefaults.dedup_window_days,
-      },
-    };
-  } catch {
-    return {
-      max_shared_targets: 1,
-      test_email_patterns: [],
-      billing: billingDefaults,
-    };
-  }
+  const cfg: DispatchCfg = (await getGlobalConfig()).dispatch ?? {};
+  return {
+    max_shared_targets: cfg.max_shared_targets ?? 1,
+    test_email_patterns: cfg.test_email_patterns ?? [],
+    billing: {
+      currency: cfg.billing?.currency ?? billingDefaults.currency,
+      acceptance_window_days:
+        cfg.billing?.acceptance_window_days ??
+        billingDefaults.acceptance_window_days,
+      dedup_window_days:
+        cfg.billing?.dedup_window_days ?? billingDefaults.dedup_window_days,
+    },
+  };
 }
 
 /**

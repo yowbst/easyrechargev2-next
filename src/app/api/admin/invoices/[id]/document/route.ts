@@ -5,7 +5,7 @@ import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Generate (always a NEW) invoice Google Doc from the invoice's current
- * state and return its URL. Same admin-token gate as /api/admin/billing.
+ * state and return its URL. Admin-token gate: `assertAdmin`.
  *
  *   POST /api/admin/invoices/<id>/document
  */

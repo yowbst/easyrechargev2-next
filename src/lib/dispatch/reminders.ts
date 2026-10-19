@@ -1,4 +1,5 @@
 import { directusFetch } from "@/lib/directus";
+import { getGlobalConfig } from "@/lib/site-settings";
 import { getEnvironment } from "@/lib/directus-storage";
 import { buildActionUrls } from "./action-token";
 import { sendDispatchEvent } from "./events";
@@ -51,15 +52,8 @@ const MAX_PER_RUN = 100;
 
 /** Off unless Directus says `enabled: true` — nothing is e-mailed by default. */
 export async function fetchReminderConfig(): Promise<ReminderConfig> {
-  type Row = { global_config?: { dispatch?: { reminders?: Partial<ReminderConfig> } } };
   try {
-    const res = await directusFetch<{ data: Row | Row[] | null }>(
-      `/items/site_settings?fields=global_config`,
-      // Uncached: a daily cron must see today's switch, not a stale copy.
-      { next: { revalidate: 0 } },
-    );
-    const raw = res?.data;
-    const cfg = (Array.isArray(raw) ? raw[0] : raw)?.global_config?.dispatch?.reminders ?? {};
+    const cfg: Partial<ReminderConfig> = (await getGlobalConfig()).dispatch?.reminders ?? {};
     const rules = Array.isArray(cfg.rules)
       ? cfg.rules.filter(
           (r): r is ReminderRule =>

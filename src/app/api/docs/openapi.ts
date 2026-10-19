@@ -1,6 +1,7 @@
 /**
  * OpenAPI 3.0 specification for easyRecharge API.
  */
+import { PRODUCTS } from "@/lib/products";
 
 const SITE_URL = process.env.SITE_URL || "https://easyrecharge.ch";
 
@@ -393,7 +394,7 @@ export function getOpenApiSpec() {
             {
               name: "product",
               in: "query",
-              schema: { type: "string", enum: ["ecp", "battery"] },
+              schema: { type: "string", enum: [...PRODUCTS] },
               description: "Filter by product.",
             },
             {
@@ -549,7 +550,7 @@ export function getOpenApiSpec() {
             miniQuoteSessionToken: { type: "string", format: "uuid", description: "When the user came from a MiniQuote, this links both submissions under the same session." },
             product: {
               type: "string",
-              enum: ["ecp", "battery"],
+              enum: [...PRODUCTS],
               default: "ecp",
               description: "Quote funnel. Drives the lead category, partner eligibility (`partner_products`), price and Ads conversion action.",
             },
@@ -728,7 +729,7 @@ export function getOpenApiSpec() {
               enum: ["dispatched", "skipped_no_partner", "skipped_test", "skipped_dedup", "skipped_quota"],
               description: "`skipped_quota` is legacy (read-only); new rows never use it.",
             },
-            product: { type: "string", enum: ["ecp", "battery"] },
+            product: { type: "string", enum: [...PRODUCTS] },
             lead_category: {
               type: ["string", "null"],
               example: "owner_pv_small",

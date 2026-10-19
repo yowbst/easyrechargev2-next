@@ -11,15 +11,15 @@ A remote [Model Context Protocol](https://modelcontextprotocol.io) server exposi
 
 ## 1. What it is
 
-The server registers 33 tools across six groups:
+The server registers 34 tools across six groups:
 
 | Group | File | Tools |
 |---|---|---|
 | CMS content | `src/lib/mcp/tools/cms.ts` | `list_blog_posts`, `get_blog_post`, `list_vehicles`, `get_vehicle`, `list_vehicle_brands`, `list_pages`, `list_form_submissions`, `search_localities`, `get_locality_subsidies` |
 | App / misc | `src/lib/mcp/tools/app.ts` | `get_form_submission`, `list_site_urls`, `get_api_docs` |
 | Form submission (writes) | `src/lib/mcp/tools/forms.ts` | `submit_quote`, `submit_contact`, `submit_mini_quote` |
-| Admin / billing | `src/lib/mcp/tools/admin.ts` | `get_billing`, `reconcile_billing`, `dispatch_submission`, `list_dispatches` |
-| Partner invoicing | `src/lib/mcp/tools/invoicing.ts` | `preview_invoice`, `issue_invoice`, `generate_invoice_document`, `set_invoice_status`, `add_invoice_note`, `add_invoice_adjustment`, `add_invoice_manual_lead`, `list_invoices` |
+| Admin / billing | `src/lib/mcp/tools/admin.ts` | `reconcile_billing`, `dispatch_submission`, `list_dispatches` |
+| Partner invoicing | `src/lib/mcp/tools/invoicing.ts` | `preview_invoice`, `issue_invoice`, `generate_invoice_document`, `set_invoice_status`, `add_invoice_note`, `add_invoice_adjustment`, `add_invoice_manual_lead`, `list_invoices`, `admin_disqualify_dispatch`, `admin_requalify_dispatch` |
 | Directus generic | `src/lib/mcp/tools/directus-generic.ts` | `directus_collections`, `directus_fields`, `directus_query`, `directus_get_item`, `directus_create_item`, `directus_update_item` |
 
 Every tool is annotated (`readOnlyHint` / `destructiveHint` / `idempotentHint`) so MCP clients can render appropriate confirmation UI. Read-only tools (`list_*`, `get_*`, `search_*`, `directus_collections|fields|query|get_item`) never mutate data. Everything else is a write:

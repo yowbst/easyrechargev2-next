@@ -26,8 +26,8 @@ vi.mock("@/lib/dispatch", async (orig) => ({
   ...(await orig<typeof import("@/lib/dispatch")>()),
   runDispatch: h.runDispatch,
 }));
+vi.mock("@/lib/site-settings", () => ({ webhookUrl: vi.fn(async () => "https://hook.example") }));
 vi.mock("@/lib/dispatch/webhook", () => ({
-  getQuoteWebhookUrl: vi.fn(async () => "https://hook.example"),
   parsePhone: vi.fn(() => null),
   buildQuoteWebhookPayload: h.buildPayload,
   fireQuoteWebhook: vi.fn(async () => {}),
@@ -83,5 +83,36 @@ describe("POST /api/quote — charger unchanged", () => {
 
     expect((await res.json()).dispatchable).toBe(true);
     expect(h.runDispatch).toHaveBeenCalledWith(expect.objectContaining({ leadCategory: "owner_solar", product: "ecp" }));
+  });
+});
+
+describe("POST /api/quote — incomplete answers", () => {
+  it("still stores and dispatches an incomplete request, and flags it", async () => {
+    h.runDispatch.mockResolvedValueOnce(DISPATCHED);
+    const res = await post({ product: "ecp", housingStatus: "owner", solarEquipment: "exists" });
+
+    expect((await res.json()).success).toBe(true);
+    expect(h.runDispatch).toHaveBeenCalled();
+    expect(h.capture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "quote_incomplete_server",
+        properties: expect.objectContaining({ product: "ecp", step: "housing", field: "housingType", submission_id: "sub1" }),
+      }),
+    );
+  });
+
+  it("does not flag a complete request", async () => {
+    h.runDispatch.mockResolvedValueOnce(DISPATCHED);
+    await post({
+      product: "ecp",
+      housingStatus: "owner",
+      housingType: "house",
+      solarEquipment: "none",
+      parkingSpotLocation: "garage-adjacent",
+      parkingSpotCount: "1",
+      deadline: "asap",
+      vehicleStatus: "own",
+    });
+    expect(h.capture).not.toHaveBeenCalledWith(expect.objectContaining({ event: "quote_incomplete_server" }));
   });
 });

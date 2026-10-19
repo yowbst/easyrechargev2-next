@@ -1,3 +1,4 @@
+import type { StepRule } from "../../types";
 import { VALID_PARKING_LOCATIONS } from "./fields";
 
 type Data = Record<string, unknown>;
@@ -18,6 +19,9 @@ export function showsNeighborhoodEquipment(d: Data): boolean {
 export const asksApproval = (d: Data) => d.housingStatus === "tenant" || d.housingStatus === "co-owner";
 
 export const hasSolar = (d: Data) => ["exists", "in-progress"].includes(String(d.solarEquipment));
+
+/** The charger steps, in order. Icons and components are added in `index.ts`. */
+export const ECP_STEPS: StepRule[] = [{ id: "housing" }, { id: "parking" }, { id: "charger" }, { id: "vehicle" }];
 
 /**
  * First unanswered field of a charger step, in visual order; null when the
