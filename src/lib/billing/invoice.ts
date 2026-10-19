@@ -5,6 +5,7 @@ import { computePeriod, isPeriodIssuable } from "./period";
 import { buildInvoiceNumber } from "./numbering";
 import { collectBillableDispatches } from "./scope";
 import { markInvoiceDocumentsSuperseded } from "./google-docs";
+import { countBilledLeads, sortBand, splitTotals } from "./line-kinds";
 import type {
   InvoiceEvent, InvoiceEventActor, InvoiceStatus,
   InvoicePeriod, PartySnapshot, ScopeResult,
@@ -225,7 +226,7 @@ export async function issueInvoice(
         invoice: invoiceId, dispatch: line.dispatchId, kind: "lead",
         label: line.label, quantity: 1,
         unit_price_chf: line.unitPriceChf, amount_chf: line.unitPriceChf,
-        sort: i, dispatched_at: line.dispatchedAt, canton: line.canton,
+        sort: sortBand("lead") + i, dispatched_at: line.dispatchedAt, canton: line.canton,
         postal_code: line.postalCode, locality: line.locality,
         last_name: line.lastName, lead_category: line.leadCategory, product: line.product,
       }),
@@ -253,7 +254,7 @@ export async function issueInvoice(
         label: gift.label, quantity: 1,
         unit_price_chf: gift.unitPriceChf, amount_chf: 0,
         gift_reason: gift.giftReason ?? null,
-        sort: 1000 + i, dispatched_at: gift.dispatchedAt, canton: gift.canton,
+        sort: sortBand("gift") + i, dispatched_at: gift.dispatchedAt, canton: gift.canton,
         postal_code: gift.postalCode, locality: gift.locality,
         last_name: gift.lastName, lead_category: gift.leadCategory, product: gift.product,
       }),
@@ -280,7 +281,7 @@ export async function issueInvoice(
         label: refused.label, quantity: 1,
         unit_price_chf: 0, amount_chf: 0,
         disqualification_reason: refused.disqualificationReason ?? null,
-        sort: 2000 + i, dispatched_at: refused.dispatchedAt, canton: refused.canton,
+        sort: sortBand("disqualified") + i, dispatched_at: refused.dispatchedAt, canton: refused.canton,
         postal_code: refused.postalCode, locality: refused.locality,
         last_name: refused.lastName, lead_category: refused.leadCategory,
         product: refused.product,
@@ -325,15 +326,6 @@ async function fetchInvoiceState(invoiceId: string): Promise<InvoiceStateRow> {
 const STATUS_TIMESTAMP: Partial<Record<InvoiceStatus, string>> = {
   sent: "sent_at", paid: "paid_at",
 };
-
-/** Same guard as `scope.ts`'s `toNumber` — a non-finite value must not silently
- * become 0 via truthiness (0 is a legitimate subtotal/adjustment) nor leak
- * through as NaN, which `JSON.stringify` would serialise as `null`. */
-function toFiniteNumber(v: string | number | null | undefined): number {
-  if (v === null || v === undefined) return 0;
-  const parsed = typeof v === "string" ? Number.parseFloat(v) : v;
-  return Number.isFinite(parsed) ? parsed : 0;
-}
 
 /**
  * Clear `partner_dispatches.invoice` on every dispatch stamped with this
@@ -472,20 +464,7 @@ async function fetchInvoiceLines(invoiceId: string): Promise<InvoiceLineRow[]> {
 async function recomputeInvoiceTotals(
   invoiceId: string,
 ): Promise<{ subtotal: number; adjustment: number; total: number }> {
-  const lines = await fetchInvoiceLines(invoiceId);
-  const subtotal = Number(
-    lines
-      .filter((l) => l.kind !== "adjustment")
-      .reduce((s, l) => s + toFiniteNumber(l.amount_chf), 0)
-      .toFixed(2),
-  );
-  const adjustment = Number(
-    lines
-      .filter((l) => l.kind === "adjustment")
-      .reduce((s, l) => s + toFiniteNumber(l.amount_chf), 0)
-      .toFixed(2),
-  );
-  const total = Number((subtotal + adjustment).toFixed(2));
+  const { subtotal, adjustment, total } = splitTotals(await fetchInvoiceLines(invoiceId));
 
   await directusFetch(`/items/partner_invoices/${invoiceId}`, {
     method: "PATCH",
@@ -516,7 +495,7 @@ export async function addAdjustmentLine(
     body: JSON.stringify({
       invoice: invoiceId, kind: "adjustment", dispatch: null,
       label: description, description, quantity: 1,
-      unit_price_chf: amountChf, amount_chf: amountChf, sort: 9999,
+      unit_price_chf: amountChf, amount_chf: amountChf, sort: sortBand("adjustment"),
     }),
     next: { revalidate: 0 },
     // Money-critical, non-idempotent POST — a retry would double the discount.
@@ -556,10 +535,10 @@ export async function addManualLeadLine(
   await assertLineWritable(invoiceId);
   if (!Number.isFinite(unitPriceChf)) throw new Error("invalid_amount");
 
-  // Sort after the lead lines already present; adjustments sit at 9999 and are
-  // excluded so a manual lead never lands past them.
+  // After the lead lines already present, inside the lead band — so it never
+  // lands among gifts, refused lines or adjustments.
   const existing = await fetchInvoiceLines(invoiceId);
-  const sort = existing.filter((l) => l.kind !== "adjustment").length;
+  const sort = sortBand("lead") + countBilledLeads(existing);
 
   await directusFetch("/items/partner_invoice_lines", {
     method: "POST",

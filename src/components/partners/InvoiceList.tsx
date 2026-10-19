@@ -2,6 +2,7 @@ import { ChevronDown, FileSearch } from "lucide-react";
 import { InvoiceUrlSync } from "./InvoiceUrlSync";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import type { PartnerInvoice, PartnerInvoiceLine } from "@/lib/billing/partner-queries";
+import { countBilledLeads, partnerStatus } from "@/lib/billing/line-kinds";
 
 function frDate(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -81,9 +82,11 @@ function InvoiceLines({
             const submissionId = line.dispatch?.submission ?? null;
             const isGift = line.kind === "gift";
             const isRefused = line.kind === "disqualified";
-            // Binary on purpose: the partner only needs to know whether this
-            // request is on the amount they owe.
-            const billed = !isGift && !isRefused;
+            // Binary on purpose for requests: the partner only needs to know
+            // whether one is on the amount they owe. An adjustment is not a
+            // request and carries no status — just its amount.
+            const status = partnerStatus(line.kind);
+            const billed = status !== "notBilled";
             const reason = isRefused
               ? line.disqualification_reason
                 ? t(`reasons.${line.disqualification_reason}.label`)
@@ -125,15 +128,17 @@ function InvoiceLines({
                 </td>
                 <td className="py-3 pr-4">{reason}</td>
                 <td className="py-3 pr-4 whitespace-nowrap">
-                  <span
-                    className={`inline-flex h-[26px] items-center rounded-md px-2.5 text-xs font-semibold ${
-                      billed
-                        ? "bg-partner-hot-bg text-partner-hot"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {billed ? t("detail.status.billed") : t("detail.status.notBilled")}
-                  </span>
+                  {status && (
+                    <span
+                      className={`inline-flex h-[26px] items-center rounded-md px-2.5 text-xs font-semibold ${
+                        billed
+                          ? "bg-partner-hot-bg text-partner-hot"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {billed ? t("detail.status.billed") : t("detail.status.notBilled")}
+                    </span>
+                  )}
                 </td>
                 <td className="py-3 text-right font-semibold tabular-nums whitespace-nowrap">
                   {billed ? (
@@ -212,7 +217,7 @@ export function InvoiceList({
 
       {invoices.map((inv) => {
         const lines = inv.lines ?? [];
-        const billed = lines.filter((l) => l.kind !== "adjustment" && l.kind !== "gift");
+        const billedCount = countBilledLeads(lines);
         const gifts = lines.filter((l) => l.kind === "gift");
         const tone = STATUS_TONE[inv.status] ?? "border-border bg-muted text-muted-foreground";
         // A cancelled invoice is history, not an amount owed: de-emphasise it
@@ -265,7 +270,7 @@ export function InvoiceList({
                   </span>
                 )}
                 <span>
-                  {t("detail.count", { count: billed.length })}
+                  {t("detail.count", { count: billedCount })}
                   {gifts.length > 0 && ` · ${t("detail.giftCount", { count: gifts.length })}`}
                 </span>
               </div>

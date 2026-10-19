@@ -1,4 +1,5 @@
 import { directusFetch } from "@/lib/directus";
+import { isAdjustment, isBilledLead } from "./line-kinds";
 
 export interface DocGateway {
   /**
@@ -319,8 +320,8 @@ export async function generateInvoiceDocument(
     { next: { revalidate: 0 } },
   );
   const lines = linesRes?.data ?? [];
-  const leadLines = lines.filter((l) => l.kind === "lead");
-  const adjustmentLines = lines.filter((l) => l.kind === "adjustment");
+  const leadLines = lines.filter((l) => isBilledLead(l.kind));
+  const adjustmentLines = lines.filter((l) => isAdjustment(l.kind));
   const giftLines = lines.filter((l) => l.kind === "gift");
   const quantity = leadLines.length;
 
