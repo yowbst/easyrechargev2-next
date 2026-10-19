@@ -4,8 +4,7 @@ import { assertAdmin } from "@/lib/admin-auth";
 import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
- * Append a comment to the invoice's event log. Same admin-token gate as
- * /api/admin/billing.
+ * Append a comment to the invoice's event log. Admin-token gate: `assertAdmin`.
  *
  *   POST /api/admin/invoices/<id>/note  { actor?, note }
  */

@@ -4,8 +4,7 @@ import { assertAdmin } from "@/lib/admin-auth";
 import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
- * List partner invoices (GET) and issue a new one (POST). Same admin-token
- * gate as /api/admin/billing.
+ * List partner invoices (GET) and issue a new one (POST). Admin-token gate: `assertAdmin`.
  *
  *   GET  /api/admin/invoices?month=2026-07&status=sent
  *   POST /api/admin/invoices  { partner, month }

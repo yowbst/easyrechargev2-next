@@ -61,7 +61,7 @@ console.log(`✓ ${names.length} tools: ${names.join(", ")}`);
 const expected = [
   "directus_collections", "directus_create_item", "directus_fields", "directus_get_item",
   "directus_query", "directus_update_item", "dispatch_submission", "get_api_docs",
-  "get_billing", "get_blog_post", "get_form_submission", "get_locality_subsidies",
+  "get_blog_post", "get_form_submission", "get_locality_subsidies",
   "get_vehicle", "list_blog_posts", "list_dispatches", "list_form_submissions",
   "list_pages", "list_site_urls", "list_vehicle_brands", "list_vehicles",
   "reconcile_billing", "search_localities", "submit_contact", "submit_mini_quote", "submit_quote",

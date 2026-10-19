@@ -7,8 +7,7 @@ import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
  * Append a `lead` line that has no dispatch behind it — a lead billed without a
  * ledger row (the spec's pre-go-live July leads). Unlike an adjustment it counts
  * towards the lead quantity on the document. Totals are recomputed from the
- * invoice's actual lines. Refused on a paid or cancelled invoice. Same
- * admin-token gate as /api/admin/billing.
+ * invoice's actual lines. Refused on a paid or cancelled invoice. Admin-token gate: `assertAdmin`.
  *
  *   POST /api/admin/invoices/<id>/manual-lead
  *     { label, unit_price_chf, description?, dispatched_at?, canton?,

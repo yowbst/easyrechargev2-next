@@ -5,7 +5,7 @@ import { errorBody, errorStatus } from "@/lib/billing/admin-guard";
 
 /**
  * Append a discount or correction line and recompute the total. Refused on a
- * paid or cancelled invoice. Same admin-token gate as /api/admin/billing.
+ * paid or cancelled invoice. Admin-token gate: `assertAdmin`.
  *
  *   POST /api/admin/invoices/<id>/adjustment  { description, amount_chf }
  */
