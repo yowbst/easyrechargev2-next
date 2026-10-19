@@ -100,6 +100,11 @@ const nextConfig: NextConfig = {
       { source: "/:lang(fr|de)/blog/:cat/en-installant-une-borne-de-recharge-en-tant-que-co-proprietaire-qui-prend-en-charge-les-couts", destination: "/:lang/blog/:cat/en-installant-une-borne-en-tant-que-locataire-qui-prend-en-charge-les-couts", permanent: true },
       // Legacy quote URL alias
       { source: "/fr/obtenir-un-devis", destination: "/fr/demande-devis", permanent: true },
+      // Battery quote slug renamed for consistency with /demande-devis (2026-10-19)
+      { source: "/fr/devis-batterie-solaire", destination: "/fr/demande-devis-batterie-solaire", permanent: true },
+      { source: "/fr/devis-batterie-solaire/:path*", destination: "/fr/demande-devis-batterie-solaire/:path*", permanent: true },
+      { source: "/de/offerte-solarbatterie", destination: "/de/offertenanfrage-solarbatterie", permanent: true },
+      { source: "/de/offerte-solarbatterie/:path*", destination: "/de/offertenanfrage-solarbatterie/:path*", permanent: true },
       // English not yet supported — redirect to French equivalent
       { source: "/en", destination: "/fr", permanent: false },
       { source: "/en/:path*", destination: "/fr/:path*", permanent: false },
