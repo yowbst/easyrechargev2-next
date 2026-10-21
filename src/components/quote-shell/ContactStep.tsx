@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { ArrowLeft, ArrowRight, Loader2, Lock, Mail, Phone as PhoneIcon, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Files, Loader2, Lock, Mail, Phone as PhoneIcon, Plus } from "lucide-react";
 import type { CountryCode } from "libphonenumber-js";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,8 @@ interface ContactStepProps extends Omit<StepProps, "hidden" | "links"> {
   submitError: boolean;
   /** NPA and locality came from the mini-quote: the street is all that is left. */
   focusStreet: boolean;
+  /** A battery request goes along (charger funnel add-on): two requests, plural consent. */
+  batteryAddon?: boolean;
 }
 
 // Inputs of design 06 / 15 v2 (one size down): 48 px, radius 8, a 2 px link border on focus.
@@ -80,14 +82,14 @@ function Field({ id, label, why, className = "", children }: { id: string; label
  * the submit button in the flow, consent under it and the comment folded away.
  */
 export function ContactStep({
-  data, set, patch, tq, tqOpt, tc, lang, pageConfig, slaVars, onSubmit, onBack, isSubmitting, submitError, focusStreet,
+  data, set, patch, tq, tqOpt, tc, lang, pageConfig, slaVars, onSubmit, onBack, isSubmitting, submitError, focusStreet, batteryAddon = false,
 }: ContactStepProps) {
   const f = data as unknown as ContactFields;
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email);
   const isPhoneValid = f.phone && validatePhone(f.phone, f.phoneCountry as CountryCode);
   const emailSuggestion = isEmailValid ? suggestEmailCorrection(f.email) : null;
-  const consentLabel = tq("steps.finalize.fields.acceptTerms.label").trim();
+  const consentLabel = (batteryAddon ? tc("quote.batteryAddon.consentPlural") : tq("steps.finalize.fields.acceptTerms.label")).trim();
   const privacyNote = tq("steps.finalize.fields.acceptTerms.privacyNote").split("{privacyLink}");
   const searching = f.addressMode === "google" && !f.streetName;
   // Asked once missing, then kept on screen: it must not vanish when chosen.
@@ -260,6 +262,12 @@ export function ContactStep({
 
       {/* Send: the button is in the flow, consent under it (design 15 v2, 2e). */}
       <div>
+        {batteryAddon && (
+          <p className="mb-3 flex items-center gap-2 rounded-lg bg-b-inset px-3.5 py-2.5 text-sm font-semibold" data-testid="text-two-requests">
+            <Files className="size-4 shrink-0 text-b-link" aria-hidden />
+            {tc("quote.batteryAddon.twoRequests")}
+          </p>
+        )}
         <button
           type="button"
           onClick={onSubmit}

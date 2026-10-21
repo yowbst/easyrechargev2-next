@@ -542,6 +542,7 @@ export function QuoteShell({
                 isSubmitting={isSubmitting}
                 submitError={submitError}
                 focusStreet={!!prefilled?.postalCode}
+                batteryAddon={addonOn}
               />
             )}
           </div>
