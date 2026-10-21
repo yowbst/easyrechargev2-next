@@ -11,6 +11,8 @@ interface Props {
   no: string;
   dontKnow: string;
   printSections: Record<string, boolean>;
+  /** Battery request added in the charger funnel: only the shared answers and PV size were asked. */
+  addon?: { origin: string; toComplete: string } | null;
 }
 
 const DASH = "—";
@@ -26,7 +28,7 @@ function bucketLabel(field: keyof typeof BATTERY_BUCKETS, v: unknown, unit: stri
   return b ? b.label.replace("{u}", unit ? ` ${unit}` : "") : withUnit(v, unit);
 }
 
-export function BatterySubmissionSections({ fd, tb, yes, no, dontKnow, printSections }: Props) {
+export function BatterySubmissionSections({ fd, tb, yes, no, dontKnow, printSections, addon }: Props) {
   const opt = (path: string, v: unknown) => {
     if (v === null || v === undefined || v === "") return DASH;
     if (v === true) return yes;
@@ -42,6 +44,25 @@ export function BatterySubmissionSections({ fd, tb, yes, no, dontKnow, printSect
     ? withUnit(fd.pvPower, "kWc")
     : bucketLabel("pvPower", fd.pvPower, "kWc", dontKnow);
   const evCount = typeof fd.evCount === "number" ? fd.evCount : null;
+
+  if (addon) {
+    return (
+      <>
+        <Section title={tb("steps.housing.title") || "Logement"} printVisible={printSections.housing}>
+          <p className="pb-2 text-sm font-medium text-primary" data-testid="text-addon-origin">{addon.origin}</p>
+          <Field label={label(`${H}.housingStatus`, "Statut")} value={opt(`${H}.housingStatus`, fd.housingStatus)} />
+          <Field label={label(`${H}.housingType`, "Type de logement")} value={opt(`${H}.housingType`, fd.housingType)} />
+          <Field label={label(`${H}.solarEquipment`, "Installation solaire")} value={opt(`${H}.solarEquipment`, fd.solarEquipment)} />
+          {!!fd.deadline && <Field label={label(`${C}.deadline`, "Délai")} value={opt(`${C}.deadline`, fd.deadline)} />}
+        </Section>
+
+        <Section title={tb("steps.pv.title") || "Installation solaire"} printVisible={printSections.installation}>
+          <Field label={label(`${P}.pvPower`, "Puissance")} value={pvPower} />
+          <p className="pt-2 text-sm text-muted-foreground" data-testid="text-addon-to-complete">{addon.toComplete}</p>
+        </Section>
+      </>
+    );
+  }
 
   return (
     <>

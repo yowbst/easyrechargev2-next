@@ -20,6 +20,7 @@ import {
   CircleX,
   RotateCcw,
   type LucideIcon,
+  Link2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -131,6 +132,7 @@ export function LeadCard({
   scoreBands,
   dictionary,
   readOnly = false,
+  partnerToken,
 }: {
   dispatch: PartnerDispatchCard;
   lang: string;
@@ -147,6 +149,8 @@ export function LeadCard({
   scoreBands?: ScoreBands;
   dictionary: PartnerDict;
   readOnly?: boolean;
+  /** Lets the request page check that this partner also holds the linked request. */
+  partnerToken?: string;
 }) {
   const t = makePartnerT(dictionary);
   const [open, setOpen] = useState(false);
@@ -206,9 +210,11 @@ export function LeadCard({
       : null;
   const approvalLabel = approvalKey ? t(`card.approval.${approvalKey}`) : null;
 
-  const quoteHref = dispatch.submission?.id
-    ? `/${lang}/demande-devis/${dispatch.submission.id}?view=partner`
-    : null;
+  const requestHref = (id: string) =>
+    `/${lang}/demande-devis/${id}?view=partner${partnerToken ? `&p=${encodeURIComponent(partnerToken)}` : ""}`;
+  const quoteHref = dispatch.submission?.id ? requestHref(dispatch.submission.id) : null;
+  // Charger ↔ battery add-on of the same send, when this partner holds both.
+  const linkedHref = dispatch.linkedSubmissionId ? requestHref(dispatch.linkedSubmissionId) : null;
 
   // Disqualified cards aren't draggable — the stage API would 409. Mobile/touch
   // devices ignore HTML5 DnD natively, so they fall back to the dropdown.
@@ -572,6 +578,25 @@ export function LeadCard({
                 <FileSearch className="size-4" />
               </TooltipTrigger>
               <TooltipContent>{t("card.actions.view")}</TooltipContent>
+            </Tooltip>
+          )}
+          {linkedHref && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <a
+                    href={linkedHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t("card.actions.linked")}
+                    className={`${ICON_BUTTON} hover:text-foreground`}
+                    data-testid="link-linked-request"
+                  />
+                }
+              >
+                <Link2 className="size-4" />
+              </TooltipTrigger>
+              <TooltipContent>{t("card.actions.linked")}</TooltipContent>
             </Tooltip>
           )}
           <span className="ml-auto flex items-center gap-0.5">

@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Loader2,
   CircleCheck,
+  Link2,
   Settings2,
   Printer,
 } from "lucide-react";
@@ -212,6 +213,23 @@ export function QuoteSubmissionView({
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
 
+  // Opened from the partner board (?view=partner&p=<token>): the other request
+  // of the same send, only when this partner holds it too.
+  const [linked, setLinked] = useState<{ id: string; product: string | null } | null>(null);
+  useEffect(() => {
+    const qs = new URLSearchParams(window.location.search);
+    const token = qs.get("view") === "partner" ? qs.get("p") : null;
+    if (!token) return;
+    let cancelled = false;
+    fetch(`/api/partners/${encodeURIComponent(token)}/submissions/${submissionId}/linked`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (!cancelled && json?.linked?.id) setLinked(json.linked);
+      })
+      .catch(() => { /* no link */ });
+    return () => { cancelled = true; };
+  }, [submissionId]);
+
   useEffect(() => {
     fetch(`/api/form-submissions/${submissionId}`)
       .then((r) => {
@@ -300,6 +318,12 @@ export function QuoteSubmissionView({
         no={tCommon("no", "Non")}
         dontKnow={tq("common.dontKnow") || tCommon("dontKnow", "Je ne sais pas")}
         printSections={printSections}
+        addon={submission.origin === "ecp-addon"
+          ? {
+              origin: tv("addon.origin") || "Demande ajoutée lors d'une demande de borne de recharge",
+              toComplete: tv("addon.toComplete") || "Informations batterie à compléter lors du premier contact",
+            }
+          : null}
       />
     ),
   };
@@ -404,6 +428,16 @@ export function QuoteSubmissionView({
             <Badge variant="secondary" className="font-mono text-xs mt-1">
               {submission.id}
             </Badge>
+            {linked && (
+              <a
+                href={`/${lang}/demande-devis/${linked.id}${window.location.search}`}
+                className="mt-2 ml-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-3"
+                data-testid="link-linked-request"
+              >
+                <Link2 className="size-4" aria-hidden />
+                {tv("linked.label") || "Demande liée"} : {tv(`products.${normalizeProduct(linked.product)}`) || PRODUCT_LABELS[normalizeProduct(linked.product)]}
+              </a>
+            )}
           </div>
 
           {/* Print-only header */}
