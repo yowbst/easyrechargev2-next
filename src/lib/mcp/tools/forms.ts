@@ -27,7 +27,7 @@ export function registerFormTools(server: McpServer) {
     {
       title: "Submit quote request",
       description:
-        "Create a real quote submission (persists to Directus, may dispatch to partners per DISPATCH_MODE, and fires the Make webhook → customer/partner emails). Use test-flagged emails for testing. product=battery leads with solarEquipment=none are stored but never dispatched (response dispatchable=false).",
+        "Create a real quote submission (persists to Directus, may dispatch to partners per DISPATCH_MODE, and fires the Make webhook → customer/partner emails). Use test-flagged emails for testing. product=battery leads with solarEquipment=none are stored but never dispatched (response dispatchable=false). On product=ecp, extra.batteryAddon=true + extra.batteryAddonPvPower (kWc bucket or \"na\") also creates a linked battery request (origin ecp-addon) when the visitor is an owner/co-owner with solarEquipment exists|in-progress and homeBattery=none; the response then adds batterySubmissionId and batteryDispatchable.",
       inputSchema: {
         product: z.enum(PRODUCTS).optional().describe("ecp (charger, default) | battery"),
         firstName: z.string(),

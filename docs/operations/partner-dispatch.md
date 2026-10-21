@@ -178,6 +178,21 @@ Reconciliation runs daily via `/api/cron/reconcile-billing`. The manual endpoint
 
 The resolver pre-empts repeat dispatches: if a partner already received a `dispatched` or `skipped_dedup` ledger row for the same email within `dedup_window_days` (default 30), it is skipped with `status='skipped_dedup'` instead of getting a real dispatch.
 
+### Battery add-on of the charger funnel (2026-10-21)
+
+A charger visitor who is an owner or in a PPE, with solar (`exists` or `in-progress`) and no home battery, can tick "also send me a battery quote" in the housing step and give a PV size (flag `quote-battery-addon`). One send then creates **two submissions**:
+
+- the charger one, as usual;
+- a battery one with `origin = "ecp-addon"`, `linked_submission` → the charger one (and back), carrying only `housingStatus`, `housingType`, `solarEquipment`, `approval`, `deadline`, the address and `pvPower`.
+
+Each is its own lead: its own category (battery: owner/co-owner × PV size, unknown = small), dispatch, price, invoice line, refusal, Make webhook (so **two partner notifications and two visitor confirmations**), Google Ads and ChatGPT Ads conversions. Dedup is per product, so neither blocks the other. The server re-checks eligibility and ignores an add-on that does not qualify; a failure on the battery side is logged and never fails the charger request.
+
+The add-on's consent is its own tick: *"Oui, je souhaite aussi recevoir un devis pour une batterie solaire, transmis à un installateur partenaire."* Without that explicit request the battery lead must not be invoiced.
+
+Partners see the battery add-on with an origin line, only the answers it has and "à compléter lors du premier contact". The board shows a **Demande liée** button, and the request page opened from the board links to the other request, only when the same partner holds both; a partner never learns that someone else received the other one. The Make payload carries `submission.origin` and `submission.linkedSubmissionId` (set on the battery one).
+
+Directus `form_submissions` needs the fields `origin` (string) and `linked_submission` (M2O to `form_submissions`, on delete SET NULL). They are written only by add-on sends.
+
 ### Partner dashboards
 
 Each partner has a private URL at `/partners/<dashboard_token>`. The token is an **opaque random UUID** stored on the `partners` row and is the only credential. Invalid tokens 404. The page is marked `noindex, nofollow`.
