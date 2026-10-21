@@ -7,7 +7,8 @@ import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
 import { parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
 import { webhookUrl as configuredWebhookUrl } from "@/lib/site-settings";
 import { normalizeProduct, type Product } from "@/lib/products";
-import { firstMissingAnswer } from "@/components/quote-shell/answers";
+import { firstMissingAddonAnswer, firstMissingAnswer } from "@/components/quote-shell/answers";
+import { ADDON_ORIGIN, buildAddonBatteryData, stripAddon, wantsBatteryAddon } from "@/components/quote-shell/products/ecp/batteryAddon";
 import { isEnrichable } from "@/lib/quote-enrich-fields";
 import { sendOpenAILeadConversion } from "@/lib/openai-ads/conversions";
 import { enrichToken } from "@/lib/quote-enrich";
@@ -66,18 +67,22 @@ export async function POST(req: Request) {
       date_terms_accepted: body.acceptTerms ? new Date().toISOString() : null,
     });
 
-    const { attribution: _a, posthog: _ph, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, miniQuoteSessionToken: _mqt, lang: _lang, ...quoteData } = body;
+    const { attribution: _a, posthog: _ph, firstName: _fn, lastName: _ln, email: _em, phone: _p, phoneCountry: _pc, miniQuoteSessionToken: _mqt, lang: _lang, ...answers } = body;
 
     const product = normalizeProduct(body.product);
 
     // Normalize canton before persistence so downstream consumers (CRM, ledger,
     // Make payload) all see the 2-letter code. The form sometimes writes the
     // localized name (e.g. "Valais" instead of "VS").
-    const normalizedCanton = normalizeCanton(typeof quoteData.canton === "string" ? quoteData.canton : null);
-    if (normalizedCanton && quoteData.canton !== normalizedCanton) {
-      quoteData.canton = normalizedCanton;
+    const normalizedCanton = normalizeCanton(typeof answers.canton === "string" ? answers.canton : null);
+    if (normalizedCanton && answers.canton !== normalizedCanton) {
+      answers.canton = normalizedCanton;
     }
-    const rawCanton = normalizedCanton ?? (typeof quoteData.canton === "string" ? quoteData.canton : null);
+    const rawCanton = normalizedCanton ?? (typeof answers.canton === "string" ? answers.canton : null);
+
+    // Battery add-on: a second, linked battery request (re-checked here, never trusted).
+    const batteryData = product === "ecp" && wantsBatteryAddon(answers) ? buildAddonBatteryData(answers) : null;
+    const quoteData = stripAddon(answers);
 
     // Identify user in PostHog server-side (client may not have loaded yet)
     try {
@@ -106,9 +111,39 @@ export async function POST(req: Request) {
     const submission = await processSubmission(ctx, { product, data: quoteData, rawCanton });
     const dispatchable = submission.dispatchable;
 
+    // The charger lead is already safe: a battery failure is logged, never a 500.
+    let battery: { id: string | null; dispatchable: boolean } | null = null;
+    if (batteryData) {
+      try {
+        const result = await processSubmission(ctx, {
+          product: "battery",
+          data: batteryData,
+          rawCanton,
+          origin: ADDON_ORIGIN,
+          linkedId: submission.id,
+        });
+        battery = result;
+        await storage.linkSubmission(submission.id, result.id);
+      } catch (error) {
+        battery ??= { id: null, dispatchable: false };
+        console.error("[Quote] Battery add-on failed:", error);
+        serverLog("ERROR", "Quote battery add-on failed", {
+          route: "quote",
+          submissionId: submission.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
     // Lets this browser add the optional charger answers afterwards (flag quote-enrich).
     const enrich = isEnrichable(product) ? enrichToken(submission.id) : null;
-    return NextResponse.json({ success: true, submissionId: submission.id, dispatchable, ...(enrich && { enrichToken: enrich }) });
+    return NextResponse.json({
+      success: true,
+      submissionId: submission.id,
+      dispatchable,
+      ...(enrich && { enrichToken: enrich }),
+      ...(battery && { batterySubmissionId: battery.id, batteryDispatchable: battery.dispatchable }),
+    });
   } catch (error) {
     console.error("[Quote] Submission error:", error);
     serverLog("ERROR", "Quote submission failed", { route: "quote", error: error instanceof Error ? error.message : String(error) });
@@ -152,10 +187,10 @@ interface SubmissionContext {
  */
 async function processSubmission(
   ctx: SubmissionContext,
-  input: { product: Product; data: Record<string, unknown>; rawCanton: string | null },
+  input: { product: Product; data: Record<string, unknown>; rawCanton: string | null; origin?: string; linkedId?: string },
 ): Promise<{ id: string; dispatchable: boolean }> {
   const { req, refererUrl, session, formUser, phIds, email, lang } = ctx;
-  const { product, data, rawCanton } = input;
+  const { product, data, rawCanton, origin, linkedId } = input;
 
   const submission = await storage.createFormSubmission({
     session: session.id,
@@ -167,12 +202,14 @@ async function processSubmission(
     location_params: refererUrl?.search.slice(1) || null,
     data,
     status: "success",
+    ...(origin && { origin }),
+    ...(linkedId && { linked_submission: linkedId }),
   });
 
   // The funnel only submits complete answers; a request that is not (a bot,
   // an old client, a funnel bug) is still stored and dispatched — refusing
   // could lose a real lead past the contact step — but it is flagged.
-  const missing = firstMissingAnswer(product, data);
+  const missing = origin === ADDON_ORIGIN ? firstMissingAddonAnswer(data) : firstMissingAnswer(product, data);
   if (missing) {
     try {
       const posthog = getPostHogServer();
@@ -231,6 +268,8 @@ async function processSubmission(
         product,
         isRepeat,
         data,
+        origin: origin ?? null,
+        linkedSubmissionId: linkedId ?? null,
       },
       user: {
         id: formUser.id,
