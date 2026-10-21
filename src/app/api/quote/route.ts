@@ -6,7 +6,7 @@ import { runDispatch, normalizeCanton, notDispatchableResult, type DispatchResul
 import { deriveLeadCategory, isDispatchable } from "@/lib/dispatch/categorize";
 import { parsePhone, buildQuoteWebhookPayload, fireQuoteWebhook } from "@/lib/dispatch/webhook";
 import { webhookUrl as configuredWebhookUrl } from "@/lib/site-settings";
-import { normalizeProduct } from "@/lib/products";
+import { normalizeProduct, type Product } from "@/lib/products";
 import { firstMissingAnswer } from "@/components/quote-shell/answers";
 import { isEnrichable } from "@/lib/quote-enrich-fields";
 import { sendOpenAILeadConversion } from "@/lib/openai-ads/conversions";
@@ -77,64 +77,7 @@ export async function POST(req: Request) {
     if (normalizedCanton && quoteData.canton !== normalizedCanton) {
       quoteData.canton = normalizedCanton;
     }
-
-    const submission = await storage.createFormSubmission({
-      session: session.id,
-      user: formUser.id,
-      form_type: "quote",
-      product,
-      location_route: "quote",
-      location_path: refererUrl?.pathname ?? null,
-      location_params: refererUrl?.search.slice(1) || null,
-      data: quoteData,
-      status: "success",
-    });
-
-    // The funnel only submits complete answers; a request that is not (a bot,
-    // an old client, a funnel bug) is still stored and dispatched — refusing
-    // could lose a real lead past the contact step — but it is flagged.
-    const missing = firstMissingAnswer(product, quoteData);
-    if (missing) {
-      try {
-        const posthog = getPostHogServer();
-        posthog.capture({
-          distinctId: phIds.phDistinctId ?? "anonymous",
-          event: "quote_incomplete_server",
-          properties: { product, step: missing.step, field: missing.field, submission_id: submission.id },
-        });
-        after(() => posthog.flush());
-      } catch { /* analytics never blocks a submission */ }
-    }
-
-    // Resolve partner dispatch. Gated by DISPATCH_MODE env var (off|shadow|live).
-    // Returns a payload-ready object embedded in the Make webhook below.
-    // runDispatch never throws — failures are logged and surface as an empty result.
-    const leadCategory = deriveLeadCategory(product, quoteData);
-    const dispatchable = isDispatchable(leadCategory);
     const rawCanton = normalizedCanton ?? (typeof quoteData.canton === "string" ? quoteData.canton : null);
-
-    let dispatchResult: DispatchResult;
-    if (dispatchable) {
-      dispatchResult = await runDispatch({
-        submissionId: submission.id,
-        rawCanton,
-        email,
-        locale: (lang === "de" ? "de" : "fr"),
-        leadCategory,
-        product,
-      });
-    } else {
-      dispatchResult = notDispatchableResult(rawCanton);
-      try {
-        const posthog = getPostHogServer();
-        posthog.capture({
-          distinctId: phIds.phDistinctId ?? "anonymous",
-          event: "dispatch_not_dispatchable",
-          properties: { product, lead_category: leadCategory, submission_id: submission.id, canton: dispatchResult.canton },
-        });
-        after(() => posthog.flush());
-      } catch { /* analytics never blocks a submission */ }
-    }
 
     // Identify user in PostHog server-side (client may not have loaded yet)
     try {
@@ -154,54 +97,14 @@ export async function POST(req: Request) {
       }
     } catch { /* don't block submission */ }
 
-    // Fire webhook
     const webhookUrl = await configuredWebhookUrl("quote");
-    if (webhookUrl) {
-      const phDistinctId = phIds.phDistinctId ?? null;
-      const posthogDashboard = "https://eu.posthog.com/project/103083";
-      const isRepeat = (dispatchResult.dedup?.skippedPartnerSlugs?.length ?? 0) > 0;
+    const ctx: SubmissionContext = {
+      req, body, refererUrl, session, formUser, phIds, miniQuoteToken, webhookUrl,
+      email, firstName, lastName, phone, phoneCountry, lang,
+    };
 
-      const payload = buildQuoteWebhookPayload({
-        submission: {
-          id: submission.id,
-          locationHost: refererUrl?.host ?? req.headers.get("host") ?? null,
-          locationPath: refererUrl?.pathname ?? null,
-          submittedAt: new Date().toISOString(),
-          environment: process.env.VERCEL_ENV || "development",
-          miniQuoteSessionToken: miniQuoteToken || null,
-          leadCategory,
-          product,
-          isRepeat,
-          data: quoteData,
-        },
-        user: {
-          id: formUser.id,
-          email,
-          firstName,
-          lastName,
-          phone: parsePhone(phone, phoneCountry),
-          language: lang ?? null,
-        },
-        session: {
-          id: session.id,
-          token: session.session_token ?? null,
-          locale: lang ?? req.headers.get("accept-language")?.split(",")[0] ?? null,
-          userAgent: req.headers.get("user-agent") ?? null,
-          ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
-        },
-        posthog: {
-          distinctId: phDistinctId,
-          personUrl: phDistinctId ? `${posthogDashboard}/person/${phDistinctId}` : null,
-        },
-        attribution: body.attribution ?? {},
-        dispatch: dispatchResult,
-        trigger: "quote_submission",
-      });
-
-      await fireQuoteWebhook(webhookUrl, payload, { submissionId: submission.id, distinctId: phDistinctId });
-      // ChatGPT Ads Conversions API — no-op unless configured and eligible.
-      after(() => sendOpenAILeadConversion(payload));
-    }
+    const submission = await processSubmission(ctx, { product, data: quoteData, rawCanton });
+    const dispatchable = submission.dispatchable;
 
     // Lets this browser add the optional charger answers afterwards (flag quote-enrich).
     const enrich = isEnrichable(product) ? enrichToken(submission.id) : null;
@@ -222,4 +125,141 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+}
+
+type Body = Record<string, unknown> & { attribution?: Record<string, unknown> };
+
+interface SubmissionContext {
+  req: Request;
+  body: Body;
+  refererUrl: URL | null;
+  session: { id: string; session_token?: string | null };
+  formUser: { id: string };
+  phIds: { phDistinctId?: string; phSessionId?: string };
+  miniQuoteToken: string | undefined;
+  webhookUrl: string | null | undefined;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | undefined;
+  phoneCountry: string | undefined;
+  lang: string | undefined;
+}
+
+/**
+ * Store one submission, flag missing answers, dispatch it and fire its Make
+ * webhook and ChatGPT Ads conversion.
+ */
+async function processSubmission(
+  ctx: SubmissionContext,
+  input: { product: Product; data: Record<string, unknown>; rawCanton: string | null },
+): Promise<{ id: string; dispatchable: boolean }> {
+  const { req, refererUrl, session, formUser, phIds, email, lang } = ctx;
+  const { product, data, rawCanton } = input;
+
+  const submission = await storage.createFormSubmission({
+    session: session.id,
+    user: formUser.id,
+    form_type: "quote",
+    product,
+    location_route: "quote",
+    location_path: refererUrl?.pathname ?? null,
+    location_params: refererUrl?.search.slice(1) || null,
+    data,
+    status: "success",
+  });
+
+  // The funnel only submits complete answers; a request that is not (a bot,
+  // an old client, a funnel bug) is still stored and dispatched — refusing
+  // could lose a real lead past the contact step — but it is flagged.
+  const missing = firstMissingAnswer(product, data);
+  if (missing) {
+    try {
+      const posthog = getPostHogServer();
+      posthog.capture({
+        distinctId: phIds.phDistinctId ?? "anonymous",
+        event: "quote_incomplete_server",
+        properties: { product, step: missing.step, field: missing.field, submission_id: submission.id },
+      });
+      after(() => posthog.flush());
+    } catch { /* analytics never blocks a submission */ }
+  }
+
+  // Resolve partner dispatch. Gated by DISPATCH_MODE env var (off|shadow|live).
+  // Returns a payload-ready object embedded in the Make webhook below.
+  // runDispatch never throws — failures are logged and surface as an empty result.
+  const leadCategory = deriveLeadCategory(product, data);
+  const dispatchable = isDispatchable(leadCategory);
+
+  let dispatchResult: DispatchResult;
+  if (dispatchable) {
+    dispatchResult = await runDispatch({
+      submissionId: submission.id,
+      rawCanton,
+      email,
+      locale: (lang === "de" ? "de" : "fr"),
+      leadCategory,
+      product,
+    });
+  } else {
+    dispatchResult = notDispatchableResult(rawCanton);
+    try {
+      const posthog = getPostHogServer();
+      posthog.capture({
+        distinctId: phIds.phDistinctId ?? "anonymous",
+        event: "dispatch_not_dispatchable",
+        properties: { product, lead_category: leadCategory, submission_id: submission.id, canton: dispatchResult.canton },
+      });
+      after(() => posthog.flush());
+    } catch { /* analytics never blocks a submission */ }
+  }
+
+  if (ctx.webhookUrl) {
+    const phDistinctId = phIds.phDistinctId ?? null;
+    const posthogDashboard = "https://eu.posthog.com/project/103083";
+    const isRepeat = (dispatchResult.dedup?.skippedPartnerSlugs?.length ?? 0) > 0;
+
+    const payload = buildQuoteWebhookPayload({
+      submission: {
+        id: submission.id,
+        locationHost: refererUrl?.host ?? req.headers.get("host") ?? null,
+        locationPath: refererUrl?.pathname ?? null,
+        submittedAt: new Date().toISOString(),
+        environment: process.env.VERCEL_ENV || "development",
+        miniQuoteSessionToken: ctx.miniQuoteToken || null,
+        leadCategory,
+        product,
+        isRepeat,
+        data,
+      },
+      user: {
+        id: formUser.id,
+        email,
+        firstName: ctx.firstName,
+        lastName: ctx.lastName,
+        phone: parsePhone(ctx.phone, ctx.phoneCountry),
+        language: lang ?? null,
+      },
+      session: {
+        id: session.id,
+        token: session.session_token ?? null,
+        locale: lang ?? req.headers.get("accept-language")?.split(",")[0] ?? null,
+        userAgent: req.headers.get("user-agent") ?? null,
+        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      },
+      posthog: {
+        distinctId: phDistinctId,
+        personUrl: phDistinctId ? `${posthogDashboard}/person/${phDistinctId}` : null,
+      },
+      attribution: ctx.body.attribution ?? {},
+      dispatch: dispatchResult,
+      trigger: "quote_submission",
+    });
+
+    await fireQuoteWebhook(ctx.webhookUrl, payload, { submissionId: submission.id, distinctId: phDistinctId });
+    // ChatGPT Ads Conversions API — no-op unless configured and eligible.
+    after(() => sendOpenAILeadConversion(payload));
+  }
+
+  return { id: submission.id, dispatchable };
 }
