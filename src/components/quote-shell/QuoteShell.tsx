@@ -388,6 +388,7 @@ export function QuoteShell({
       if (batteryId) {
         qs.set("ba", "1");
         qs.set("bsid", batteryId);
+        qs.set("bpv", String(data.batteryAddonPvPower ?? "na"));
         if (!batteryDispatchable) qs.set("bnd", "1");
       }
       const redirect = () => {

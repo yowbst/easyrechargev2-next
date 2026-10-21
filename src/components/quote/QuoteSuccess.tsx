@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { usePostHog } from "@/components/PostHogProvider";
-import { CheckCircle } from "lucide-react";
+import { BatteryCharging, CheckCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { resolveRouteId, resolveRouteLinks } from "@/lib/pageConfig";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
 import { matchesShowWhen } from "@/lib/cta-conditions";
 import type { Product } from "@/lib/products";
+import { SHELL_COPY } from "@/components/quote-shell/copy";
+import { formatBatteryAnswer } from "@/components/quote-shell/products/battery/buckets";
 
 interface QuoteSuccessProps {
   lang: string;
@@ -48,6 +50,8 @@ export function QuoteSuccess({
   const searchParams = useSearchParams();
   const [firstName, setFirstName] = useState("");
   const [submissionId, setSubmissionId] = useState("");
+  /** Battery add-on sent with this charger request: PV answer, or null. */
+  const addonPv = searchParams.get("ba") === "1" ? (searchParams.get("bpv") ?? "na") : null;
 
   useEffect(() => {
     setFirstName(searchParams.get("firstName") ?? "");
@@ -91,9 +95,20 @@ export function QuoteSuccess({
   }, [needsLeadData, submissionId]);
 
   // Keep each CTA's original index: its label key is cta.<index>.label.
+  // Already asked for a battery quote: no link to the battery funnel.
   const visibleCtas = ctas
     .map((cta, i) => ({ cta, i }))
+    .filter(({ cta }) => !(addonPv !== null && cta.page_route_id === "quote-battery"))
     .filter(({ cta }) => matchesShowWhen(cta.show_when, leadData));
+
+  const copy = SHELL_COPY[lang as "fr" | "de"] ?? SHELL_COPY.fr;
+  const addonLine = dictionary["pages.quote.quote.batteryAddon.success"] || copy["quote.batteryAddon.success"];
+  const addonPvLabel = addonPv === null
+    ? null
+    : addonPv === "na" || !Number(addonPv)
+      ? (dictionary["pages.quote.quote.batteryAddon.dontKnow"] || copy["quote.batteryAddon.dontKnow"])
+      : formatBatteryAnswer("pvPower", Number(addonPv));
+  const addonPvTitle = dictionary["pages.quote.quote.batteryAddon.pvPower.label"] || copy["quote.batteryAddon.pvPower.label"];
 
   const rawTitle = d("blocks.hero.headline", { firstName });
   // No firstName: strip leading punctuation/whitespace, then capitalize
@@ -154,6 +169,16 @@ export function QuoteSuccess({
                     __html: resolveRouteLinks(heroBody, lang, pageRegistry),
                   }}
                 />
+              )}
+
+              {addonPv !== null && (
+                <div className="mb-10 flex items-start gap-3 rounded-xl border border-white/20 bg-white/10 p-4 text-white backdrop-blur-sm" data-testid="battery-addon-confirmation">
+                  <BatteryCharging className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+                  <div>
+                    <p className="font-semibold">{addonLine}</p>
+                    {addonPvLabel && <p className="mt-1 text-sm text-white/75">{addonPvTitle} : {addonPvLabel}</p>}
+                  </div>
+                </div>
               )}
 
               {visibleCtas.length > 0 && (
