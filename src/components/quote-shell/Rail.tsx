@@ -1,7 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { BadgeCheck, ClipboardCheck, FileCheck, Gift, Landmark, Pencil, PhoneCall, Star } from "lucide-react";
+import { BadgeCheck, BatteryCharging, Check, ClipboardCheck, FileCheck, Gift, Landmark, Pencil, PhoneCall, Plus, Star } from "lucide-react";
 import type { PublicQuoteConfig } from "@/lib/public-config";
 import type { FormValues, ProductFunnel, StepProps } from "./types";
 
@@ -126,7 +126,7 @@ function Rows({ rows }: { rows: RailRow[] }) {
  * visitor gets (or, on the last step, what happens next), their answers so far
  * with a link back to each question, and the rating.
  */
-export function Rail({ tc, tq, gc, subsidy, offer, last, answers, onEdit }: {
+export function Rail({ tc, tq, gc, subsidy, offer, last, answers, onEdit, addon }: {
   tc: T;
   tq: StepProps["tq"];
   gc: PublicQuoteConfig;
@@ -135,6 +135,8 @@ export function Rail({ tc, tq, gc, subsidy, offer, last, answers, onEdit }: {
   last: boolean;
   answers: AnswerRow[];
   onEdit: (stepId: string, field: string) => void;
+  /** Battery add-on: a teaser that points at the card, then its confirmation. Null when not offered. */
+  addon?: { optedIn: boolean; onAdd: () => void } | null;
 }) {
   const score = gc.trustpilot?.score;
   const installations = gc.stats?.installations;
@@ -147,6 +149,33 @@ export function Rail({ tc, tq, gc, subsidy, offer, last, answers, onEdit }: {
         </h2>
         <Rows rows={last ? nextRows(tc, gc) : benefitRows(tc, tq, gc, subsidy, offer)} />
       </div>
+
+      {addon && (addon.optedIn ? (
+        <p className="flex items-center gap-2.5 rounded-xl border border-b-charge/40 bg-b-charge/5 px-5.5 py-4 text-[15px] font-semibold">
+          <BatteryCharging className="size-4.5 shrink-0 text-b-link" aria-hidden />
+          {tc("quote.batteryAddon.added")}
+          <Check className="ml-auto size-4.5 shrink-0 text-b-link" aria-hidden />
+        </p>
+      ) : (
+        <div className="rounded-xl border border-b-charge/40 bg-b-charge/5 px-5.5 py-5">
+          <div className="flex items-start gap-3">
+            <BatteryCharging className="mt-0.5 size-4.5 shrink-0 text-b-link" aria-hidden />
+            <div>
+              <p className="text-[15px] leading-snug font-semibold">{tc("quote.batteryAddon.teaser.title")}</p>
+              <p className="mt-1 text-sm leading-snug text-muted-foreground">{tc("quote.batteryAddon.teaser.text")}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={addon.onAdd}
+            className="mt-3.5 ml-7.5 inline-flex h-10 items-center gap-1.5 rounded-lg bg-b-forest px-4 text-sm font-semibold text-b-on-forest"
+            data-testid="button-battery-addon-teaser"
+          >
+            <Plus className="size-4" aria-hidden />
+            {tc("quote.batteryAddon.teaser.cta")}
+          </button>
+        </div>
+      ))}
 
       {answers.length > 0 && (
         <div className="rounded-xl bg-b-sand px-5.5 py-5">

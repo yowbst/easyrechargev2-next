@@ -295,17 +295,28 @@ export function QuoteShell({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const pulse = (el: HTMLElement) => {
+    scrollToElement(el);
+    el.classList.remove("er-field-nudge");
+    void el.offsetWidth;
+    el.classList.add("er-field-nudge");
+    window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+  };
+
   // Scroll to the missing question, pulse it and say what is missing under it.
   const nudgeField = (field: string) => {
     ph?.capture("quote_missing_answer_nudge", { ...eventProps(), step: index + 1, step_name: currentId, field });
     const el = document.getElementById(`q-${field}`);
     if (!el) return;
     setNudged({ field, el });
-    scrollToElement(el);
-    el.classList.remove("er-field-nudge");
-    void el.offsetWidth;
-    el.classList.add("er-field-nudge");
-    window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+    pulse(el);
+  };
+
+  // Side-panel teaser: show the battery card; ticking stays the visitor's act.
+  const showAddonCard = () => {
+    ph?.capture("battery_addon_teaser_clicked", { ...eventProps(), step_name: currentId });
+    const el = document.getElementById("q-batteryAddon");
+    if (el) pulse(el);
   };
 
   const tryGoToStep = (nextId: string) => {
@@ -537,7 +548,11 @@ export function QuoteShell({
         </main>
 
         <div className="hidden lg:block">
-          <Rail tc={tc} tq={tq} gc={gc} subsidy={subsidy} offer={offer} last={isContact} answers={answers} onEdit={editAnswer} />
+          <Rail
+            tc={tc} tq={tq} gc={gc} subsidy={subsidy} offer={offer} last={isContact} answers={answers} onEdit={editAnswer}
+            // The teaser only where the card is; the confirmation follows the visitor.
+            addon={addonOn ? { optedIn: true, onAdd: showAddonCard } : addonEligible && currentId === "housing" ? { optedIn: false, onAdd: showAddonCard } : null}
+          />
         </div>
       </div>
 
