@@ -26,6 +26,9 @@ export interface EcpFields {
   neighborhoodEquipment: string;
   /** Landlord / co-ownership approval — asked in the housing step for tenants and co-owners. */
   approval: string;
+  /** Battery add-on (`batteryAddon.ts`): never stored on the charger submission. */
+  batteryAddon: boolean;
+  batteryAddonPvPower: number | "na" | "";
   parkingSpotLocation: string;
   parkingSpotCount: string;
   /** Hidden question with a single value. */
@@ -51,6 +54,8 @@ export const ECP_INITIAL: EcpFields = {
   homeBattery: "",
   neighborhoodEquipment: "",
   approval: "",
+  batteryAddon: false,
+  batteryAddonPvPower: "",
   parkingSpotLocation: "",
   parkingSpotCount: "",
   ecpStatus: "get-advice",
