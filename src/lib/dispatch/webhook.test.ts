@@ -67,3 +67,21 @@ describe("quote ref", () => {
     expect(ref("solar", "en")).toBe("P / BORNE / B / 1000 Lausanne / 2026-07-25");
   });
 });
+
+describe("battery add-on link", () => {
+  it("is null on a plain request", () => {
+    const s = buildQuoteWebhookPayload(parts("ecp")).submission;
+    expect(s.origin).toBeNull();
+    expect(s.linkedSubmissionId).toBeNull();
+  });
+
+  it("carries the origin and the linked submission", () => {
+    const p = parts("battery");
+    const s = buildQuoteWebhookPayload({
+      ...p,
+      submission: { ...p.submission, origin: "ecp-addon", linkedSubmissionId: "sub-0" },
+    }).submission;
+    expect(s.origin).toBe("ecp-addon");
+    expect(s.linkedSubmissionId).toBe("sub-0");
+  });
+});

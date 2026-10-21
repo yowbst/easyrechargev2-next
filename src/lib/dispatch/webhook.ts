@@ -33,6 +33,8 @@ export interface QuoteWebhookParts {
     product: string;
     isRepeat: boolean;
     data: Record<string, unknown>;
+    origin?: string | null;
+    linkedSubmissionId?: string | null;
   };
   user: {
     id: string;
@@ -127,6 +129,8 @@ export function buildQuoteWebhookPayload(parts: QuoteWebhookParts) {
       product: parts.submission.product,
       leadCategory: parts.submission.leadCategory,
       isRepeat: parts.submission.isRepeat,
+      origin: parts.submission.origin ?? null,
+      linkedSubmissionId: parts.submission.linkedSubmissionId ?? null,
       trigger: parts.trigger,
       ref,
       request_url,

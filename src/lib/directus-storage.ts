@@ -60,6 +60,9 @@ interface CreateSubmissionData {
   location_params?: string | null;
   data: Record<string, unknown>;
   status?: string;
+  /** Set only on add-on sends, so a plain request never depends on these columns. */
+  origin?: string;
+  linked_submission?: string;
 }
 
 class DirectusStorage {
@@ -177,6 +180,14 @@ class DirectusStorage {
       },
     );
     return result.data;
+  }
+
+  async linkSubmission(id: string, linkedId: string): Promise<void> {
+    await directusFetch(`/items/form_submissions/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ linked_submission: linkedId }),
+      next: { revalidate: 0 },
+    });
   }
 
   /** Replace a submission's `data` (a JSON field: send the whole object). */
