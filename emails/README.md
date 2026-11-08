@@ -36,3 +36,17 @@ next push overwrites them. After a change in Directus SLAs, run `push` again.
   from `https://easyrecharge.ch/email/logo-white.png`. SVG is not shown by Gmail/Outlook.
 - Adding an e-mail: a `make/<name>.json` with its module ids; the module must be an
   `email:ActionSendEmail` (push refuses otherwise).
+
+## Subjects
+
+- Partner e-mails: `%productIcon% Nouvelle demande de devis – Réf. %ref%` (⚡ charger, 🔋 battery);
+  reminders: `Re: ` + the same subject, so they stay in the new-lead thread. The reference
+  already carries the product, the client's name and the place: nothing else goes in the subject.
+- Visitor e-mails: `Votre demande de devis – Réf. %ref% | easyRecharge` (de/en equivalents).
+
+## Known limitations
+
+- German partner reminders (modules 11, 13, 15, 17) keep the French subject: the new-lead
+  e-mail they thread under exists only in French. Revisit if a German-speaking partner joins.
+- Changing a subject restarts the Gmail conversation for leads already sent: their next
+  reminder no longer matches the original subject.
