@@ -3,7 +3,7 @@
   "modules": { "fr": 61 },
   "mapper": { "headers": [{ "key": "Message-ID", "value": "%threadMessageId%" }] },
   "fr": {
-    "subject": "[ NEW ] %productShortFr% – Demande de devis – Réf. %ref%",
+    "subject": "%productIcon% Nouvelle demande de devis – Réf. %ref%",
     "preheader": "Une nouvelle demande correspond à votre zone. Contactez le demandeur sous {first_contact}\u00a0h.",
     "audienceLabel": "Partenaire",
     "eyebrow": "Nouveau lead",
