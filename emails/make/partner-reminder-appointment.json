@@ -12,7 +12,7 @@
     ]
   },
   "fr": {
-    "subject": "Re: [ NEW ] %rProductShortFr% – Demande de devis – Réf. %rRef%",
+    "subject": "Re: Nouvelle demande de devis – Réf. %rRef%",
     "preheader": "Un clic suffit pour mettre votre suivi à jour.",
     "audienceLabel": "Partenaire",
     "eyebrow": "Suivi du lead",
@@ -65,7 +65,7 @@
     "reason": "Vous recevez cet e-mail en tant que partenaire installateur easyRecharge."
   },
   "de": {
-    "subject": "Re: [ NEW ] %rProductShortFr% – Demande de devis – Réf. %rRef%",
+    "subject": "Re: Nouvelle demande de devis – Réf. %rRef%",
     "preheader": "Ein Klick genügt, um den Stand zu aktualisieren.",
     "audienceLabel": "Partner",
     "eyebrow": "Lead-Nachverfolgung",
