@@ -28,6 +28,8 @@ export interface PartnerInvoice {
   total_chf: string;
   issued_at: string | null;
   due_at: string | null;
+  /** Set by hand when the invoice is marked sent — older invoices may lack it. */
+  sent_at: string | null;
   paid_at: string | null;
   /**
    * Optional on purpose: this is a Directus O2M alias, so it is absent from the
@@ -53,7 +55,7 @@ export async function fetchPartnerInvoices(
   const params = new URLSearchParams();
   params.set(
     "fields",
-    "id,number,version,status,period_month,total_chf,issued_at,due_at,paid_at," +
+    "id,number,version,status,period_month,total_chf,issued_at,due_at,sent_at,paid_at," +
       "lines.label,lines.dispatched_at,lines.lead_category,lines.amount_chf,lines.kind," +
       "lines.dispatch.submission,lines.disqualification_reason,lines.gift_reason,lines.unit_price_chf",
   );

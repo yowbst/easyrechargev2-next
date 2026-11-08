@@ -37,18 +37,116 @@ function byDispatchDate(a: PartnerInvoiceLine, b: PartnerInvoiceLine): number {
   return da === db ? a.label.localeCompare(b.label) : da.localeCompare(db);
 }
 
-// Warm tones for "you owe this", green for settled, neutral for void — drawn
-// from the partner palette so they hold up in both themes.
-const STATUS_TONE: Record<string, string> = {
-  issued: "border-partner-warm/35 bg-partner-warm-bg text-partner-warm",
-  sent: "border-partner-cold/35 bg-partner-cold-bg text-partner-cold",
-  disputed: "border-partner-lost/35 bg-partner-lost/10 text-partner-lost",
-  paid: "border-partner-won/40 bg-partner-hot-bg text-partner-hot",
-  cancelled: "border-border bg-muted text-muted-foreground",
-};
+/** `2026-09` → `Septembre 2026` / `September 2026`. */
+function periodLabel(period: string, lang: "fr" | "de"): string {
+  const d = new Date(`${period}-01T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return period;
+  const s = new Intl.DateTimeFormat(lang === "de" ? "de-CH" : "fr-CH", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 /** Statuses that mean money is still owed — summed into the header figure. */
 const OUTSTANDING = new Set(["issued", "sent", "disputed"]);
+
+type StepTone = "done" | "pending" | "won" | "late" | "void";
+
+interface Step {
+  label: string;
+  date: string | null;
+  tone: StepTone;
+}
+
+const DOT_TONE: Record<StepTone, string> = {
+  done: "border-foreground/70 bg-foreground/70",
+  pending: "border-border bg-card",
+  won: "border-partner-won bg-partner-won",
+  late: "border-partner-lost bg-card",
+  void: "border-muted-foreground/50 bg-muted-foreground/50",
+};
+
+const LABEL_TONE: Record<StepTone, string> = {
+  done: "text-foreground",
+  pending: "text-muted-foreground",
+  won: "text-partner-hot",
+  late: "text-partner-lost",
+  void: "text-muted-foreground",
+};
+
+/**
+ * Issued → sent → settled. The last step is whatever ended the invoice (paid,
+ * cancelled, disputed) or, while it is still open, the due date — in red once
+ * that date has passed. The status is read off the line, so no separate pill.
+ */
+function invoiceSteps(
+  inv: PartnerInvoice,
+  t: ReturnType<typeof makePartnerT>,
+  now: Date,
+): Step[] {
+  // `sent_at` is set by hand and older invoices predate it: a status past
+  // `issued` proves the invoice left even when the date is missing.
+  const sent = Boolean(inv.sent_at) || ["sent", "paid", "disputed"].includes(inv.status);
+
+  let last: Step;
+  if (inv.status === "paid") {
+    last = { label: t("status.paid"), date: inv.paid_at, tone: "won" };
+  } else if (inv.status === "cancelled") {
+    last = { label: t("status.cancelled"), date: null, tone: "void" };
+  } else if (inv.status === "disputed") {
+    last = { label: t("status.disputed"), date: null, tone: "late" };
+  } else {
+    const overdue = Boolean(inv.due_at) && new Date(inv.due_at!) < now;
+    last = { label: t("col.due"), date: inv.due_at, tone: overdue ? "late" : "pending" };
+  }
+
+  return [
+    { label: t("status.issued"), date: inv.issued_at, tone: "done" },
+    { label: t("status.sent"), date: inv.sent_at, tone: sent ? "done" : "pending" },
+    last,
+  ];
+}
+
+function StatusTrack({ steps }: { steps: Step[] }) {
+  return (
+    <ol className="grid w-full max-w-sm grid-cols-3">
+      {steps.map((step, i) => {
+        // A segment is drawn solid once the step it leads to has happened.
+        const reached = step.tone !== "pending" && step.tone !== "late";
+        return (
+          <li key={i} className="relative flex flex-col items-center text-center">
+            {i > 0 && (
+              <span
+                aria-hidden
+                className={`absolute top-1 right-1/2 h-0.5 w-full ${
+                  reached
+                    ? step.tone === "won"
+                      ? "bg-partner-won"
+                      : step.tone === "void"
+                        ? "bg-muted-foreground/40"
+                        : "bg-foreground/60"
+                    : "bg-border"
+                }`}
+              />
+            )}
+            <span
+              aria-hidden
+              className={`relative z-10 size-2.5 rounded-full border-2 ${DOT_TONE[step.tone]}`}
+            />
+            <span className={`mt-1.5 text-xs font-semibold ${LABEL_TONE[step.tone]}`}>
+              {step.label}
+            </span>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {step.date ? frDate(step.date) : "—"}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 function InvoiceLines({
   lines,
@@ -164,7 +262,7 @@ function InvoiceLines({
               >
                 {t("detail.col.amount")}
               </td>
-              <td className="pt-4 text-right font-heading text-xl font-semibold tracking-tight tabular-nums">
+              <td className="pt-4 text-right font-heading text-base font-semibold tracking-tight tabular-nums">
                 {chf(total)}
               </td>
             </tr>
@@ -199,6 +297,7 @@ export function InvoiceList({
   const outstanding = invoices
     .filter((inv) => OUTSTANDING.has(inv.status))
     .reduce((sum, inv) => sum + Number(inv.total_chf), 0);
+  const now = new Date();
 
   return (
     <div className="space-y-3">
@@ -209,7 +308,7 @@ export function InvoiceList({
           <span className="text-sm text-muted-foreground">
             {t("status.issued")}
           </span>
-          <span className="font-heading text-2xl font-semibold tracking-tight tabular-nums text-partner-warm">
+          <span className="font-heading text-lg font-semibold tracking-tight tabular-nums text-partner-warm">
             {chf(outstanding)}
           </span>
         </div>
@@ -219,10 +318,12 @@ export function InvoiceList({
         const lines = inv.lines ?? [];
         const billedCount = countBilledLeads(lines);
         const gifts = lines.filter((l) => l.kind === "gift");
-        const tone = STATUS_TONE[inv.status] ?? "border-border bg-muted text-muted-foreground";
         // A cancelled invoice is history, not an amount owed: de-emphasise it
         // and strike the total so it cannot be mistaken for something due.
         const cancelled = inv.status === "cancelled";
+        const counts =
+          t("detail.count", { count: billedCount }) +
+          (gifts.length > 0 ? ` · ${t("detail.giftCount", { count: gifts.length })}` : "");
 
         return (
           <details
@@ -234,49 +335,46 @@ export function InvoiceList({
               cancelled ? " opacity-60" : ""
             }`}
           >
-            <summary className="cursor-pointer list-none px-6 py-5 [&::-webkit-details-marker]:hidden">
-              <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
-                <span
-                  className={`font-heading text-xl font-semibold tracking-tight${cancelled ? " line-through" : ""}`}
-                >
-                  {inv.number}
-                </span>
-                <span
-                  className={`inline-flex h-7 items-center rounded-md border px-2.5 text-[13px] font-semibold ${tone}`}
-                >
-                  {t(`status.${inv.status}`)}
-                </span>
-                <span className="text-[15px] text-muted-foreground">{inv.period_month}</span>
-                <span
-                  className={`ml-auto font-heading text-2xl font-semibold tracking-tight tabular-nums${cancelled ? " line-through" : ""}`}
-                >
-                  {chf(inv.total_chf)}
-                </span>
-                <ChevronDown
-                  className="size-[18px] shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
-                  aria-hidden
-                />
-              </div>
-              <div className="mt-2 flex flex-wrap gap-x-5 text-sm text-muted-foreground">
-                <span>
-                  {t("col.issued")} {frDate(inv.issued_at)}
-                </span>
-                <span>
-                  {t("col.due")} {frDate(inv.due_at)}
-                </span>
-                {inv.paid_at && (
-                  <span>
-                    {t("col.paid")} {frDate(inv.paid_at)}
-                  </span>
-                )}
-                <span>
-                  {t("detail.count", { count: billedCount })}
-                  {gifts.length > 0 && ` · ${t("detail.giftCount", { count: gifts.length })}`}
-                </span>
+            <summary className="cursor-pointer list-none px-5 py-4 [&::-webkit-details-marker]:hidden">
+              <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-4 md:gap-x-6 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)_minmax(0,1fr)]">
+                <div className="min-w-0">
+                  <div
+                    className={`whitespace-nowrap font-heading text-base font-semibold tracking-tight${cancelled ? " line-through" : ""}`}
+                  >
+                    {inv.number}
+                  </div>
+                  <div className="whitespace-nowrap text-sm text-muted-foreground">
+                    {periodLabel(inv.period_month, lang)}
+                  </div>
+                </div>
+
+                <div className="col-span-2 row-start-2 flex justify-center md:col-span-1 md:row-start-auto">
+                  <StatusTrack steps={invoiceSteps(inv, t, now)} />
+                </div>
+
+                {/* On a phone the counts would crowd the number; they move under the track. */}
+                <div className="col-span-2 -mt-2 text-center text-xs text-muted-foreground md:hidden">
+                  {counts}
+                </div>
+
+                <div className="col-start-2 row-start-1 flex items-center justify-end gap-3 md:col-start-auto md:row-start-auto">
+                  <div className="text-right">
+                    <div
+                      className={`font-heading text-lg font-semibold tracking-tight tabular-nums${cancelled ? " line-through" : ""}`}
+                    >
+                      {chf(inv.total_chf)}
+                    </div>
+                    <div className="hidden text-xs text-muted-foreground md:block">{counts}</div>
+                  </div>
+                  <ChevronDown
+                    className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </div>
               </div>
             </summary>
 
-            <div className="border-t px-6 pb-6">
+            <div className="border-t px-5 pb-5">
               {lines.length === 0 ? (
                 <p className="py-4 text-sm text-muted-foreground">{t("detail.empty")}</p>
               ) : (
