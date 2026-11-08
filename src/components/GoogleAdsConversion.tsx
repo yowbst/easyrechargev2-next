@@ -12,14 +12,21 @@ import { useSearchParams } from "next/navigation";
 // Waits for window.gtag: this child effect runs before the layout-level
 // GoogleAdsTag effect, and events queued before the consent defaults
 // would be dropped.
-export function GoogleAdsConversion({ sendTo }: { sendTo?: string | null }) {
+export function GoogleAdsConversion({ sendTo, idParam = "submissionId", notALeadParam = "nd" }: {
+  sendTo?: string | null;
+  /** Query params of the submission to count; the battery add-on uses bsid / bnd. */
+  idParam?: string;
+  notALeadParam?: string;
+}) {
   const searchParams = useSearchParams();
-  const submissionId = searchParams.get("submissionId") || undefined;
+  const submissionId = searchParams.get(idParam) || undefined;
   // nd=1: the lead is stored but never dispatched (battery visitor without PV).
-  const notALead = searchParams.get("nd") === "1";
+  const notALead = searchParams.get(notALeadParam) === "1";
+  // A second conversion only exists with its own id.
+  const missingId = idParam !== "submissionId" && !submissionId;
 
   useEffect(() => {
-    if (!sendTo || notALead) return;
+    if (!sendTo || notALead || missingId) return;
     const guardKey = `er-ads-conv-${submissionId || "unknown"}`;
     try {
       if (sessionStorage.getItem(guardKey)) return;
@@ -47,7 +54,7 @@ export function GoogleAdsConversion({ sendTo }: { sendTo?: string | null }) {
     return () => {
       cancelled = true;
     };
-  }, [sendTo, submissionId, notALead]);
+  }, [sendTo, submissionId, notALead, missingId]);
 
   return null;
 }

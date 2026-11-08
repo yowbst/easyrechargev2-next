@@ -312,13 +312,14 @@ Dictionary strings can contain `{quote_request_duration}`, `{first_contact}`, `{
 
 | Route | Method | Purpose |
 |---|---|---|
-| `/api/quote` | POST | Quote form → Directus + webhook |
+| `/api/quote` | POST | Quote form → Directus + webhook; a charger send with the battery add-on (flag `quote-battery-addon`) also creates a linked battery submission (`origin` `ecp-addon`) — see `docs/operations/partner-dispatch.md` |
 | `/api/contact` | POST | Contact form → Directus + webhook |
 | `/api/form-submissions/[id]` | GET | Retrieve submission (QuoteSuccess page) |
 | `/api/cms/localities` | GET | Swiss locality search (autocomplete) |
 | `/api/cms/localities/subsidy-summary` | GET | Commune charging subsidy by NPA + locality (quote side panel) |
 | `/api/quote/[id]/enrich` | PATCH | Optional charger answers after sending (flag `quote-enrich`); HMAC token from `/api/quote`, 6 fields, empty ones only, 2 h window |
 | `/api/cms/assets/[id]` | GET | Directus asset proxy (auth required) |
+| `/api/partners/[uuid]/submissions/[id]/linked` | GET | The other request of the same send (charger ↔ battery add-on), only when this partner holds both |
 | `/api/partners/action` | POST | Write behind an e-mail action link (signed token); the link itself opens `/partners/action/[token]`, which never writes |
 | `/api/cron/dispatch-reminders` | GET | Weekday partner reminders → `reminder_due` events (Vercel Cron, `CRON_SECRET`); `POST /api/admin/dispatch-reminders?dryRun=1` previews |
 

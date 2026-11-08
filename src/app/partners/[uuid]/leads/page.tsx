@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { findPartnerByToken } from "@/lib/partner-auth";
 import {
   fetchPartnerDispatches,
+  fetchSubmissionLinks,
+  resolveLinkedForPartner,
   fetchPartnerLeadsConfig,
   fetchPartnerSectionPage,
 } from "@/lib/dispatch/partner-dashboard-queries";
@@ -78,11 +80,15 @@ export default async function PartnerLeadsPage({
   if (!partner) notFound();
 
   const locale = slugToDirectusLocale(lang);
-  const [dispatches, leadsConfig, leadsPage] = await Promise.all([
+  const [rawDispatches, leadsConfig, leadsPage] = await Promise.all([
     fetchPartnerDispatches(partner.id),
     fetchPartnerLeadsConfig(),
     fetchPartnerSectionPage("partner-leads", locale),
   ]);
+  const links = await fetchSubmissionLinks(
+    rawDispatches.map((d) => d.submission?.id).filter((id): id is string => !!id),
+  );
+  const dispatches = resolveLinkedForPartner(rawDispatches, links);
   const dictionary = leadsPage
     ? extractPageDictionary("partner-leads", leadsPage, locale)
     : {};

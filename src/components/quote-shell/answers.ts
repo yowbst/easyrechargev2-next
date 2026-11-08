@@ -38,3 +38,14 @@ export function firstMissingAnswer(
   }
   return null;
 }
+
+/**
+ * The same check for a battery request added from the charger funnel
+ * (`batteryAddon.ts`): only the PV size is asked there; the rest is gathered
+ * by the installer at first contact.
+ */
+export function firstMissingAddonAnswer(data: FormValues): { step: string; field: string } | null {
+  const pv = data.pvPower;
+  const ok = pv === "na" || (typeof pv === "number" && pv > 0);
+  return ok ? null : { step: "pv", field: "pvPower" };
+}

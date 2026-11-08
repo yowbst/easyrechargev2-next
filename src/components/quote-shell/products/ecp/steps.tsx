@@ -5,6 +5,11 @@ import {
   CarFront, Clock, HelpCircle, Home, Hourglass, Key, Search, Sun, Umbrella, Users, Warehouse, Zap,
 } from "lucide-react";
 import { IconButtonGroup, type IconButtonOption } from "@/components/quote/IconButtonGroup";
+import { RangeButtonGroup } from "@/components/quote/RangeButtonGroup";
+import { Checkbox } from "@/components/ui/checkbox";
+import { resolveBuckets } from "@/lib/quoteBuckets";
+import { BATTERY_BUCKETS } from "../battery/buckets";
+import { isBatteryAddonEligible } from "./batteryAddon";
 import { RevealField } from "../../RevealField";
 import { FieldLabel } from "../../FieldLabel";
 import { ApprovalField } from "../../ApprovalField";
@@ -88,6 +93,10 @@ export function HousingStep(props: StepProps) {
           list={[["exists", BatteryCharging], ["in-progress", Hourglass], ["none", Ban]]} />
       </RevealField>
 
+      <RevealField visible={!!props.features?.batteryAddon && isBatteryAddonEligible(d)}>
+        <BatteryAddonCard {...props} />
+      </RevealField>
+
       <RevealField visible={neighborhood && solarDone}>
         <Question step="housing" field="neighborhoodEquipment" props={props} sub value={d.neighborhoodEquipment ?? ""} onChange={(v) => set("neighborhoodEquipment", v)}
           list={[["exists", Users], ["in-progress", Hourglass], ["none", Ban]]} />
@@ -97,6 +106,45 @@ export function HousingStep(props: StepProps) {
         <ApprovalField {...props} />
       </RevealField>
     </>
+  );
+}
+
+/**
+ * Battery add-on (`batteryAddon.ts`): the tick is the visitor's request for a
+ * second, battery quote — the consent the partner invoice relies on.
+ */
+function BatteryAddonCard({ data, set, tc }: StepProps) {
+  const on = data.batteryAddon === true;
+  const pv = data.batteryAddonPvPower;
+  return (
+    <div id="q-batteryAddon" className="rounded-xl border border-b-charge/40 bg-b-charge/5 p-5">
+      <p className="font-semibold text-foreground">{tc("quote.batteryAddon.title")}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{tc("quote.batteryAddon.text")}</p>
+      <label htmlFor="batteryAddon" className="mt-4 flex cursor-pointer items-start gap-3 text-[15px] leading-relaxed">
+        <Checkbox
+          id="batteryAddon"
+          checked={on}
+          onCheckedChange={(checked) => set("batteryAddon", !!checked)}
+          className="mt-0.5 size-6 shrink-0 rounded-md"
+          data-testid="checkbox-battery-addon"
+        />
+        <span>{tc("quote.batteryAddon.optIn")}</span>
+      </label>
+      <RevealField visible={on}>
+        <div id="q-batteryAddonPvPower" className="mt-5">
+          <RangeButtonGroup
+            label={tc("quote.batteryAddon.pvPower.label")}
+            help={tc("quote.batteryAddon.pvPower.why")}
+            value={typeof pv === "number" || pv === "na" ? pv : null}
+            onChange={(v) => set("batteryAddonPvPower", v)}
+            options={resolveBuckets("pvPower", BATTERY_BUCKETS.pvPower, "kWc")}
+            allowNa
+            naLabel={tc("quote.batteryAddon.dontKnow")}
+            testId="battery-addon-pv"
+          />
+        </div>
+      </RevealField>
+    </div>
   );
 }
 

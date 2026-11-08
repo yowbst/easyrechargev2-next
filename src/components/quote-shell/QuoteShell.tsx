@@ -27,6 +27,7 @@ import { EnrichStep } from "./EnrichStep";
 import { QuoteHeader } from "./QuoteHeader";
 import { Rail, answerRows, subsidyLine, type PartnerOffer, type SubsidySummary } from "./Rail";
 import type { FormValues } from "./types";
+import { isBatteryAddonEligible, stripAddon } from "./products/ecp/batteryAddon";
 
 const SHARED_INITIAL: FormValues = {
   firstName: "", lastName: "", email: "", phone: "", phoneCountry: "CH",
@@ -73,6 +74,14 @@ export function QuoteShell({
     [dictionary, funnel, lang],
   );
   const ph = usePostHog();
+  // Flag quote-battery-addon. PostHog starts late: off until it says otherwise.
+  const [addonFlag, setAddonFlag] = useState(false);
+  useEffect(() => {
+    if (!ph || product !== "ecp") return;
+    const read = () => setAddonFlag(ph.isFeatureEnabled("quote-battery-addon") === true);
+    read();
+    return ph.onFeatureFlags?.(read);
+  }, [ph, product]);
   const telemetry = useFormTelemetry({ formType: "quote", locale: lang });
   const draftKey = quoteDraftKey(product);
   const hidden = useMemo(() => hiddenFields(pageConfig), [pageConfig]);
@@ -105,7 +114,7 @@ export function QuoteShell({
 
   const missingFor = (id: string, d: FormValues): string | null => {
     if (id === CONTACT) return contactFirstUnanswered(d as unknown as ContactFields);
-    return funnel.firstUnansweredField(id, d, hidden);
+    return funnel.firstUnansweredField(id, addonFlag ? d : stripAddon(d), hidden);
   };
   const exitsAt = (id: string, d: FormValues): boolean =>
     funnel.steps.find((s) => s.id === id)?.exit?.(d) ?? false;
@@ -131,6 +140,17 @@ export function QuoteShell({
     entry_point: miniQuoteSessionTokenRef.current ? "mini-quote" : "direct",
     shell: "v2",
   });
+
+  // Battery add-on: once per page view, when the card first appears.
+  const addonEligible = addonFlag && isBatteryAddonEligible(data);
+  const addonOn = addonEligible && data.batteryAddon === true;
+  const addonShownRef = useRef(false);
+  useEffect(() => {
+    if (!addonEligible || addonShownRef.current) return;
+    addonShownRef.current = true;
+    ph?.capture("battery_addon_shown", { ...eventProps(), step_name: currentId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addonEligible]);
 
   // Restore the draft, read mini-quote hand-off params, land on the right step.
   useEffect(() => {
@@ -240,6 +260,12 @@ export function QuoteShell({
 
   const set = (field: string, value: unknown) => {
     if (nudged) setNudged(null);
+    if (field === "batteryAddon" && value !== true && data.batteryAddon === true) {
+      ph?.capture("battery_addon_removed", { ...eventProps(), step_name: currentId });
+    }
+    if (field === "batteryAddonPvPower" && (typeof value === "number" || value === "na")) {
+      ph?.capture("battery_addon_opted_in", { ...eventProps(), step_name: currentId, pv_power: value });
+    }
     telemetry.trackChange(field, String(value));
     // Typing (exact kWc, contact details) must not move the page.
     const typing = document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement;
@@ -269,17 +295,28 @@ export function QuoteShell({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const pulse = (el: HTMLElement) => {
+    scrollToElement(el);
+    el.classList.remove("er-field-nudge");
+    void el.offsetWidth;
+    el.classList.add("er-field-nudge");
+    window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+  };
+
   // Scroll to the missing question, pulse it and say what is missing under it.
   const nudgeField = (field: string) => {
     ph?.capture("quote_missing_answer_nudge", { ...eventProps(), step: index + 1, step_name: currentId, field });
     const el = document.getElementById(`q-${field}`);
     if (!el) return;
     setNudged({ field, el });
-    scrollToElement(el);
-    el.classList.remove("er-field-nudge");
-    void el.offsetWidth;
-    el.classList.add("er-field-nudge");
-    window.setTimeout(() => el.classList.remove("er-field-nudge"), 2600);
+    pulse(el);
+  };
+
+  // Side-panel teaser: show the battery card; ticking stays the visitor's act.
+  const showAddonCard = () => {
+    ph?.capture("battery_addon_teaser_clicked", { ...eventProps(), step_name: currentId });
+    const el = document.getElementById("q-batteryAddon");
+    if (el) pulse(el);
   };
 
   const tryGoToStep = (nextId: string) => {
@@ -326,7 +363,8 @@ export function QuoteShell({
       const res = await fetch("/api/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, lang, product, attribution: getAttributionCompact(), posthog: phIds, ...(token && { miniQuoteSessionToken: token }) }),
+        // The add-on fields only travel when the card could be seen and ticked.
+        body: JSON.stringify({ ...(addonOn ? data : stripAddon(data)), lang, product, attribution: getAttributionCompact(), posthog: phIds, ...(token && { miniQuoteSessionToken: token }) }),
       });
       if (!res.ok) throw new Error("Submit failed");
       const result = await res.json();
@@ -334,26 +372,10 @@ export function QuoteShell({
 
       telemetry.trackSubmit(true, { submissionId: result.submissionId });
       try { sessionStorage.removeItem(draftKey); } catch { /* ignore */ }
-      try { ph?.capture("quote_submitted", { ...eventProps(), dispatchable }); } catch { /* noop */ }
+      const batteryId = typeof result.batterySubmissionId === "string" ? result.batterySubmissionId : null;
+      const batteryDispatchable = result.batteryDispatchable === true;
+      try { ph?.capture("quote_submitted", { ...eventProps(), dispatchable, battery_addon: addonOn }); } catch { /* noop */ }
       try { ph?.identify(String(data.email), { first_name: data.firstName, last_name: data.lastName, locale: lang }); } catch { /* noop */ }
-
-      fetch("/api/form-submissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionToken: telemetry.sessionToken,
-          formType: "quote",
-          locationPath: window.location.pathname,
-          locationParams: window.location.search.slice(1) || null,
-          locationRoute: "quote",
-          locale: lang,
-          userAgent: navigator.userAgent,
-          user: { email: data.email, firstName: data.firstName, lastName: data.lastName, phone: data.phone },
-          data,
-          status: "success",
-          posthog: phIds,
-        }),
-      }).catch(() => {});
 
       const confirmSegment = tq("steps.finalize.fields.confirmation_segment");
       const seg = confirmSegment.includes(".") || confirmSegment.startsWith("[") ? "confirmation" : confirmSegment;
@@ -363,6 +385,12 @@ export function QuoteShell({
       if (result.submissionId) qs.set("submissionId", result.submissionId);
       // Not dispatchable = not a lead for Ads: the success page skips its fallback conversion too.
       if (!dispatchable) qs.set("nd", "1");
+      if (batteryId) {
+        qs.set("ba", "1");
+        qs.set("bsid", batteryId);
+        qs.set("bpv", String(data.batteryAddonPvPower ?? "na"));
+        if (!batteryDispatchable) qs.set("bnd", "1");
+      }
       const redirect = () => {
         leavingRef.current = true;
         window.location.href = `/${lang}/${quoteSlug}/${seg}?${qs.toString()}`;
@@ -381,24 +409,26 @@ export function QuoteShell({
             }
           : redirect;
 
+      const userData = {
+        email: String(data.email || "") || undefined,
+        phone_number: formatPhoneE164(String(data.phone ?? ""), data.phoneCountry as CountryCode) || undefined,
+        address: {
+          first_name: String(data.firstName || "") || undefined,
+          last_name: String(data.lastName || "") || undefined,
+          postal_code: String(data.postalCode || "") || undefined,
+          country: "CH",
+        },
+      };
+      // Each lead is its own conversion: the battery add-on under the battery action.
+      const batterySendTo = batteryId && batteryDispatchable ? adsSendTo(gc.google_ads, "quote_submit", "battery") : null;
+      const afterCharger = batterySendTo && batteryId
+        ? () => fireAdsConversion(batterySendTo, { transactionId: batteryId, userData, onDone: afterConversion })
+        : afterConversion;
       const leadSendTo = dispatchable ? adsSendTo(gc.google_ads, "quote_submit", product) : null;
       if (leadSendTo) {
-        fireAdsConversion(leadSendTo, {
-          transactionId: result.submissionId,
-          userData: {
-            email: String(data.email || "") || undefined,
-            phone_number: formatPhoneE164(String(data.phone ?? ""), data.phoneCountry as CountryCode) || undefined,
-            address: {
-              first_name: String(data.firstName || "") || undefined,
-              last_name: String(data.lastName || "") || undefined,
-              postal_code: String(data.postalCode || "") || undefined,
-              country: "CH",
-            },
-          },
-          onDone: afterConversion,
-        });
+        fireAdsConversion(leadSendTo, { transactionId: result.submissionId, userData, onDone: afterCharger });
       } else {
-        afterConversion();
+        afterCharger();
       }
     } catch (err) {
       telemetry.trackSubmit(false, { error: String(err) });
@@ -449,7 +479,7 @@ export function QuoteShell({
     );
   }
 
-  const stepProps = { data, set, tq, tqOpt, tc, lang, pageConfig, hidden, links: { ecpQuote } };
+  const stepProps = { data, set, tq, tqOpt, tc, lang, pageConfig, hidden, links: { ecpQuote }, features: { batteryAddon: addonFlag } };
   const answers = answerRows(funnel, seq.slice(0, index), data, tq, tqOpt);
   const mobileLine = isContact
     ? { icon: PhoneCall, text: `${tc("quote.rail.next.1")} · ${tc("quote.rail.next.1sub", slaVars)}` }
@@ -513,13 +543,18 @@ export function QuoteShell({
                 isSubmitting={isSubmitting}
                 submitError={submitError}
                 focusStreet={!!prefilled?.postalCode}
+                batteryAddon={addonOn}
               />
             )}
           </div>
         </main>
 
         <div className="hidden lg:block">
-          <Rail tc={tc} tq={tq} gc={gc} subsidy={subsidy} offer={offer} last={isContact} answers={answers} onEdit={editAnswer} />
+          <Rail
+            tc={tc} tq={tq} gc={gc} subsidy={subsidy} offer={offer} last={isContact} answers={answers} onEdit={editAnswer}
+            // The teaser only where the card is; the confirmation follows the visitor.
+            addon={addonOn ? { optedIn: true, onAdd: showAddonCard } : addonEligible && currentId === "housing" ? { optedIn: false, onAdd: showAddonCard } : null}
+          />
         </div>
       </div>
 

@@ -101,6 +101,8 @@ export function registerCmsTools(server: McpServer) {
         product: z.enum(PRODUCTS).optional().describe("Quote product: ecp (charger) | battery"),
         status: z.string().optional(),
         environment: z.enum(["development", "staging", "production", "all"]).optional(),
+        origin: z.enum(["ecp-addon", "direct"]).optional()
+          .describe("ecp-addon = battery request added in the charger funnel (linked_submission → the charger one); direct = sent from its own funnel"),
       },
       annotations: { readOnlyHint: true },
     },

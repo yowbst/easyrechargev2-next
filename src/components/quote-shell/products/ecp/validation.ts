@@ -1,5 +1,6 @@
 import type { StepRule } from "../../types";
 import { VALID_PARKING_LOCATIONS } from "./fields";
+import { isBatteryAddonEligible, wantsBatteryAddon } from "./batteryAddon";
 
 type Data = Record<string, unknown>;
 
@@ -37,6 +38,7 @@ export function ecpFirstUnanswered(stepId: string, d: Data, hidden: ReadonlySet<
       if (need("housingType", answered(d.housingType))) return "housingType";
       if (need("solarEquipment", answered(d.solarEquipment))) return "solarEquipment";
       if (hasSolar(d) && need("homeBattery", answered(d.homeBattery))) return "homeBattery";
+      if (wantsBatteryAddon(d) && !answered(d.batteryAddonPvPower)) return "batteryAddonPvPower";
       if (showsNeighborhoodEquipment(d) && need("neighborhoodEquipment", answered(d.neighborhoodEquipment))) {
         return "neighborhoodEquipment";
       }
@@ -72,5 +74,7 @@ export function ecpFieldChange(field: string, value: unknown, d: Data): Data {
     next.ecpModel = "";
   }
   if (field === "ecpBrand") next.ecpModel = "";
+  if (next.batteryAddon === true && !isBatteryAddonEligible(next)) next.batteryAddon = false;
+  if (next.batteryAddon !== true && "batteryAddonPvPower" in next) next.batteryAddonPvPower = "";
   return next;
 }

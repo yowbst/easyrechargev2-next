@@ -1051,10 +1051,13 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     // Google dedupes. Inert unless tag_id + quote_submit label are set.
     const googleAds = gc?.google_ads ?? {};
     const adsConversionSendTo = adsSendTo(googleAds, "quote_submit", route.product);
+    // Battery add-on of a charger request: its own lead, its own conversion.
+    const addonSendTo = route.product === "ecp" ? adsSendTo(googleAds, "quote_submit", "battery") : null;
 
     return (
       <Suspense>
         <GoogleAdsConversion sendTo={adsConversionSendTo} />
+        <GoogleAdsConversion sendTo={addonSendTo} idParam="bsid" notALeadParam="bnd" />
         <OpenAIConversion />
         <QuoteSuccessClient
           lang={lang}

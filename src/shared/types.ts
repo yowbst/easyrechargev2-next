@@ -37,6 +37,10 @@ export interface FormSubmission {
   data: Record<string, unknown>;
   status: string;
   date_created: string;
+  /** null = sent from its own funnel; "ecp-addon" = battery request added in the charger funnel. */
+  origin?: string | null;
+  /** The other submission created by the same send (charger ↔ battery add-on). */
+  linked_submission?: string | FormSubmission | null;
 }
 
 export interface Locality {

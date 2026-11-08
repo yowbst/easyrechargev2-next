@@ -18,6 +18,8 @@ export interface StepProps {
   hidden: ReadonlySet<string>;
   /** Links to the other funnels, with the answers they can reuse (tenant exit). */
   links: { ecpQuote?: string };
+  /** PostHog-gated parts of a step (`quote-battery-addon`). */
+  features?: { batteryAddon?: boolean };
 }
 
 /**

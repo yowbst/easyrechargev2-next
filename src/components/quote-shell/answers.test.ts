@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { firstMissingAnswer } from "./answers";
+import { firstMissingAddonAnswer, firstMissingAnswer } from "./answers";
 import { ECP_INITIAL } from "./products/ecp/fields";
 import { BATTERY_INITIAL } from "./products/battery/fields";
 
@@ -56,5 +56,18 @@ describe("firstMissingAnswer", () => {
       step: "housing",
       field: null,
     });
+  });
+});
+
+describe("firstMissingAddonAnswer", () => {
+  it("only needs the PV size, \"na\" included", () => {
+    expect(firstMissingAddonAnswer({ housingStatus: "owner", pvPower: 8 })).toBeNull();
+    expect(firstMissingAddonAnswer({ housingStatus: "owner", pvPower: "na" })).toBeNull();
+    expect(firstMissingAddonAnswer({ housingStatus: "owner", pvPower: "" })).toEqual({ step: "pv", field: "pvPower" });
+    expect(firstMissingAddonAnswer({ housingStatus: "owner", pvPower: 0 })).toEqual({ step: "pv", field: "pvPower" });
+  });
+
+  it("a stripped charger request with an add-on still passes the charger rules", () => {
+    expect(firstMissingAnswer("ecp", { ...ecpComplete, solarEquipment: "exists", homeBattery: "none" })).toBeNull();
   });
 });

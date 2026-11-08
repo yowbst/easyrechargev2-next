@@ -35,6 +35,8 @@ export interface PartnerDispatchCard {
     } | null;
     data: Record<string, unknown> | null;
   } | null;
+  /** The other request of the same send, only when this partner holds it too (`resolveLinkedForPartner`). */
+  linkedSubmissionId?: string | null;
 }
 
 const CARD_FIELDS = [
@@ -238,4 +240,64 @@ export async function fetchPartnerDispatches(
     { next: { revalidate: 0 } },
   );
   return res?.data ?? [];
+}
+
+/**
+ * submission id → linked submission id (charger ↔ battery add-on), for the
+ * given submissions. Read apart from the cards so a Directus without the
+ * `linked_submission` field never breaks the board: any failure means no links.
+ */
+export async function fetchSubmissionLinks(submissionIds: string[]): Promise<Map<string, string>> {
+  const links = new Map<string, string>();
+  if (submissionIds.length === 0) return links;
+  try {
+    const params = new URLSearchParams();
+    params.set("fields", "id,linked_submission");
+    params.set("filter[id][_in]", submissionIds.join(","));
+    params.set("filter[linked_submission][_nnull]", "true");
+    params.set("limit", String(submissionIds.length));
+    const res = await directusFetch<{ data: Array<{ id: string; linked_submission: string | null }> }>(
+      `/items/form_submissions?${params}`,
+      { next: { revalidate: 0 } },
+    );
+    for (const row of res?.data ?? []) if (row.linked_submission) links.set(row.id, row.linked_submission);
+  } catch {
+    /* no links */
+  }
+  return links;
+}
+
+/**
+ * Keep a link only when the same partner also holds the linked request: a
+ * partner never learns that another partner received the other one.
+ */
+export function resolveLinkedForPartner<T extends { submission: { id: string } | null }>(
+  cards: T[],
+  links: Map<string, string>,
+): (T & { linkedSubmissionId: string | null })[] {
+  const held = new Set(cards.map((c) => c.submission?.id).filter((id): id is string => !!id));
+  return cards.map((c) => {
+    const linked = c.submission?.id ? links.get(c.submission.id) : undefined;
+    return { ...c, linkedSubmissionId: linked && held.has(linked) ? linked : null };
+  });
+}
+
+/** Whether this partner holds a dispatched lead for the submission, in this environment. */
+export async function partnerHoldsSubmission(partnerId: string, submissionId: string): Promise<boolean> {
+  try {
+    const params = new URLSearchParams();
+    params.set("fields", "id");
+    params.set("filter[partner][_eq]", partnerId);
+    params.set("filter[submission][_eq]", submissionId);
+    params.set("filter[status][_eq]", "dispatched");
+    params.set("filter[environment][_eq]", getEnvironment());
+    params.set("limit", "1");
+    const res = await directusFetch<{ data: Array<{ id: string }> }>(
+      `/items/partner_dispatches?${params}`,
+      { next: { revalidate: 0 } },
+    );
+    return (res?.data?.length ?? 0) > 0;
+  } catch {
+    return false;
+  }
 }

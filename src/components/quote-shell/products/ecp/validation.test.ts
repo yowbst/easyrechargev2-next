@@ -68,4 +68,43 @@ describe("ecpFieldChange", () => {
     expect(ecpFieldChange("housingStatus", "owner", { ...complete, housingStatus: "tenant", approval: "yes" }).approval).toBe("");
     expect(ecpFieldChange("housingStatus", "co-owner", { ...complete, housingStatus: "tenant", approval: "yes" }).approval).toBe("yes");
   });
+
+  const optedIn = { ...complete, solarEquipment: "exists", homeBattery: "none", batteryAddon: true, batteryAddonPvPower: 8 };
+
+  it("battery add-on: cleared when eligibility is lost", () => {
+    for (const [field, value] of [
+      ["housingStatus", "tenant"],
+      ["solarEquipment", "none"],
+      ["homeBattery", "in-progress"],
+    ] as const) {
+      const next = ecpFieldChange(field, value, optedIn);
+      expect(next.batteryAddon).toBe(false);
+      expect(next.batteryAddonPvPower).toBe("");
+    }
+  });
+
+  it("battery add-on: kept while still eligible", () => {
+    const next = ecpFieldChange("solarEquipment", "in-progress", optedIn);
+    expect(next.batteryAddon).toBe(true);
+    expect(next.batteryAddonPvPower).toBe(8);
+  });
+
+  it("battery add-on: unticking clears the PV size", () => {
+    expect(ecpFieldChange("batteryAddon", false, optedIn).batteryAddonPvPower).toBe("");
+  });
+});
+
+describe("ecpFirstUnanswered — battery add-on", () => {
+  const base = { ...complete, solarEquipment: "exists", homeBattery: "none" };
+
+  it("asks the PV size once ticked, after the battery question", () => {
+    expect(ecpFirstUnanswered("housing", { ...base, batteryAddon: true, batteryAddonPvPower: "" })).toBe("batteryAddonPvPower");
+    expect(ecpFirstUnanswered("housing", { ...base, batteryAddon: true, batteryAddonPvPower: "na" })).toBeNull();
+    expect(ecpFirstUnanswered("housing", { ...base, batteryAddon: true, batteryAddonPvPower: 15 })).toBeNull();
+  });
+
+  it("does not ask it when not ticked or not eligible", () => {
+    expect(ecpFirstUnanswered("housing", { ...base, batteryAddon: false, batteryAddonPvPower: "" })).toBeNull();
+    expect(ecpFirstUnanswered("housing", { ...base, housingStatus: "tenant", housingType: "house", batteryAddon: true, batteryAddonPvPower: "" })).toBeNull();
+  });
 });

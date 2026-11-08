@@ -456,6 +456,7 @@ export function Kanban({
                   {activeGrouped[stage].map((d) => (
                     <li key={d.id}>
                       <LeadCard
+                        partnerToken={partnerToken}
                         dispatch={d}
                         rottingDaysByStage={rottingDaysByStage}
                         reasonsByStage={reasonsByStage}
@@ -512,6 +513,7 @@ export function Kanban({
                     {disqGrouped[stage].map((d) => (
                       <li key={d.id}>
                         <LeadCard
+                          partnerToken={partnerToken}
                           dispatch={d}
                           rottingDaysByStage={rottingDaysByStage}
                           reasonsByStage={reasonsByStage}
@@ -565,6 +567,7 @@ export function Kanban({
                       {cards.map((d) => (
                         <li key={d.id}>
                           <LeadCard
+                            partnerToken={partnerToken}
                             dispatch={d}
                             rottingDaysByStage={rottingDaysByStage}
                             reasonsByStage={reasonsByStage}
