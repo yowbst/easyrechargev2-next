@@ -3,6 +3,13 @@ import { opt, optList } from "./content";
 
 const PREFIX = "pages.home.blocks.solar";
 
+/**
+ * Tags battery leads that start from this section. `/api/quote` stores the
+ * funnel URL's query (from the Referer) as `location_params` on the session
+ * and the submission, so these leads are found by `src=home-solar` there.
+ */
+export const SOLAR_SECTION_SOURCE = "home-solar";
+
 export interface SolarSection {
   eyebrow?: string;
   title: string;
@@ -18,8 +25,7 @@ export interface SolarSection {
 /**
  * Solar battery section of the home page — the battery offer's entry point
  * on a charger-first site. Hidden (null) until its title exists in Directus,
- * so the code can ship before the copy. The button carries `src=home-solar`
- * into the battery funnel's session params, which is how its leads are counted.
+ * so the code can ship before the copy.
  */
 export function buildSolarSection(
   dictionary: Record<string, string>,
@@ -33,7 +39,8 @@ export function buildSolarSection(
 
   const label = opt(dictionary, `${PREFIX}.cta.label`);
   const slug = pageRegistry.find((p) => p.id === "quote-battery")?.slugs[lang];
-  const action = label && slug ? { label, href: `/${lang}/${slug}?src=home-solar` } : undefined;
+  const action =
+    label && slug ? { label, href: `/${lang}/${slug}?src=${SOLAR_SECTION_SOURCE}` } : undefined;
 
   const imageId = opt(dictionary, `${PREFIX}.image`);
 

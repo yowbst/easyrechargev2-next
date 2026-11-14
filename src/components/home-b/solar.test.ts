@@ -60,10 +60,23 @@ describe("buildSolarSection", () => {
     });
   });
 
-  it("links to the localized battery funnel", () => {
-    expect(buildSolarSection(full, registry, "de")?.action?.href).toBe(
-      "/de/offertenanfrage-solarbatterie?src=home-solar",
-    );
+  it("builds the German section with the German funnel", () => {
+    const de: Record<string, string> = {
+      [`${P}.title`]: "Speichern Sie Ihren Solarstrom",
+      [`${P}.points.0`]: "Punkt A",
+      [`${P}.cta.label`]: "Offerte anfordern",
+    };
+    expect(buildSolarSection(de, registry, "de")).toEqual({
+      eyebrow: undefined,
+      title: "Speichern Sie Ihren Solarstrom",
+      lede: undefined,
+      points: ["Punkt A"],
+      action: { label: "Offerte anfordern", href: "/de/offertenanfrage-solarbatterie?src=home-solar" },
+      image: undefined,
+      imageAlt: undefined,
+      statValue: undefined,
+      statLabel: undefined,
+    });
   });
 
   it("has no button without a label or a battery page", () => {
