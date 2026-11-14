@@ -1,10 +1,30 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { directusFetch } from "@/lib/directus";
-import { run } from "./helpers";
+import { fetchPageRegistry } from "@/lib/directus-queries";
+import { checkRouteTokens } from "@/lib/pageConfig";
+import { err, run } from "./helpers";
 
 const live = { next: { revalidate: 0 } };
 const UNKNOWN_COLLECTION_HINT = "Unknown collection? Call directus_collections to list what exists.";
+const ROUTE_TOKEN_RULE =
+  " Internal links to CMS pages use `{r:routeId}` (e.g. href=\"{r:quote}\"), never hardcoded /fr/… URLs.";
+
+/**
+ * Check `{r:id}` links before a write: unknown ids are an error (nothing is
+ * written), hardcoded links to CMS pages only a warning.
+ */
+async function guardRouteTokens(data: unknown): Promise<{ error: string } | { warnings: string[] }> {
+  const registry = await fetchPageRegistry().catch(() => []);
+  // An empty registry means the lookup failed: don't block every write on it.
+  if (registry.length === 0) return { warnings: ["Page registry unavailable: {r:…} links were not checked."] };
+  const { unknownIds, hardcoded } = checkRouteTokens(data, registry);
+  if (unknownIds.length > 0) {
+    const valid = [...new Set(["home", ...registry.map((p) => p.id)])].join(", ");
+    return { error: `Unknown route id(s): ${unknownIds.join(", ")}. Nothing was written. Valid ids: ${valid}` };
+  }
+  return { warnings: hardcoded.map(({ url, suggestion }) => `Hardcoded link ${url}: use ${suggestion} instead.`) };
+}
 
 export function registerDirectusTools(server: McpServer) {
   server.registerTool(
@@ -104,36 +124,44 @@ export function registerDirectusTools(server: McpServer) {
     "directus_create_item",
     {
       title: "Create a Directus item",
-      description: "Create one item in any collection. Writes production CMS data — check directus_fields first.",
+      description:
+        "Create one item in any collection. Writes production CMS data — check directus_fields first." +
+        ROUTE_TOKEN_RULE,
       inputSchema: { collection: z.string(), data: z.record(z.string(), z.unknown()) },
       annotations: { readOnlyHint: false, destructiveHint: true },
     },
-    async ({ collection, data }) =>
-      run(async () => {
+    async ({ collection, data }) => {
+      const guard = await guardRouteTokens(data);
+      if ("error" in guard) return err(guard.error);
+      return run(async () => {
         const res = await directusFetch<{ data: unknown }>(`/items/${encodeURIComponent(collection)}`, {
           ...live,
           method: "POST",
           body: JSON.stringify(data),
         });
-        return res.data;
-      }, UNKNOWN_COLLECTION_HINT),
+        return guard.warnings.length > 0 ? { data: res.data, warnings: guard.warnings } : res.data;
+      }, UNKNOWN_COLLECTION_HINT);
+    },
   );
 
   server.registerTool(
     "directus_update_item",
     {
       title: "Update a Directus item",
-      description: "Patch fields on one item. Writes production CMS data.",
+      description: "Patch fields on one item. Writes production CMS data." + ROUTE_TOKEN_RULE,
       inputSchema: { collection: z.string(), id: z.string(), data: z.record(z.string(), z.unknown()) },
       annotations: { readOnlyHint: false, destructiveHint: true },
     },
-    async ({ collection, id, data }) =>
-      run(async () => {
+    async ({ collection, id, data }) => {
+      const guard = await guardRouteTokens(data);
+      if ("error" in guard) return err(guard.error);
+      return run(async () => {
         const res = await directusFetch<{ data: unknown }>(
           `/items/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
           { ...live, method: "PATCH", body: JSON.stringify(data) },
         );
-        return res.data;
-      }, UNKNOWN_COLLECTION_HINT),
+        return guard.warnings.length > 0 ? { data: res.data, warnings: guard.warnings } : res.data;
+      }, UNKNOWN_COLLECTION_HINT);
+    },
   );
 }

@@ -21,7 +21,7 @@ import {
   buildFAQPage,
 } from "@/lib/seo/jsonLd";
 import { DIRECTUS_URL } from "@/lib/directus";
-import { resolveRouteId } from "@/lib/pageConfig";
+import { resolveRouteId, resolveRouteLinks } from "@/lib/pageConfig";
 
 import { MiniQuoteForm } from "@/components/MiniQuoteForm";
 
@@ -445,7 +445,7 @@ export default async function Home({ params }: HomeProps) {
   const faqEntries: FaqEntry[] = faqItems.map((item) => ({
     id: item.id,
     question: item.question,
-    answer: item.answer,
+    answer: resolveRouteLinks(item.answer, lang, pageRegistry),
   }));
 
   const faqBlockData = findBlock(blocks, "block_faq");

@@ -59,6 +59,10 @@ const nextConfig: NextConfig = {
     return [
       // Root → /fr
       { source: "/", destination: "/fr", permanent: true },
+      // Unresolved {r:…} CMS links that leaked from the home FAQ (fixed 2026-11) and got indexed.
+      // The colon is escaped, or path-to-regexp reads `:quote` as a parameter.
+      { source: "/%7Br\\:quote%7D", destination: "/fr/demande-devis", permanent: true },
+      { source: "/%7Br\\:contact%7D", destination: "/fr/contact", permanent: true },
       // WordPress exact redirects
       { source: "/contact", destination: "/fr/contact", permanent: true },
       { source: "/mentions-legales", destination: "/fr/mentions-legales", permanent: true },
