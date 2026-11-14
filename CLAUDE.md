@@ -207,6 +207,10 @@ Forms persist to Directus via REST API (no local DB):
 
 - **Time-based only:** All content 3600s (1 hour). No on-demand webhook — content updates appear within 1 hour of publishing in Directus.
 
+### Internal Links in CMS HTML
+
+Links to CMS pages are written `{r:routeId}` (e.g. `<a href="{r:quote}">`) in every WYSIWYG field — never a hardcoded `/fr/…` URL, which breaks on the next slug rename. Every component that renders CMS HTML must pass it through `resolveRouteLinks(html, lang, registry)` (`lib/pageConfig.ts`). An unknown id is left in the page on purpose, so a miss shows up as a 404 on `/%7Br:…%7D` (PostHog) instead of a silently wrong link. The MCP `directus_create_item` / `directus_update_item` tools reject unknown ids and warn on hardcoded page links (`checkRouteTokens`). Links to items (a vehicle, a locality, a post) have no token and stay hardcoded.
+
 ### Directus Assets
 
 Assets require auth (403 without token). The proxy route `GET /api/cms/assets/[id]` forwards the auth token. All OG images and SEO images use this proxy path (`/api/cms/assets/{uuid}`), NOT direct Directus URLs.

@@ -71,3 +71,47 @@ export function resolveRouteLinks(
     return resolveRouteId(routeId, language, pageRegistry) || match;
   });
 }
+
+export interface RouteTokenReport {
+  /** `{r:id}` tokens whose id is not in the page registry. */
+  unknownIds: string[];
+  /** Hardcoded links to a registry page, with the token that should replace them. */
+  hardcoded: Array<{ url: string; suggestion: string }>;
+}
+
+const HARDCODED_HREF = /href="(?:https?:\/\/(?:www\.)?easyrecharge\.ch)?(\/(fr|de)(?:\/([a-z0-9-]+))?)\/?(?=["?#])/g;
+
+/**
+ * Check CMS content before it is written: walks every string (translations
+ * included) for `{r:id}` tokens with an unknown id, and for hardcoded links
+ * to registry pages. Links to items (a vehicle, a locality, a post) have no
+ * token and never match a registry slug, so they are left alone.
+ */
+export function checkRouteTokens(data: unknown, pageRegistry: PageRegistryEntry[]): RouteTokenReport {
+  const unknownIds = new Set<string>();
+  const hardcoded = new Map<string, string>();
+
+  const visit = (value: unknown) => {
+    if (typeof value === "string") {
+      for (const [, id] of value.matchAll(/\{r:([a-zA-Z0-9_-]+)\}/g)) {
+        if (!resolveRouteId(id, "fr", pageRegistry)) unknownIds.add(id);
+      }
+      for (const [, url, lang, slug] of value.matchAll(HARDCODED_HREF)) {
+        const id = slug
+          ? pageRegistry.find((p) => p.slugs[lang] === slug)?.id
+          : "home";
+        if (id) hardcoded.set(url, `{r:${id}}`);
+      }
+    } else if (Array.isArray(value)) {
+      value.forEach(visit);
+    } else if (value && typeof value === "object") {
+      Object.values(value).forEach(visit);
+    }
+  };
+  visit(data);
+
+  return {
+    unknownIds: [...unknownIds],
+    hardcoded: [...hardcoded].map(([url, suggestion]) => ({ url, suggestion })),
+  };
+}

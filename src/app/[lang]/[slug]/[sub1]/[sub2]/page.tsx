@@ -599,9 +599,9 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
           bodyHtml={safeBody}
           noContentLabel={df("pages.blog-post.noContent", lang === "de" ? "Kein Inhalt verfügbar." : "Aucun contenu disponible.")}
           faq={faqItems}
-          expertAdviceHtml={expertAdvice || undefined}
+          expertAdviceHtml={expertAdvice ? resolveRouteLinks(expertAdvice, lang, registry) : undefined}
           expertAdviceIcon={config.expertAdvice?.icon}
-          takeawaysHtml={takeaways || undefined}
+          takeawaysHtml={takeaways ? resolveRouteLinks(takeaways, lang, registry) : undefined}
           takeawaysIcon={config.takeaways?.icon}
           related={relatedPosts}
           relatedReadingTime={readingTimeText}
