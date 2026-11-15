@@ -27,6 +27,8 @@ Commands:
                                Keyword research into the Keywords Master tab
   sheet <read <tab> | upsert <tab> <keyCol> <json-file> [--protect cols]>
                                Read or write a tab of the SEO workbook (used by skills)
+  citations [--dry-run] [--limit n] [--engine chatgpt|gemini] [--max-cost usd] [--no-sheet]
+                               Ask ChatGPT/Gemini the frozen prompts (DataForSEO) and log cited domains
   help                         Show this message
 
 Runbook: docs/seo.md`;
@@ -40,6 +42,7 @@ const commands: Record<string, () => Promise<Command>> = {
   freshness: async () => (await import("./commands/freshness")).freshness,
   keywords: async () => (await import("./commands/keywords")).keywords,
   sheet: async () => (await import("./commands/sheet")).sheet,
+  citations: async () => (await import("./commands/citations")).citations,
 };
 
 /** `takesValue: false` is a bare switch; `true` consumes the next token. */
@@ -57,6 +60,15 @@ const COMMAND_FLAGS: Record<string, { name: string; takesValue: boolean }[]> = {
   freshness: [{ name: "dry-run", takesValue: false }],
   keywords: [{ name: "dry-run", takesValue: false }],
   sheet: [{ name: "protect", takesValue: true }],
+  citations: [
+    { name: "engine", takesValue: true },
+    { name: "limit", takesValue: true },
+    { name: "max-cost", takesValue: true },
+    { name: "location", takesValue: true },
+    { name: "language", takesValue: true },
+    { name: "dry-run", takesValue: false },
+    { name: "no-sheet", takesValue: false },
+  ],
 };
 
 function validateFlags(command: string, argv: string[]): void {

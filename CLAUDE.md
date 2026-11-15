@@ -102,6 +102,7 @@ SEO command center (`npm run seo`, see `docs/seo.md`):
 - `SEO_SHEETS_WORKBOOK_ID` — Google Sheet that holds the SEO tabs (Keywords Master, Performance, Site Health, Issues, AI Citations, ...); share it with the service account below as Editor
 - `GSC_PROPERTY` — optional Search Console property, defaults to `sc-domain:easyrecharge.ch`; the same service account must be a user on it
 - `SEO_GOOGLE_SERVICE_ACCOUNT_EMAIL` / `SEO_GOOGLE_SERVICE_ACCOUNT_KEY` — the dedicated `seo-agent` service account (PEM key, `\n`-escaped); Restricted on Search Console, Editor on the Sheet. Falls back to the invoicing `GOOGLE_SERVICE_ACCOUNT_*` when unset. `--dry-run` commands need no Google credentials at all
+- `DATAFORSEO_LOGIN` / `DATAFORSEO_PASSWORD` — DataForSEO "API Access" credentials, used only by `npm run seo -- citations` (pay-as-you-go; prompts are public questions, no client data)
 
 Partner invoicing — Google Docs env vars (used by `src/lib/billing/google-docs.ts`):
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` — service account credentials (Drive + Docs API scopes) used to copy the invoice template and substitute placeholders; the key is a PEM private key with literal `\n` escapes

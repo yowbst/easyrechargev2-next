@@ -19,6 +19,7 @@ Code lives in `seo/`; raw output (GSC exports, crawls, audit JSON, logs) goes to
 | `keywords discover "<topic>"` | GSC queries + Google Autocomplete (CH) -> Keywords Master | yes |
 | `keywords import-ads <csv> [--dry-run]` | Search terms report (UTF-8 CSV) or Keyword Planner download (UTF-16 TSV) | only without `--dry-run` |
 | `keywords cluster` / `keywords gaps` | Pre-group unclustered terms / list clusters with no content | yes |
+| `citations [--dry-run] [--limit n] [--engine chatgpt\|gemini]` | Asks ChatGPT and Gemini the frozen prompts through DataForSEO's LLM scraper (Switzerland, French) and logs the cited domains to the AI Citations tab | `--dry-run` no; otherwise DataForSEO login + Sheet |
 | `sheet read <tab>` / `sheet upsert <tab> <key> <json>` | Generic tab access, used by the skills | yes |
 
 `--dry-run` prints results and leaves the Sheet untouched, so it works with no Google credentials.
@@ -45,7 +46,11 @@ Goal: see whether ChatGPT, Perplexity and Gemini cite easyRecharge, and track it
 3. In the **AI Citations** tab add one row per prompt and engine: `date, prompt, engine, cited_domains, easyrecharge_cited (yes/no), rank`.
 4. Compare with the PostHog Acquisition dashboard tiles "AI channel": citations should precede sessions from `chatgpt.com`, `gemini.google.com`, `perplexity.ai`.
 
-Automate only the Perplexity part later, if the signal justifies it; API answers differ from what the consumer apps show.
+### Automated (DataForSEO)
+
+`npm run seo -- citations` does steps 2-3 for ChatGPT and Gemini: `--dry-run` prints the request count and estimated cost without any network call; `--limit 3` is a cheap trial; a spending cap (`--max-cost`, default $0.5) stops a run that costs more than expected. Raw answers, including the searches ChatGPT ran to build them (`fan_out_queries`), are saved to `seo/data/citations/<date>.json`.
+
+Setup: create a DataForSEO account (pay as you go; the vendor lists a $50 minimum top-up and a $1 trial credit), then put the **API Access** login and password in `.env.local` as `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` (not the account password). Before relying on it: confirm that Switzerland + French returns sensible answers, and spot-check about five prompts by hand each quarter, because the scraper is not guaranteed to match what you see in the apps. Perplexity is not covered by the scraper.
 
 ## Reading the audits
 

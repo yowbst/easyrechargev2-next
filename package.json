@@ -65,6 +65,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "cheerio": "^1.2.0",
     "csv-parse": "^6.2.1",
+    "dataforseo-client": "^2.1.13",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "handlebars": "^4.7.8",
