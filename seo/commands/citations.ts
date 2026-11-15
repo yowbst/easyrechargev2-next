@@ -10,12 +10,10 @@ import { AI_CITATIONS_HEADERS } from "../lib/tab-schemas";
 const log = createLogger("citations");
 const PROMPTS_FILE = resolve(__dirname, "../prompts/ai-citations-2026.md");
 const BASE_URL = "https://api.dataforseo.com";
-const LIVE_PRICE_USD = 0.004; // per result page, Live queue (vendor price list; check before relying on it)
+// Observed 2026-11-15: ~$0.008 per ChatGPT Live answer (balance $1.000 -> $0.984 after two). The vendor lists $0.004 per result page.
+const LIVE_PRICE_USD = 0.008;
 const OK = 20000;
 type Engine = "chatgpt" | "gemini";
-
-/** Stops the whole run: retrying the remaining prompts would only repeat the failure. */
-class FatalCitationsError extends Error {}
 
 const arg = (name: string) => {
   const argv = process.argv.slice(2);
@@ -77,6 +75,8 @@ export async function citations(): Promise<void> {
   const raw: unknown[] = [];
   let spent = 0;
   let failures = 0;
+  /** Set instead of throwing, so the answers already paid for are still saved before we report the failure. */
+  let stopped: Error | null = null;
 
   outer: for (const prompt of prompts) {
     for (const engine of engines) {
@@ -91,11 +91,29 @@ export async function citations(): Promise<void> {
             ? await api.chatGptLlmScraperLiveAdvanced([new client.AiOptimizationChatGptLlmScraperLiveAdvancedRequestInfo(fields)])
             : await api.geminiLlmScraperLiveAdvanced([new client.AiOptimizationGeminiLlmScraperLiveAdvancedRequestInfo(fields)]);
         spent += res?.cost ?? 0;
+        // The account-level errors (e.g. 40104 "verify your account") come back on the root, with no task at all.
+        if (res?.status_code !== OK) {
+          const text = `${res?.status_code} ${res?.status_message}`;
+          log.error(`P${prompt.id} ${engine}: ${text}`);
+          if ((res?.status_code ?? 0) >= 40100 && (res?.status_code ?? 0) < 40200) {
+            stopped = new Error(text);
+            break outer;
+          }
+          failures++;
+          if (failures >= 3) {
+            stopped = new Error(`3 failed requests in a row; last: ${text}`);
+            break outer;
+          }
+          continue;
+        }
         const task = res?.tasks?.[0];
         if (task?.status_code !== OK) {
           failures++;
           log.error(`P${prompt.id} ${engine}: ${task?.status_code} ${task?.status_message}`);
-          if (failures >= 3) throw new FatalCitationsError(`3 failed requests in a row; last: ${task?.status_code} ${task?.status_message}`);
+          if (failures >= 3) {
+            stopped = new Error(`3 failed requests in a row; last: ${task?.status_code} ${task?.status_message}`);
+            break outer;
+          }
           continue;
         }
         failures = 0;
@@ -105,12 +123,13 @@ export async function citations(): Promise<void> {
         rows.push({ date: stamp, prompt: prompt.text, engine, ...summary });
         log.info(`P${prompt.id} ${engine}: ${summary.easyrecharge_cited === "yes" ? `cited (rank ${summary.rank})` : "not cited"}`);
       } catch (err) {
-        if (err instanceof FatalCitationsError) throw err;
         const { text, fatal } = describeError(err);
         log.error(`P${prompt.id} ${engine} failed: ${text}`);
-        if (fatal) throw new FatalCitationsError(text);
         failures++;
-        if (failures >= 3) throw new FatalCitationsError(`3 failed requests in a row; last: ${text}`);
+        if (fatal || failures >= 3) {
+          stopped = new Error(fatal ? text : `3 failed requests in a row; last: ${text}`);
+          break outer;
+        }
       }
       await new Promise((r) => setTimeout(r, 300));
     }
@@ -133,4 +152,8 @@ export async function citations(): Promise<void> {
     console.log(`  ${engine}: ${mine.filter((r) => r.easyrecharge_cited === "yes").length}/${mine.length} cited`);
   }
   console.log(`Raw answers (incl. fan-out queries): seo/data/citations/${stamp}.json`);
+  if (stopped) {
+    console.log(`\nStopped early: ${(stopped as Error).message}`);
+    throw stopped;
+  }
 }
