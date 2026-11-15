@@ -10,6 +10,7 @@
     "test": "vitest run",
     "ingest": "tsx --env-file=.env.local scripts/vehicles-ingest.ts",
     "emails": "tsx --env-file=.env.local scripts/emails.ts",
+    "seo": "tsx --env-file=.env.local seo/cli.ts",
     "quote-copy": "tsx --env-file=.env.local scripts/quote-copy.ts",
     "images": "tsx --env-file=.env.local scripts/images.ts"
   },
@@ -63,6 +64,9 @@
     "@types/react-dom": "^19",
     "@types/swagger-ui-react": "^5.18.0",
     "babel-plugin-react-compiler": "1.0.0",
+    "cheerio": "^1.2.0",
+    "csv-parse": "^6.2.1",
+    "dataforseo-client": "^2.1.13",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "handlebars": "^4.7.8",

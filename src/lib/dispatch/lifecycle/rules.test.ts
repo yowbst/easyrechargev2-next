@@ -42,7 +42,7 @@ const email: Actor = { kind: "partner", partnerId: "p1", source: "email" };
 const admin: Actor = { kind: "admin" };
 const system: Actor = { kind: "system" };
 
-const move = (stage: string, extra: { lostReason?: string; lostNote?: string } = {}) =>
+const move = (stage: string, extra: { lostReason?: string; lostNote?: string; quotedAmountChf?: number } = {}) =>
   ({ type: "move", stage, ...extra }) as const;
 
 describe("partner moves a lead", () => {
@@ -78,6 +78,7 @@ describe("partner moves a lead", () => {
           from_stage: "new",
           to_stage: "contacted",
           lost_reason: null,
+          quoted_amount_chf: null,
         },
       },
     ]);
@@ -138,6 +139,44 @@ describe("partner moves a lead", () => {
   it("records the lost reason and note when closing as lost", () => {
     const d = decide(dispatch({ stage: "appointment" }), kanban, move("lost", { lostReason: "other", lostNote: " trop cher " }), ctx);
     expect(d.ok && d.patch).toMatchObject({ lost_reason: "other", lost_note: "trop cher" });
+  });
+});
+
+describe("quoted amount on quote_sent", () => {
+  const atAppointment = dispatch({ stage: "appointment" });
+
+  it("records the amount the partner quoted and sends it with stage_changed", () => {
+    const d = decide(atAppointment, kanban, move("quote_sent", { quotedAmountChf: 2450 }), ctx);
+    expect(d.ok && d.patch).toMatchObject({ stage: "quote_sent", quoted_amount_chf: 2450 });
+    expect(d.ok && d.events[0].payload).toMatchObject({ to_stage: "quote_sent", quoted_amount_chf: 2450 });
+  });
+
+  it("leaves the field untouched when no amount is given", () => {
+    const d = decide(atAppointment, kanban, move("quote_sent"), ctx);
+    expect(d.ok && d.patch).not.toHaveProperty("quoted_amount_chf");
+    expect(d.ok && d.events[0].payload).toMatchObject({ quoted_amount_chf: null });
+  });
+
+  it("refuses an amount that is not a whole number of francs between 1 and 100'000", () => {
+    for (const bad of [0, -5, 12.5, 100_001, Number.NaN]) {
+      expect(decide(atAppointment, kanban, move("quote_sent", { quotedAmountChf: bad }), ctx)).toMatchObject({
+        error: "invalid_quoted_amount",
+      });
+    }
+    expect(
+      decide(atAppointment, kanban, { type: "move", stage: "quote_sent", quotedAmountChf: "2450" as unknown as number }, ctx),
+    ).toMatchObject({ error: "invalid_quoted_amount" });
+  });
+
+  it("refuses an amount on any other stage rather than dropping it", () => {
+    expect(decide(dispatch(), kanban, move("contacted", { quotedAmountChf: 2450 }), ctx)).toMatchObject({
+      error: "quoted_amount_only_on_quote_sent",
+    });
+  });
+
+  it("does not touch a recorded amount when the lead is later won or lost", () => {
+    const won = decide(dispatch({ stage: "quote_sent" }), kanban, move("won"), ctx);
+    expect(won.ok && won.patch).not.toHaveProperty("quoted_amount_chf");
   });
 });
 

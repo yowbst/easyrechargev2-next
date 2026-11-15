@@ -149,6 +149,13 @@ targets via `allowedActions`); `rules.test.ts` is the table that pins them:
 - Stages only move forward; a move to the current stage writes nothing.
 - **Lost** from `contacted` onward, **won** from `appointment` onward; earlier
   drop-offs are disqualifications.
+- Moving to `quote_sent` on the board asks for the **quoted amount** (optional:
+  the partner can skip; closing the dialog cancels the move). It is stored in
+  `quoted_amount_chf` (whole CHF incl. VAT, 1 to 100'000) and only on that
+  move; anything else is refused (`invalid_quoted_amount`,
+  `quoted_amount_only_on_quote_sent`). It is never billed and never shown to
+  the customer: it exists to build real installation price ranges, published
+  only as anonymised aggregates. E-mail action links do not ask for it.
 - On the board, a closed lead can swap won ↔ lost, or **reopen** to the stage it
   was closed from (billing stays locked, the lost reason is cleared). An e-mail
   link never touches a closed lead: it answers "already done".
@@ -273,7 +280,8 @@ stays the new-lead path. Every payload has `event`, `environment` and `at`:
 | `requalified` | an admin undoing a disqualification (`source`: `admin`) | Slack |
 
 `stage_changed`, `disqualified` and `requalified` carry no customer name, contact or free-text note
-(they go to Slack): partner, postal code, locality, canton, product, stages and reason.
+(they go to Slack): partner, postal code, locality, canton, product, stages, reason and, on
+`stage_changed`, the quoted amount when one was entered (a price, not a customer detail).
 
 ## Manually dispatching a submission
 
