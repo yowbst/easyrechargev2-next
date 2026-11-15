@@ -1,0 +1,24 @@
+{
+  "model": "google/gemini-3.1-flash-image",
+  "style": "Documentary architectural photograph, eye level, 35mm lens, natural soft morning light, muted palette of raw concrete grey, warm oak wood and deep greens, Swiss residential setting, calm and tidy, realistic materials, no people, no text, no lettering, no brand logos",
+  "refs": [
+    { "id": "475a06f4-9320-4452-b5ce-595a05726781", "label": "Hero — dawn driveway" },
+    { "id": "e6b712f2-8bc0-4e81-9b4a-83179173b0aa", "label": "Hero — open garage" },
+    { "id": "6d4a6a91-7eaa-451f-9de8-fafe66427a79", "label": "La borne — product shot" },
+    { "id": "b8b2addb-273c-4aa4-88c3-b25e31cc6e10", "label": "PPE — underground car park" }
+  ],
+  "presets": {
+    "home-block": {
+      "aspect": "16:10",
+      "framing": "landscape 16:10 framing"
+    },
+    "hero": {
+      "aspect": "16:9",
+      "framing": "wide landscape 16:9 framing, main subject slightly right of centre and fully inside the middle third of the width, calm uncluttered edges"
+    },
+    "blog-cover": {
+      "aspect": "16:9",
+      "framing": "landscape 16:9 framing, main subject centred in the middle band, nothing essential in the top and bottom 15 percent"
+    }
+  }
+}

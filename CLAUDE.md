@@ -16,12 +16,29 @@ npm test             # Vitest unit tests
 npm run ingest -- plan  --in <file>   # Diff EVDB snapshot vs CMS (read-only)
 npm run ingest -- apply --plan <file> # Apply a reviewed plan (writes)
 npm run ingest -- images              # Upload 1536px thumbnails (writes)
+
+npm run images -- generate <preset> "<subject>" [--n 1-4]  # N options → .images/review/ + manifest
+npm run images -- edit <file> "<change>"                   # Minimal edit pass on one option → .images/review/
+npm run images -- publish <file> --title "…" [--apply]     # JPEG q85 → Directus; read-only without --apply
 ```
 
 `ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
 before `plan`/`apply` — see `docs/vehicle-ingest.md` for the full runbook, sequence, and
-gotchas. `images` downloads every thumbnail through a Bright Data proxy zone and refuses
+gotchas. `ingest -- images` downloads every thumbnail through a Bright Data proxy zone and refuses
 to start when that zone is not configured — it never falls back to a direct download.
+
+`npm run images` (AI-generated site images, a separate script) also has `regenerate <manifest-id>`
+and `refs`; the full command list is `USAGE` in `src/lib/images/pipeline.ts`. House style (approved 2026-11-15) in `docs/brand/image-style.md`, presets and reference asset ids in
+`brand/image-presets.json`, runbook and costs (~$0.07 per call) in `docs/image-pipeline.md`.
+Images are illustrative only, no personal data in prompts, and `publish` runs only after Yoan approves.
+
+## Site images
+
+Need a photo or illustration for the site (a homepage block, a hero, a blog cover)? Generate it
+with `npm run images`. Don't use another image generator, stock photos, or a one-off prompt. The
+tool sends the approved reference photos with every call, so new images match the existing ones.
+Pick a preset (`home-block` 16:10, `hero` 16:9, `blog-cover` 16:9), generate 2–4 options, and show
+them to Yoan. Publish to Directus only after he picks one, then reference the returned asset id.
 
 ## Deploy
 
@@ -74,6 +91,9 @@ GOOGLE_INVOICE_ROOT_FOLDER_ID=<root Drive folder; <root>/<year>/Revenus is resol
 ```
 
 Optional: `DIRECTUS_LOCALITIES_COLLECTION` (defaults to "localities")
+
+AI site images (`npm run images`, local only, see `docs/image-pipeline.md`):
+- `AI_GATEWAY_API_KEY` — Vercel AI Gateway key used by `npm run images` for image generation and edits; a dedicated, budget-capped key, never needed by the app at runtime
 
 MCP server env vars (see `docs/mcp-setup.md`):
 - `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` — Google OAuth client for MCP Google SSO login
