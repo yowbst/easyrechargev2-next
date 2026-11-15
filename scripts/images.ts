@@ -1,35 +1,35 @@
 /**
- * Site images in the house style, through Vercel AI Gateway.
- *
- *   npm run images -- generate <preset> "<subject>" [--n 3]   N options → .images/review/
- *   npm run images -- edit <file> "<change>"                  minimal edit pass on one option
- *   npm run images -- regenerate <manifest-id>                rerun a manifest entry
- *   npm run images -- refs                                    fill the reference-photo cache
- *   npm run images -- publish <file> --title "…" [--dry-run]  JPEG q85 → Directus (writes!)
+ * Site images in the house style, through Vercel AI Gateway: `npm run images -- <command>`.
+ * Commands and flags: USAGE in src/lib/images/pipeline.ts (the only copy; printed on errors).
  *
  * Style, presets and reference photos (Directus asset ids): brand/image-presets.json.
  * Every generation and edit is appended to brand/image-manifest.jsonl (model,
- * prompt, refs, real cost, output path) so any image can be made again. The
- * review folder and the reference cache live under .images/ (gitignored).
- * Publish only after Yoan's explicit go — runbook: docs/image-pipeline.md.
+ * prompt, refIds, real cost, pixel size, output path) so any image can be made again.
+ * The review folder and the reference cache live under .images/ (gitignored).
+ * `publish` is read-only unless given --apply, and runs only after Yoan's explicit go
+ * — runbook: docs/image-pipeline.md.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, extname, join, relative, resolve } from "node:path";
 import {
-  buildChatBody,
+  apiError,
+  aspectWarning,
   buildEditPrompt,
+  buildGatewayRequest,
   buildPrompt,
   findEntry,
   illustrationTitle,
+  imageSize,
   manifestEntry,
   outputName,
   parseArgs,
-  parseChatResponse,
+  parseGatewayResponse,
   resolvePreset,
   type ImageConfig,
   type InlineImage,
   type ManifestEntry,
-  type ManifestInput,
+  type ManifestFields,
+  type ResolvedPreset,
 } from "../src/lib/images/pipeline";
 
 const ROOT = join(__dirname, "..");
@@ -37,7 +37,7 @@ const CONFIG_FILE = join(ROOT, "brand", "image-presets.json");
 const MANIFEST = join(ROOT, "brand", "image-manifest.jsonl");
 const REVIEW = join(ROOT, ".images", "review");
 const REF_CACHE = join(ROOT, ".images", "refs");
-const GATEWAY = "https://ai-gateway.vercel.sh/v1/chat/completions";
+const GATEWAY = "https://ai-gateway.vercel.sh";
 
 const MIME: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
 
@@ -48,9 +48,14 @@ const env = (name: string) => {
 };
 
 const loadConfig = () => JSON.parse(readFileSync(CONFIG_FILE, "utf8")) as ImageConfig;
+const readManifest = () => {
+  if (!existsSync(MANIFEST)) throw new Error(`${relative(ROOT, MANIFEST)} is missing`);
+  return readFileSync(MANIFEST, "utf8");
+};
 const usd = (cost: number | null) => (cost === null ? "cost not reported" : `$${cost.toFixed(4)}`);
 
-function inline(file: string): InlineImage {
+/** An image file as base64 + MIME type, ready to attach to a gateway call. */
+function readInlineImage(file: string): InlineImage {
   const mime = MIME[extname(file).toLowerCase()];
   if (!mime) throw new Error(`unsupported image type: ${file}`);
   return { mime, base64: readFileSync(file).toString("base64") };
@@ -66,62 +71,74 @@ async function loadRefs(ids: string[]): Promise<InlineImage[]> {
       const res = await fetch(`${env("DIRECTUS_URL")}/assets/${id}?width=1024&format=jpg&quality=80`, {
         headers: { Authorization: `Bearer ${env("DIRECTUS_STATIC_TOKEN")}` },
       });
-      if (!res.ok) throw new Error(`reference ${id}: Directus ${res.status}`);
+      if (!res.ok) throw apiError(`Directus reference ${id}`, res.status, await res.text());
       writeFileSync(file, Buffer.from(await res.arrayBuffer()));
       console.log(`  cached reference ${id}`);
     }
-    images.push(inline(file));
+    images.push(readInlineImage(file));
   }
   return images;
 }
 
-async function callGateway(model: string, text: string, images: InlineImage[]) {
-  const res = await fetch(GATEWAY, {
+/** One image from the gateway: chat completions or the images API, depending on the model. */
+async function callGateway(model: string, prompt: string, images: InlineImage[], aspect?: string) {
+  const req = buildGatewayRequest(model, prompt, images, aspect);
+  const res = await fetch(`${GATEWAY}${req.path}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${env("AI_GATEWAY_API_KEY")}`, "Content-Type": "application/json" },
-    body: JSON.stringify(buildChatBody(model, text, images)),
+    body: JSON.stringify(req.body),
   });
-  if (!res.ok) throw new Error(`AI Gateway ${res.status}: ${(await res.text()).slice(0, 500)}`);
-  return parseChatResponse(await res.json());
+  if (!res.ok) throw apiError(`AI Gateway ${req.path}`, res.status, await res.text());
+  return parseGatewayResponse(model, await res.json());
 }
 
-/** Writes the image to the review folder and logs it in the manifest. */
-function keep(bytes: Uint8Array, name: string, entry: Omit<ManifestInput, "output">): ManifestEntry {
+/**
+ * Writes the image to .images/review/, appends its manifest line, and warns when its
+ * pixel size is unreadable or more than 5% off `aspect`.
+ */
+function saveToReviewAndLog(
+  bytes: Uint8Array,
+  name: string,
+  fields: Omit<ManifestFields, "output" | "width" | "height">,
+  aspect?: string,
+): ManifestEntry {
   mkdirSync(REVIEW, { recursive: true });
   const file = join(REVIEW, name);
   writeFileSync(file, bytes);
-  const logged = manifestEntry({ ...entry, output: relative(ROOT, file) });
+  const size = imageSize(bytes);
+  const logged = manifestEntry({ ...fields, width: size?.width ?? null, height: size?.height ?? null, output: relative(ROOT, file) });
   appendFileSync(MANIFEST, `${JSON.stringify(logged)}\n`);
-  console.log(`  ${logged.output}  (${usd(entry.cost)})`);
+  console.log(`  ${logged.output}  ${size ? `${size.width}×${size.height}` : "size unreadable"}  (${usd(fields.cost)})`);
+  if (!size) console.warn(`  warning: could not read the pixel size of ${name}; aspect not checked`);
+  else if (aspect) {
+    const warning = aspectWarning(size, aspect);
+    if (warning) console.warn(`  warning: ${warning}`);
+  }
   return logged;
 }
 
-async function generate(opts: { label: string; model: string; preset?: string; subject?: string; prompt: string; refIds: string[]; n: number }) {
-  const refs = await loadRefs(opts.refIds);
+async function generate(preset: ResolvedPreset, prompt: string, n: number, subject?: string) {
+  const refs = await loadRefs(preset.refIds);
   const at = new Date();
-  let total = 0;
-  for (let i = 1; i <= opts.n; i++) {
-    const image = await callGateway(opts.model, opts.prompt, refs);
-    total += image.cost ?? 0;
-    keep(image.bytes, outputName(opts.label, at, i, image.ext), {
-      kind: "generate",
-      at,
-      model: opts.model,
-      preset: opts.preset,
-      subject: opts.subject,
-      prompt: opts.prompt,
-      refIds: opts.refIds,
-      cost: image.cost,
-    });
+  let total: number | null = 0;
+  for (let i = 1; i <= n; i++) {
+    const image = await callGateway(preset.model, prompt, refs, preset.aspect);
+    total = total === null || image.cost === null ? null : total + image.cost;
+    saveToReviewAndLog(
+      image.bytes,
+      outputName(preset.name, at, i, image.ext),
+      { kind: "generate", at, model: preset.model, preset: preset.name, subject, prompt, refIds: preset.refIds, cost: image.cost },
+      preset.aspect,
+    );
   }
-  console.log(`${opts.n} option(s), total $${total.toFixed(4)}. Review them in .images/review/.`);
+  console.log(`${n} option(s), total ${usd(total)}. Review them in .images/review/.`);
 }
 
 async function edit(file: string, change: string, model: string) {
   const prompt = buildEditPrompt(change);
-  const image = await callGateway(model, prompt, [inline(file)]);
+  const image = await callGateway(model, prompt, [readInlineImage(file)]);
   const label = `${basename(file, extname(file))}-edit`;
-  keep(image.bytes, outputName(label, new Date(), 1, image.ext), {
+  saveToReviewAndLog(image.bytes, outputName(label, new Date(), 1, image.ext), {
     kind: "edit",
     at: new Date(),
     model,
@@ -133,33 +150,39 @@ async function edit(file: string, change: string, model: string) {
   });
 }
 
-/** The model that made `file`, from the manifest; the default model otherwise. */
-function modelFor(file: string, fallback: string): string {
-  if (!existsSync(MANIFEST)) return fallback;
+/** The model that made `file`, from its manifest entry; fails when the file is not in the manifest. */
+function modelFor(file: string): string {
+  const id = basename(file, extname(file));
   try {
-    return findEntry(readFileSync(MANIFEST, "utf8"), basename(file, extname(file))).model;
-  } catch {
-    return fallback;
-  }
-}
-
-/** JPEG q85 via sharp (bundled with Next); the file as-is when sharp is unavailable. */
-async function toJpeg(file: string): Promise<{ bytes: Buffer; name: string; type: string }> {
-  const name = `${basename(file, extname(file))}.jpg`;
-  try {
-    const sharp = (await import("sharp")).default;
-    return { bytes: await sharp(file).jpeg({ quality: 85, mozjpeg: true }).toBuffer(), name, type: "image/jpeg" };
+    return findEntry(readManifest(), id).model;
   } catch (err) {
-    console.warn(`  sharp unavailable (${(err as Error).message}); uploading the file unconverted`);
-    return { bytes: readFileSync(file), name: basename(file), type: MIME[extname(file).toLowerCase()] };
+    throw new Error(`edit: cannot tell which model made ${file} (${(err as Error).message}); edit works on pipeline outputs only`);
   }
 }
 
-async function publish(file: string, rawTitle: string, dryRun: boolean) {
+/** JPEG q85 via sharp (bundled with Next). Fails rather than upload an unconverted file. */
+async function toJpeg(file: string): Promise<{ bytes: Buffer; name: string; type: string }> {
+  let sharp: typeof import("sharp");
+  try {
+    sharp = (await import("sharp")).default;
+  } catch (err) {
+    throw new Error(`publish needs sharp to convert to JPEG and could not load it: ${(err as Error).message}`);
+  }
+  try {
+    const bytes = await sharp(file).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+    return { bytes, name: `${basename(file, extname(file))}.jpg`, type: "image/jpeg" };
+  } catch (err) {
+    throw new Error(`publish: JPEG conversion of ${file} failed: ${(err as Error).message}`);
+  }
+}
+
+async function publish(file: string, rawTitle: string, apply: boolean) {
   const title = illustrationTitle(rawTitle);
   const jpeg = await toJpeg(file);
-  if (dryRun) {
-    console.log("dry run — would POST /files:", { title, filename_download: jpeg.name, type: jpeg.type, bytes: jpeg.bytes.length });
+  const plan = { title, filename_download: jpeg.name, type: jpeg.type, bytes: jpeg.bytes.length };
+  if (!apply) {
+    console.log("read-only — would POST /files:", plan);
+    console.log("Nothing sent. Re-run with --apply to upload (only after Yoan's go).");
     return;
   }
   const form = new FormData();
@@ -170,7 +193,7 @@ async function publish(file: string, rawTitle: string, dryRun: boolean) {
     headers: { Authorization: `Bearer ${env("DIRECTUS_STATIC_TOKEN")}` },
     body: form,
   });
-  if (!res.ok) throw new Error(`Directus POST /files: ${res.status} ${await res.text()}`);
+  if (!res.ok) throw apiError("Directus POST /files", res.status, await res.text());
   const { data } = (await res.json()) as { data: { id: string } };
   console.log(`uploaded "${title}" → asset ${data.id}`);
 }
@@ -182,23 +205,26 @@ async function main() {
     case "generate": {
       const preset = resolvePreset(config, cmd.preset);
       const prompt = buildPrompt({ ...preset, subject: cmd.subject, refCount: preset.refIds.length });
-      return generate({ label: preset.name, model: preset.model, preset: preset.name, subject: cmd.subject, prompt, refIds: preset.refIds, n: cmd.n });
+      return generate(preset, prompt, cmd.n, cmd.subject);
     }
     case "edit":
-      return edit(cmd.file, cmd.change, modelFor(cmd.file, config.model));
+      return edit(cmd.file, cmd.change, modelFor(cmd.file));
     case "regenerate": {
-      const entry = findEntry(readFileSync(MANIFEST, "utf8"), cmd.id);
+      const entry = findEntry(readManifest(), cmd.id);
       if (entry.kind === "edit") {
         if (!entry.source || !existsSync(join(ROOT, entry.source))) throw new Error(`source of ${cmd.id} is gone: ${entry.source}`);
         return edit(join(ROOT, entry.source), entry.change ?? "", entry.model);
       }
-      return generate({ label: entry.preset ?? entry.id, model: entry.model, preset: entry.preset, subject: entry.subject, prompt: entry.prompt, refIds: entry.refs, n: 1 });
+      if (!entry.preset) throw new Error(`manifest entry ${cmd.id} has no preset to regenerate from`);
+      // The preset's current framing and aspect, with the entry's own model and references.
+      const preset = { ...resolvePreset(config, entry.preset), model: entry.model, refIds: entry.refIds };
+      return generate(preset, entry.prompt, 1, entry.subject);
     }
     case "refs":
       await loadRefs(config.refs.map((r) => r.id));
       return console.log(`${config.refs.length} reference(s) in .images/refs/`);
     case "publish":
-      return publish(cmd.file, cmd.title, cmd.dryRun);
+      return publish(cmd.file, cmd.title, cmd.apply);
   }
 }
 

@@ -41,6 +41,7 @@ No image files are committed.
 | `475a06f4-9320-4452-b5ce-595a05726781` | Hero, dawn driveway |
 | `e6b712f2-8bc0-4e81-9b4a-83179173b0aa` | Hero, open garage |
 | `6d4a6a91-7eaa-451f-9de8-fafe66427a79` | "La borne" product shot |
+| `b8b2addb-273c-4aa4-88c3-b25e31cc6e10` | PPE, underground car park |
 
 Add a photo to the set only once it is approved and live on the site. Three to five
 references work best.

@@ -4,7 +4,8 @@
   "refs": [
     { "id": "475a06f4-9320-4452-b5ce-595a05726781", "label": "Hero — dawn driveway" },
     { "id": "e6b712f2-8bc0-4e81-9b4a-83179173b0aa", "label": "Hero — open garage" },
-    { "id": "6d4a6a91-7eaa-451f-9de8-fafe66427a79", "label": "La borne — product shot" }
+    { "id": "6d4a6a91-7eaa-451f-9de8-fafe66427a79", "label": "La borne — product shot" },
+    { "id": "b8b2addb-273c-4aa4-88c3-b25e31cc6e10", "label": "PPE — underground car park" }
   ],
   "presets": {
     "home-block": {
