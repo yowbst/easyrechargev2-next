@@ -10,8 +10,8 @@ import { AI_CITATIONS_HEADERS } from "../lib/tab-schemas";
 const log = createLogger("citations");
 const PROMPTS_FILE = resolve(__dirname, "../prompts/ai-citations-2026.md");
 const BASE_URL = "https://api.dataforseo.com";
-// Observed 2026-11-15: ~$0.008 per ChatGPT Live answer (balance $1.000 -> $0.984 after two). The vendor lists $0.004 per result page.
-const LIVE_PRICE_USD = 0.008;
+// Confirmed on the 2026-11-15 baseline: 180 answers cost $0.72, i.e. $0.004 each (the vendor's Live price).
+const LIVE_PRICE_USD = 0.004;
 const OK = 20000;
 type Engine = "chatgpt" | "gemini";
 
