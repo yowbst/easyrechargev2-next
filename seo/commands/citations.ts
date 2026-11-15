@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import * as client from "dataforseo-client";
-import { didSearch, parsePrompts, summarizeSources } from "../lib/citations";
+import { citationShare, didSearch, parsePrompts, summarizeSources } from "../lib/citations";
 import { dataDir, requireEnv, site } from "../lib/config";
 import { createLogger } from "../lib/logger";
 import { appendRows, ensureTab } from "../lib/sheets";
@@ -168,6 +168,13 @@ export async function citations(): Promise<void> {
       `  ${engine}: cited in ${cited}/${searched.length} answers that searched ` +
         `(${searched.length ? Math.round((cited / searched.length) * 100) : 0}%); ${mine.length - searched.length} answered without searching`,
     );
+  }
+  for (const competitor of site.watchlist?.competitors ?? []) {
+    const share = citationShare(rows as Parameters<typeof citationShare>[0], competitor);
+    const parts = Object.entries(share).map(
+      ([engine, v]) => `${engine} ${v.cited}/${v.searched} (${v.searched ? Math.round((v.cited / v.searched) * 100) : 0}%)`,
+    );
+    console.log(`  watchlist ${competitor}: ${parts.join(", ") || "no answers"}`);
   }
   console.log(`Raw answers (incl. fan-out queries): seo/data/citations/${rawFile}`);
   if (stopped) {

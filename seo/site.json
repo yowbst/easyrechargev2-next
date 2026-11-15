@@ -1,7 +1,9 @@
 {
   "siteUrl": "https://easyrecharge.ch",
   "gscProperty": "sc-domain:easyrecharge.ch",
-  "languages": ["fr-FR"],
+  "languages": [
+    "fr-FR"
+  ],
   "sheetsTabNames": {
     "keywordsMaster": "Keywords Master",
     "contentCalendar": "Content Calendar",
@@ -16,9 +18,21 @@
   "psi": {
     "sitemapDiscovery": true,
     "locale": "fr",
-    "sampleSize": { "blog": 5, "vehicles": 5, "localites": 8 },
-    "strategies": ["mobile", "desktop"],
-    "categories": ["performance", "accessibility", "best-practices", "seo"],
+    "sampleSize": {
+      "blog": 5,
+      "vehicles": 5,
+      "localites": 8
+    },
+    "strategies": [
+      "mobile",
+      "desktop"
+    ],
+    "categories": [
+      "performance",
+      "accessibility",
+      "best-practices",
+      "seo"
+    ],
     "thresholds": {
       "performance": 90,
       "accessibility": 90,
@@ -43,9 +57,21 @@
     "freshnessThresholdDays": 90
   },
   "geo": {
-    "aiBots": ["OAI-SearchBot", "PerplexityBot", "Google-Extended", "ClaudeBot", "ChatGPT-User", "Amazonbot"],
+    "aiBots": [
+      "OAI-SearchBot",
+      "PerplexityBot",
+      "Google-Extended",
+      "ClaudeBot",
+      "ChatGPT-User",
+      "Amazonbot"
+    ],
     "freshnessThresholdDays": 90,
     "targetCitationsPerWords": 200,
     "questionHeadingTargetPct": 50
+  },
+  "watchlist": {
+    "competitors": [
+      "borne-recharge-suisse.ch"
+    ]
   }
 }

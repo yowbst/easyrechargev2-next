@@ -55,3 +55,23 @@ export function didSearch(result: ScraperResult | null | undefined): "yes" | "no
   const any = (result?.sources?.length ?? 0) + (result?.search_results?.length ?? 0) + (result?.fan_out_queries?.length ?? 0);
   return any > 0 ? "yes" : "no";
 }
+
+/**
+ * Share of answers that searched and cited `domain`, per engine. Reads the
+ * `cited_domains` column, so it works on fresh rows and on rows read back from the Sheet.
+ */
+export function citationShare(
+  rows: { engine: string | number; searched: string | number; cited_domains: string | number }[],
+  domain: string,
+): Record<string, { cited: number; searched: number }> {
+  const out: Record<string, { cited: number; searched: number }> = {};
+  for (const r of rows) {
+    if (r.searched !== "yes") continue;
+    const e = String(r.engine);
+    out[e] ??= { cited: 0, searched: 0 };
+    out[e].searched++;
+    const domains = String(r.cited_domains).split(",").map((d) => d.trim());
+    if (domains.some((d) => d === domain || d.endsWith(`.${domain}`))) out[e].cited++;
+  }
+  return out;
+}

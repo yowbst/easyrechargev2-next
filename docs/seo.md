@@ -52,6 +52,14 @@ Goal: see whether ChatGPT, Perplexity and Gemini cite easyRecharge, and track it
 
 Setup: create a DataForSEO account (pay as you go; the vendor lists a $50 minimum top-up and a $1 trial credit), then put the **API Access** login and password in `.env.local` as `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` (not the account password). Before relying on it: confirm that Switzerland + French returns sensible answers, and spot-check about five prompts by hand each quarter, because the scraper is not guaranteed to match what you see in the apps. Perplexity is not covered by the scraper.
 
+## Competitor watchlist
+
+`seo/site.json` > `watchlist.competitors` lists domains whose AI citations are reported next to ours on every `citations` run (`watchlist <domain>: chatgpt x/y, gemini x/y`). Add a domain there to start tracking it; the Sheet's `cited_domains` column holds the raw data for any domain, past runs included.
+
+| Domain | Why it is watched | Baseline 2026-11-15 (answers that searched and cited it) |
+|---|---|---|
+| borne-recharge-suisse.ch | SEO-first lead-generation site paid by partner electricians; per-canton pages with TTC price ranges and a "validé le" date | ChatGPT 35/90 (39 %), Gemini 0/82 (0 %). Us: ChatGPT 12/90 (13 %), Gemini 30/82 (37 %) |
+
 ## Reading the audits
 
 - A page that emits BlogPosting + Person + FAQPage inside one `@graph` block is credited for all three. If an audit says "no schema", open the page source before believing it.

@@ -21,6 +21,8 @@ export interface SiteConfig {
   framework: string;
   psi: Record<string, unknown>;
   spin: Record<string, unknown>;
+  /** Domains whose AI citations are tracked next to ours on every `citations` run. */
+  watchlist: { competitors: string[] };
   geo: {
     aiBots: string[];
     freshnessThresholdDays: number;

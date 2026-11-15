@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { didSearch, parsePrompts, summarizeSources } from "./citations";
+import { citationShare, didSearch, parsePrompts, summarizeSources } from "./citations";
 
 describe("parsePrompts", () => {
   it("keeps numbered lines and ignores headings, prose and bullets", () => {
@@ -60,5 +60,20 @@ describe("didSearch", () => {
   it("is no for an answer from memory", () => {
     expect(didSearch({ sources: [], search_results: null, fan_out_queries: null })).toBe("no");
     expect(didSearch(undefined)).toBe("no");
+  });
+});
+
+describe("citationShare", () => {
+  it("counts answers that searched and cited the domain (www included), per engine", () => {
+    const rows = [
+      { engine: "chatgpt", searched: "yes", cited_domains: "tcs.ch, borne-recharge-suisse.ch" },
+      { engine: "chatgpt", searched: "yes", cited_domains: "tcs.ch" },
+      { engine: "chatgpt", searched: "no", cited_domains: "" },
+      { engine: "gemini", searched: "yes", cited_domains: "www.borne-recharge-suisse.ch" },
+    ];
+    expect(citationShare(rows, "borne-recharge-suisse.ch")).toEqual({
+      chatgpt: { cited: 1, searched: 2 },
+      gemini: { cited: 1, searched: 1 },
+    });
   });
 });
