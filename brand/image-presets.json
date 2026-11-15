@@ -14,11 +14,11 @@
     },
     "hero": {
       "aspect": "16:9",
-      "framing": "wide landscape 16:9 framing, main subject in the right half, calm uncluttered left half"
+      "framing": "wide landscape 16:9 framing, main subject slightly right of centre and fully inside the middle third of the width, calm uncluttered edges"
     },
     "blog-cover": {
-      "aspect": "1.91:1",
-      "framing": "wide landscape 1.91:1 framing, main subject centred with generous margins"
+      "aspect": "16:9",
+      "framing": "landscape 16:9 framing, main subject centred in the middle band, nothing essential in the top and bottom 15 percent"
     }
   }
 }

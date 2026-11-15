@@ -1,7 +1,7 @@
 # House style for site images
 
-> **DRAFT, waiting for Yoan's approval.** Nothing here is binding until Yoan signs it off
-> (issue #16). The reference photos listed below need the same approval.
+> **Approved by Yoan on 2026-11-15** ("yes for now", issue #16), reference set included.
+> Change it only with his approval.
 
 Every AI-generated image on easyrecharge.ch follows this style, so a new image sits next to
 the existing hero, "La borne" and PPE photos without looking out of place. The machine-readable
@@ -27,8 +27,8 @@ version is `brand/image-presets.json`, which the generator (`npm run images`) se
 | Preset | Aspect | Use |
 |---|---|---|
 | `home-block` | 16:10 | Homepage blocks (PPE / battery / solar layout) |
-| `hero` | 16:9 | Page heroes: subject on the right, calm left half for the headline |
-| `blog-cover` | 1.91:1 | Blog covers and social sharing |
+| `hero` | 16:9 | Full-screen homepage backdrop (`object-cover`, centred) under a dark gradient, with the headline on the left and the quote card on the right. Phones keep only a narrow centre strip, so the subject sits just right of centre, inside the middle third |
+| `blog-cover` | 16:9 | Blog post image: cards at 16:9, article header at 21:9 (desktop) and 16:10 (mobile), social share at 1.91:1. Subject in the middle band, nothing essential in the top and bottom 15 % |
 
 ## Reference photos
 
