@@ -16,12 +16,21 @@ npm test             # Vitest unit tests
 npm run ingest -- plan  --in <file>   # Diff EVDB snapshot vs CMS (read-only)
 npm run ingest -- apply --plan <file> # Apply a reviewed plan (writes)
 npm run ingest -- images              # Upload 1536px thumbnails (writes)
+
+npm run images -- generate <preset> "<subject>" [--n 3]  # AI site images → .images/review/ + manifest
+npm run images -- edit <file> "<change>"                 # Minimal edit pass on one option
+npm run images -- publish <file> --title "…" [--dry-run] # JPEG q85 → Directus (writes, only after Yoan's go)
 ```
 
 `ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
 before `plan`/`apply` — see `docs/vehicle-ingest.md` for the full runbook, sequence, and
-gotchas. `images` downloads every thumbnail through a Bright Data proxy zone and refuses
+gotchas. `ingest -- images` downloads every thumbnail through a Bright Data proxy zone and refuses
 to start when that zone is not configured — it never falls back to a direct download.
+
+`npm run images` (AI-generated site images, a separate script) also has `regenerate <manifest-id>`
+and `refs`. House style (draft) in `docs/brand/image-style.md`, presets and reference asset ids in
+`brand/image-presets.json`, runbook and costs (~$0.07 per call) in `docs/image-pipeline.md`.
+Images are illustrative only, no personal data in prompts, and `publish` runs only after Yoan approves.
 
 ## Deploy
 
