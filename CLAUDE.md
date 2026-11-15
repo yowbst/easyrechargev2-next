@@ -16,6 +16,10 @@ npm test             # Vitest unit tests
 npm run ingest -- plan  --in <file>   # Diff EVDB snapshot vs CMS (read-only)
 npm run ingest -- apply --plan <file> # Apply a reviewed plan (writes)
 npm run ingest -- images              # Upload 1536px thumbnails (writes)
+
+npm run seo -- geo --dry-run          # AI-readiness audit of the live site (no Google needed)
+npm run seo -- gsc                    # 28 days of Search Console -> seo/data + Sheet
+npm run seo -- help                   # crawl, freshness, keywords, sheet: see docs/seo.md
 ```
 
 `ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
@@ -93,6 +97,11 @@ Quote enrichment (funnel v2, flag `quote-enrich`):
 
 Partner e-mail actions (see `docs/operations/partner-dispatch.md`):
 - `DISPATCH_ACTION_SECRET` — optional HMAC key for the e-mail action links (`/partners/action/<token>`); falls back to `MCP_JWT_SECRET`, then `CRON_SECRET`. Rotating it voids every link already sent.
+
+SEO command center (`npm run seo`, see `docs/seo.md`):
+- `SEO_SHEETS_WORKBOOK_ID` — Google Sheet that holds the SEO tabs (Keywords Master, Performance, Site Health, Issues, AI Citations, ...); share it with the service account below as Editor
+- `GSC_PROPERTY` — optional Search Console property, defaults to `sc-domain:easyrecharge.ch`; the same service account must be a user on it
+- Google auth reuses `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` (below). `--dry-run` commands need no Google credentials at all
 
 Partner invoicing — Google Docs env vars (used by `src/lib/billing/google-docs.ts`):
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_KEY` — service account credentials (Drive + Docs API scopes) used to copy the invoice template and substitute placeholders; the key is a PEM private key with literal `\n` escapes

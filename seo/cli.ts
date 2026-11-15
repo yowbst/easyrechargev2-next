@@ -20,6 +20,13 @@ Commands:
   gsc                          Fetch 28 days of Search Console data
   geo [--url <page>] [--dry-run]
                                AI-readiness audit (blog posts + home); --dry-run skips the Sheet
+  crawl [--url <start>] [--max-pages <n>] [--dry-run]
+                               Titles, meta, h1, canonical, hreflang, alt text across the site
+  freshness [--dry-run]        Posts untouched for more than 90 days -> Content Calendar
+  keywords <discover "<topic>" | import-ads <csv> [--dry-run] | cluster | gaps>
+                               Keyword research into the Keywords Master tab
+  sheet <read <tab> | upsert <tab> <keyCol> <json-file> [--protect cols]>
+                               Read or write a tab of the SEO workbook (used by skills)
   help                         Show this message
 
 Runbook: docs/seo.md`;
@@ -29,6 +36,10 @@ type Command = () => Promise<void>;
 const commands: Record<string, () => Promise<Command>> = {
   gsc: async () => (await import("./commands/gsc")).gsc,
   geo: async () => (await import("./commands/geo")).geo,
+  crawl: async () => (await import("./commands/crawl")).crawl,
+  freshness: async () => (await import("./commands/freshness")).freshness,
+  keywords: async () => (await import("./commands/keywords")).keywords,
+  sheet: async () => (await import("./commands/sheet")).sheet,
 };
 
 /** `takesValue: false` is a bare switch; `true` consumes the next token. */
@@ -38,6 +49,14 @@ const COMMAND_FLAGS: Record<string, { name: string; takesValue: boolean }[]> = {
     { name: "url", takesValue: true },
     { name: "dry-run", takesValue: false },
   ],
+  crawl: [
+    { name: "url", takesValue: true },
+    { name: "max-pages", takesValue: true },
+    { name: "dry-run", takesValue: false },
+  ],
+  freshness: [{ name: "dry-run", takesValue: false }],
+  keywords: [{ name: "dry-run", takesValue: false }],
+  sheet: [{ name: "protect", takesValue: true }],
 };
 
 function validateFlags(command: string, argv: string[]): void {
