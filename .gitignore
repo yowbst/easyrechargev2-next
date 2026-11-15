@@ -58,3 +58,6 @@ next-env.d.ts
 
 # Local scratch inputs (reference images, drafts) — never committed
 /input/
+
+# AI image review folder + reference-photo cache (npm run images)
+/.images/
