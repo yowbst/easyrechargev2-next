@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePrompts, summarizeSources } from "./citations";
+import { didSearch, parsePrompts, summarizeSources } from "./citations";
 
 describe("parsePrompts", () => {
   it("keeps numbered lines and ignores headings, prose and bullets", () => {
@@ -48,5 +48,17 @@ describe("summarizeSources", () => {
 
   it("does not match a lookalike domain", () => {
     expect(summarizeSources([{ domain: "noteasyrecharge.ch" }]).easyrecharge_cited).toBe("no");
+  });
+});
+
+describe("didSearch", () => {
+  it("is yes when sources, search results or fan-out queries exist", () => {
+    expect(didSearch({ sources: [{}] })).toBe("yes");
+    expect(didSearch({ search_results: [{}] })).toBe("yes");
+    expect(didSearch({ fan_out_queries: ["q"] })).toBe("yes");
+  });
+  it("is no for an answer from memory", () => {
+    expect(didSearch({ sources: [], search_results: null, fan_out_queries: null })).toBe("no");
+    expect(didSearch(undefined)).toBe("no");
   });
 });

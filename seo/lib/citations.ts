@@ -43,3 +43,15 @@ export function summarizeSources(sources: CitedSource[] | null | undefined, ownD
     rank: idx >= 0 ? idx + 1 : "",
   };
 }
+
+export interface ScraperResult {
+  sources?: unknown[] | null;
+  search_results?: unknown[] | null;
+  fan_out_queries?: string[] | null;
+}
+
+/** Did the assistant search the web for this answer? When it did not, there is nothing to cite. */
+export function didSearch(result: ScraperResult | null | undefined): "yes" | "no" {
+  const any = (result?.sources?.length ?? 0) + (result?.search_results?.length ?? 0) + (result?.fan_out_queries?.length ?? 0);
+  return any > 0 ? "yes" : "no";
+}

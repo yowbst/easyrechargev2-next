@@ -23,7 +23,10 @@ export const ISSUES_HEADERS = [
   "url", "issue_type", "severity", "category", "details", "fix_prompt", "date_found", "status",
 ];
 
-/** Monthly manual check of what ChatGPT / Perplexity / Gemini cite. */
+/**
+ * What ChatGPT / Gemini cite for the frozen prompts. One row per prompt, engine
+ * and run; `searched` is "no" when the assistant answered from memory (nothing to cite).
+ */
 export const AI_CITATIONS_HEADERS = [
-  "date", "prompt", "engine", "cited_domains", "easyrecharge_cited", "rank",
+  "date", "run", "prompt", "engine", "searched", "cited_domains", "easyrecharge_cited", "rank",
 ];
