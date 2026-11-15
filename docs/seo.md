@@ -27,11 +27,11 @@ Not ported yet (still in the old repo, run there): PageSpeed (`audit:psi`), prog
 
 ## One-time setup
 
-The scripts reuse the invoicing service account, so there is no key file to copy.
+The scripts authenticate as the dedicated `seo-agent` service account, so SEO never shares a key with invoicing.
 
-1. `.env.local` already has `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_SERVICE_ACCOUNT_KEY`. Add `SEO_SHEETS_WORKBOOK_ID` (the id in the Sheet URL) and, if different from `sc-domain:easyrecharge.ch`, `GSC_PROPERTY`.
-2. Share the SEO workbook with the service account e-mail as **Editor**.
-3. In Search Console, add the same e-mail as a **Restricted** user on the property.
+1. In `.env.local` set `SEO_GOOGLE_SERVICE_ACCOUNT_EMAIL` and `SEO_GOOGLE_SERVICE_ACCOUNT_KEY` (the key is the PEM `private_key`, with `\n` escapes), and `SEO_SHEETS_WORKBOOK_ID` (the id in the Sheet URL). Optional: `GSC_PROPERTY` if it is not `sc-domain:easyrecharge.ch`. Without the `SEO_` pair the scripts fall back to the invoicing account (`GOOGLE_SERVICE_ACCOUNT_*`).
+2. Share the SEO workbook with that e-mail as **Editor**.
+3. In Search Console (Settings > Users and permissions), add the same e-mail as a **Restricted** user. The scripts only read.
 4. Check: `npm run seo -- gsc`.
 
 Sheet tabs: Keywords Master, Content Calendar, Topic Clusters, Performance, Site Health, Score History, Issues, AI Citations. Tab names are in `seo/site.json`.
