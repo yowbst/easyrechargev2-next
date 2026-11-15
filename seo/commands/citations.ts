@@ -136,7 +136,9 @@ export async function citations(): Promise<void> {
   }
 
   mkdirSync(resolve(dataDir, "citations"), { recursive: true });
-  writeFileSync(resolve(dataDir, "citations", `${stamp}.json`), JSON.stringify(raw, null, 2));
+  // Time in the name: two runs on the same day must not overwrite each other.
+  const rawFile = `${stamp}-${new Date().toISOString().slice(11, 19).replaceAll(":", "")}.json`;
+  writeFileSync(resolve(dataDir, "citations", rawFile), JSON.stringify(raw, null, 2));
 
   if (!has("no-sheet") && rows.length) {
     await ensureTab(site.sheetsTabNames.aiCitations, AI_CITATIONS_HEADERS);
@@ -151,7 +153,7 @@ export async function citations(): Promise<void> {
     const mine = rows.filter((r) => r.engine === engine);
     console.log(`  ${engine}: ${mine.filter((r) => r.easyrecharge_cited === "yes").length}/${mine.length} cited`);
   }
-  console.log(`Raw answers (incl. fan-out queries): seo/data/citations/${stamp}.json`);
+  console.log(`Raw answers (incl. fan-out queries): seo/data/citations/${rawFile}`);
   if (stopped) {
     console.log(`\nStopped early: ${(stopped as Error).message}`);
     throw stopped;
