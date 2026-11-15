@@ -1,0 +1,51 @@
+{
+  "siteUrl": "https://easyrecharge.ch",
+  "gscProperty": "sc-domain:easyrecharge.ch",
+  "languages": ["fr-FR"],
+  "sheetsTabNames": {
+    "keywordsMaster": "Keywords Master",
+    "contentCalendar": "Content Calendar",
+    "topicClusters": "Topic Clusters",
+    "performance": "Performance",
+    "siteHealth": "Site Health",
+    "scoreHistory": "Score History",
+    "issues": "Issues",
+    "aiCitations": "AI Citations"
+  },
+  "framework": "nextjs",
+  "psi": {
+    "sitemapDiscovery": true,
+    "locale": "fr",
+    "sampleSize": { "blog": 5, "vehicles": 5, "localites": 8 },
+    "strategies": ["mobile", "desktop"],
+    "categories": ["performance", "accessibility", "best-practices", "seo"],
+    "thresholds": {
+      "performance": 90,
+      "accessibility": 90,
+      "best-practices": 90,
+      "seo": 90,
+      "LCP": 2500,
+      "CLS": 0.1,
+      "TBT": 200,
+      "FCP": 1800,
+      "SI": 3400,
+      "TTI": 3800,
+      "INP": 200
+    }
+  },
+  "spin": {
+    "urlPatterns": [],
+    "minGroupSize": 10,
+    "thinContentThreshold": 500,
+    "minWordCount": 300,
+    "boilerplateSimThreshold": 0.7,
+    "maxPagesToAudit": 500,
+    "freshnessThresholdDays": 90
+  },
+  "geo": {
+    "aiBots": ["OAI-SearchBot", "PerplexityBot", "Google-Extended", "ClaudeBot", "ChatGPT-User", "Amazonbot"],
+    "freshnessThresholdDays": 90,
+    "targetCitationsPerWords": 200,
+    "questionHeadingTargetPct": 50
+  }
+}
