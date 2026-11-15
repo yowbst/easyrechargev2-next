@@ -11,13 +11,20 @@ export async function POST(
   const partner = await findPartnerByToken(uuid);
   if (!partner) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  const body: { stage?: string; lost_reason?: string; lost_note?: string } = await req
+  const body: { stage?: string; lost_reason?: string; lost_note?: string; quoted_amount_chf?: number } = await req
     .json()
     .catch(() => ({}));
   const result = await act(
     id,
     { kind: "partner", partnerId: partner.id, source: "kanban" },
-    { type: "move", stage: body.stage ?? "", lostReason: body.lost_reason, lostNote: body.lost_note },
+    {
+      type: "move",
+      stage: body.stage ?? "",
+      lostReason: body.lost_reason,
+      lostNote: body.lost_note,
+      // Validated by the lifecycle rules (whole CHF, quote_sent only); a bad value is refused there.
+      quotedAmountChf: body.quoted_amount_chf ?? undefined,
+    },
   );
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
