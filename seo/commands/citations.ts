@@ -14,12 +14,31 @@ const LIVE_PRICE_USD = 0.004; // per result page, Live queue (vendor price list;
 const OK = 20000;
 type Engine = "chatgpt" | "gemini";
 
+/** Stops the whole run: retrying the remaining prompts would only repeat the failure. */
+class FatalCitationsError extends Error {}
+
 const arg = (name: string) => {
   const argv = process.argv.slice(2);
   const i = argv.indexOf(`--${name}`);
   return i >= 0 ? argv[i + 1] : undefined;
 };
 const has = (name: string) => process.argv.slice(2).includes(`--${name}`);
+
+/** The SDK's exception message is generic; the vendor's status and body say what actually went wrong. */
+function describeError(err: unknown): { text: string; fatal: boolean } {
+  const e = err as { message?: string; status?: number; response?: string };
+  if (typeof e.status === "number") {
+    let detail = (e.response ?? "").slice(0, 300);
+    try {
+      detail = (JSON.parse(e.response ?? "") as { status_message?: string }).status_message ?? detail;
+    } catch {
+      // Not JSON: keep the raw text.
+    }
+    // 401/403 are about the credentials or the account (e.g. "verify your account"): retrying cannot help.
+    return { text: `HTTP ${e.status}: ${detail}`, fatal: e.status === 401 || e.status === 403 };
+  }
+  return { text: e.message ?? String(err), fatal: false };
+}
 
 /** HTTP Basic auth for the SDK, from DATAFORSEO_LOGIN / DATAFORSEO_PASSWORD (the "API Access" password, not the account one). */
 function authenticatedFetch(login: string, password: string): typeof fetch {
@@ -76,7 +95,7 @@ export async function citations(): Promise<void> {
         if (task?.status_code !== OK) {
           failures++;
           log.error(`P${prompt.id} ${engine}: ${task?.status_code} ${task?.status_message}`);
-          if (failures >= 3) throw new Error(`3 failed requests in a row; last: ${task?.status_code} ${task?.status_message}`);
+          if (failures >= 3) throw new FatalCitationsError(`3 failed requests in a row; last: ${task?.status_code} ${task?.status_message}`);
           continue;
         }
         failures = 0;
@@ -86,10 +105,12 @@ export async function citations(): Promise<void> {
         rows.push({ date: stamp, prompt: prompt.text, engine, ...summary });
         log.info(`P${prompt.id} ${engine}: ${summary.easyrecharge_cited === "yes" ? `cited (rank ${summary.rank})` : "not cited"}`);
       } catch (err) {
-        if (String((err as Error).message).startsWith("3 failed")) throw err;
+        if (err instanceof FatalCitationsError) throw err;
+        const { text, fatal } = describeError(err);
+        log.error(`P${prompt.id} ${engine} failed: ${text}`);
+        if (fatal) throw new FatalCitationsError(text);
         failures++;
-        log.error(`P${prompt.id} ${engine} failed: ${(err as Error).message}`);
-        if (failures >= 3) throw new Error(`3 failed requests in a row; last: ${(err as Error).message}`);
+        if (failures >= 3) throw new FatalCitationsError(`3 failed requests in a row; last: ${text}`);
       }
       await new Promise((r) => setTimeout(r, 300));
     }
