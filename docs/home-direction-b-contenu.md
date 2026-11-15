@@ -119,6 +119,32 @@ masquer la section comme Le réseau.
 
 ---
 
+## 8 · Batterie solaire — EN ATTENTE DE VALIDATION (#15)
+
+Placée entre « Quelle puissance » et la grille de preuves, ancre `#solar`, même
+mise en page que le bloc PPE. Masquée tant que `blocks.solar.title` manque. Le
+bouton mène au tunnel batterie avec `?src=home-solar`, retrouvable dans le
+`location_params` des demandes.
+
+| Clé | FR | DE |
+|---|---|---|
+| `blocks.solar.eyebrow` | BATTERIE SOLAIRE | SOLARBATTERIE |
+| `blocks.solar.title` | Déjà des panneaux solaires ? Stockez votre production. | Bereits eine Solaranlage? Speichern Sie Ihren Solarstrom. |
+| `blocks.solar.lede` | Une batterie garde l'électricité produite en journée pour le soir — et pour recharger votre voiture. Décrivez votre installation en quelques minutes. | Ein Speicher bewahrt den tagsüber erzeugten Strom für den Abend auf – auch zum Laden Ihres Autos. Beschreiben Sie Ihre Anlage in wenigen Minuten. |
+| `blocks.solar.points.0` | Pour les propriétaires et les PPE déjà équipés de panneaux solaires | Für Eigentümer und Stockwerkeigentümer mit bestehender Solaranlage |
+| `blocks.solar.points.1` | Quelques questions sur votre installation et votre consommation | Einige Fragen zu Ihrer Anlage und Ihrem Verbrauch |
+| `blocks.solar.points.2` | Combinable avec votre demande de borne | Kombinierbar mit Ihrer Ladestation-Anfrage |
+| `blocks.solar.points.3` | Sans engagement | Unverbindlich |
+| `blocks.solar.cta.label` | Demander un devis batterie | Offerte für Solarbatterie anfordern |
+| `blocks.solar.image` / `image_alt` | à choisir — sans image, le bloc affiche un fond hachuré | |
+| `blocks.solar.stat.value` / `stat.label` | aucun (pas de chiffre vérifié) | |
+
+> Pas de « un installateur de votre région vous contacte » : E-ME est le seul
+> partenaire batterie, hors de ses cantons la demande est stockée sans appel.
+> Pas de « gratuit » : le tunnel batterie ne le dit pas.
+
+---
+
 ## Encore ouvert
 
 1. PPE — prestation réelle ? (section 5)

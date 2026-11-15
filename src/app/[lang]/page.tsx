@@ -42,6 +42,7 @@ import { GuidesB, type GuidePost } from "@/components/home-b/GuidesB";
 import { CoverageB, type CoverageStat } from "@/components/home-b/CoverageB";
 import { FaqB, type FaqEntry } from "@/components/home-b/FaqB";
 import { opt, optList } from "@/components/home-b/content";
+import { buildSolarSection } from "@/components/home-b/solar";
 import { deriveExcerpt } from "@/lib/blog-excerpt";
 
 export function generateStaticParams() {
@@ -419,6 +420,7 @@ export default async function Home({ params }: HomeProps) {
     6,
   ).map((p) => p.text);
   const coproTitle = opt(dictionary, "pages.home.blocks.copro.title");
+  const solar = buildSolarSection(dictionary, pageRegistry, lang);
 
   // Guides, coverage and FAQ keep their existing Directus sources; only the
   // rendering moves to Direction B.
@@ -550,6 +552,14 @@ export default async function Home({ params }: HomeProps) {
             options={powerOptions}
             note={opt(dictionary, "pages.home.blocks.power.note")}
           />
+        </section>
+      )}
+
+      {/* The battery offer, once the charger story is told. Same layout as the
+          PPE block; renders once its Directus copy exists. */}
+      {solar && (
+        <section id="solar">
+          <CoproBlock {...solar} />
         </section>
       )}
 
