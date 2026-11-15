@@ -63,7 +63,7 @@ export function CoproBlock({
             {action && (
               <Link
                 href={action.href}
-                className="mt-8 inline-flex h-14 items-center rounded-md bg-b-forest px-7 text-[17px] font-semibold text-b-on-forest transition-opacity hover:opacity-90"
+                className="mt-8 inline-flex h-14 items-center rounded-md bg-b-forest px-7 text-[17px] font-semibold text-b-on-forest transition-opacity hover:opacity-90 dark:bg-b-on-forest dark:text-b-forest"
               >
                 {action.label}
               </Link>
