@@ -33,8 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# claude
-.claude/
+# claude: settings stay private, skills are shared
+.claude/*
+!.claude/skills/
+
+# seo command center: GSC exports, crawls, logs
+/seo/data/
 
 # vercel
 .vercel

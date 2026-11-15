@@ -25,6 +25,7 @@ import type { PartnerDispatchCard } from "@/lib/dispatch/partner-dashboard-queri
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { makePartnerT, type PartnerDict } from "@/lib/partner-i18n";
 import { LeadCard } from "./LeadCard";
+import { QuoteAmountModal } from "./QuoteAmountModal";
 import { usePartnerFilter, type SortKey } from "./PartnerFilterContext";
 import {
   scoreLead,
@@ -118,6 +119,8 @@ export function Kanban({
   const { inRange, sort, facets } = usePartnerFilter();
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
+  /** Lead waiting for the optional quoted amount before moving to quote_sent. */
+  const [quoting, setQuoting] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DispatchStage | null>(null);
   // Where the dragged card may land, from the lifecycle rules.
   const [dropTargets, setDropTargets] = useState<string[] | null>(null);
@@ -193,7 +196,13 @@ export function Kanban({
     );
   }
 
-  async function moveStage(id: string, stage: DispatchStage) {
+  /** Every board move goes through here: quote_sent first asks for the quoted amount. */
+  function requestMove(id: string, stage: DispatchStage) {
+    if (stage === "quote_sent") setQuoting(id);
+    else moveStage(id, stage);
+  }
+
+  async function moveStage(id: string, stage: DispatchStage, quotedAmountChf?: number) {
     const previous = localDispatches;
     const now = new Date().toISOString();
     // Optimistic: move the card immediately.
@@ -209,7 +218,10 @@ export function Kanban({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ stage }),
+          body: JSON.stringify({
+            stage,
+            ...(quotedAmountChf !== undefined ? { quoted_amount_chf: quotedAmountChf } : {}),
+          }),
         },
       );
       if (!res.ok) {
@@ -384,7 +396,7 @@ export function Kanban({
     if (!id) return;
     const card = localDispatches.find((c) => c.id === id);
     if (!card || !allowedActions(card, BOARD).includes(stage)) return;
-    moveStage(id, stage);
+    requestMove(id, stage);
   }
 
   // Restrict disqualified grid to main funnel stages — Won/Lost are terminal
@@ -465,7 +477,7 @@ export function Kanban({
                         dictionary={dictionary}
                         lang={lang}
                         pending={pending === d.id}
-                        onMove={(s) => moveStage(d.id, s)}
+                        onMove={(s) => requestMove(d.id, s)}
                         onDisqualify={(r, n) => disqualify(d.id, r, n)}
                         onLose={(r, n) => lose(d.id, r, n)}
                         onDragStart={(e) => handleDragStart(e, d.id)}
@@ -590,6 +602,18 @@ export function Kanban({
         )}
         </div>
       </div>
+      {quoting !== null && (
+        <QuoteAmountModal
+          key={quoting}
+          onClose={() => setQuoting(null)}
+          onConfirm={(amount) => {
+            const id = quoting;
+            setQuoting(null);
+            moveStage(id, "quote_sent", amount);
+          }}
+          dictionary={dictionary}
+        />
+      )}
     </TooltipProvider>
   );
 }

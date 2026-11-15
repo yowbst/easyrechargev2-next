@@ -39,6 +39,8 @@ const STATUS: Record<string, number> = {
   lost_reason_required: 400,
   lost_note_required_for_other: 400,
   reason_not_allowed_for_stage: 400,
+  invalid_quoted_amount: 400,
+  quoted_amount_only_on_quote_sent: 400,
 };
 
 const ROW_FIELDS = [

@@ -53,7 +53,15 @@ export type Actor =
 
 export type Intent =
   /** Partner: forward, close, swap or reopen. Admin: any stage, as a correction. */
-  | { type: "move"; stage: string; lostReason?: string; lostNote?: string; note?: string }
+  | {
+      type: "move";
+      stage: string;
+      lostReason?: string;
+      lostNote?: string;
+      note?: string;
+      /** Optional, on quote_sent only: the amount the partner quoted the customer, whole CHF. */
+      quotedAmountChf?: number;
+    }
   | { type: "disqualify"; reason: string; note?: string }
   /** Admin only. */
   | { type: "requalify"; note?: string }
@@ -76,6 +84,7 @@ export type DispatchPatch = Partial<{
   billable_locked_at: string | null;
   lost_reason: string | null;
   lost_note: string | null;
+  quoted_amount_chf: number | null;
   disqualified: boolean;
   disqualification_reason: DisqualificationReason | null;
   disqualification_note: string | null;
@@ -101,6 +110,8 @@ export type Decision =
 const refuse = (error: string): Decision => ({ ok: false, error });
 
 const MAX_NOTE_LENGTH = 2000;
+/** A charger installation quote above this is a typo, not a quote. */
+const MAX_QUOTED_AMOUNT_CHF = 100_000;
 
 const isClosed = (stage: DispatchStage) => stage === "won" || stage === "lost";
 
@@ -188,6 +199,16 @@ function decideMove(
     }
   }
 
+  // Refused rather than dropped: an amount sent with the wrong stage, or
+  // malformed, would otherwise vanish without the partner knowing.
+  const quoted = intent.quotedAmountChf;
+  if (quoted !== undefined) {
+    if (to !== "quote_sent") return refuse("quoted_amount_only_on_quote_sent");
+    if (typeof quoted !== "number" || !Number.isInteger(quoted) || quoted < 1 || quoted > MAX_QUOTED_AMOUNT_CHF) {
+      return refuse("invalid_quoted_amount");
+    }
+  }
+
   let lostReason: LostReason | null = null;
   let lostNote: string | null = null;
   if (to === "lost") {
@@ -208,6 +229,7 @@ function decideMove(
     stage_history: [...(d.stage_history ?? []), { stage: to, at: now }],
     billable,
     billable_locked_at: billable && !d.billable_locked_at ? now : d.billable_locked_at,
+    ...(quoted !== undefined ? { quoted_amount_chf: quoted } : {}),
     ...(to === "lost"
       ? { lost_reason: lostReason, lost_note: lostNote }
       : d.stage === "lost"
@@ -226,6 +248,8 @@ function decideMove(
           from_stage: d.stage,
           to_stage: to,
           lost_reason: lostReason,
+          // A price, not a customer detail: safe for the Slack-bound event.
+          quoted_amount_chf: quoted ?? null,
         },
       },
     ],

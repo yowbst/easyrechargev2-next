@@ -7,17 +7,84 @@ const SITE_URL = process.env.SITE_URL || "https://easyrecharge.ch";
 
 // ── Organization ────────────────────────────────────────────────────────
 
+/** `site_settings.global_config.organization` — every field optional. */
+export interface OrganizationConfig {
+  legal_name?: string;
+  /** Swiss business identifier, e.g. CHE-123.456.789. */
+  uid?: string;
+  telephone?: string;
+  email?: string;
+  founding_date?: string;
+  address?: {
+    street?: string;
+    postal_code?: string;
+    locality?: string;
+    region?: string;
+  };
+  same_as?: string[];
+}
+
+/**
+ * Profile URLs for `sameAs`. Footer socials are included only when they point
+ * at a real profile: the CMS ships bare placeholders ("https://x.com") that
+ * would tell crawlers our entity is the platform itself.
+ */
+export function resolveSameAs(
+  config: OrganizationConfig | null | undefined,
+  socials: Array<{ url?: string | null }> | null | undefined,
+): string[] {
+  const urls = [...(config?.same_as ?? []), ...(socials ?? []).map((s) => s.url ?? "")];
+  const profiles = urls.filter((raw) => {
+    try {
+      const u = new URL(raw);
+      return u.pathname.replace(/\/+$/, "") !== "";
+    } catch {
+      return false;
+    }
+  });
+  return [...new Set(profiles)];
+}
+
 export function buildOrganization(input: {
   logoUrl: string;
-  socialLinks?: Array<{ platform: string; url: string }>;
+  organization?: OrganizationConfig | null;
+  sameAs?: string[];
 }) {
+  const org = input.organization ?? {};
+  const a = org.address;
+  const hasAddress = !!(a && (a.street || a.postal_code || a.locality));
   return {
     "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,
     name: "easyRecharge",
+    ...(org.legal_name && { legalName: org.legal_name }),
     url: SITE_URL,
     logo: input.logoUrl,
-    sameAs: input.socialLinks?.map((s) => s.url) ?? [],
+    areaServed: { "@type": "Country", name: "CH" },
+    ...(org.uid && { identifier: org.uid }),
+    ...(org.founding_date && { foundingDate: org.founding_date }),
+    ...(org.email && { email: org.email }),
+    ...(org.telephone && { telephone: org.telephone }),
+    ...(hasAddress && {
+      address: {
+        "@type": "PostalAddress",
+        ...(a?.street && { streetAddress: a.street }),
+        ...(a?.postal_code && { postalCode: a.postal_code }),
+        ...(a?.locality && { addressLocality: a.locality }),
+        ...(a?.region && { addressRegion: a.region }),
+        addressCountry: "CH",
+      },
+    }),
+    ...(org.telephone && {
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer service",
+        telephone: org.telephone,
+        areaServed: "CH",
+        availableLanguage: ["fr", "de"],
+      },
+    }),
+    sameAs: input.sameAs ?? [],
   };
 }
 

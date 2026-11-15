@@ -16,6 +16,7 @@ import {
 import {
   wrapInGraph,
   buildOrganization,
+  resolveSameAs,
   buildWebSite,
   buildBreadcrumbList,
   buildFAQPage,
@@ -465,7 +466,11 @@ export default async function Home({ params }: HomeProps) {
   // JSON-LD
   const SITE_URL = getSiteUrl();
   const schemas: AnyRecord[] = [
-    buildOrganization({ logoUrl: `${SITE_URL}/og-default.webp` }),
+    buildOrganization({
+      logoUrl: `${SITE_URL}/og-default.webp`,
+      organization: gc.organization,
+      sameAs: resolveSameAs(gc.organization, layoutData?.footer_config?.socials),
+    }),
     buildWebSite(),
     buildBreadcrumbList([
       { name: t(dictionary, "common.home"), url: `${SITE_URL}/${lang}` },
