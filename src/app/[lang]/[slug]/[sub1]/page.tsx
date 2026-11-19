@@ -33,6 +33,7 @@ import {
   resolveOgImage,
   buildAlternates,
   getSiteUrl,
+  pickFittingTitle,
 } from "@/lib/seo/resolver";
 import { wrapInGraph, buildVehicleCar, buildBreadcrumbList, buildFAQPage } from "@/lib/seo/jsonLd";
 import {
@@ -226,7 +227,9 @@ export async function generateMetadata({ params }: Sub1PageProps): Promise<Metad
     const merged = mergeItemOverTemplate(undefined, templateSeo);
     const resolved = resolveSEOFieldMappings(merged, fieldMap);
 
-    const title = resolved?.title || vehicleName;
+    // The template's title, or its first fallback that fits in 60 characters
+    // (Directus seo.title_fallbacks), so long names never end in "…".
+    const title = pickFittingTitle([resolved?.title, ...(templateSeo?.titleFallbacks ?? [])], fieldMap) || vehicleName;
     const description = resolved?.description || [vehicleName, vehicle.batteryDisplay, vehicle.rangeDisplay, vehicle.chargingDisplay].filter(Boolean).join(" | ");
 
     const currentPath = `/${lang}/${slug}/${sub1}`;
@@ -549,6 +552,9 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
                     </span>
                     <span className="text-[13px] font-semibold uppercase tracking-[0.1em] text-muted-foreground md:text-sm">{vehicle.brand}</span>
                   </span>
+                  {/* Block spans render on separate lines; without this space the
+                      heading's text reads "Peugeote-2008" to crawlers. */}
+                  {" "}
                   <span className="block font-heading text-4xl font-semibold leading-[1.04] tracking-[-0.04em] md:text-[56px] md:leading-[1.02]">{vehicle.model}</span>
                 </h1>
                 {/* Le modèle reste en ligne à dessein : quelqu'un qui possède
