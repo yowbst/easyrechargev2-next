@@ -10,6 +10,8 @@ const DIRECTUS_URL = process.env.DIRECTUS_URL || "";
 
 export interface CmsSEO {
   title?: string;
+  /** Shorter titles, tried in order when `title` would exceed 60 characters once filled. */
+  titleFallbacks?: string[];
   description?: string;
   canonical?: string;
   image?: string;
@@ -107,6 +109,10 @@ export function extractItemSEO(seoRaw: unknown): CmsSEO | undefined {
   };
 
   const title = str("title");
+  const rawFallbacks = raw.title_fallbacks ?? raw.titleFallbacks;
+  const titleFallbacks = Array.isArray(rawFallbacks)
+    ? rawFallbacks.filter((v): v is string => typeof v === "string" && v.trim() !== "").map((v) => v.trim())
+    : undefined;
   const description = str("description") || str("meta_description");
   const canonical = str("canonical");
   const image = str("image") || str("og_image");
@@ -119,13 +125,14 @@ export function extractItemSEO(seoRaw: unknown): CmsSEO | undefined {
 
   if (
     !title &&
+    !titleFallbacks?.length &&
     !description &&
     !canonical &&
     !image &&
     noIndex === undefined
   )
     return undefined;
-  return { title, description, canonical, image, noIndex };
+  return { title, ...(titleFallbacks?.length && { titleFallbacks }), description, canonical, image, noIndex };
 }
 
 export function mergeItemOverTemplate(
@@ -137,6 +144,7 @@ export function mergeItemOverTemplate(
   if (!itemSEO) return templateSEO;
   return {
     title: itemSEO.title || templateSEO.title,
+    titleFallbacks: itemSEO.title ? itemSEO.titleFallbacks : (itemSEO.titleFallbacks ?? templateSEO.titleFallbacks),
     description: itemSEO.description || templateSEO.description,
     canonical: itemSEO.canonical || templateSEO.canonical,
     image: itemSEO.image || templateSEO.image,
@@ -204,6 +212,28 @@ export function resolveSEOFieldMappings(
 }
 
 // ── Image URL helpers ───────────────────────────────────────────────────
+
+/**
+ * The first candidate title that fits in `max` characters once its `{f:...}`
+ * placeholders are filled, so a specific title can step down to a shorter one
+ * instead of being cut with an ellipsis. When none fits, the last candidate is
+ * returned and left to `normalizeTitle`.
+ */
+export function pickFittingTitle(
+  candidates: (string | undefined)[],
+  fieldMap?: Record<string, unknown>,
+  max = 60,
+): string | undefined {
+  let last: string | undefined;
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const filled = resolveSEOFieldMappings({ title: candidate }, fieldMap)?.title;
+    if (!filled) continue;
+    if (filled.length <= max) return filled;
+    last = filled;
+  }
+  return last;
+}
 
 export function resolveImageUrl(imageId?: string): string | undefined {
   if (!imageId) return undefined;
