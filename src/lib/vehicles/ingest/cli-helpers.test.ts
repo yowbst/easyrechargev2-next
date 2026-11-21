@@ -325,3 +325,29 @@ describe("parseLimit", () => {
     expect(() => parseLimit("2.5")).toThrow(/"2\.5"/);
   });
 });
+
+describe("validateFlags with a custom flag table", () => {
+  const specs = {
+    fetch: [
+      { name: "canton", takesValue: true },
+      { name: "dry-run", takesValue: false },
+    ],
+  };
+
+  it("honours the table it is given", () => {
+    expect(() => validateFlags("fetch", ["fetch", "--canton", "VD", "--dry-run"], specs)).not.toThrow();
+  });
+
+  it("rejects a flag the custom table does not know, even if the vehicle table does", () => {
+    expect(() => validateFlags("fetch", ["fetch", "--limit", "3"], specs)).toThrow(/Unknown flag "--limit"/);
+  });
+
+  it("still catches a missing value", () => {
+    expect(() => validateFlags("fetch", ["fetch", "--canton", "--dry-run"], specs)).toThrow(/--canton requires a value/);
+  });
+
+  it("keeps the vehicle table as the default", () => {
+    expect(() => validateFlags("plan", ["plan", "--in", "x.json"])).not.toThrow();
+    expect(() => validateFlags("plan", ["plan", "--canton", "VD"])).toThrow(/Unknown flag/);
+  });
+});

@@ -1,0 +1,44 @@
+{
+  "results": {
+    "bindings": [
+      {
+        "s": { "type": "uri", "value": "https://register.ld.admin.ch/zefix/company/15706" },
+        "legalName": { "type": "literal", "value": "Baumberger & Fils S.A." },
+        "purpose": { "type": "literal", "value": "travaux du bâtiment, spécialement plâtrerie-peinture et installations électriques et téléphoniques." },
+        "form": { "type": "uri", "value": "https://ld.admin.ch/ech/97/legalforms/0106" },
+        "street": { "type": "literal", "value": "Chemin Général Charles-Jules-Guiguer-de-Prangins 17" },
+        "plz": { "type": "literal", "value": "1004" },
+        "locality": { "type": "literal", "value": "Lausanne" },
+        "region": { "type": "literal", "value": "VD" },
+        "muni": { "type": "uri", "value": "https://ld.admin.ch/municipality/5586" },
+        "uid": { "type": "literal", "value": "CHE107036057" },
+        "chid": { "type": "literal", "value": "CH55000774120" }
+      },
+      {
+        "s": { "type": "uri", "value": "https://register.ld.admin.ch/zefix/company/15706" },
+        "legalName": { "type": "literal", "value": "Baumberger & Fils S.A." },
+        "purpose": { "type": "literal", "value": "second description for the same company" },
+        "form": { "type": "uri", "value": "https://ld.admin.ch/ech/97/legalforms/0106" },
+        "locality": { "type": "literal", "value": "Lausanne" },
+        "region": { "type": "literal", "value": "VD" },
+        "muni": { "type": "uri", "value": "https://ld.admin.ch/municipality/5586" }
+      },
+      {
+        "s": { "type": "uri", "value": "https://register.ld.admin.ch/zefix/company/128282" },
+        "legalName": { "type": "literal", "value": "Noverraz & Pitteloud S.A. en liquidation" },
+        "purpose": { "type": "literal", "value": "l'exploitation d'un commerce d'électricité, notamment installations électriques" },
+        "form": { "type": "uri", "value": "https://ld.admin.ch/ech/97/legalforms/0106" },
+        "plz": { "type": "literal", "value": "1003" },
+        "locality": { "type": "literal", "value": "Lausanne" },
+        "region": { "type": "literal", "value": "VD" },
+        "muni": { "type": "uri", "value": "https://ld.admin.ch/municipality/5586" }
+      },
+      {
+        "s": { "type": "uri", "value": "https://register.ld.admin.ch/zefix/company/999" },
+        "legalName": { "type": "literal", "value": "Row without a purpose" },
+        "form": { "type": "uri", "value": "https://ld.admin.ch/ech/97/legalforms/0107" },
+        "region": { "type": "literal", "value": "VD" }
+      }
+    ]
+  }
+}

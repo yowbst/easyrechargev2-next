@@ -21,7 +21,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
  * Per-command flag whitelist. `takesValue: false` is a bare boolean switch;
  * `true` means the following token is consumed as its value.
  */
-interface FlagSpec {
+export interface FlagSpec {
   name: string;
   takesValue: boolean;
 }
@@ -68,10 +68,15 @@ export const COMMAND_FLAGS: Record<string, FlagSpec[]> = {
  * rather than silently swallowing `--dry-run` as `--in`'s value.
  *
  * `argv` is the full argument vector including the command at index 0 (the
- * same shape `parseArgs` takes).
+ * same shape `parseArgs` takes). `flagSpecs` defaults to the vehicle pipeline's
+ * table; the companies pipeline passes its own.
  */
-export function validateFlags(command: string, argv: string[]): void {
-  const specs = [...(COMMAND_FLAGS[command] ?? []), { name: "help", takesValue: false }];
+export function validateFlags(
+  command: string,
+  argv: string[],
+  flagSpecs: Record<string, FlagSpec[]> = COMMAND_FLAGS,
+): void {
+  const specs = [...(flagSpecs[command] ?? []), { name: "help", takesValue: false }];
   const known = new Map(specs.map((s) => [s.name, s]));
 
   for (let i = 1; i < argv.length; i++) {
