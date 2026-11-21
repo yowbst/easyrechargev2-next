@@ -17,6 +17,10 @@ npm run ingest -- plan  --in <file>   # Diff EVDB snapshot vs CMS (read-only)
 npm run ingest -- apply --plan <file> # Apply a reviewed plan (writes)
 npm run ingest -- images              # Upload 1536px thumbnails (writes)
 
+npm run companies -- fetch --canton ZH   # Swiss electrical installers from the commercial register (Zefix via LINDAS), read-only
+npm run companies -- plan --in <file>    # Diff against the Directus `companies` collection (read-only)
+npm run companies -- apply --plan <file> # Apply a reviewed plan (writes); also: geo-dataset, normalize, classify, report, export
+
 npm run images -- generate <preset> "<subject>" [--n 1-4]  # N options → .images/review/ + manifest
 npm run images -- edit <file> "<change>"                   # Minimal edit pass on one option → .images/review/
 npm run images -- publish <file> --title "…" [--apply]     # JPEG q85 → Directus; read-only without --apply
@@ -26,7 +30,7 @@ npm run seo -- gsc                    # 28 days of Search Console -> seo/data + 
 npm run seo -- help                   # crawl, freshness, keywords, sheet: see docs/seo.md
 ```
 
-`ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
+`companies` runbook: `docs/companies-ingest.md` (register data, DataForSEO classification, no new env var). `ingest` also has `scrape`, `clean`, `brands`, and `help` subcommands. Run `brands`
 before `plan`/`apply` — see `docs/vehicle-ingest.md` for the full runbook, sequence, and
 gotchas. `ingest -- images` downloads every thumbnail through a Bright Data proxy zone and refuses
 to start when that zone is not configured — it never falls back to a direct download.
@@ -185,7 +189,7 @@ WordPress 301 redirects (legacy URLs) are in `next.config.ts` `redirects()`.
 ### MCP Server
 
 - Remote MCP server at `/api/mcp` — streamable HTTP via `mcp-handler`, implemented in `src/app/api/[transport]/route.ts`
-- 34 tools: CMS reads, form submission writes, billing/admin, partner invoicing, generic Directus CRUD — for LLM clients (claude.ai, Claude Desktop, Claude Code)
+- 36 tools: CMS reads, form submission writes, billing/admin, partner invoicing, register companies (installer prospects), generic Directus CRUD — for LLM clients (claude.ai, Claude Desktop, Claude Code)
 - Auth: Google SSO with email allowlist, OR static bearer token (`MCP_STATIC_TOKEN`) for CLI use
 - OAuth AS at `/api/mcp-auth/{register,authorize,callback,token}`; discovery at `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource`
 - Tool implementations in `src/lib/mcp/tools/`, auth/JWT logic in `src/lib/mcp/`
@@ -360,7 +364,7 @@ Dictionary strings can contain `{quote_request_duration}`, `{first_contact}`, `{
 | `/api/docs` | GET | OpenAPI 3.0 spec (JSON) |
 | `/api/debug/urls` | GET | List all generated URLs by type |
 | `/api-docs` | — | Swagger UI (interactive docs page) |
-| `/api/mcp` | GET/POST/DELETE | MCP server (streamable HTTP, 34 tools; OAuth or static bearer auth) — see `docs/mcp-setup.md` |
+| `/api/mcp` | GET/POST/DELETE | MCP server (streamable HTTP, 36 tools; OAuth or static bearer auth) — see `docs/mcp-setup.md` |
 | `/api/mcp-auth/*` | GET/POST | MCP OAuth AS endpoints: `register`, `authorize`, `callback`, `token` |
 | `/.well-known/oauth-*` | GET | MCP OAuth discovery (`oauth-authorization-server`, `oauth-protected-resource`) |
 
