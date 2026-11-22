@@ -28,8 +28,8 @@ export const CANTON_PARAGRAPHS: Record<string, string> = {
     "Canton bilingue, Fribourg va de la Gruyère au Lac et de la Broye à la Singine. " +
     "Maison individuelle ou copropriété, la demande de devis passe par le même formulaire.",
   GE:
-    "À Genève, une grande partie des logements sont des appartements : l'installation d'une borne " +
-    "passe souvent par la copropriété ou la régie. Décrivez votre situation dans la demande, le devis en tient compte.",
+    "De la ville aux communes de la campagne genevoise, en appartement comme en villa : " +
+    "en immeuble, l'installation d'une borne passe par la copropriété ou la régie. Décrivez votre situation dans la demande, le devis en tient compte.",
   NE:
     "Du Littoral aux Montagnes neuchâteloises, en passant par le Val-de-Ruz et le Val-de-Travers, " +
     "la demande de devis passe par le même formulaire, en maison comme en immeuble.",
