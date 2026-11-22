@@ -486,7 +486,7 @@ export async function fetchCantonCoats(): Promise<Record<string, string>> {
 
 const LOCALITY_FIELDS = [
   "id", "postal_code", "name", "slug", "canton_2l",
-  "subsidies_fetched_at",
+  "subsidies_fetched_at", "additional_digit",
   "translations.*",
   "canton.*", "canton.translations.*",
 ];

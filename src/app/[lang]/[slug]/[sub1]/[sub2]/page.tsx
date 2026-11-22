@@ -40,9 +40,17 @@ import {
   buildBreadcrumbList,
   buildFAQPage,
   buildGovernmentService,
+  buildElectricianItemList,
 } from "@/lib/seo/jsonLd";
 import { LocalitySubsidiesPage } from "@/components/LocalitySubsidiesPage";
-import { resolveRouteLinks } from "@/lib/pageConfig";
+import { resolveRouteId, resolveRouteLinks } from "@/lib/pageConfig";
+import { PartnerCard } from "@/components/partners/PartnerCard";
+import { NearbyInstallers } from "@/components/companies/NearbyInstallers";
+import { fetchActivePartnersForCanton } from "@/lib/companies/public/partners";
+import { fetchInstallerCandidates, latestSeen, selectNearby, type NearbyInstaller } from "@/lib/companies/public/installers";
+import { installersBlockEnabled } from "@/lib/companies/public/gate";
+import { CANTONS_INFO, cantonPageSlug } from "@/lib/companies/public/cantons";
+import { lookupPostcode } from "@/lib/companies/geo/postcode-coords";
 import { GetQuote } from "@/components/GetQuote";
 import { BlogArticle } from "@/components/blog/BlogArticle";
 import type { PostCardData } from "@/components/home-b/PostCard";
@@ -785,6 +793,51 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     // Quote href
     const quoteEntry = registry.find((p) => p.id === "quote");
     const quoteHref = quoteEntry ? `/${lang}/${quoteEntry.slugs[lang]}` : `/${lang}`;
+    // Partner CTA: the funnel prefills the postcode step from these (QuoteShell URL_PREFILL).
+    const prefilledQuoteHref = `${quoteHref}?${new URLSearchParams({
+      postalCode: String(locality.postal_code ?? ""),
+      locality: String(locality.name ?? ""),
+      canton: String(cantonName ?? ""),
+    })}`;
+
+    // Region partner (FR + DE, ungated) and nearby register installers (FR, gated).
+    const cantonCode = String(locality.canton_2l || "").toUpperCase();
+    const cantonInfo = CANTONS_INFO[cantonCode];
+    const showInstallers = installersBlockEnabled(gc, cantonCode, lang);
+    const origin = lookupPostcode(String(locality.postal_code ?? ""), locality.additional_digit);
+    const NEARBY_RADIUS_KM = 25;
+    const [regionPartners, installerCandidates] = await Promise.all([
+      cantonCode ? fetchActivePartnersForCanton(cantonCode) : Promise.resolve([]),
+      showInstallers && origin ? fetchInstallerCandidates({ lat: origin[0], lng: origin[1] }, NEARBY_RADIUS_KM) : Promise.resolve([]),
+    ]);
+    const shownPartnerIds = new Set(regionPartners.map((p) => String(p.id)));
+    let nearby: NearbyInstaller[] = [];
+    if (showInstallers && origin) {
+      const excludeIds = new Set(
+        installerCandidates.filter((c) => c.partnerId && shownPartnerIds.has(c.partnerId)).map((c) => c.ehraid),
+      );
+      nearby = selectNearby(installerCandidates, { lat: origin[0], lng: origin[1] }, { excludeIds });
+    }
+    const partnerCardProps = {
+      partners: regionPartners,
+      lang: (lang === "de" ? "de" : "fr") as "fr" | "de",
+      cantonPhrase: lang === "de" ? (cantonInfo?.nameDe ?? cantonName) : (cantonInfo?.ofFr ?? `de ${cantonName}`),
+      cantonName: lang === "de" ? (cantonInfo?.nameDe ?? cantonName) : (cantonInfo?.nameFr ?? cantonName),
+      cantonCode,
+      quoteHref: prefilledQuoteHref,
+      pageType: "locality" as const,
+    };
+
+    // Canton installation page (French only, served cantons).
+    const cantonSlug = cantonPageSlug(cantonCode);
+    const installationEntry = registry.find((p) => p.id === "installation");
+    const cantonPage =
+      lang === "fr" && cantonSlug && installationEntry?.slugs.fr
+        ? {
+            title: `Installation de borne de recharge dans le canton ${cantonInfo?.ofFr ?? cantonName}`,
+            href: `/fr/${installationEntry.slugs.fr}/${cantonSlug}`,
+          }
+        : null;
 
     // JSON-LD
     const SITE_URL = getSiteUrl();
@@ -830,6 +883,10 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
           url: s.site_url || undefined,
         }),
       ),
+      buildElectricianItemList(
+        `Électriciens près de ${locality.name}`,
+        nearby.map((n) => ({ name: n.name, street: n.street, postalCode: n.postalCode, locality: n.locality, uid: n.uid })),
+      ),
       subsidies.length > 0 ? buildFAQPage([
         {
           question: lang === "de"
@@ -863,6 +920,22 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
           pageRegistry={registry}
           lang={lang}
           quoteHref={quoteHref}
+          partnerBanner={<PartnerCard {...partnerCardProps} variant="banner" title="heading" />}
+          partnerCompact={<PartnerCard {...partnerCardProps} variant="compact" />}
+          nearbyInstallers={
+            nearby.length > 0 ? (
+              <NearbyInstallers
+                installers={nearby}
+                localityName={locality.name}
+                postalCode={String(locality.postal_code ?? "")}
+                cantonCode={cantonCode}
+                radiusKm={NEARBY_RADIUS_KM}
+                registerDate={latestSeen(nearby)}
+                contactHref={resolveRouteId("contact", lang, registry)}
+              />
+            ) : null
+          }
+          cantonPage={cantonPage}
         />
         {getQuoteBlock && (
           <GetQuote

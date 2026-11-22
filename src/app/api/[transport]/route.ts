@@ -3,6 +3,7 @@ import { verifyMcpToken } from "@/lib/mcp/auth";
 import { registerAdminTools } from "@/lib/mcp/tools/admin";
 import { registerAppTools } from "@/lib/mcp/tools/app";
 import { registerCmsTools } from "@/lib/mcp/tools/cms";
+import { registerCompanyTools } from "@/lib/mcp/tools/companies";
 import { registerDirectusTools } from "@/lib/mcp/tools/directus-generic";
 import { registerFormTools } from "@/lib/mcp/tools/forms";
 import { registerInvoicingTools } from "@/lib/mcp/tools/invoicing";
@@ -14,6 +15,7 @@ const handler = createMcpHandler(
     registerFormTools(server);
     registerAdminTools(server);
     registerInvoicingTools(server);
+    registerCompanyTools(server);
     registerDirectusTools(server);
   },
   { serverInfo: { name: "easyrecharge", version: "1.0.0" } },

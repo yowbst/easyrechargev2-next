@@ -274,6 +274,64 @@ export function buildGovernmentService(input: {
   return service;
 }
 
+// ── Electricians (register companies) ──────────────────────────────────
+
+export interface ElectricianInput {
+  name: string;
+  street: string | null;
+  postalCode: string | null;
+  locality: string | null;
+  /** Formatted UID, CHE-123.456.789. */
+  uid: string;
+}
+
+/**
+ * The installers listed on a page, as an ItemList of Electrician. Register facts only:
+ * name, postal address, UID. No telephone, url or geo (none is shown on the page).
+ * Returns null for an empty list so the graph drops it.
+ */
+export function buildElectricianItemList(
+  name: string,
+  items: ElectricianInput[],
+): Record<string, unknown> | null {
+  if (items.length === 0) return null;
+  return {
+    "@type": "ItemList",
+    name,
+    numberOfItems: items.length,
+    itemListElement: items.map((it, i) => {
+      const address: Record<string, unknown> = { "@type": "PostalAddress", addressCountry: "CH" };
+      if (it.street) address.streetAddress = it.street;
+      if (it.postalCode) address.postalCode = it.postalCode;
+      if (it.locality) address.addressLocality = it.locality;
+      const org: Record<string, unknown> = { "@type": "Electrician", name: it.name, address };
+      if (it.uid) org.identifier = { "@type": "PropertyValue", propertyID: "CH-UID", value: it.uid };
+      return { "@type": "ListItem", position: i + 1, item: org };
+    }),
+  };
+}
+
+// ── Installation service per canton ────────────────────────────────────
+
+export function buildInstallationService(input: {
+  name: string;
+  description: string;
+  cantonName: string;
+  url: string;
+  providerName?: string;
+  providerUrl?: string;
+}): Record<string, unknown> {
+  return {
+    "@type": "Service",
+    name: input.name,
+    description: input.description,
+    serviceType: "Installation de borne de recharge",
+    url: input.url,
+    areaServed: { "@type": "AdministrativeArea", name: input.cantonName, containedInPlace: { "@type": "Country", name: "Suisse" } },
+    provider: { "@type": "Organization", name: input.providerName ?? "easyRecharge", url: input.providerUrl ?? "https://easyrecharge.ch" },
+  };
+}
+
 // ── Graph wrapper ───────────────────────────────────────────────────────
 
 export function wrapInGraph(...schemas: (Record<string, unknown> | null)[]) {

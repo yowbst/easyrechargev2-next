@@ -6,6 +6,7 @@ vi.mock("./directus-queries", () => ({
     { id: "quote", slugs: { fr: "demande-devis", de: "offertenanfrage" } },
     { id: "quote-battery", slugs: { fr: "devis-batterie-solaire", de: "offerte-solarbatterie" } },
     { id: "contact", slugs: { fr: "contact", de: "kontakt" } },
+    { id: "installation", slugs: { fr: "installation-borne-de-recharge", de: "installation-ladestation" } },
   ] as unknown as PageRegistryEntry[]),
 }));
 
@@ -24,5 +25,22 @@ describe("funnel routes", () => {
     expect(await resolveSub1Route("devis-batterie-solaire", "confirmation", "fr")).toMatchObject({ type: "quote-success", product: "battery" });
     expect(await resolveSub1Route("devis-batterie-solaire", UUID, "fr")).toMatchObject({ type: "quote-submission", submissionId: UUID });
     expect(await resolveSub1Route("demande-devis", "confirmation", "fr")).toMatchObject({ type: "quote-success", product: "ecp" });
+  });
+});
+
+describe("canton installation pages", () => {
+  it("resolves the five served cantons in French", async () => {
+    const { resolveSub1Route } = await import("./route-resolver");
+    for (const [slug, code] of [["vaud", "VD"], ["valais", "VS"], ["fribourg", "FR"], ["geneve", "GE"], ["neuchatel", "NE"]]) {
+      expect(await resolveSub1Route("installation-borne-de-recharge", slug, "fr")).toMatchObject({ type: "installation-canton", cantonSlug: slug, cantonCode: code });
+    }
+  });
+
+  it("returns null for other cantons, German pages and prototype keys", async () => {
+    const { resolveSub1Route } = await import("./route-resolver");
+    expect(await resolveSub1Route("installation-borne-de-recharge", "zurich", "fr")).toBeNull();
+    expect(await resolveSub1Route("installation-borne-de-recharge", "constructor", "fr")).toBeNull();
+    expect(await resolveSub1Route("installation-ladestation", "waadt", "de")).toBeNull();
+    expect(await resolveSub1Route("installation-ladestation", "vaud", "de")).toBeNull();
   });
 });

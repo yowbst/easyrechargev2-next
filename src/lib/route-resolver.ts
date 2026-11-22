@@ -6,6 +6,7 @@
 import { fetchPageRegistry, type PageRegistryEntry } from "./directus-queries";
 import { FUNNEL_ROUTES, isFunnelRoute, type Product } from "./products";
 import { getRouteSlug, type AppLangSlug } from "./i18n/config";
+import { CANTON_PAGE_SLUGS } from "./companies/public/cantons";
 
 export type SlugRoute =
   | { type: "cms-page"; routeId: string; entry: PageRegistryEntry }
@@ -23,6 +24,7 @@ export type Sub1Route =
   | { type: "quote-success"; quoteEntry: PageRegistryEntry; product: Product }
   | { type: "quote-submission"; submissionId: string; quoteEntry: PageRegistryEntry }
   | { type: "locality-redirect"; localitySlug: string; localitiesEntry: PageRegistryEntry }
+  | { type: "installation-canton"; cantonSlug: string; cantonCode: string; installationEntry: PageRegistryEntry }
   | null;
 
 export type Sub2Route =
@@ -110,6 +112,11 @@ export async function resolveSub1Route(
   // Localities: /{lang}/{localitiesSlug}/{localitySlug} → redirect to subsidies sub-page
   if (entry.id === "localities") {
     return { type: "locality-redirect", localitySlug: sub1, localitiesEntry: entry };
+  }
+
+  // Canton installation pages: /fr/{installationSlug}/{canton}, served cantons, French only.
+  if (entry.id === "installation" && lang === "fr" && Object.hasOwn(CANTON_PAGE_SLUGS, sub1)) {
+    return { type: "installation-canton", cantonSlug: sub1, cantonCode: CANTON_PAGE_SLUGS[sub1], installationEntry: entry };
   }
 
   return null;
