@@ -39,7 +39,7 @@ export function formatDistance(km: number): string {
 /** The register's public page for a UID (uid.admin.ch, the federal company register lookup). */
 export function registerLink(uid: string): string | null {
   const digits = uid.replace(/[^0-9]/g, "");
-  return digits.length === 9 ? `https://www.uid.admin.ch/Detail.aspx?uid_id=CHE${digits}` : null;
+  return digits.length === 9 ? `https://www.uid.admin.ch/Detail.aspx?uid_id=CHE${digits}&lang=fr` : null;
 }
 
 /**
