@@ -1,5 +1,5 @@
 const SITE_URL = process.env.SITE_URL || "https://easyrecharge.ch";
-const SEGMENTS = ["cms", "blog", "vehicles", "localities"];
+const SEGMENTS = ["cms", "blog", "vehicles", "localities", "installation"];
 
 // Canonical sitemap index, served directly at /sitemap.xml with a 200
 // (search engines penalize sitemap URLs that redirect). Legacy aliases

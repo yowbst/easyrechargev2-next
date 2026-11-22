@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { installationEvidence } from "./candidates";
 import type { CleanCompany, LegalFormKind, RawCompany } from "./types";
 
 /** "CHE-107.036.057", "che 107 036 057" and "CHE107036057" all become "CHE107036057". */
@@ -80,6 +81,7 @@ export function toCleanCompany(raw: RawCompany, lookup: CoordLookup): CleanCompa
     legal_form_code: raw.legalFormCode,
     legal_form_kind: legalFormKind(raw.legalFormCode),
     in_liquidation: isInLiquidation(raw.legalName),
+    installation_evidence: installationEvidence(raw.purpose),
     street_address: cleanStreet(raw.street),
     postal_code: raw.postalCode,
     locality: raw.locality?.trim() || null,

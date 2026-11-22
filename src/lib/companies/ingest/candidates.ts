@@ -40,6 +40,39 @@ export function isInstallerCandidate(purpose: string | null | undefined): boolea
   return !!purpose && CANDIDATE_RE.test(purpose);
 }
 
+/**
+ * Explicit installation wording: the purpose says the company carries out electrical
+ * installation work, not just that it touches electricity. Public pages show only
+ * companies with explicit wording (or partners, or a human override). Measured on the
+ * 2026-11-21 import: 340 of 3,637 installers had none.
+ */
+const EXPLICIT_RE = new RegExp(
+  [
+    "installations? [ée]lectriques?",
+    "entreprise (g[ée]n[ée]rale )?d.[ée]lectricit[ée]",
+    "travaux d.[ée]lectricit[ée]",
+    "domaine de l.[ée]lectricit[ée]",
+    "[ée]lectricien",
+    "courants? (fort|faible)",
+    "elektro-?installation",
+    "elektrische[nr]? (anlagen|installationen)",
+    "elektroanlagen",
+    "elektrotechnische[nr]? anlagen",
+    "stark- ?und schwachstrom",
+    "elektriker",
+    "impianti elettrici",
+    "installazioni elettriche",
+    "elettricista",
+  ].join("|"),
+  "i",
+);
+
+export type InstallationEvidence = "explicit" | "weak";
+
+export function installationEvidence(purpose: string | null | undefined): InstallationEvidence {
+  return purpose && EXPLICIT_RE.test(purpose) ? "explicit" : "weak";
+}
+
 /** Escapes a string for a SPARQL double-quoted literal. */
 export function sparqlStringLiteral(s: string): string {
   return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;

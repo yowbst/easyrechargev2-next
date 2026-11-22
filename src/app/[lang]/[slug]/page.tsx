@@ -5,6 +5,8 @@ import { deriveExcerpt } from "@/lib/blog-excerpt";
 import { notFound } from "next/navigation";
 import { pickPublicQuoteConfig } from "@/lib/public-config";
 import { fetchPage, fetchPageRegistry, fetchLayout, fetchBlogPosts, fetchVehicles, fetchVehicleBrands, fetchAllLocalitySlugs, fetchCantonCoats, fetchChargerPriceRange } from "@/lib/directus-queries";
+import { CANTONS_INFO, CANTON_PAGE_SLUGS } from "@/lib/companies/public/cantons";
+import { fetchInstallerCountsByCanton } from "@/lib/companies/public/installers";
 import { InstallationServicePage } from "@/components/InstallationServicePage";
 import Link from "next/link";
 import { isValidLang, slugToDirectusLocale } from "@/lib/i18n/config";
@@ -450,7 +452,18 @@ export default async function SlugPage({ params }: SlugPageProps) {
     const installTranslation = page?.translations?.[0];
     const installContent = installTranslation?.content;
     if (installContent) {
-      const chargerRange = await fetchChargerPriceRange();
+      const [chargerRange, cantonCounts] = await Promise.all([
+        fetchChargerPriceRange(),
+        lang === "fr" ? fetchInstallerCountsByCanton(Object.values(CANTON_PAGE_SLUGS)) : Promise.resolve(null),
+      ]);
+      const cantonLinks = cantonCounts
+        ? Object.entries(CANTON_PAGE_SLUGS).map(([cantonSlug, code]) => ({
+            code,
+            name: CANTONS_INFO[code]?.nameFr ?? code,
+            href: `/${lang}/${slug}/${cantonSlug}`,
+            count: cantonCounts[code] ?? 0,
+          }))
+        : undefined;
       return (
         <InstallationServicePage
           lang={lang}
@@ -459,6 +472,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
           content={installContent}
           registry={registry}
           chargerRange={chargerRange}
+          cantonLinks={cantonLinks}
         />
       );
     }

@@ -1,4 +1,4 @@
-import { getBlogEntries, getCmsEntries, getVehicleEntries } from "./registries";
+import { getBlogEntries, getCmsEntries, getInstallationCantonEntries, getVehicleEntries } from "./registries";
 
 export async function listSiteUrls(
   opts: { type?: string; lang?: "fr" | "de" } = {},
@@ -10,9 +10,10 @@ export async function listSiteUrls(
     cms: getCmsEntries,
     blog: getBlogEntries,
     vehicles: getVehicleEntries,
+    installation: getInstallationCantonEntries,
   };
 
-  const types = type && type !== "all" ? [type] : ["cms", "blog", "vehicles"];
+  const types = type && type !== "all" ? [type] : ["cms", "blog", "vehicles", "installation"];
   const results: Record<string, { url: string; lastModified?: string }[]> = {};
 
   await Promise.all(

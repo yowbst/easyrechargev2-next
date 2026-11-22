@@ -21,3 +21,6 @@ export const PURPOSE_MAX_CHARS = 230;
  * prompt change relabels everything on the next run instead of mixing two prompts.
  */
 export const PROMPT_VERSION = "v2";
+
+/** Version of the describe prompt (specialties + trade line), stored at the end of `described_model`. */
+export const DESCRIBE_VERSION = "d1";

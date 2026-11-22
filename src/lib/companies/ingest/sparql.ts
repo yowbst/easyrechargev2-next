@@ -35,6 +35,39 @@ ORDER BY ?s
 LIMIT ${limit} OFFSET ${offset}`;
 }
 
+/**
+ * Companies by UID, whatever their purpose says: used to make sure every active partner
+ * has a row even when its purpose fails the installer pattern.
+ */
+export function buildUidQuery(uids: string[]): string {
+  const clean = uids.filter((u) => /^CHE\d{9}$/.test(u));
+  if (clean.length === 0) throw new Error("buildUidQuery: no valid UID");
+  return `PREFIX schema: <http://schema.org/>
+SELECT ?s ?legalName ?purpose ?form ?street ?plz ?locality ?region ?muni ?uid ?chid WHERE {
+  GRAPH <${ZEFIX_GRAPH}> {
+    ?s schema:identifier ?u . ?u schema:name "CompanyUID" ; schema:value ?uid .
+    VALUES ?uid { ${clean.map(sparqlStringLiteral).join(" ")} }
+    ?s schema:legalName ?legalName ;
+       schema:description ?purpose ;
+       schema:additionalType ?form ;
+       schema:address ?a ;
+       <https://schema.ld.admin.ch/municipality> ?muni .
+    ?a schema:addressRegion ?region ;
+       schema:addressLocality ?locality .
+    OPTIONAL { ?a schema:postalCode ?plz }
+    OPTIONAL { ?a schema:streetAddress ?street }
+    OPTIONAL { ?s schema:identifier ?c . ?c schema:name "CompanyCHID" ; schema:value ?chid }
+  }
+}
+ORDER BY ?s`;
+}
+
+export async function fetchByUids(uids: string[], sparql: SparqlFetch = lindasFetch): Promise<RawCompany[]> {
+  if (uids.length === 0) return [];
+  const res = await sparql(buildUidQuery(uids));
+  return parseBindings(res.results.bindings).map((c) => ({ ...c, forcedPartner: true }));
+}
+
 export interface SparqlBinding {
   [variable: string]: { type: string; value: string } | undefined;
 }

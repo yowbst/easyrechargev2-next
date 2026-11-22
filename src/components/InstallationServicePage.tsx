@@ -44,6 +44,8 @@ interface InstallationServicePageProps {
   registry: PageRegistryEntry[];
   /** Live CHF price bounds computed from the Directus chargers catalog. */
   chargerRange?: { min: number; max: number } | null;
+  /** Canton installation pages: replace the "zones" prose with links (French only). */
+  cantonLinks?: { code: string; name: string; href: string; count: number }[];
 }
 
 function formatChf(value: number): string {
@@ -59,6 +61,7 @@ export function InstallationServicePage({
   content,
   registry,
   chargerRange,
+  cantonLinks,
 }: InstallationServicePageProps) {
   // Resolve {r:route-id} tokens and the live charger price placeholders.
   const resolve = (html?: string): string => {
@@ -179,10 +182,37 @@ export function InstallationServicePage({
               <h2 className="text-xl md:text-2xl font-heading font-semibold mb-4">
                 {section.heading}
               </h2>
-              <div
-                className={prose}
-                dangerouslySetInnerHTML={{ __html: resolve(section.text) }}
-              />
+              {section === content.zones && cantonLinks?.length ? (
+                <>
+                  <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {cantonLinks.map((c) => (
+                      <li key={c.code}>
+                        <Link
+                          href={c.href}
+                          className="flex h-full items-center gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50"
+                        >
+                          <span aria-hidden className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#07231A] font-mono text-sm font-medium text-[#3DDC84]">
+                            {c.code}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block font-heading font-semibold">{c.name}</span>
+                            {c.count > 0 && <span className="block font-mono text-sm text-muted-foreground">{c.count} installateurs</span>}
+                          </span>
+                          <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    Nombre d&apos;entreprises du canton dont le but social mentionne des installations électriques (registre du commerce, Zefix).
+                  </p>
+                </>
+              ) : (
+                <div
+                  className={prose}
+                  dangerouslySetInnerHTML={{ __html: resolve(section.text) }}
+                />
+              )}
             </section>
           ))}
 

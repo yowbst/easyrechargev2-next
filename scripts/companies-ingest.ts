@@ -7,11 +7,12 @@ import { isInstallerCandidate } from "@/lib/companies/ingest/candidates";
 import { toCsv } from "@/lib/companies/ingest/export";
 import { toCleanCompany } from "@/lib/companies/ingest/normalize";
 import { effectiveClassification } from "@/lib/companies/ingest/publish-rule";
-import { fetchAllCmsCompanies, fetchPartnerUids } from "@/lib/companies/ingest/queries";
+import { fetchActivePartners, fetchAllCmsCompanies, fetchPartnerUids, unmatchedPartners } from "@/lib/companies/ingest/queries";
 import { buildReport } from "@/lib/companies/ingest/report";
-import { CANTONS, fetchCanton } from "@/lib/companies/ingest/sparql";
+import { CANTONS, fetchByUids, fetchCanton } from "@/lib/companies/ingest/sparql";
 import { applyCompanyPlanAndPersist } from "@/lib/companies/ingest/upsert";
 import {
+  type DescriptionResult,
   type ClassificationLabel,
   type ClassificationResult,
   type ClassifiedCompany,
@@ -20,7 +21,9 @@ import {
   type RawCompany,
 } from "@/lib/companies/ingest/types";
 import { createDataForSeoLlm } from "@/lib/companies/llm/client";
-import { LIVE_PRICE_USD, PROMPT_VERSION } from "@/lib/companies/llm/config";
+import { DESCRIBE_VERSION, LIVE_PRICE_USD, PROMPT_VERSION } from "@/lib/companies/llm/config";
+import { describePurposes, DESCRIBE_HEADER, type DescribeCache } from "@/lib/companies/llm/describe";
+import { packItems } from "@/lib/companies/llm/batch";
 import {
   classifyPurposes,
   evaluate,
@@ -48,7 +51,8 @@ into the Directus companies collection. Runbook: docs/companies-ingest.md
   normalize --in <raw>        derive fields, geocode -> data/companies/clean/<stamp>.json
   classify --in <clean>       installer / inspector / planner / solar / other -> classified/<stamp>.json
   classify --eval             run the golden set and print accuracy (gate 90%)
-  plan --in <classified>      diff against Directus -> plans/<stamp>.json (no writes)
+  describe --in <classified>  specialties + one-line trade description for installers -> described/<stamp>.json
+  plan --in <described|classified>  diff against Directus -> plans/<stamp>.json (no writes)
   apply --plan <file>         execute a plan (the only command that writes rows)
   report [--canton ZH]        counts per canton from Directus
   export [--canton ZH,BE]     CSV for the sales list -> data/companies/export/<stamp>.csv
@@ -116,6 +120,15 @@ async function cmdFetch() {
     total += rows.length;
     console.log(`  ${canton}: ${rows.length}`);
   }
+  if (!has("no-partners")) {
+    const seen = new Set(readJsonLines<RawCompany>(path).map((r) => r.ehraid));
+    const partners = await fetchActivePartners();
+    const uids = partners.map((p) => p.uid).filter((u): u is string => !!u);
+    const forced = (await fetchByUids(uids)).filter((r) => !seen.has(r.ehraid));
+    if (forced.length) appendFileSync(path, forced.map((r) => JSON.stringify(r)).join("\n") + "\n");
+    total += forced.length;
+    console.log(`  partners: ${uids.length} UID(s) looked up, ${forced.length} added outside the installer pattern`);
+  }
   console.log(`\n✓ ${total} candidates, ${cantons.length} cantons → ${path}`);
   if (empty.length && !flag("canton")) {
     throw new Error(`No rows for ${empty.join(", ")}. A full fetch should return rows for every canton; check LINDAS before going on.`);
@@ -131,7 +144,7 @@ async function cmdNormalize() {
   let droppedByPattern = 0;
   const noCoords = new Set<string>();
   for (const r of raw) {
-    if (!isInstallerCandidate(r.purpose)) {
+    if (!isInstallerCandidate(r.purpose) && !r.forcedPartner) {
       droppedByPattern += 1;
       continue;
     }
@@ -145,6 +158,7 @@ async function cmdNormalize() {
   if (droppedByPattern) console.log(`  ${droppedByPattern} dropped by the installer pattern (prefilter was wider)`);
   console.log(`  ${clean.filter((c) => c.in_liquidation).length} flagged in liquidation/bankruptcy`);
   console.log(`  ${clean.filter((c) => !c.uid).length} without a UID`);
+  console.log(`  ${clean.filter((c) => c.installation_evidence === "weak").length} without explicit installation wording (never published unless partner or override)`);
   if (noCoords.size) {
     const { shown, hiddenCount } = truncateList([...noCoords].sort(), 15);
     console.log(`  ${noCoords.size} postcodes without coordinates: ${shown.join(", ")}${hiddenCount ? ` …and ${hiddenCount} more` : ""}`);
@@ -288,6 +302,81 @@ async function cmdClassify() {
   console.log("  " + Object.entries(dist).map(([k, v]) => `${k} ${v}`).join(", "));
 }
 
+// ─── describe ──────────────────────────────────────────────
+
+const DESCRIBE_CACHE_DIR = "data/companies/cache/describe";
+const isCurrentDescription = (r: DescriptionResult | undefined) =>
+  !!r && !!r.described_model && r.described_model.endsWith(`:${DESCRIBE_VERSION}`);
+
+async function cmdDescribe() {
+  const cantons = cantonList(flag("canton"));
+  const limit = parseLimit(flag("limit"));
+  const rows = readJson<ClassifiedCompany[]>(requireFlag("in"));
+  // Only what can be shown: installers (partners are installers too in practice; an
+  // override to installer on another row gets its description on the next run).
+  let targets = rows.filter((r) => r.classification === "installer");
+  if (cantons) targets = targets.filter((r) => cantons.includes(r.canton));
+  if (limit) targets = targets.slice(0, limit);
+
+  mkdirSync(DESCRIBE_CACHE_DIR, { recursive: true });
+  const seeded = new Map<string, DescriptionResult>();
+  if (!has("force") && !has("no-cms")) {
+    for (const r of await fetchAllCmsCompanies()) {
+      const d: DescriptionResult = {
+        specialties: (r.specialties as string[] | null) ?? null,
+        trade_summary: (r.trade_summary as string | null) ?? null,
+        described_model: (r.described_model as string | null) ?? null,
+        described_at: (r.described_at as string | null) ?? null,
+        described_purpose_hash: (r.described_purpose_hash as string | null) ?? null,
+      };
+      if (d.described_purpose_hash && isCurrentDescription(d)) seeded.set(d.described_purpose_hash, d);
+    }
+  }
+  const results = new Map<string, DescriptionResult>();
+  const cache: DescribeCache = {
+    get: (h) => {
+      if (results.has(h)) return results.get(h);
+      if (seeded.has(h)) return seeded.get(h);
+      const p = `${DESCRIBE_CACHE_DIR}/${h}.json`;
+      if (has("force") || !existsSync(p)) return undefined;
+      const r = readJson<DescriptionResult>(p);
+      return isCurrentDescription(r) ? r : undefined;
+    },
+    set: (h, r) => {
+      results.set(h, r);
+      writeFileSync(`${DESCRIBE_CACHE_DIR}/${h}.json`, JSON.stringify(r));
+    },
+  };
+
+  const distinct = new Map<string, ClassifyItem>();
+  for (const r of targets) if (!distinct.has(r.purpose_hash)) distinct.set(r.purpose_hash, { hash: r.purpose_hash, name: r.legal_name, purpose: r.purpose_text });
+  const pending = [...distinct.values()].filter((it) => !cache.get(it.hash));
+  const calls = packItems(pending, DESCRIBE_HEADER).length;
+  const estimate = calls * LIVE_PRICE_USD;
+  const maxCost = Number(flag("max-cost") ?? Math.max(0.5, estimate * 1.5));
+  console.log(`${targets.length} companies to describe, ${distinct.size} distinct purposes, ${pending.length} new`);
+  console.log(`About ${calls} calls, ~$${estimate.toFixed(2)} (cap $${maxCost.toFixed(2)})`);
+  if (has("dry-run")) return;
+
+  if (pending.length) {
+    const s = await describePurposes(pending, {
+      call: createDataForSeoLlm(),
+      cache,
+      maxCost,
+      onBatch: (d, t, spent) => process.stdout.write(`\r  batch ${d}/${t}, $${spent.toFixed(3)}`),
+    });
+    process.stdout.write("\n");
+    printClassifyStats({ calls: s.calls, spent: s.spent, unparseableCalls: s.unparseableCalls, classified: s.hits, failed: s.failed, capped: s.capped, errors: s.errors });
+  }
+
+  const empty: DescriptionResult = { specialties: null, trade_summary: null, described_model: null, described_at: null, described_purpose_hash: null };
+  const described = rows.map((r) => ({ ...r, ...(cache.get(r.purpose_hash) ?? empty) }));
+  const path = out("described", `${runStamp}.json`);
+  writeFileSync(path, JSON.stringify(described, null, 1));
+  const withSummary = described.filter((r) => r.trade_summary).length;
+  console.log(`\n✓ ${described.length} rows → ${path} (${withSummary} with a description)`);
+}
+
 // ─── plan / apply ──────────────────────────────────────────
 
 function printTruncated(label: string, lines: string[], max = 10) {
@@ -303,7 +392,11 @@ async function cmdPlan() {
   let classified = readJson<ClassifiedCompany[]>(inPath);
   if (cantons) classified = classified.filter((c) => cantons.includes(c.canton));
 
-  const [cms, partnerByUid] = await Promise.all([fetchAllCmsCompanies(), fetchPartnerUids()]);
+  const [cms, partnerByUid, activePartners] = await Promise.all([fetchAllCmsCompanies(), fetchPartnerUids(), fetchActivePartners()]);
+  const missing = unmatchedPartners(activePartners, new Set(classified.map((c) => c.uid).filter((u): u is string => !!u)));
+  for (const m of missing) {
+    console.log(`  ⚠ partner "${m.partner.name}" not linked: ${m.reason === "no_uid" ? "no UID on the partner record" : `UID ${m.partner.uid} not in this run`}`);
+  }
   const plan = buildCompanyPlan(classified, cms, { sourceFile: inPath, partnerByUid, scopeCantons: cantons });
   assertPlanSane(plan, { partial: has("partial"), maxChangeRatio: parseMaxChangeRatio(flag("max-change-ratio")) });
 
@@ -368,6 +461,7 @@ const commands: Record<string, () => Promise<void>> = {
   fetch: cmdFetch,
   normalize: cmdNormalize,
   classify: cmdClassify,
+  describe: cmdDescribe,
   plan: cmdPlan,
   apply: cmdApply,
   report: cmdReport,

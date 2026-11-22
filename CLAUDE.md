@@ -163,7 +163,7 @@ src/app/
 
 Route types per level:
 - **[slug]:** `cms-page | quote (charger) | quote-battery (battery) | contact | blog-listing | vehicles-listing` — both quote routes render `QuoteShell`
-- **[slug]/[sub1]:** `vehicle-detail | vehicle-brands | blog-listing | quote-success | quote-submission`
+- **[slug]/[sub1]:** `vehicle-detail | vehicle-brands | blog-listing | quote-success | quote-submission | installation-canton` (FR only, served cantons VD/VS/FR/GE/NE, `/fr/installation-borne-de-recharge/{canton}`)
 - **[slug]/[sub1]/[sub2]:** `blog-post | vehicle-brand-detail | vehicle-model-detail`
 
 ### Server vs Client Components

@@ -314,3 +314,42 @@ export async function getLocalitySubsidyEntries(): Promise<UrlEntry[]> {
 
   return entries;
 }
+
+// ─── Canton installation pages (French only) ────────────
+
+/** Pure part: one French URL per served canton, no German alternate. */
+export function buildInstallationCantonEntries(installationSlugFr: string, cantonSlugs: string[], lastModified?: string): UrlEntry[] {
+  return cantonSlugs.map((canton) => {
+    const path = `/fr/${installationSlugFr}/${canton}`;
+    return {
+      url: `${SITE_URL}${path}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+      alternates: { languages: buildAlternates({ fr: path }) },
+    };
+  });
+}
+
+export async function getInstallationCantonEntries(): Promise<UrlEntry[]> {
+  const [{ fetchPageRegistry }, { CANTON_PAGE_SLUGS }] = await Promise.all([
+    import("@/lib/directus-queries"),
+    import("@/lib/companies/public/cantons"),
+  ]);
+  const registry = await fetchPageRegistry();
+  const slug = registry.find((p) => p.id === "installation")?.slugs.fr;
+  if (!slug) return [];
+  // Latest register run: the canton pages' figures date from it.
+  let lastModified: string | undefined;
+  try {
+    const res = await directusFetch<{ data: { register_seen_at?: string | null }[] }>(
+      "/items/companies?fields=register_seen_at&filter[status][_eq]=published&sort=-register_seen_at&limit=1",
+      { next: { revalidate: 3600, tags: ["companies"] } },
+    );
+    const at = res?.data?.[0]?.register_seen_at;
+    if (at) lastModified = at.endsWith("Z") || at.includes("+") ? at : `${at}Z`;
+  } catch {
+    /* lastmod is optional */
+  }
+  return buildInstallationCantonEntries(slug, Object.keys(CANTON_PAGE_SLUGS), lastModified);
+}

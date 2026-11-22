@@ -26,10 +26,11 @@ Gemini scraper the SEO citations check already uses.
 
 ```
 npm run companies -- geo-dataset --csv <file>      # swisstopo WGS84 CSV -> src/shared/swiss-postcode-coordinates.ts
-npm run companies -- fetch [--canton VD,VS]        # LINDAS -> data/companies/raw/<stamp>.jsonl   (read-only, free)
+npm run companies -- fetch [--canton VD,VS] [--no-partners]  # LINDAS -> raw/<stamp>.jsonl, plus every active partner's company by UID
 npm run companies -- normalize --in <raw>          # derive fields + geocode -> clean/<stamp>.json
 npm run companies -- classify --in <clean>         # -> classified/<stamp>.json   (paid, capped)
 npm run companies -- classify --eval               # golden set, prints accuracy (gate 90 %)
+npm run companies -- describe --in <classified>    # specialties + one-line trade summary for installers -> described/<stamp>.json (paid, capped)
 npm run companies -- plan --in <classified>        # diff against Directus -> plans/<stamp>.json (read-only)
 npm run companies -- apply --plan <file> [--dry-run]
 npm run companies -- report [--canton ZH]
@@ -44,9 +45,10 @@ Options: `--limit n`, `--max-cost usd`, `--max-change-ratio n`, `--partial`, `--
 1. `fetch` all cantons. Measured on 2026-11-20: 4,798 rows across 26 cantons (ZH 736, VD 537, TI 435, BE 401, AG 348, GE 312). It stops with an error if a canton returns nothing.
 2. `normalize --in data/companies/raw/<stamp>.jsonl`.
 3. `classify --in <clean> --dry-run` to see the call count and cost, then run it. The cost cap defaults to the estimate x 1.5. Results are cached per purpose in `data/companies/cache/classify/`, so an interrupted or capped run resumes without paying twice.
-4. `plan --in <classified>`. Read the summary: bucket counts, PUBLISH/UNPUBLISH flips, creates by canton, classification split, 20 samples per bucket.
-5. `apply --plan <file> --dry-run`, then `apply --plan <file>`. An interrupted apply resumes from `completed[]` in the plan file.
-6. `report`, then spot-check ten rows against zefix.ch.
+4. `describe --in <classified> --dry-run`, then run it (installers only, cached per purpose in `data/companies/cache/describe/`, already-described rows are read back from Directus). Measured 2026-11-22: about 612 calls, about $2.45.
+5. `plan --in <described>` (or `<classified>` to leave descriptions untouched). Read the summary: bucket counts, PUBLISH/UNPUBLISH flips, creates by canton, classification split, 20 samples per bucket.
+6. `apply --plan <file> --dry-run`, then `apply --plan <file>`. An interrupted apply resumes from `completed[]` in the plan file.
+7. `report`, then spot-check ten rows against zefix.ch.
 
 Refresh monthly with the same sequence. The first monthly plan is the one to read slowly.
 
@@ -54,12 +56,21 @@ Refresh monthly with the same sequence. The first monthly plan is the one to rea
 
 | Pipeline writes | Humans write in Directus (never touched by the pipeline) |
 |---|---|
-| `status`, every `register_*`, `classification*`, contact fields, `lat/lng`, `partner` | `do_not_display`, `classification_override`, `display_name`, `notes`, `prospect_*`, `assigned_to` |
+| `status`, every `register_*`, `classification*`, `installation_evidence`, `specialties`, `trade_summary`, `described_*`, contact fields, `lat/lng`, `partner` | `do_not_display`, `classification_override`, `display_name`, `notes`, `prospect_*`, `assigned_to` |
 
 `status` is recomputed on every plan. To hide a company use `do_not_display`; to correct
-the model use `classification_override`. Publish rule: published only when the effective
-classification is installer, confidence is at least 0.8 (an override skips the threshold),
-the name does not say liquidation or bankruptcy, `do_not_display` is off, and the row is not gone.
+the model use `classification_override`. Publish rule (2026-11-22), in order:
+
+1. gone → archived; `do_not_display` or liquidation/bankruptcy in the name → draft;
+2. `classification_override` decides;
+3. a company linked to a partner (`partner` set) is published;
+4. otherwise published only when classified installer, confidence at least 0.8 **and**
+   `installation_evidence = explicit` (strict installation wording in the purpose, FR/DE/IT,
+   `installationEvidence` in `candidates.ts`). Rows with weak wording stay draft for prospecting.
+
+**Partners are always in the dataset.** `fetch` adds every active production partner's company by
+`partners.uid`, even when its purpose fails the pattern, and `plan` lists the partners it could not
+match (no UID, or UID not in the register). Fill `partners.uid` for those.
 
 ## Guardrails
 
@@ -106,9 +117,19 @@ dataset in Directus and the MCP tools, do not paste exports into other AI tools,
 
 - Contacts, website and the person running the company are not in the register. Phase 2 fills them (bake-off between four DataForSEO sources first, then site verification through the Bright Data proxy).
 - **ESTI permit data is deferred.** The register (verzeichnisse.esti.ch) would add permit number, type, validity and the responsible person, and would confirm which installers are real. Its robots.txt disallows all automated access. Bright Data refuses the host outright (policy_20000, classified as Government, checked 2026-11-21). Firecrawl respects robots.txt by default and only lets Enterprise accounts ignore it, so it does not help either. Remaining options: request an extract from info@esti.admin.ch (preferred), or slow per-company lookups from the operator's own IP, which is a decision for the owner. The ESTI fields already exist in Directus and are empty.
-- `lat/lng` are not indexed yet; add indexes before the Phase 3 bounding-box query.
+- `lat/lng` are at the postcode centre, not the street address (distances are "from the centre of the locality").
 
 ## Manual actions required (outside this repo)
 
 1. **Directus permissions.** Give the role behind `DIRECTUS_STATIC_TOKEN` read, create and update on `companies` (not delete). Until then every command that reads or writes Directus returns 403: `classify` (without `--no-cms`), `plan`, `apply`, `report`, `export`, and the two MCP tools.
 2. Redeploy after merging so the MCP server exposes `list_companies` and `update_company_prospect`.
+
+## On the website (2026-11-22)
+
+Server-side reads only, field allowlists, tags `companies` and `partners-public`, ISR 3600.
+
+- **Partner card** (`components/partners/PartnerCard.tsx`): the canton's partner as the dispatch resolver picks it (exclusive alone, otherwise shared by priority; charger product rule; deploy environment). Commune subsidy pages FR and DE (banner under the intro, compact strip above the mini-quote) and canton pages. Not gated. No phone or website. A paused partner disappears within the hour. The CTA passes `postalCode`, `locality`, `canton` to the funnel.
+- **Nearby installers** (`components/companies/NearbyInstallers.tsx`): up to 5 published companies within 5/10/25 km of the locality, partners first, then SA/Sàrl, then distance. French commune pages only, behind `site_settings.global_config.installers_block = { "enabled": true, "cantons": ["VD"] }` (`"*"` = all; anything else = off). Source, date and opt-out line always printed. JSON-LD `ItemList` of `Electrician` (name, address, UID; no contact).
+- **Canton pages** `/fr/installation-borne-de-recharge/{vaud|valais|fribourg|geneve|neuchatel}` (`components/InstallationCantonPage.tsx`): partner, figures with source and date, 12 companies, top localities linked to their subsidy pages, canton-wide subsidy programs with their conditions, FAQ, method note. Copy in `components/installation-canton/copy.ts` (canton paragraphs: draft, to review). Sitemap segment `installation.xml`. The installation hub's "zones" section links them.
+- **Opt-out**: the contact page; set `do_not_display` on the row.
+- **Kill switch**: `installers_block.enabled = false` (PATCH the whole `global_config`, a JSON PATCH replaces the object).

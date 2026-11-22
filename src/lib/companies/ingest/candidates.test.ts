@@ -45,3 +45,22 @@ describe("sparqlStringLiteral", () => {
     expect(sparqlStringLiteral('a\\b"c')).toBe('"a\\\\b\\"c"');
   });
 });
+
+import { installationEvidence } from "./candidates";
+
+describe("installationEvidence", () => {
+  it.each([
+    "installations électriques et téléphoniques",
+    "exploitation d'une entreprise générale d'électricité",
+    "Ausführung aller elektrischen Installationen",
+    "Projektierung von Stark- und Schwachstromanlagen",
+    "impianti elettrici civili",
+  ])("explicit: %s", (p) => expect(installationEvidence(p)).toBe("explicit"));
+
+  it.each([
+    "Dienstleistungen in der Gebäudetechnik",
+    "elektrotechnische Beratungen",
+    "gestion de projets dans le domaine de la construction",
+    "",
+  ])("weak: %j", (p) => expect(installationEvidence(p)).toBe("weak"));
+});

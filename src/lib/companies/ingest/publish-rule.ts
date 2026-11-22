@@ -10,6 +10,10 @@ export interface PublishInput {
   inLiquidation: boolean;
   doNotDisplay: boolean;
   gone: boolean;
+  /** Explicit installation wording in the purpose (see installationEvidence). */
+  evidence?: "explicit" | "weak";
+  /** Linked to an easyRecharge partner. */
+  isPartner?: boolean;
 }
 
 /**
@@ -21,7 +25,10 @@ export function computeStatus(i: PublishInput): CompanyStatus {
   if (i.gone) return "archived";
   if (i.doNotDisplay || i.inLiquidation) return "draft";
   if (i.override) return i.override === "installer" ? "published" : "draft";
-  return i.classification === "installer" && (i.confidence ?? 0) >= MIN_PUBLISH_CONFIDENCE
+  if (i.isPartner) return "published";
+  return i.classification === "installer" &&
+    (i.confidence ?? 0) >= MIN_PUBLISH_CONFIDENCE &&
+    (i.evidence ?? "explicit") === "explicit"
     ? "published"
     : "draft";
 }

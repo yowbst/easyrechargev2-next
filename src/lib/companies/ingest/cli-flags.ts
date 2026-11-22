@@ -6,6 +6,7 @@ export const COMPANY_COMMAND_FLAGS: Record<string, FlagSpec[]> = {
   fetch: [
     { name: "canton", takesValue: true },
     { name: "limit", takesValue: true },
+    { name: "no-partners", takesValue: false },
   ],
   normalize: [{ name: "in", takesValue: true }],
   classify: [
@@ -16,6 +17,15 @@ export const COMPANY_COMMAND_FLAGS: Record<string, FlagSpec[]> = {
     { name: "force", takesValue: false },
     { name: "no-cms", takesValue: false },
     { name: "eval", takesValue: false },
+    { name: "dry-run", takesValue: false },
+  ],
+  describe: [
+    { name: "in", takesValue: true },
+    { name: "limit", takesValue: true },
+    { name: "max-cost", takesValue: true },
+    { name: "canton", takesValue: true },
+    { name: "force", takesValue: false },
+    { name: "no-cms", takesValue: false },
     { name: "dry-run", takesValue: false },
   ],
   plan: [

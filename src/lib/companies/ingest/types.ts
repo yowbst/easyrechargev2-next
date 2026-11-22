@@ -36,6 +36,8 @@ export interface RawCompany {
   locality: string | null;
   canton: string;
   bfsId: number | null;
+  /** Fetched by UID because it is an active partner, whatever its purpose says. */
+  forcedPartner?: boolean;
 }
 
 /**
@@ -54,6 +56,7 @@ export interface CleanCompany {
   legal_form_code: string | null;
   legal_form_kind: LegalFormKind;
   in_liquidation: boolean;
+  installation_evidence: "explicit" | "weak";
   street_address: string | null;
   postal_code: string | null;
   locality: string | null;
@@ -74,7 +77,18 @@ export interface ClassificationResult {
   classified_purpose_hash: string | null;
 }
 
-export type ClassifiedCompany = CleanCompany & ClassificationResult;
+export type ClassifiedCompany = CleanCompany & ClassificationResult & Partial<DescriptionResult>;
+
+/** Card copy derived from the purpose text by the `describe` pass. */
+export interface DescriptionResult {
+  /** Keys of SPECIALTIES, at most 4. */
+  specialties: string[] | null;
+  /** One short French line saying what the company does, no name, no place. */
+  trade_summary: string | null;
+  described_model: string | null;
+  described_at: string | null;
+  described_purpose_hash: string | null;
+}
 
 /** A `companies` row as read back from Directus. Only fields the pipeline reads are typed. */
 export interface CmsCompany {

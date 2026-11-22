@@ -23,7 +23,7 @@ export function registerAppTools(server: McpServer) {
       title: "List site URLs",
       description: "All generated site URLs by type (cms | blog | vehicles | all) with fr/de counts.",
       inputSchema: {
-        type: z.enum(["cms", "blog", "vehicles", "all"]).default("all"),
+        type: z.enum(["cms", "blog", "vehicles", "installation", "all"]).default("all"),
         lang: z.enum(["fr", "de"]).optional(),
       },
       annotations: { readOnlyHint: true },

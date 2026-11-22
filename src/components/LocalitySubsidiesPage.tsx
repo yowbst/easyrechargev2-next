@@ -5,6 +5,7 @@
  */
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { PageRegistryEntry } from "@/lib/directus-queries";
@@ -29,6 +30,7 @@ import {
   Building2,
   Users,
   CircleDollarSign,
+  MapPin,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────
@@ -73,6 +75,14 @@ interface LocalitySubsidiesPageProps {
   pageRegistry: PageRegistryEntry[];
   lang: string;
   quoteHref: string;
+  /** Region partner banner, rendered under the hero (FR and DE). */
+  partnerBanner?: ReactNode;
+  /** Compact partner strip, rendered above the mini-quote. */
+  partnerCompact?: ReactNode;
+  /** Nearby register installers (FR, gated). */
+  nearbyInstallers?: ReactNode;
+  /** The canton installation page, when the canton has one. */
+  cantonPage?: { title: string; href: string } | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -111,6 +121,10 @@ export function LocalitySubsidiesPage({
   pageRegistry,
   lang,
   quoteHref,
+  partnerBanner,
+  partnerCompact,
+  nearbyInstallers,
+  cantonPage,
 }: LocalitySubsidiesPageProps) {
   const cityDisplay = `${locality.postalCode} ${locality.name}`;
   const P = "pages.locality-subsidies.";
@@ -189,7 +203,8 @@ export function LocalitySubsidiesPage({
       <div className="container mx-auto px-4 py-10 sm:py-14">
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
           {/* Sticky sidebar — must be first for row-span-full to work */}
-          <aside className="lg:sticky lg:top-24 self-start lg:col-start-2 lg:row-start-1 lg:row-span-full">
+          <aside className="lg:sticky lg:top-24 self-start lg:col-start-2 lg:row-start-1 lg:row-span-full flex flex-col gap-3">
+            {partnerCompact}
             <MiniQuoteCard
               pageId="locality-subsidies"
               dictionary={dictionary}
@@ -231,6 +246,8 @@ export function LocalitySubsidiesPage({
                 </Link>
               )}
             </div>
+            {partnerBanner}
+
             {/* Charging infrastructure */}
             {chargingInfra.length > 0 && (
               <section>
@@ -293,12 +310,24 @@ export function LocalitySubsidiesPage({
               </section>
             )}
 
+            {nearbyInstallers}
+
             {/* Contextual links */}
             <section>
               <h2 className="text-xl sm:text-2xl font-heading font-bold mb-6">
                 {d("sections.links")}
               </h2>
               <div className="grid gap-3">
+                {cantonPage && (
+                  <Link
+                    href={cantonPage.href}
+                    className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <MapPin className="h-5 w-5 text-primary shrink-0" />
+                    <span className="text-sm font-medium">{cantonPage.title}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
+                  </Link>
+                )}
                 {cantonArticle && (
                   <Link
                     href={cantonArticle.href}

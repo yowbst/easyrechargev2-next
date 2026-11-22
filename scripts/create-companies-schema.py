@@ -168,6 +168,7 @@ PROSPECT = choices(("None", "none"), ("To contact", "to_contact"), ("Contacted",
                    ("Interested", "interested"), ("Declined", "declined"),
                    ("Became partner", "became_partner"), ("Unqualified", "unqualified"))
 
+EVIDENCE = choices(("Explicit", "explicit"), ("Weak", "weak"))
 PIPE = "Written by the pipeline."
 HUMAN = "Edited by hand in Directus; the pipeline never writes it."
 
@@ -194,6 +195,7 @@ COMPANIES = {
         s("purpose_hash", max_length=64, note="sha256; a different hash triggers reclassification."),
         s("legal_form_code", max_length=8), s("legal_form_kind", choices=LEGAL_KIND),
         boolean("in_liquidation", note="Name carries en liquidation / in Liquidation / en faillite."),
+        s("installation_evidence", choices=EVIDENCE, note="explicit = the purpose names installation work. Weak rows are never published unless partner or override."),
         s("street_address", max_length=255), s("postal_code", max_length=4, is_indexed=True),
         s("locality", max_length=255), s("canton", max_length=2, is_indexed=True), integer("bfs_id"),
         ts("register_first_seen_at"), ts("register_seen_at"),
@@ -204,6 +206,10 @@ COMPANIES = {
         s("classification_model", max_length=64), ts("classified_at"),
         s("classified_purpose_hash", max_length=64),
         s("classification_override", choices=CLASSIFICATION, note=HUMAN + " Wins over the model."),
+        # Card copy (describe pass)
+        js("specialties", "Specialty keys, display order, max 4 (courant_fort, telecom, bornes…)."),
+        s("trade_summary", max_length=120, note="One short French line on what the company does. " + PIPE),
+        s("described_model", max_length=64), ts("described_at"), s("described_purpose_hash", max_length=64),
         # Contacts (filled by the enrichment phase)
         s("website", max_length=255), s("website_source", choices=SOURCE), s("website_source_url", max_length=500),
         ts("website_verified_at"), s("website_status", choices=WEBSITE_STATUS, default_value="unverified"),
@@ -244,6 +250,24 @@ if exists_collection(name):
 else:
     print(f"collection {name}: {len(COMPANIES['fields'])} fields")
     do(f"create {name}", "POST", "/collections", COMPANIES)
+
+# ---------- 1b. fields added after the first install ----------
+ADDED_LATER = ["installation_evidence", "specialties", "trade_summary", "described_model", "described_at", "described_purpose_hash"]
+if exists_collection(name):
+    print("\nfields added after the first install:")
+    by_name = {f["field"]: f for f in COMPANIES["fields"]}
+    for field in ADDED_LATER:
+        if call("GET", f"/fields/{name}/{field}")[0] == 200:
+            print(f"  exists   {field}")
+        else:
+            do(f"create {name}.{field}", "POST", f"/fields/{name}", by_name[field])
+    print("\nindexes for the nearby query:")
+    for field in ("lat", "lng"):
+        code, res = call("GET", f"/fields/{name}/{field}")
+        if code == 200 and (res.get("data", {}).get("schema") or {}).get("is_indexed"):
+            print(f"  exists   index on {field}")
+        else:
+            do(f"index {name}.{field}", "PATCH", f"/fields/{name}/{field}", {"schema": {"is_indexed": True}})
 
 # ---------- 2. relations ----------
 print("\nrelations:")

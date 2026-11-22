@@ -16,6 +16,7 @@ function company(over: Partial<ClassifiedCompany> = {}): ClassifiedCompany {
     legal_form_code: "0107",
     legal_form_kind: "llc",
     in_liquidation: false,
+    installation_evidence: "explicit",
     street_address: "Rue 1",
     postal_code: "1003",
     locality: "Lausanne",

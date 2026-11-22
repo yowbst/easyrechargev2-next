@@ -17,7 +17,14 @@ import {
   fetchLayout,
   fetchPage,
   fetchPageRegistry,
+  fetchChargerPriceRange,
 } from "@/lib/directus-queries";
+import { InstallationCantonPage } from "@/components/InstallationCantonPage";
+import { CANTONS_INFO } from "@/lib/companies/public/cantons";
+import { fetchActivePartnersForCanton } from "@/lib/companies/public/partners";
+import { fetchCantonInstallerStats } from "@/lib/companies/public/installers";
+import { fetchCantonSubsidySummary, fetchLocalitySlugsByName } from "@/lib/localities-server";
+import { resolveRouteId } from "@/lib/pageConfig";
 import { extractLayoutDictionary, extractPageDictionary, t } from "@/lib/i18n/dictionaries";
 import { VehicleBrandsListView, BrandIcon } from "@/lib/vehicles/shared";
 import { transformDirectusVehicle, formatMinutes, type Vehicle } from "@/lib/vehicleTransformer";
@@ -301,6 +308,24 @@ export async function generateMetadata({ params }: Sub1PageProps): Promise<Metad
         [lang]: currentPath,
         [otherLang]: `/${otherLang}/${vehiclesSlugOther}/${brandsSlugOther}`,
       }),
+    });
+  }
+
+  // ── Canton installation page: /fr/{installationSlug}/{canton} ──
+  if (route.type === "installation-canton") {
+    const canton = CANTONS_INFO[route.cantonCode];
+    const stats = await fetchCantonInstallerStats(route.cantonCode);
+    const currentPath = `/${lang}/${slug}/${sub1}`;
+    const description = stats.count > 0
+      ? `${stats.count} entreprises d'installation électrique dans le canton ${canton.ofFr}, aides pour une borne à domicile et partenaire easyRecharge. Demandez un devis en quelques minutes.`
+      : `Installation de borne de recharge dans le canton ${canton.ofFr} : aides pour une borne à domicile et partenaire easyRecharge. Demandez un devis en quelques minutes.`;
+    return buildMetadata({
+      title: normalizeTitle(`Installation borne de recharge ${canton.nameFr}`),
+      description: truncate(description),
+      canonical: `${SITE_URL}${currentPath}`,
+      ogType: "website",
+      lang,
+      alternates: buildAlternates({ fr: currentPath }),
     });
   }
 
@@ -1128,6 +1153,38 @@ export default async function Sub1Page({ params }: Sub1PageProps) {
     // Redirect to the main blog page — category filtering handled there
     const { redirect } = await import("next/navigation");
     redirect(`/${lang}/${slug}`);
+  }
+
+  // Canton installation page (French only, served cantons)
+  if (route.type === "installation-canton") {
+    const canton = CANTONS_INFO[route.cantonCode];
+    if (!canton) notFound();
+    const [registry, partners, stats, subsidies, chargerRange, installationPage] = await Promise.all([
+      fetchPageRegistry(),
+      fetchActivePartnersForCanton(route.cantonCode),
+      fetchCantonInstallerStats(route.cantonCode),
+      fetchCantonSubsidySummary(route.cantonCode),
+      fetchChargerPriceRange().catch(() => null),
+      fetchPage("installation", locale),
+    ]);
+    const localitySlugs = await fetchLocalitySlugsByName(route.cantonCode, stats.topLocalities.map((l) => l.locality));
+    const installationPath = `/${lang}/${slug}`;
+    return (
+      <InstallationCantonPage
+        canton={canton}
+        partners={partners}
+        stats={stats}
+        subsidies={subsidies}
+        chargerRange={chargerRange}
+        localitySlugs={localitySlugs}
+        installationTitle={installationPage?.translations?.[0]?.title || "Installation de borne de recharge"}
+        installationPath={installationPath}
+        currentPath={`${installationPath}/${sub1}`}
+        quoteHref={resolveRouteId("quote", lang, registry) || `/${lang}`}
+        contactHref={resolveRouteId("contact", lang, registry)}
+        siteUrl={getSiteUrl()}
+      />
+    );
   }
 
   if (route.type === "locality-redirect") {

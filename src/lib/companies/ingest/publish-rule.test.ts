@@ -51,3 +51,23 @@ describe("effectiveClassification", () => {
     expect(effectiveClassification({ classification: "other", classification_override: null })).toBe("other");
   });
 });
+
+describe("computeStatus with evidence and partners", () => {
+  it("needs explicit installation wording to publish a model-labelled installer", () => {
+    expect(computeStatus({ ...base, evidence: "weak" })).toBe("draft");
+    expect(computeStatus({ ...base, evidence: "explicit" })).toBe("published");
+  });
+
+  it("publishes a linked partner whatever the model says", () => {
+    expect(computeStatus({ ...base, classification: "other", confidence: 0.1, evidence: "weak", isPartner: true })).toBe("published");
+  });
+
+  it("still hides a partner in liquidation or flagged do_not_display", () => {
+    expect(computeStatus({ ...base, isPartner: true, inLiquidation: true })).toBe("draft");
+    expect(computeStatus({ ...base, isPartner: true, doNotDisplay: true })).toBe("draft");
+  });
+
+  it("lets a human override publish weak evidence", () => {
+    expect(computeStatus({ ...base, evidence: "weak", override: "installer" })).toBe("published");
+  });
+});

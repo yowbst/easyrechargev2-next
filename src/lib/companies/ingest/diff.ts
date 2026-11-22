@@ -15,6 +15,7 @@ export const NON_TRIGGERING_FIELDS: ReadonlySet<string> = new Set([
   // Directus rewrites timestamp formats on the way back; a real reclassification
   // changes the label fields too, so this one never needs to trigger on its own.
   "classified_at",
+  "described_at",
 ]);
 
 /**
@@ -25,6 +26,7 @@ export const NON_TRIGGERING_FIELDS: ReadonlySet<string> = new Set([
 export function sameValue(a: unknown, b: unknown): boolean {
   const empty = (v: unknown) => v === null || v === undefined || v === "";
   if (empty(a) || empty(b)) return empty(a) && empty(b);
+  if (typeof a === "object" || typeof b === "object") return JSON.stringify(a) === JSON.stringify(b);
   const num = (v: unknown) => (typeof v === "number" ? v : typeof v === "string" && v.trim() !== "" ? Number(v) : NaN);
   const na = num(a);
   const nb = num(b);
@@ -46,12 +48,16 @@ export interface PlanOptions {
 /** Register + classification fields written on every run. */
 const REGISTER_FIELDS = [
   "uid", "chid", "register_url", "legal_name", "purpose_text", "purpose_hash",
-  "legal_form_code", "legal_form_kind", "in_liquidation", "street_address",
+  "legal_form_code", "legal_form_kind", "in_liquidation", "installation_evidence", "street_address",
   "postal_code", "locality", "canton", "bfs_id", "lat", "lng", "geo_source",
 ] as const;
 const CLASSIFICATION_FIELDS = [
   "classification", "classification_confidence", "classification_reason",
   "classification_model", "classified_at", "classified_purpose_hash",
+] as const;
+/** Written only when the input carries a description (the `describe` pass ran). */
+const DESCRIPTION_FIELDS = [
+  "specialties", "trade_summary", "described_model", "described_at", "described_purpose_hash",
 ] as const;
 
 const isGone = (r: CmsCompany) => r.status === "archived" && !!r.register_gone_at;
@@ -87,6 +93,8 @@ export function buildCompanyPlan(
       inLiquidation: c.in_liquidation,
       doNotDisplay: !!existing?.do_not_display,
       gone: false,
+      evidence: c.installation_evidence,
+      isPartner: !!partnerId,
     });
     // A company back from the dead is reviewed before it is shown again.
     const status: CompanyStatus = reappeared ? "draft" : effectiveStatus;
@@ -94,6 +102,7 @@ export function buildCompanyPlan(
     const candidate: Record<string, unknown> = { status, partner: partnerId };
     for (const f of REGISTER_FIELDS) candidate[f] = c[f];
     for (const f of CLASSIFICATION_FIELDS) candidate[f] = c[f];
+    if (c.described_purpose_hash !== undefined) for (const f of DESCRIPTION_FIELDS) candidate[f] = c[f] ?? null;
 
     if (!existing) {
       entries.push({
