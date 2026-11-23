@@ -83,6 +83,8 @@ interface LocalitySubsidiesPageProps {
   nearbyInstallers?: ReactNode;
   /** The canton installation page, when the canton has one. */
   cantonPage?: { title: string; href: string } | null;
+  /** Replaces the dictionary H1 where the installers block is on. */
+  h1Override?: string;
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -125,6 +127,7 @@ export function LocalitySubsidiesPage({
   partnerCompact,
   nearbyInstallers,
   cantonPage,
+  h1Override,
 }: LocalitySubsidiesPageProps) {
   const cityDisplay = `${locality.postalCode} ${locality.name}`;
   const P = "pages.locality-subsidies.";
@@ -225,7 +228,7 @@ export function LocalitySubsidiesPage({
             {/* Hero */}
             <div>
               <h1 className="text-2xl sm:text-3xl font-heading font-bold mb-4">
-                {d("h1", { city: cityDisplay })}
+                {h1Override ?? d("h1", { city: cityDisplay })}
               </h1>
               <p className="text-base text-muted-foreground leading-relaxed">
                 {hasSubsidies

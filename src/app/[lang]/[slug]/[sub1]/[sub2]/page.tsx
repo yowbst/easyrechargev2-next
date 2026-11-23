@@ -33,6 +33,7 @@ import {
   buildAlternates,
   getSiteUrl,
   decodeHtmlEntities,
+  pickFittingTitle,
 } from "@/lib/seo/resolver";
 import {
   wrapInGraph,
@@ -48,7 +49,7 @@ import { PartnerCard } from "@/components/partners/PartnerCard";
 import { NearbyInstallers } from "@/components/companies/NearbyInstallers";
 import { fetchActivePartnersForCanton } from "@/lib/companies/public/partners";
 import { fetchInstallerCandidates, latestSeen, selectNearby, type NearbyInstaller } from "@/lib/companies/public/installers";
-import { installersBlockEnabled } from "@/lib/companies/public/gate";
+import { installerIntentTitles, installersBlockEnabled } from "@/lib/companies/public/gate";
 import { CANTONS_INFO, cantonPageSlug } from "@/lib/companies/public/cantons";
 import { lookupPostcode } from "@/lib/companies/geo/postcode-coords";
 import { GetQuote } from "@/components/GetQuote";
@@ -341,8 +342,10 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
   // ── Locality subsidies ────────────────────────────────────────────
   if (route.type === "locality-subsidies") {
     const locale = slugToDirectusLocale(lang);
-    const locality = await fetchLocality(route.localitySlug, locale);
+    const [locality, layoutData] = await Promise.all([fetchLocality(route.localitySlug, locale), fetchLayout(locale)]);
     if (!locality) return {};
+    // Where the installers block is on (Vaud first), the title answers the installation query too.
+    const installerIntent = installersBlockEnabled(layoutData?.global_config, String(locality.canton_2l || ""), lang);
 
     const cantonName = locality.canton?.translations?.[0]?.name || locality.canton_2l;
     const ville = locality.name;
@@ -364,10 +367,14 @@ export async function generateMetadata({ params }: Sub2PageProps): Promise<Metad
       (tr: any) => tr.languages_code === slugToDirectusLocale(otherLang),
     )?.slug || locality.slug;
 
-    const title = lang === "de"
-      ? `Förderung Ladestation in ${ville} (${cantonName})`
-      : `Subventions borne de recharge à ${ville} (${cantonName})`;
-    const description = lang === "de"
+    const title = installerIntent
+      ? pickFittingTitle(installerIntentTitles(ville).title) ?? `Subventions borne de recharge à ${ville}`
+      : lang === "de"
+        ? `Förderung Ladestation in ${ville} (${cantonName})`
+        : `Subventions borne de recharge à ${ville} (${cantonName})`;
+    const description = installerIntent
+      ? `Électriciens près de ${ville}, installateur partenaire et aides pour une borne de recharge à ${ville} (${locality.postal_code}).`
+      : lang === "de"
       ? `Förderprogramme für Ladestationen in ${ville} (${locality.postal_code}). ${personalCount} Programme verfügbar.`
       : `Aides pour installer une borne de recharge à ${ville} (${locality.postal_code}). ${personalCount} programmes disponibles.`;
 
@@ -937,6 +944,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
             ) : null
           }
           cantonPage={cantonPage}
+          h1Override={showInstallers && nearby.length > 0 ? installerIntentTitles(locality.name).h1 : undefined}
         />
         {getQuoteBlock && (
           <GetQuote
