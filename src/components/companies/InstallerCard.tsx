@@ -1,6 +1,6 @@
 import { BadgeCheck, Cable, ClipboardCheck, Cpu, ExternalLink, Flame, Lightbulb, MapPin, Network, PlugZap, ShieldCheck, Sun, Wrench, Zap, type LucideIcon } from "lucide-react";
 import { SPECIALTIES, type SpecialtyKey } from "@/lib/companies/specialties";
-import { monogram, monogramTone, type PublicInstaller } from "@/lib/companies/public/installers";
+import { monogram, type PublicInstaller } from "@/lib/companies/public/installers";
 
 const ICONS: Record<SpecialtyKey, LucideIcon> = {
   bornes: PlugZap,
@@ -25,11 +25,9 @@ const FORM_LABEL: Record<string, string> = {
   branch: "Succursale",
 };
 
-const TONES = [
-  "bg-[#07231A] text-[#3DDC84]",
-  "bg-[#E2DCCE] text-[#07231A] dark:bg-[#1b3527] dark:text-[#e8ede9]",
-  "bg-[#16A34A] text-[#04150C]",
-] as const;
+/** One neutral tile for every company; the forest tile marks a partner company. */
+const TILE = "bg-[#E2DCCE] text-[#07231A] dark:bg-[#1b3527] dark:text-[#e8ede9]";
+const TILE_PARTNER = "bg-[#07231A] text-[#3DDC84]";
 
 export function formatDistance(km: number): string {
   if (km < 1) return "< 1 km";
@@ -56,7 +54,7 @@ export function InstallerCard({ installer, distanceKm }: { installer: PublicInst
       <div className="flex items-start gap-3.5">
         <span
           aria-hidden
-          className={`inline-flex size-14 shrink-0 items-center justify-center rounded-[10px] font-heading text-xl font-semibold tracking-tight ${TONES[monogramTone(installer.ehraid)]}`}
+          className={`inline-flex size-14 shrink-0 items-center justify-center rounded-[10px] font-heading text-xl font-semibold tracking-tight ${installer.isPartner ? TILE_PARTNER : TILE}`}
         >
           {monogram(installer.name)}
         </span>

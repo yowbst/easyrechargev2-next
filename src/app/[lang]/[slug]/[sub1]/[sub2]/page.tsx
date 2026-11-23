@@ -826,6 +826,7 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
       cantonCode,
       quoteHref: prefilledQuoteHref,
       pageType: "locality" as const,
+      localityName: String(locality.name ?? ""),
     };
 
     // Canton installation page (French only, served cantons).

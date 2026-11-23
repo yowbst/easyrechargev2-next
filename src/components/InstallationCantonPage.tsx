@@ -138,7 +138,7 @@ export function InstallationCantonPage({
   return (
     <div className="flex-1">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <div className="container mx-auto max-w-5xl px-4 py-10 sm:py-14 space-y-12">
+      <div className="mx-auto w-full max-w-[1240px] px-5 md:px-10 py-10 sm:py-14 space-y-12">
           {/* Breadcrumb + title (the page view fires here: a whole page never reaches 50 % on screen) */}
           <TrackedSection event="canton_page" props={{ canton: canton.code, has_partner: partners.length > 0, installers: stats.count }} className="space-y-5">
             <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
