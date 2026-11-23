@@ -23,3 +23,17 @@ describe("installersBlockEnabled", () => {
     expect(installersBlockEnabled({ installers_block: { enabled: true, cantons: "VD" } }, "VD", "fr")).toBe(false);
   });
 });
+
+describe("installerIntentTitles", () => {
+  it("puts installation first and keeps a short fallback for long names", async () => {
+    const { installerIntentTitles } = await import("./gate");
+    const { pickFittingTitle } = await import("@/lib/seo/resolver");
+    expect(pickFittingTitle(installerIntentTitles("Nyon").title)).toBe("Installation et subventions borne de recharge à Nyon");
+    expect(pickFittingTitle(installerIntentTitles("Cheseaux-sur-Lausanne").title)).toBe("Installation borne Cheseaux-sur-Lausanne et aides");
+    expect(pickFittingTitle(installerIntentTitles("Saint-Légier-La Chiésaz (Saint-Légier)").title)).toBe("Installation borne Saint-Légier-La Chiésaz (Saint-Légier) et aides");
+    for (const name of ["Cheseaux-sur-Lausanne", "Romanel-sur-Lausanne", "Yverdon-les-Bains"]) {
+      expect(pickFittingTitle(installerIntentTitles(name).title)!.length).toBeLessThanOrEqual(60);
+    }
+    expect(installerIntentTitles("Nyon").h1).toBe("Borne de recharge à Nyon : installateurs et subventions");
+  });
+});

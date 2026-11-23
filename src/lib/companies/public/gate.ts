@@ -17,3 +17,20 @@ export function installersBlockEnabled(
   if (cfg.cantons === "*") return true;
   return Array.isArray(cfg.cantons) && cfg.cantons.some((c) => typeof c === "string" && c.toUpperCase() === cantonCode.toUpperCase());
 }
+
+/**
+ * Title and H1 of a commune page once its installers block is on: the page then answers
+ * "installation borne de recharge {commune}" as well as the subsidy question (GSC to
+ * 2026-11-15: 56 commune installation queries, 655 impressions, 0 clicks on "Subventions…"
+ * titles). First candidate that fits 60 characters wins, the last one otherwise.
+ */
+export function installerIntentTitles(locality: string): { title: string[]; h1: string } {
+  return {
+    title: [
+      `Installation et subventions borne de recharge à ${locality}`,
+      `Installation borne de recharge ${locality} et aides`,
+      `Installation borne ${locality} et aides`,
+    ],
+    h1: `Borne de recharge à ${locality} : installateurs et subventions`,
+  };
+}

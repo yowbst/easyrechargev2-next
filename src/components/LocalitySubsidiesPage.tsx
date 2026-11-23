@@ -83,6 +83,8 @@ interface LocalitySubsidiesPageProps {
   nearbyInstallers?: ReactNode;
   /** The canton installation page, when the canton has one. */
   cantonPage?: { title: string; href: string } | null;
+  /** Replaces the dictionary H1 where the installers block is on. */
+  h1Override?: string;
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -125,6 +127,7 @@ export function LocalitySubsidiesPage({
   partnerCompact,
   nearbyInstallers,
   cantonPage,
+  h1Override,
 }: LocalitySubsidiesPageProps) {
   const cityDisplay = `${locality.postalCode} ${locality.name}`;
   const P = "pages.locality-subsidies.";
@@ -180,7 +183,7 @@ export function LocalitySubsidiesPage({
     <div className="flex-1">
       {/* Breadcrumbs */}
       <nav aria-label="breadcrumb" className="border-b bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-4 py-3">
+        <div className="mx-auto w-full max-w-[1240px] px-5 md:px-10 py-3">
           <ol className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
             <li>
               <Link href={`/${lang}/${pageRegistry.find((p) => p.id === "localities")?.slugs[lang] || "localites"}`} className="hover:text-foreground transition-colors">
@@ -200,7 +203,7 @@ export function LocalitySubsidiesPage({
       </nav>
 
       {/* Page-level 2-column layout: content + sticky sidebar */}
-      <div className="container mx-auto px-4 py-10 sm:py-14">
+      <div className="mx-auto w-full max-w-[1240px] px-5 md:px-10 py-10 sm:py-14">
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
           {/* Sticky sidebar — must be first for row-span-full to work */}
           <aside className="lg:sticky lg:top-24 self-start lg:col-start-2 lg:row-start-1 lg:row-span-full flex flex-col gap-3">
@@ -225,7 +228,7 @@ export function LocalitySubsidiesPage({
             {/* Hero */}
             <div>
               <h1 className="text-2xl sm:text-3xl font-heading font-bold mb-4">
-                {d("h1", { city: cityDisplay })}
+                {h1Override ?? d("h1", { city: cityDisplay })}
               </h1>
               <p className="text-base text-muted-foreground leading-relaxed">
                 {hasSubsidies

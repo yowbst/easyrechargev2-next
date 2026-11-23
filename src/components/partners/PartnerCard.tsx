@@ -9,26 +9,33 @@ const COPY = {
   fr: {
     badge: (canton: string) => `Partenaire easyRecharge · ${canton}`,
     heading: (canton: string) => `Votre installateur partenaire dans le canton ${canton}`,
+    headingMany: (canton: string) => `Vos installateurs partenaires dans le canton ${canton}`,
     several: "Nos installateurs partenaires",
+    /** Locality pages: where the partner installs, not where it is based. */
+    installsIn: (locality: string) => `Installe des bornes à ${locality}`,
+    installIn: (locality: string) => `Installent des bornes à ${locality}`,
     exclusive: (canton: string) => `installe dans tout le canton ${canton}`,
     shared: (canton: string) => `intervient dans le canton ${canton}`,
     forwarded: "Votre demande de devis lui est transmise directement.",
-    forwardedMany: "Votre demande de devis est transmise à nos partenaires du canton.",
+    forwardedMany: "Votre demande de devis est transmise à l'un de nos partenaires du canton.",
     cta: "Demander un devis",
     compactLead: "Votre demande sera transmise à",
-    compactMany: "nos partenaires du canton",
+    compactLeadMany: "Votre demande sera transmise à l'un de nos partenaires",
   },
   de: {
     badge: (canton: string) => `easyRecharge-Partner · ${canton}`,
     heading: (canton: string) => `Ihr Partner-Installateur im Kanton ${canton}`,
+    headingMany: (canton: string) => `Ihre Partner-Installateure im Kanton ${canton}`,
     several: "Unsere Partner-Installateure",
+    installsIn: (locality: string) => `Installiert Ladestationen in ${locality}`,
+    installIn: (locality: string) => `Installieren Ladestationen in ${locality}`,
     exclusive: (canton: string) => `installiert im ganzen Kanton ${canton}`,
     shared: (canton: string) => `ist im Kanton ${canton} tätig`,
     forwarded: "Ihre Offertanfrage wird direkt an ihn weitergeleitet.",
-    forwardedMany: "Ihre Offertanfrage geht an unsere Partner im Kanton.",
+    forwardedMany: "Ihre Offertanfrage geht an einen unserer Partner im Kanton.",
     cta: "Offerte anfragen",
     compactLead: "Ihre Anfrage geht an",
-    compactMany: "unsere Partner im Kanton",
+    compactLeadMany: "Ihre Anfrage geht an einen unserer Partner",
   },
 } as const;
 
@@ -42,14 +49,18 @@ export interface PartnerCardProps {
   cantonCode: string;
   quoteHref: string;
   pageType: "canton" | "locality";
+  /** Locality pages: the card says the partner installs there, without its base town. */
+  localityName?: string;
   variant?: "banner" | "compact";
   /** "heading" = the long title (commune pages); "badge" = the short eyebrow (canton page). */
   title?: "heading" | "badge";
 }
 
 /**
- * The region's partner, as the dispatch resolver would pick it. Renders nothing without
- * a partner. No phone or website: the request goes through the quote funnel.
+ * The region's partner(s), as the dispatch resolver would pick them: an exclusive partner
+ * alone, otherwise every shared partner by priority. Renders nothing without a partner.
+ * No phone or website: the request goes through the quote funnel, and the resolver picks
+ * the recipient when several partners share the canton.
  */
 export function PartnerCard({
   partners,
@@ -59,13 +70,14 @@ export function PartnerCard({
   cantonCode,
   quoteHref,
   pageType,
+  localityName,
   variant = "banner",
   title = "badge",
 }: PartnerCardProps) {
   if (partners.length === 0) return null;
   const c = COPY[lang];
   const one = partners.length === 1 ? partners[0] : null;
-  const track = { canton: cantonCode, page_type: pageType, placement: variant, partner_slug: one?.slug ?? "several", locale: lang };
+  const track = { canton: cantonCode, page_type: pageType, placement: variant, partner_slug: one?.slug ?? "several", partners: partners.length, locale: lang };
 
   if (variant === "compact") {
     return (
@@ -74,12 +86,18 @@ export function PartnerCard({
           <Zap className="size-5" />
         </span>
         <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">{c.compactLead}</p>
-          <p className="font-semibold leading-snug">{one ? one.name : c.compactMany}</p>
+          <p className="text-sm text-muted-foreground">{one ? c.compactLead : c.compactLeadMany}</p>
+          <p className="font-semibold leading-snug">{partners.map((p) => p.name).join(" · ")}</p>
         </div>
       </TrackedSection>
     );
   }
+
+  /** One partner's area line: the locality on commune pages, the canton coverage on canton pages. */
+  const areaLine = (p: PublicPartner) =>
+    localityName
+      ? c.installsIn(localityName)
+      : [p.locality, p.mode === "exclusive" ? c.exclusive(cantonPhrase) : c.shared(cantonPhrase)].filter(Boolean).join(" · ");
 
   return (
     <TrackedSection
@@ -91,25 +109,47 @@ export function PartnerCard({
     >
       <div className="flex min-w-0 flex-col gap-2">
         {title === "heading" ? (
-          <p className="text-sm font-semibold text-[#3DDC84]">{c.heading(cantonPhrase)}</p>
+          <p className="text-sm font-semibold text-[#3DDC84]">{one ? c.heading(cantonPhrase) : c.headingMany(cantonPhrase)}</p>
         ) : (
           <p className="inline-flex h-7 items-center gap-2 self-start rounded-md bg-[#3DDC84]/15 px-2.5 text-[13px] font-semibold uppercase tracking-[0.06em] text-[#3DDC84]">
             <BadgeCheck className="size-3.5" aria-hidden />
             {c.badge(cantonName)}
           </p>
         )}
-        <h2 className="font-heading text-2xl font-semibold leading-tight tracking-tight sm:text-[28px]">
-          {one ? one.name : c.several}
-        </h2>
         {one ? (
-          <p className="flex items-center gap-1.5 text-[15px] text-[#F3F1EB]/75">
-            <MapPin className="size-4 text-[#3DDC84]" aria-hidden />
-            {[one.locality, one.mode === "exclusive" ? c.exclusive(cantonPhrase) : c.shared(cantonPhrase)].filter(Boolean).join(" · ")}
-          </p>
+          <>
+            <h2 className="font-heading text-2xl font-semibold leading-tight tracking-tight sm:text-[28px]">{one.name}</h2>
+            <p className="flex items-center gap-1.5 text-[15px] text-[#F3F1EB]/75">
+              <MapPin className="size-4 shrink-0 text-[#3DDC84]" aria-hidden />
+              {areaLine(one)}
+            </p>
+            <p className="text-[15px] text-[#F3F1EB]/75">{c.forwarded}</p>
+          </>
         ) : (
-          <p className="text-[15px] text-[#F3F1EB]/75">{partners.map((p) => p.name).join(" · ")}</p>
+          <>
+            <h2 className="sr-only">{c.several}</h2>
+            <ul className="flex flex-col gap-3">
+              {partners.map((p) => (
+                <li key={p.id} className="flex flex-col gap-0.5">
+                  <span className="font-heading text-xl font-semibold leading-tight tracking-tight sm:text-2xl">{p.name}</span>
+                  {!localityName && (
+                    <span className="flex items-center gap-1.5 text-[15px] text-[#F3F1EB]/75">
+                      <MapPin className="size-4 shrink-0 text-[#3DDC84]" aria-hidden />
+                      {areaLine(p)}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {localityName && (
+              <p className="flex items-center gap-1.5 text-[15px] text-[#F3F1EB]/75">
+                <MapPin className="size-4 shrink-0 text-[#3DDC84]" aria-hidden />
+                {c.installIn(localityName)}
+              </p>
+            )}
+            <p className="text-[15px] text-[#F3F1EB]/75">{c.forwardedMany}</p>
+          </>
         )}
-        <p className="text-[15px] text-[#F3F1EB]/75">{one ? c.forwarded : c.forwardedMany}</p>
       </div>
       <Link
         href={quoteHref}
