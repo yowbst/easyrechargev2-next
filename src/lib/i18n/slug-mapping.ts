@@ -4,14 +4,27 @@
  * handles sub-segment translation for nested routes (e.g., vehicle brand URLs).
  */
 
+import { getRouteSlug } from "./config";
+
 export type Language = "fr" | "de";
 
-const SEGMENT_TRANSLATIONS: Record<string, Record<Language, string>> = {
-  marque: { fr: "marque", de: "marke" },
-  marke: { fr: "marque", de: "marke" },
-  marques: { fr: "marques", de: "marken" },
-  marken: { fr: "marques", de: "marken" },
-};
+/** Nested segments that exist in both languages under a different word. */
+const SEGMENT_PAIRS: Record<Language, string>[] = [
+  { fr: "marque", de: "marke" },
+  { fr: "marques", de: "marken" },
+  // Locality subsidy pages: /fr/localites/{slug}/subventions <-> /de/ortschaften/{slug}/subventionen.
+  { fr: getRouteSlug("fr", "subsidies"), de: getRouteSlug("de", "subsidies") },
+];
+
+const SEGMENT_TRANSLATIONS: Record<string, Record<Language, string>> = Object.fromEntries(
+  SEGMENT_PAIRS.flatMap((pair) => [[pair.fr, pair], [pair.de, pair]]),
+);
+
+/**
+ * Pages whose nested routes exist in one language only (canton installation pages are
+ * French only): switching language from a nested URL lands on the page itself.
+ */
+const SINGLE_LANGUAGE_NESTED = new Set(["installation"]);
 
 function translateSegment(segment: string, targetLanguage: Language): string {
   return SEGMENT_TRANSLATIONS[segment]?.[targetLanguage] ?? segment;
@@ -43,6 +56,9 @@ export function convertPathToLanguage(
     for (const page of Object.values(pageRegistry)) {
       if (page.slugs?.[currentLang as Language] === firstSlug) {
         const targetFirstSlug = page.slugs?.[targetLanguage];
+        if (targetFirstSlug && SINGLE_LANGUAGE_NESTED.has(page.id)) {
+          return `/${targetLanguage}/${targetFirstSlug}`;
+        }
         if (targetFirstSlug) {
           const translatedSegments = [targetFirstSlug];
           for (let i = 1; i < segments.length; i++) {

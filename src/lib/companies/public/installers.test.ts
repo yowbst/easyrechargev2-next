@@ -130,3 +130,35 @@ describe("fetchInstallerCountsByCanton", () => {
     expect(await fetchInstallerCountsByCanton(["VD", "NE"], fetcher as never)).toEqual({ VD: 364, NE: 0 });
   });
 });
+
+describe("fetchNearbyInstallers", () => {
+  const rows = (n: number, km: number) =>
+    Array.from({ length: n }, (_, i) => ({ ehraid: `r${km}-${String(i).padStart(4, "0")}`, legal_name: `C${i}`, uid: "CHE107036057", lat: 46.5 + km / 111, lng: 6.6, legal_form_kind: "llc" }));
+
+  it("asks Directus for every row (no 300 cap) and stays in 10 km when that is enough", async () => {
+    const { fetchNearbyInstallers } = await import("./installers");
+    // 400 far-from-centre rows sorted first by id, then the 3 closest: a 300-row cap would lose them.
+    const near = [...rows(400, 9), ...rows(3, 1)];
+    const fetcher = vi.fn(async (path: string) => ({ data: path.includes("limit=-1") ? near : near.slice(0, 300) }));
+    const out = await fetchNearbyInstallers({ lat: 46.5, lng: 6.6 }, {}, fetcher as never);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(out.map((o) => o.ehraid)).toEqual(["r1-0000", "r1-0001", "r1-0002"]);
+  });
+
+  it("widens to 25 km only when fewer than 3 are within 10 km", async () => {
+    const { fetchNearbyInstallers } = await import("./installers");
+    let call = 0;
+    const fetcher = vi.fn(async () => ({ data: call++ === 0 ? rows(1, 2) : [...rows(1, 2), ...rows(4, 20)] }));
+    const out = await fetchNearbyInstallers({ lat: 46.5, lng: 6.6 }, {}, fetcher as never);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(out).toHaveLength(5);
+  });
+
+  it("drops the companies the caller excludes (the partner already shown)", async () => {
+    const { fetchNearbyInstallers } = await import("./installers");
+    const data = rows(4, 1);
+    const fetcher = vi.fn(async () => ({ data }));
+    const out = await fetchNearbyInstallers({ lat: 46.5, lng: 6.6 }, { excludeIds: () => new Set(["r1-0000"]) }, fetcher as never);
+    expect(out.map((o) => o.ehraid)).not.toContain("r1-0000");
+  });
+});

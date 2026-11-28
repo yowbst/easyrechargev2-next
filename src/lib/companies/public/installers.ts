@@ -101,7 +101,9 @@ export async function fetchInstallerCandidates(
   const params = PUBLISHED({
     "filter[lat][_between]": `${(origin.lat - dLat).toFixed(5)},${(origin.lat + dLat).toFixed(5)}`,
     "filter[lng][_between]": `${(origin.lng - dLng).toFixed(5)},${(origin.lng + dLng).toFixed(5)}`,
-    limit: "300",
+    // No row cap: a capped query sorted by id silently dropped the closest companies
+    // around Lausanne (167 Vaud communes had more than 300 rows in a 25 km square).
+    limit: "-1",
     sort: "ehraid",
   });
   try {
@@ -114,6 +116,23 @@ export async function fetchInstallerCandidates(
 }
 
 const FORM_RANK: Record<string, number> = { corporation: 0, llc: 0, cooperative: 1, gp: 1, branch: 1, sp: 2 };
+
+/**
+ * Nearby installers with the smallest query that answers: a 10 km square first (enough
+ * for the 5 and 10 km tiers), the 25 km square only when fewer than `min` are found.
+ */
+export async function fetchNearbyInstallers(
+  origin: { lat: number; lng: number },
+  opts: { min?: number; max?: number; excludeIds?: (rows: PublicInstaller[]) => Set<string> } = {},
+  fetcher: typeof directusFetch = directusFetch,
+): Promise<NearbyInstaller[]> {
+  const min = opts.min ?? 3;
+  const near = await fetchInstallerCandidates(origin, 10, fetcher);
+  const nearPick = selectNearby(near, origin, { tiers: [5, 10], min, max: opts.max, excludeIds: opts.excludeIds?.(near) });
+  if (nearPick.length >= min) return nearPick;
+  const wide = await fetchInstallerCandidates(origin, 25, fetcher);
+  return selectNearby(wide, origin, { tiers: [5, 10, 25], min, max: opts.max, excludeIds: opts.excludeIds?.(wide) });
+}
 
 /**
  * Up to `max` installers around a point: the first distance tier holding at least `min`

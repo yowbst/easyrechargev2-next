@@ -48,7 +48,7 @@ import { resolveRouteId, resolveRouteLinks } from "@/lib/pageConfig";
 import { PartnerCard } from "@/components/partners/PartnerCard";
 import { NearbyInstallers } from "@/components/companies/NearbyInstallers";
 import { fetchActivePartnersForCanton } from "@/lib/companies/public/partners";
-import { fetchInstallerCandidates, latestSeen, selectNearby, type NearbyInstaller } from "@/lib/companies/public/installers";
+import { fetchNearbyInstallers, latestSeen, type NearbyInstaller } from "@/lib/companies/public/installers";
 import { installerIntentTitles, installersBlockEnabled } from "@/lib/companies/public/gate";
 import { CANTONS_INFO, cantonPageSlug } from "@/lib/companies/public/cantons";
 import { lookupPostcode } from "@/lib/companies/geo/postcode-coords";
@@ -813,17 +813,14 @@ export default async function Sub2Page({ params }: Sub2PageProps) {
     const showInstallers = installersBlockEnabled(gc, cantonCode, lang);
     const origin = lookupPostcode(String(locality.postal_code ?? ""), locality.additional_digit);
     const NEARBY_RADIUS_KM = 25;
-    const [regionPartners, installerCandidates] = await Promise.all([
-      cantonCode ? fetchActivePartnersForCanton(cantonCode) : Promise.resolve([]),
-      showInstallers && origin ? fetchInstallerCandidates({ lat: origin[0], lng: origin[1] }, NEARBY_RADIUS_KM) : Promise.resolve([]),
-    ]);
+    const regionPartners = cantonCode ? await fetchActivePartnersForCanton(cantonCode) : [];
     const shownPartnerIds = new Set(regionPartners.map((p) => String(p.id)));
     let nearby: NearbyInstaller[] = [];
     if (showInstallers && origin) {
-      const excludeIds = new Set(
-        installerCandidates.filter((c) => c.partnerId && shownPartnerIds.has(c.partnerId)).map((c) => c.ehraid),
-      );
-      nearby = selectNearby(installerCandidates, { lat: origin[0], lng: origin[1] }, { excludeIds });
+      // The partner's own company is already the banner: never list it twice.
+      nearby = await fetchNearbyInstallers({ lat: origin[0], lng: origin[1] }, {
+        excludeIds: (rows) => new Set(rows.filter((c) => c.partnerId && shownPartnerIds.has(c.partnerId)).map((c) => c.ehraid)),
+      });
     }
     const partnerCardProps = {
       partners: regionPartners,
