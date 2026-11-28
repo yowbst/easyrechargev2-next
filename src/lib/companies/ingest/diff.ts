@@ -40,6 +40,8 @@ export interface PlanOptions {
   sourceFile?: string;
   /** normalised UID -> partners.id, production partners only */
   partnerByUid?: Map<string, string>;
+  /** Active partners' ids: only a link to an Active partner lists a company outside the normal rule. */
+  activePartnerIds?: Set<string>;
   /** Cantons this run covered. GONE is only judged inside them. */
   scopeCantons?: string[];
   now?: string;
@@ -94,7 +96,7 @@ export function buildCompanyPlan(
       doNotDisplay: !!existing?.do_not_display,
       gone: false,
       evidence: c.installation_evidence,
-      isPartner: !!partnerId,
+      isPartner: !!partnerId && (!opts.activePartnerIds || opts.activePartnerIds.has(partnerId)),
     });
     // A company back from the dead is reviewed before it is shown again.
     const status: CompanyStatus = reappeared ? "draft" : effectiveStatus;

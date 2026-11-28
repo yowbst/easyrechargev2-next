@@ -397,7 +397,12 @@ async function cmdPlan() {
   for (const m of missing) {
     console.log(`  ⚠ partner "${m.partner.name}" not linked: ${m.reason === "no_uid" ? "no UID on the partner record" : `UID ${m.partner.uid} not in this run`}`);
   }
-  const plan = buildCompanyPlan(classified, cms, { sourceFile: inPath, partnerByUid, scopeCantons: cantons });
+  const plan = buildCompanyPlan(classified, cms, {
+    sourceFile: inPath,
+    partnerByUid,
+    activePartnerIds: new Set(activePartners.map((p) => p.id)),
+    scopeCantons: cantons,
+  });
   assertPlanSane(plan, { partial: has("partial"), maxChangeRatio: parseMaxChangeRatio(flag("max-change-ratio")) });
 
   const s = summarize(plan);

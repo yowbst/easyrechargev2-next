@@ -25,8 +25,17 @@ describe("displayStreet", () => {
 
 describe("toPublicInstaller", () => {
   it("formats the UID, parses decimals, keeps only known specialties and reduces partner to a flag", () => {
-    const p = toPublicInstaller({ ehraid: "1", legal_name: "X Sàrl", display_name: null, uid: "CHE107036057", lat: "46.5", lng: "6.6", partner: "uuid", specialties: ["bornes", "junk"], trade_summary: "Installations", street_address: "c/o A, Rue 2" });
+    const p = toPublicInstaller({ ehraid: "1", legal_name: "X Sàrl", display_name: null, uid: "CHE107036057", lat: "46.5", lng: "6.6", partner: { id: "uuid", status: "active" }, specialties: ["bornes", "junk"], trade_summary: "Installations", street_address: "c/o A, Rue 2" });
     expect(p).toMatchObject({ name: "X Sàrl", uid: "CHE-107.036.057", lat: 46.5, lng: 6.6, isPartner: true, specialties: ["bornes"], tradeSummary: "Installations", street: "Rue 2" });
+  });
+});
+
+describe("partner link", () => {
+  it("counts as partner only while the partner is active", () => {
+    const row = { ehraid: "1", legal_name: "X", uid: "CHE107036057" };
+    expect(toPublicInstaller({ ...row, partner: { id: "p1", status: "paused" } })).toMatchObject({ isPartner: false, partnerId: "p1" });
+    expect(toPublicInstaller({ ...row, partner: { id: "p1", status: "active" } })).toMatchObject({ isPartner: true, partnerId: "p1" });
+    expect(toPublicInstaller({ ...row, partner: null })).toMatchObject({ isPartner: false, partnerId: null });
   });
 });
 

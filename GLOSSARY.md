@@ -4,17 +4,51 @@ A Swiss marketplace that collects quote requests for EV chargers and home batter
 
 ## Leads and partners
 
+**Product**:
+The kind of installation a Lead asks for: charger or home battery today.
+_Avoid_: Vertical, service, offer
+
 **Lead**:
-A customer's quote request for one product, as submitted through the quote funnel.
+A customer's quote request for one Product, as submitted through the quote funnel.
 _Avoid_: Submission (that's the stored form record), request
 
 **Partner**:
-An installer company that receives Leads and is invoiced for them.
-_Avoid_: Installer, client
+A company that receives Leads and is invoiced for them; a commercial relationship, not a kind of company. Linked to at most one Company, the legal entity it is invoiced under.
+_Avoid_: Installer (that's a classification of a Company), client
+
+**Active**:
+Said of a Partner enrolled to receive Leads and not paused. Reaching a quota limits Dispatch, not being Active.
+_Avoid_: Live, enabled
 
 **Dispatch**:
 One Lead sent to one Partner; the unit the Partner works, and the unit that is billed.
 _Avoid_: Assignment, lead (when the Partner-specific copy is meant)
+
+**Area**:
+A canton in which a Partner receives Leads for a Product. Exclusive when that Partner alone gets the canton's Leads, shared otherwise.
+_Avoid_: Region, zone, territory
+
+**Served canton**:
+A canton where easyRecharge actively sells installation, chosen by the owner; it can exist without any Area.
+_Avoid_: Covered canton (coverage is the Areas)
+
+## Register companies
+
+**Company**:
+A business from the commercial register kept in our dataset, whatever its trade.
+_Avoid_: Business, entreprise, firm
+
+**Installer**:
+A Company whose registered purpose describes electrical installation work.
+_Avoid_: Electrician (page wording only), partner
+
+**Listed**:
+Said of a Company shown on public pages. A Company withdrawn at its own request is Hidden. A link to an Active Partner lists a Company; liquidation never does.
+_Avoid_: Published, visible, active
+
+**Prospect**:
+An Installer chosen for outreach about becoming a Partner.
+_Avoid_: Lead (that's a customer request), candidate
 
 ## Dispatch lifecycle
 

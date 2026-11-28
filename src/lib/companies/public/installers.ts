@@ -30,7 +30,7 @@ export interface NearbyInstaller extends PublicInstaller {
 /** Only what a card shows. No purpose text, no contacts, no person. */
 const FIELDS = [
   "ehraid", "legal_name", "display_name", "legal_form_kind", "street_address", "postal_code",
-  "locality", "canton", "uid", "lat", "lng", "partner", "specialties", "trade_summary", "register_seen_at",
+  "locality", "canton", "uid", "lat", "lng", "partner.id", "partner.status", "specialties", "trade_summary", "register_seen_at",
 ].join(",");
 
 type Row = Record<string, unknown>;
@@ -47,6 +47,16 @@ export function displayStreet(street: string | null | undefined): string | null 
   return parts.length ? parts.join(", ") : null;
 }
 
+/** The company's partner link: a bare id (legacy rows) or `{ id, status }`. */
+function partnerOf(v: unknown): { id: string | null; active: boolean } {
+  if (!v) return { id: null, active: false };
+  if (typeof v === "object") {
+    const p = v as { id?: unknown; status?: unknown };
+    return { id: p.id ? String(p.id) : null, active: p.status === "active" };
+  }
+  return { id: String(v), active: false };
+}
+
 export function toPublicInstaller(r: Row): PublicInstaller {
   const num = (v: unknown) => (v === null || v === undefined || v === "" ? null : Number(v));
   const specialties = Array.isArray(r.specialties) ? (r.specialties as unknown[]).filter(isSpecialtyKey) : [];
@@ -61,8 +71,9 @@ export function toPublicInstaller(r: Row): PublicInstaller {
     uid: formatUid(r.uid as string | null),
     lat: num(r.lat),
     lng: num(r.lng),
-    isPartner: !!r.partner,
-    partnerId: r.partner ? String(typeof r.partner === "object" ? (r.partner as { id?: unknown }).id : r.partner) : null,
+    // Partner effects (first in lists, partner tile) only while the Partner is Active.
+    isPartner: partnerOf(r.partner).active,
+    partnerId: partnerOf(r.partner).id,
     specialties,
     tradeSummary: (r.trade_summary as string | null) || null,
     seenAt: (r.register_seen_at as string | null) || null,

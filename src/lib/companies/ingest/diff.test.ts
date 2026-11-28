@@ -152,6 +152,17 @@ describe("buildCompanyPlan", () => {
     expect(e.changes.partner_linked_at.to).toBe(NOW);
   });
 
+  it("lists a weak-wording company only while its partner is Active", () => {
+    const weak = company({ installation_evidence: "weak" });
+    const map = new Map([["CHE111111111", "partner-1"]]);
+    const active = buildCompanyPlan([weak], [stored(weak, { status: "draft" })], { now: NOW, partnerByUid: map, activePartnerIds: new Set(["partner-1"]) });
+    expect(active.entries[0].changes.status.to).toBe("published");
+    const paused = buildCompanyPlan([weak], [stored(weak, { status: "published", partner: "partner-1" })], { now: NOW, partnerByUid: map, activePartnerIds: new Set() });
+    expect(paused.entries[0].changes.status.to).toBe("draft");
+    // The link itself stays: this company is still that partner's legal entity.
+    expect(paused.entries[0].changes.partner).toBeUndefined();
+  });
+
   it("marks a row GONE when it is no longer a candidate", () => {
     const plan = buildCompanyPlan([], [stored(company())], { now: NOW });
     const [e] = plan.entries;
