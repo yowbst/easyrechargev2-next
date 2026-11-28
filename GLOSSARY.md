@@ -43,11 +43,15 @@ A Company whose registered purpose describes electrical installation work.
 _Avoid_: Electrician (page wording only), partner
 
 **Listed**:
-Said of a Company shown on public pages. A Company withdrawn at its own request is Hidden. A link to an Active Partner lists a Company; liquidation never does.
+Said of a Company shown on public pages. A link to an Active Partner lists a Company; liquidation never does.
 _Avoid_: Published, visible, active
 
+**Hidden**:
+Said of a Company withdrawn from public pages at its own request. A wrong classification is corrected by reclassifying, never by hiding.
+_Avoid_: Blocked, removed, unlisted
+
 **Prospect**:
-An Installer chosen for outreach about becoming a Partner.
+An Installer chosen for outreach about becoming a Partner. Never inside another Partner's exclusive Area for the same Product.
 _Avoid_: Lead (that's a customer request), candidate
 
 ## Dispatch lifecycle
