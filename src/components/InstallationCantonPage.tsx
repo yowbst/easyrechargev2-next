@@ -173,7 +173,7 @@ export function InstallationCantonPage({
               <h2 id="canton-stats" className="font-heading text-xl font-bold sm:text-2xl">
                 {COPY.statsHeading}
               </h2>
-              <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {statTiles.map((s) => (
                   <div key={s.label} className="flex flex-col gap-1.5 rounded-xl border bg-card p-5">
                     <dt className="order-2 text-sm leading-snug text-muted-foreground">{s.label}</dt>
@@ -194,7 +194,7 @@ export function InstallationCantonPage({
                 </h2>
                 <p className="text-muted-foreground">{COPY.installersLead(stats.sample.length, stats.count)}</p>
               </div>
-              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {stats.sample.map((c) => (
                   <li key={c.ehraid}>
                     <InstallerCard installer={c} />
@@ -216,7 +216,7 @@ export function InstallationCantonPage({
                 </h2>
                 <p className="text-muted-foreground">{COPY.localitiesLead}</p>
               </div>
-              <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.topLocalities.map((l) => {
                   const slug = localitySlugs[l.locality.toLowerCase()];
                   const inner = (
@@ -247,7 +247,7 @@ export function InstallationCantonPage({
               <h2 id="canton-subsidies" className="font-heading text-xl font-bold sm:text-2xl">
                 {COPY.subsidiesHeading}
               </h2>
-              <ul className="grid gap-3">
+              <ul className="grid grid-cols-1 gap-3">
                 {subsidies.widePrograms.map((p) => (
                   <li key={String(p.sourceId)} className="rounded-xl border bg-card p-5 space-y-2">
                     <p className="font-semibold">

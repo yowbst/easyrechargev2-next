@@ -51,7 +51,7 @@ export function NearbyInstallers({
           Entreprises de la région dont le but social, inscrit au registre du commerce, mentionne des installations électriques.
         </p>
       </div>
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {installers.map((i) => (
           <li key={i.ehraid}>
             <InstallerCard installer={i} distanceKm={i.distanceKm} />

@@ -204,7 +204,7 @@ export function LocalitySubsidiesPage({
 
       {/* Page-level 2-column layout: content + sticky sidebar */}
       <div className="mx-auto w-full max-w-[1240px] px-5 md:px-10 py-10 sm:py-14">
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-8 lg:gap-12">
           {/* Sticky sidebar — must be first for row-span-full to work */}
           <aside className="lg:sticky lg:top-24 self-start lg:col-start-2 lg:row-start-1 lg:row-span-full flex flex-col gap-3">
             {partnerCompact}

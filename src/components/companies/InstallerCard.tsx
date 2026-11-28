@@ -50,7 +50,7 @@ export function InstallerCard({ installer, distanceKm }: { installer: PublicInst
   const register = registerLink(installer.uid);
   const place = [installer.postalCode, installer.locality].filter(Boolean).join(" ");
   return (
-    <article className="flex h-full flex-col gap-3.5 rounded-xl border bg-card p-5">
+    <article className="flex h-full min-w-0 flex-col gap-3.5 rounded-xl border bg-card p-5">
       <div className="flex items-start gap-3.5">
         <span
           aria-hidden
@@ -77,12 +77,12 @@ export function InstallerCard({ installer, distanceKm }: { installer: PublicInst
         </ul>
       )}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t pt-3 text-sm text-muted-foreground">
-        <span className="inline-flex min-w-0 items-center gap-1.5">
-          <MapPin className="size-3.5 shrink-0" aria-hidden />
-          <span className="truncate">
-            {installer.street ? `${installer.street}, ${place}` : place}
-            {distanceKm !== undefined ? ` · ${formatDistance(distanceKm)}` : ""}
-          </span>
+        <span className="flex w-full min-w-0 items-start gap-1.5">
+          <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 break-words">{installer.street ? `${installer.street}, ${place}` : place}</span>
+          {distanceKm !== undefined && (
+            <span className="shrink-0 font-mono text-[13px] font-medium text-foreground/80">{formatDistance(distanceKm)}</span>
+          )}
         </span>
         {register && (
           <a href={register} target="_blank" rel="nofollow noopener noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
